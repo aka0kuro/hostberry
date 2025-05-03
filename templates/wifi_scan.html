@@ -172,10 +172,12 @@ $(document).ready(function() {
     $('#connectModal').on('show.bs.modal', function(event) {
         const button = $(event.relatedTarget);
         $('#modalNetworkName').text(button.data('ssid'));
+        const security = button.data('security') || '--';
         $('#modalNetworkSecurity').html(`
-            <i class="fas fa-${button.data('security') === '--' ? 'unlock' : 'lock'}"></i>
-            ${button.data('security') === '--' ? 'Open Network' : button.data('security') + ' Encryption'}
+            <i class="fas fa-${security === '--' ? 'unlock' : 'lock'}"></i>
+            ${security === '--' ? 'Open Network' : security + ' Encryption'}
         `);
+        $('#password').prop('disabled', security === '--');
     });
 
     // Connect button handler
@@ -207,9 +209,9 @@ $(document).ready(function() {
             }
             
             $('#connectModal').modal('hide');
-            location.reload();
+            setTimeout(() => location.reload(), 1000);
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Connection error:', error);
             alert(`Error: ${error.message}`);
         } finally {
             btn.prop('disabled', false).html(originalText);
@@ -218,7 +220,12 @@ $(document).ready(function() {
 
     // Rescan networks
     $('#rescanBtn').click(function() {
-        location.reload();
+        fetch('/api/rescan_wifi', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        }).then(() => location.reload());
     });
 });
 </script>
