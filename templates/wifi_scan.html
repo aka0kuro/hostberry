@@ -175,35 +175,7 @@ if (window.jQuery) {
         // 3. Botón Rescan
         $(document).off('click', '#rescanBtn').on('click', '#rescanBtn', async function(e) {
             e.preventDefault();
-            const btn = $(this);
-            const originalHtml = btn.html();
-            
-            btn.prop('disabled', true).html(
-                '<span class="spinner-border spinner-border-sm"></span> Escaneando...'
-            );
-            
-            try {
-                const response = await fetch('/api/wifi/scan', {
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token() }}'
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (!response.ok || !data.success) {
-                    throw new Error(data.error || 'Scan failed');
-                }
-                
-                // Actualizar UI con redes
-                updateNetworkList(data.networks);
-                
-            } catch (error) {
-                console.error('Scan error:', error);
-                alert('Error: ' + error.message);
-            } finally {
-                btn.prop('disabled', false).html(originalHtml);
-            }
+            await rescanNetworks();
         });
 
         // Configuración inicial
@@ -215,30 +187,56 @@ if (window.jQuery) {
 }
 
 async function rescanNetworks() {
+    const loadingHtml = `
+        <div class="list-group-item text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2 mb-0">Escaneando redes WiFi...</p>
+        </div>
+    `;
+    
+    $('#network-list').html(loadingHtml);
+    
     try {
-        console.log('Iniciando escaneo WiFi...');
+        console.log('[WiFi] Iniciando escaneo...');
         
+        const startTime = performance.now();
         const response = await fetch('/api/wifi/scan');
-        console.log('Respuesta recibida:', response.status);
+        const duration = (performance.now() - startTime).toFixed(2);
+        
+        console.log(`[WiFi] Respuesta recibida en ${duration}ms`, response);
         
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Error en respuesta:', errorText);
-            throw new Error(`Error HTTP ${response.status}: ${errorText}`);
+            const errorData = await response.json().catch(() => ({}));
+            console.error('[WiFi] Error en respuesta:', errorData);
+            
+            let errorMessage = 'Error al escanear redes';
+            if (errorData.error) {
+                errorMessage = errorData.error;
+                if (errorData.can_enable) {
+                    errorMessage += ' <button class="btn btn-sm btn-warning ms-2" id="enableWifiBtn">Activar WiFi</button>';
+                }
+            }
+            
+            throw new Error(errorMessage);
         }
         
         const data = await response.json();
-        console.log('Datos recibidos:', data);
+        console.log('[WiFi] Datos recibidos:', data);
         
-        if (!data.success) {
-            throw new Error(data.error || 'Error en el servidor');
+        if (!data.success || !data.networks) {
+            throw new Error(data.error || 'Formato de respuesta inválido');
+        }
+        
+        if (data.networks.length === 0) {
+            showToast('No se encontraron redes WiFi', 'warning');
         }
         
         updateNetworkList(data.networks);
         
     } catch (error) {
-        console.error('Error en rescanNetworks:', error);
-        showToast(`Error: ${error.message}`, 'danger');
+        console.error('[WiFi] Error en escaneo:', error);
         
         $('#network-list').html(`
             <div class="list-group-item text-danger">
@@ -246,6 +244,8 @@ async function rescanNetworks() {
                 ${error.message}
             </div>
         `);
+        
+        showToast(error.message, 'danger');
     }
 }
 
