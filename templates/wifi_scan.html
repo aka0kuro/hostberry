@@ -4,6 +4,15 @@
 
 {% block content %}
 <div class="container-fluid">
+    <!-- Mensaje de estado WiFi -->
+    <div id="wifiStatusAlert" class="alert alert-warning d-none">
+        <i class="bi bi-wifi-off"></i>
+        <span id="wifiStatusText"></span>
+        <button id="enableWifiBtn" class="btn btn-sm btn-success ms-2 d-none">
+            <i class="bi bi-power"></i> Activar WiFi
+        </button>
+    </div>
+
     <!-- Mensajes de error -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -237,25 +246,56 @@
             </div>
         </div>
     </div>
+
+    <!-- Script para verificar estado WiFi -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/api/wifi_status')
+            .then(response => response.json())
+            .then(data => {
+                const alert = document.getElementById('wifiStatusAlert');
+                const text = document.getElementById('wifiStatusText');
+                const btn = document.getElementById('enableWifiBtn');
+                
+                if (!data.enabled) {
+                    alert.classList.remove('d-none');
+                    text.textContent = 'El WiFi está desactivado';
+                    btn.classList.remove('d-none');
+                }
+            });
+        
+        // Activar WiFi
+        document.getElementById('enableWifiBtn').addEventListener('click', function() {
+            fetch('/api/enable_wifi', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                });
+        });
+    });
+    </script>
+
+    <script>
+    document.getElementById('rescanBtn').addEventListener('click', function() {
+        const btn = this;
+        const spinner = document.getElementById('rescanSpinner');
+        const text = document.getElementById('rescanText');
+        
+        btn.disabled = true;
+        spinner.classList.remove('d-none');
+        text.textContent = '{% trans %}Scanning...{% endtrans %}';
+        
+        // Recargar la página después de 2 segundos (simulando scan)
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
+    });
+    </script>
 </div>
-
-<script>
-document.getElementById('rescanBtn').addEventListener('click', function() {
-    const btn = this;
-    const spinner = document.getElementById('rescanSpinner');
-    const text = document.getElementById('rescanText');
-    
-    btn.disabled = true;
-    spinner.classList.remove('d-none');
-    text.textContent = '{% trans %}Scanning...{% endtrans %}';
-    
-    // Recargar la página después de 2 segundos (simulando scan)
-    setTimeout(() => {
-        window.location.reload();
-    }, 2000);
-});
-</script>
-
 {% endblock %}
 
 {% block scripts %}

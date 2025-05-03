@@ -879,6 +879,24 @@ def api_wifi_scan():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
+@app.route('/api/wifi_status', methods=['GET'])
+def wifi_status():
+    try:
+        result = subprocess.run(['rfkill', 'list', 'wifi'], capture_output=True, text=True)
+        enabled = 'Soft blocked: no' in result.stdout
+        return jsonify({'enabled': enabled})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/enable_wifi', methods=['POST'])
+def enable_wifi():
+    try:
+        subprocess.run(['rfkill', 'unblock', 'wifi'], check=True)
+        subprocess.run(['nmcli', 'radio', 'wifi', 'on'], check=True)
+        return jsonify({'success': True})
+    except subprocess.CalledProcessError as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 def read_lines_filter(filename):
     try:
         with open(filename, 'r') as f:

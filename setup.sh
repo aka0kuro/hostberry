@@ -10,6 +10,36 @@ if ! command -v python3 &> /dev/null; then
     sudo apt-get install -y python3 python3-pip
 fi
 
+# Verificar e instalar NetworkManager
+if ! command -v nmcli &> /dev/null; then
+    echo "Instalando NetworkManager..."
+    sudo apt-get update
+    sudo apt-get install -y network-manager
+    
+    # Reiniciar servicio
+    sudo systemctl restart NetworkManager
+    
+    # Verificar instalación
+    if ! command -v nmcli &> /dev/null; then
+        echo "ERROR: No se pudo instalar NetworkManager"
+        exit 1
+    fi
+else
+    echo "NetworkManager ya está instalado"
+fi
+
+# Añadir usuario al grupo netdev
+if ! groups $USER | grep -q "netdev"; then
+    echo "Añadiendo usuario $USER al grupo netdev..."
+    sudo usermod -aG netdev newgrp $USER
+    echo "Usuario añadido. Debes reiniciar la sesión para aplicar los cambios."
+else
+    echo "El usuario ya está en el grupo netdev"
+fi
+
+echo "Instalando nmcli (NetworkManager) si no está presente"
+sudo apt-get install -y network-manager
+
 # Move project to /opt/hostberry
 echo "Moving project to /opt/hostberry..."
 sudo mkdir -p /opt/hostberry
