@@ -728,5 +728,14 @@ def network_stats():
         network_stats.last_sent = net.bytes_sent
         network_stats.last_recv = net.bytes_recv
 
+def read_lines_filter(filename):
+    try:
+        with open(filename, 'r') as f:
+            return f.readlines()
+    except IOError:
+        return []
+
+app.jinja_env.filters['read_lines'] = read_lines_filter
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

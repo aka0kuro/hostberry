@@ -82,14 +82,13 @@
                 <div class="card-body">
                     <h5 class="card-title"><i class="bi bi-journal-text"></i> {% trans %}Registros del Sistema{% endtrans %}</h5>
                     <div class="log-container">
-                        {% if logs and logs is iterable %}
-                            {% for log in logs %}
-                                {% if log.timestamp and log.message %}
-                                    <div class="log-entry">
-                                        <small class="text-muted">{{ log.timestamp }}</small>
-                                        <p class="mb-1">{{ log.message }}</p>
-                                    </div>
-                                {% endif %}
+                        {% set log_file = '/opt/hostberry/logs/hostberry.log' %}
+                        {% if log_file is file and log_file is readable %}
+                            {% set log_lines = log_file|read_lines|reverse %}
+                            {% for line in log_lines[:100] %}
+                                <div class="log-entry">
+                                    <p class="mb-1">{{ line }}</p>
+                                </div>
                             {% endfor %}
                         {% else %}
                             <p class="text-muted">{% trans %}No hay registros disponibles{% endtrans %}</p>
