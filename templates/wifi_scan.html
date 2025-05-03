@@ -38,21 +38,24 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">SSID</label>
-                        <input type="text" id="ssid" class="form-control" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Contraseña</label>
-                        <input type="password" id="password" class="form-control" placeholder="Ingresa la contraseña">
-                        <div class="form-text">
-                            <i class="fas fa-lock me-1"></i>
-                            <span id="securityTypeText">Red segura</span>
+                    <form id="wifiConnectForm" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label class="form-label">SSID</label>
+                            <input type="text" id="ssid" class="form-control" readonly>
                         </div>
-                    </div>
-                    <div class="progress d-none" id="connectProgress">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña</label>
+                            <input type="password" id="password" class="form-control" placeholder="Ingresa la contraseña">
+                            <div class="form-text">
+                                <i class="fas fa-lock me-1"></i>
+                                <span id="securityTypeText">Red segura</span>
+                            </div>
+                        </div>
+                        <div class="progress d-none" id="connectProgress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+                        </div>
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>

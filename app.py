@@ -39,7 +39,8 @@ if not secret_key or len(secret_key) < 32:
         f.write(f"FLASK_SECRET_KEY={secret_key}\n")
 
 app = Flask(__name__)
-app.secret_key = secret_key
+app.config['SECRET_KEY'] = secret_key
+csrf = CSRFProtect(app)
 
 # Configure secure session settings
 app.config.update(
