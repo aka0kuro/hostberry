@@ -39,6 +39,12 @@
     <!-- Mobile Optimization -->
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <style>
+        /* Mover todo el CSS aquí */
+        .wifi-table th:nth-child(3),
+        .wifi-table td:nth-child(3) {
+            display: none;
+        }
+
         @media (max-width: 768px) {
             /* Cards en columna */
             .stats-card {
@@ -51,12 +57,6 @@
                 width: 100%;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
-            }
-            
-            /* Ocultar columnas menos importantes */
-            .wifi-table th:nth-child(3),
-            .wifi-table td:nth-child(3) {
-                display: none;
             }
             
             /* Botones más grandes */
@@ -221,14 +221,7 @@
                             <tr>
                                 <th></th>
                                 <td>
-                                    <button class="btn btn-sm btn-connect" 
-                                            data-toggle="modal" 
-                                            data-target="#connectModal"
-                                            data-ssid="{{ network.ssid }}"
-                                            data-security="{{ network.security }}"
-                                            data-signal="{{ network.signal }}">
-                                        <i class="bi bi-wifi"></i> {% trans %}Connect{% endtrans %}
-                                    </button>
+                                    <button class='btn btn-sm btn-connect' data-toggle='modal' data-target='#connectModal' data-ssid='{{ network.ssid }}' data-security='{{ network.security if network.security else "Abierta" }}'><i class='bi bi-wifi'></i> {% trans %}Connect{% endtrans %}</button>
                                 </td>
                             </tr>
                         </tbody>
