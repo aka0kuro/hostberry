@@ -264,58 +264,58 @@
 
     <script>
     // Configurar modal con SSID seleccionado
-    $('#connectModal').on('show.bs.modal', function(event) {
-        const button = $(event.relatedTarget);
-        const ssid = button.data('ssid');
-        const security = button.data('security');
+    $('#connectModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var ssid = button.data('ssid');
+        var security = button.data('security');
+        var modal = $(this);
         
-        $('#ssid').val(ssid);
+        modal.find('#ssid').val(ssid);
         
         // Habilitar/deshabilitar campo de contraseña según seguridad
         if(security === '--' || !security || security === 'Abierta') {
-            $('#password').prop('disabled', true).val('');
+            modal.find('#password').prop('disabled', true).val('');
         } else {
-            $('#password').prop('disabled', false).focus();
+            modal.find('#password').prop('disabled', false).focus();
         }
     });
 
-    // Manejador del botón Connect
-    $('#connectBtn').click(async function() {
-        const btn = $(this);
-        const originalText = btn.html();
+    document.getElementById('connectBtn').addEventListener('click', async function() {
+        const btn = this;
+        const originalText = btn.innerHTML;
         
         // Mostrar estado de carga
-        btn.prop('disabled', true).html(
-            '<span class="spinner-border spinner-border-sm"></span> {% trans %}Connecting...{% endtrans %}'
-        );
+        btn.disabled = true;
+        btn.innerHTML = `
+            <span class="spinner-border spinner-border-sm" role="status"></span>
+            Conectando...
+        `;
         
         try {
             const response = await fetch('/wifi_connect', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
-                    ssid: $('#ssid').val(),
-                    password: $('#password').val()
+                    ssid: document.getElementById('ssid').value,
+                    password: document.getElementById('password').value
                 })
             });
             
             const data = await response.json();
             
             if (!response.ok || !data.success) {
-                throw new Error(data.error || '{% trans %}Connection failed{% endtrans %}');
+                throw new Error(data.error || 'Error al conectar');
             }
             
-            $('#connectModal').modal('hide');
-            setTimeout(() => location.reload(), 1000);
+            // Recargar tras conexión exitosa
+            window.location.reload();
             
         } catch (error) {
-            console.error('Connection error:', error);
             alert(`Error: ${error.message}`);
         } finally {
-            btn.prop('disabled', false).html(originalText);
+            // Restaurar estado del botón
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     });
     </script>
@@ -373,8 +373,9 @@
 {% block scripts %}
 {{ super() }}
 <script>
+// Initialize DataTable
 $(document).ready(function() {
-    // Initialize DataTable
+    // Connect button handler
 });
 </script>
 {% endblock %}
