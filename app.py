@@ -792,38 +792,65 @@ def wifi_scan():
         # Verificar si nmcli está disponible
         nmcli_path = subprocess.run(['which', 'nmcli'], capture_output=True, text=True)
         if not nmcli_path.stdout.strip():
-            raise Exception('nmcli no está instalado')
+            flash('nmcli no está instalado', 'danger')
+            return redirect(url_for('index'))
             
-        # Escanear redes
+        # Verificar estado WiFi
+        wifi_status = subprocess.run(['rfkill', 'list', 'wifi'], capture_output=True, text=True)
+        if 'Soft blocked: yes' in wifi_status.stdout:
+            flash('WiFi is disabled. Please enable WiFi first.', 'warning')
+            return redirect(url_for('index'))
+            
+        # Escanear redes con rescan primero
+        subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'rescan'], timeout=10)
+        
+        # Obtener lista completa de redes
         result = subprocess.run(
-            ['nmcli', '-t', '-f', 'SSID,SIGNAL,SECURITY', 'device', 'wifi', 'list'],
+            ['nmcli', '-t', '-f', 'SSID,SIGNAL,SECURITY,BSSID', 'device', 'wifi', 'list'],
             capture_output=True,
             text=True,
-            timeout=30  # Timeout de 30 segundos
+            timeout=30
         )
         
         if result.returncode != 0:
-            raise Exception(f'Error en nmcli: {result.stderr}')
+            raise Exception(result.stderr or 'Failed to scan networks')
+        
+        networks = []
+        current_connection = None
+        
+        # Obtener conexión actual
+        conn_result = subprocess.run(
+            ['nmcli', '-t', '-f', 'NAME,TYPE,DEVICE', 'connection', 'show', '--active'],
+            capture_output=True,
+            text=True
+        )
+        if conn_result.returncode == 0:
+            for line in conn_result.stdout.splitlines():
+                if 'wifi' in line.lower():
+                    current_connection = line.split(':')[0]
+                    break
         
         # Procesar resultados
-        networks = []
         for line in result.stdout.splitlines():
-            if line and line.count(':') >= 2:  # Verificar formato
+            if line and line.count(':') >= 3:
                 parts = line.split(':')
                 networks.append({
-                    'ssid': parts[0] if parts[0] else 'Oculta',
-                    'signal': f'{parts[1]}%',
-                    'security': parts[2] if parts[2] else 'Abierta'
+                    'ssid': parts[0] if parts[0] else 'Hidden Network',
+                    'signal': f'{min(100, int(parts[1]))}%',
+                    'security': parts[2] if parts[2] else 'Open',
+                    'bssid': parts[3]
                 })
         
-        return render_template('wifi_scan.html', networks=networks)
+        return render_template('wifi_scan.html', 
+                            networks=networks,
+                            current_connection=current_connection)
         
     except subprocess.TimeoutExpired:
-        app.logger.error('Tiempo de espera agotado para nmcli')
-        flash('El escaneo WiFi tardó demasiado', 'danger')
+        app.logger.error('WiFi scan timeout')
+        flash('WiFi scan timed out. Please try again.', 'danger')
     except Exception as e:
-        app.logger.error(f'Error escaneando redes: {str(e)}')
-        flash(f'Error al escanear: {str(e)}', 'danger')
+        app.logger.error(f'WiFi scan error: {str(e)}')
+        flash(f'Failed to scan WiFi networks: {str(e)}', 'danger')
         
     return redirect(url_for('index'))
 
@@ -871,67 +898,6 @@ def wifi_connect():
     except Exception as e:
         app.logger.error(f'WiFi connection error: {str(e)}')
         return jsonify({'success': False, 'error': 'Internal server error'}), 500
-
-@app.route('/wifi_scan')
-def wifi_scan():
-    try:
-        # Verificar si WiFi está activado
-        wifi_status = subprocess.run(['rfkill', 'list', 'wifi'], capture_output=True, text=True)
-        if 'Soft blocked: yes' in wifi_status.stdout:
-            flash('WiFi is disabled. Please enable WiFi first.', 'warning')
-            return redirect(url_for('index'))
-            
-        # Escanear redes con rescan primero
-        subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'rescan'], timeout=10)
-        
-        # Obtener lista de redes
-        result = subprocess.run(
-            ['nmcli', '-t', '-f', 'SSID,SIGNAL,SECURITY,BSSID', 'device', 'wifi', 'list'],
-            capture_output=True,
-            text=True,
-            timeout=30
-        )
-        
-        if result.returncode != 0:
-            raise Exception(result.stderr or 'Failed to scan networks')
-        
-        # Procesar resultados
-        networks = []
-        current_connection = None
-        
-        # Obtener conexión actual
-        conn_result = subprocess.run(
-            ['nmcli', '-t', '-f', 'NAME,TYPE,DEVICE', 'connection', 'show', '--active'],
-            capture_output=True,
-            text=True
-        )
-        if conn_result.returncode == 0:
-            for line in conn_result.stdout.splitlines():
-                if 'wifi' in line.lower():
-                    current_connection = line.split(':')[0]
-                    break
-        
-        for line in result.stdout.splitlines():
-            if line and line.count(':') >= 3:
-                parts = line.split(':')
-                networks.append({
-                    'ssid': parts[0] if parts[0] else 'Hidden Network',
-                    'signal': f'{min(100, int(parts[1]))}%',  # Asegurar máximo 100%
-                    'security': parts[2] if parts[2] else 'Open',
-                    'bssid': parts[3]
-                })
-        
-        return render_template('wifi_scan.html', 
-                            networks=networks,
-                            current_connection=current_connection)
-        
-    except subprocess.TimeoutExpired:
-        flash('WiFi scan timed out. Please try again.', 'danger')
-    except Exception as e:
-        app.logger.error(f'WiFi scan error: {str(e)}')
-        flash(f'Failed to scan WiFi networks: {str(e)}', 'danger')
-        
-    return redirect(url_for('index'))
 
 @app.route('/api/wifi_status', methods=['GET'])
 def wifi_status():
