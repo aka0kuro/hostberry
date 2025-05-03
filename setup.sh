@@ -32,6 +32,8 @@ if [ ! -f ".env" ]; then
     echo "Creating .env file with generated FLASK_SECRET_KEY..."
     SECRET_KEY=$(openssl rand -hex 32)
     echo "FLASK_SECRET_KEY=$SECRET_KEY" > .env
+    echo "DB_USER=hostberry" >> .env
+    echo "DB_PASS=$(openssl rand -hex 16)" >> .env
     echo "Please review and add other required configurations to the .env file"
 fi
 

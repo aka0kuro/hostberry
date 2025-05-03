@@ -21,14 +21,23 @@ from wtforms import BooleanField, SelectField
 import logging
 import logging.config
 import os
+import secrets
 
 # Initialize environment and logging
+if not os.path.exists('.env'):
+    with open('.env', 'w') as f:
+        secret_key = secrets.token_hex(32)
+        f.write(f"FLASK_SECRET_KEY={secret_key}\n")
+
 load_dotenv()
 
-app = Flask(__name__)
 secret_key = os.getenv('FLASK_SECRET_KEY')
-if not secret_key or secret_key == 'your-secure-key-here':
-    raise ValueError('Missing or invalid FLASK_SECRET_KEY in .env file')
+if not secret_key or len(secret_key) < 32:
+    secret_key = secrets.token_hex(32)
+    with open('.env', 'a') as f:
+        f.write(f"FLASK_SECRET_KEY={secret_key}\n")
+
+app = Flask(__name__)
 app.secret_key = secret_key
 
 # Configure secure session settings
