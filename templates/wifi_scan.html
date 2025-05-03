@@ -1,17 +1,29 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container mt-4">
-    <h2><i class="bi bi-wifi"></i> Redes WiFi Disponibles</h2>
-    
-    <div class="card shadow mt-4">
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">{% trans %}WiFi Networks{% endtrans %}</h6>
+            <div>
+                <button id="toggleWifi" class="btn btn-sm btn-{{ 'success' if wifi_enabled else 'danger' }}">
+                    <i class="fas fa-{{ 'wifi' if wifi_enabled else 'ban' }}"></i>
+                    {% if wifi_enabled %}{% trans %}Disable{% endtrans %}{% else %}{% trans %}Enable{% endtrans %}{% endif %}
+                </button>
+                <button id="rescanBtn" class="btn btn-sm btn-primary ml-2">
+                    <i class="fas fa-sync-alt"></i> {% trans %}Rescan{% endtrans %}
+                </button>
+            </div>
+        </div>
+        
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-bordered" id="wifiTable" width="100%" cellspacing="0">
                     <thead>
                         <tr>
-                            <th>Nombre (SSID)</th>
-                            <th>Señal</th>
-                            <th>Seguridad</th>
+                            <th>{% trans %}SSID{% endtrans %}</th>
+                            <th>{% trans %}Signal{% endtrans %}</th>
+                            <th>{% trans %}Security{% endtrans %}</th>
+                            <th>{% trans %}Actions{% endtrans %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -20,25 +32,50 @@
                             <td>{{ network.ssid }}</td>
                             <td>
                                 <div class="progress">
-                                    <div class="progress-bar" role="progressbar" 
-                                         style="width: {{ network.signal }}" 
-                                         aria-valuenow="{{ network.signal.split('%')[0] }}" 
-                                         aria-valuemin="0" 
+                                    <div class="progress-bar bg-{{ 'success' if network.signal|replace('%','')|int > 70 else 'warning' if network.signal|replace('%','')|int > 30 else 'danger' }}" 
+                                         role="progressbar" 
+                                         style="width: {{ network.signal|replace('%','') }}%"
+                                         aria-valuenow="{{ network.signal|replace('%','') }}"
+                                         aria-valuemin="0"
                                          aria-valuemax="100">
                                         {{ network.signal }}
                                     </div>
                                 </div>
                             </td>
-                            <td>{{ network.security }}</td>
+                            <td>
+                                {% if network.security == 'WPA2' %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-lock"></i> WPA2
+                                    </span>
+                                {% elif network.security == 'WPA' %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fas fa-lock"></i> WPA
+                                    </span>
+                                {% elif network.security == 'WEP' %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-unlock"></i> WEP
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-globe"></i> Open
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary connect-btn" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#connectModal"
+                                        data-ssid="{{ network.ssid }}"
+                                        data-security="{{ network.security }}"
+                                        {% if not wifi_enabled %}disabled{% endif %}>
+                                    <i class="fas fa-plug"></i> {% trans %}Connect{% endtrans %}
+                                </button>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            
-            <button class="btn btn-primary mt-3" onclick="location.reload()">
-                <i class="bi bi-arrow-repeat"></i> Volver a Escanear
-            </button>
         </div>
     </div>
 </div>
@@ -100,6 +137,70 @@
 {{ super() }}
 <script>
 $(document).ready(function() {
+    // Toggle WiFi
+    $('#toggleWifi').click(async function() {
+        const btn = $(this);
+        const originalText = btn.html();
+        
+        btn.prop('disabled', true).html(
+            '<span class="spinner-border spinner-border-sm"></span> Processing'
+        );
+        
+        try {
+            const response = await fetch('/api/{{ "disable" if wifi_enabled else "enable" }}_wifi', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || 'Operation failed');
+            }
+            
+            location.reload();
+        } catch (error) {
+            console.error('Error:', error);
+            alert(`Error: ${error.message}`);
+        } finally {
+            btn.prop('disabled', false).html(originalText);
+        }
+    });
+    
+    // Rescan networks
+    $('#rescanBtn').click(async function() {
+        const btn = $(this);
+        const originalText = btn.html();
+        
+        btn.prop('disabled', true).html(
+            '<span class="spinner-border spinner-border-sm"></span> Scanning'
+        );
+        
+        try {
+            const response = await fetch('/api/rescan_wifi', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || 'Scan failed');
+            }
+            
+            location.reload();
+        } catch (error) {
+            console.error('Error:', error);
+            alert(`Error: ${error.message}`);
+        } finally {
+            btn.prop('disabled', false).html(originalText);
+        }
+    });
+    
     // Manejador de conexión WiFi
     $(document).on('click', '#connectBtn', async function() {
         const btn = $(this);
