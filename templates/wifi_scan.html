@@ -42,23 +42,6 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-                                </button>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            
-            <button class="btn btn-primary mt-3" onclick="location.reload()">
-                <i class="bi bi-arrow-repeat"></i> Volver a Escanear
-            </button>
-        </div>
-    </div>
-</div>
 
 <!-- Modal para contraseña -->
 <div class="modal fade" id="passwordModal" tabindex="-1" aria-hidden="true">
@@ -77,96 +60,6 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" onclick="confirmConnection()">Conectar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-{% endblock %}
-
-{% block scripts %}
-{{ super() }}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-// Gráfico de intensidad
-const ctx = document.getElementById('signalChart').getContext('2d');
-const chart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: {{ networks|map(attribute='ssid')|list|tojson }},
-        datasets: [{
-            label: 'Intensidad de señal (%)',
-            data: {{ networks|map(attribute='signal')|map('replace', '%', '')|list|tojson }},
-            backgroundColor: 'rgba(54, 162, 235, 0.5)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        scales: {
-            y: {
-                beginAtZero: true,
-                max: 100
-            }
-        }
-    }
-});
-
-// Conexión a red
-function connectToNetwork(ssid) {
-    document.getElementById('networkName').textContent = ssid;
-    const modal = new bootstrap.Modal(document.getElementById('passwordModal'));
-    modal.show();
-}
-
-function confirmConnection() {
-    const ssid = document.getElementById('networkName').textContent;
-    const password = document.getElementById('wifiPassword').value;
-    
-    fetch('/wifi_connect', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ssid, password})
-    })
-    .then(response => response.json())
-    .then(data => {
-        if(data.success) {
-            alert('¡Conectado exitosamente a ' + ssid + '!');
-            location.reload();
-        } else {
-            alert('Error: ' + data.error);
-        }
-    });
-}
-</script>
-{% endblock %}
-
-                backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100
-                }
-            }
-        }
-    });
-});
-</script>
-{% endblock %}
-
-                                    <i class="bi bi-plug"></i> {% trans %}Connect{% endtrans %}
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
@@ -206,178 +99,46 @@ function confirmConnection() {
 {% block scripts %}
 {{ super() }}
 <script>
-// Initialize DataTable
 $(document).ready(function() {
-    $('#wifiTable').DataTable({
-        "pageLength": 10,
-        "order": [[1, 'desc']]
-    });
-
-    // Connect modal handler
-    $('#connectModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget);
-        var ssid = button.data('ssid');
-        var security = button.data('security');
+    // Manejador de conexión WiFi
+    $(document).on('click', '#connectBtn', async function() {
+        const btn = $(this);
+        const originalText = btn.html();
         
-        var modal = $(this);
-        modal.find('.modal-title').text('Connect to: ' + ssid);
-        modal.find('#ssid').val(ssid);
+        // Mostrar estado de carga
+        btn.prop('disabled', true).html(
+            '<span class="spinner-border spinner-border-sm"></span> {% trans %}Connecting...{% endtrans %}'
+        );
         
-        if(security === '--') {
-            modal.find('#password').prop('disabled', true).val('');
-        } else {
-            modal.find('#password').prop('disabled', false);
+        try {
+            const response = await fetch('/wifi_connect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    ssid: $('#ssid').val(),
+                    password: $('#password').val()
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || '{% trans %}Connection failed{% endtrans %}');
+            }
+            
+            // Recargar después de 1 segundo
+            setTimeout(() => location.reload(), 1000);
+            
+        } catch (error) {
+            console.error('Connection error:', error);
+            alert(`Error: ${error.message}`);
+        } finally {
+            btn.prop('disabled', false).html(originalText);
         }
     });
-
-    // Connect button handler
-    $('#connectBtn').click(function() {
-        var ssid = $('#ssid').val();
-        var password = $('#password').val();
-        
-        $.post('/wifi_connect', {
-            ssid: ssid,
-            password: password
-        }, function(data) {
-            if(data.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + data.error);
-            }
-        }).fail(function() {
-            alert('Connection failed');
-        });
-    });
-});
-</script>
-{% endblock %}
-
-    // Connect button handler
-    $('#connectBtn').click(function() {
-        var ssid = $('#ssid').val();
-        var password = $('#password').val();
-        
-        $.post('/wifi_connect', {
-            ssid: ssid,
-            password: password
-        }, function(data) {
-            if(data.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + data.error);
-            }
-        }).fail(function() {
-            alert('Connection failed');
-        });
-    });
-});
-</script>
-{% endblock %}
-
-            modal.find('#password').prop('disabled', true).val('');
-        } else {
-            modal.find('#password').prop('disabled', false);
-        }
-    });
-
-    // Connect button handler
-    $('#connectBtn').click(function() {
-        var ssid = $('#ssid').val();
-        var password = $('#password').val();
-        
-        $.post('/wifi_connect', {
-            ssid: ssid,
-            password: password
-        }, function(data) {
-            if(data.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + data.error);
-            }
-        }).fail(function() {
-            alert('Connection failed');
-        });
-    });
-});
-</script>
-{% endblock %}
-
-$(document).ready(function() {
-    // Connect modal handler
-    $('#connectModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget);
-        var ssid = button.data('ssid');
-        var security = button.data('security');
-        
-        var modal = $(this);
-        modal.find('.modal-title').text('Connect to: ' + ssid);
-        modal.find('#ssid').val(ssid);
-        
-        if(security === '--') {
-            modal.find('#password').prop('disabled', true).val('');
-        } else {
-            modal.find('#password').prop('disabled', false);
-        }
-    });
-
-    // Connect button handler
-    $('#connectBtn').click(function() {
-        var ssid = $('#ssid').val();
-        var password = $('#password').val();
-        
-        $.post('/wifi_connect', {
-            ssid: ssid,
-            password: password
-        }, function(data) {
-            if(data.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + data.error);
-            }
-        }).fail(function() {
-            alert('Connection failed');
-        });
-    });
-});
-</script>
-{% endblock %}
-
-        var password = $('#password').val();
-        
-        $.post('/wifi_connect', {
-            ssid: ssid,
-            password: password
-        }, function(data) {
-            if(data.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + data.error);
-            }
-        }).fail(function() {
-            alert('Connection failed');
-        });
-    });
-});
-</script>
-{% endblock %}
-
-});
-</script>
-{% endblock %}
-
-            window.location.reload();
-        }, 2000);
-    });
-    </script>
-</div>
-{% endblock %}
-
-{% block scripts %}
-{{ super() }}
-<script>
-// Initialize DataTable
-$(document).ready(function() {
-    // Connect button handler
 });
 </script>
 {% endblock %}

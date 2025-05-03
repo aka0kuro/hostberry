@@ -832,37 +832,36 @@ def wifi_connect():
     try:
         data = request.get_json()
         if not data or 'ssid' not in data:
-            return jsonify({'success': False, 'error': 'Datos inválidos'}), 400
+            return jsonify({'success': False, 'error': 'Invalid request data'}), 400
             
         ssid = data['ssid'].strip()
         password = data.get('password', '').strip()
         
         # Validar parámetros
         if not ssid:
-            return jsonify({'success': False, 'error': 'SSID no puede estar vacío'}), 400
+            return jsonify({'success': False, 'error': 'SSID cannot be empty'}), 400
             
-        # Construir comando
+        # Construir comando nmcli
+        cmd = ['nmcli', 'device', 'wifi', 'connect', f'"{ssid}"']
         if password:
-            cmd = ["nmcli", "device", "wifi", "connect", f'"{ssid}"', "password", f'"{password}"']
-        else:
-            cmd = ["nmcli", "device", "wifi", "connect", f'"{ssid}"']
+            cmd.extend(['password', f'"{password}"'])
             
-        # Ejecutar
+        # Ejecutar comando
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
-            timeout=60
+            timeout=30
         )
         
         if result.returncode == 0:
             return jsonify({'success': True})
         else:
-            error_msg = result.stderr.split('\n')[0] if result.stderr else 'Error desconocido'
+            error_msg = result.stderr.split('\n')[0] if result.stderr else 'Unknown error'
             return jsonify({'success': False, 'error': error_msg}), 400
             
     except subprocess.TimeoutExpired:
-        return jsonify({'success': False, 'error': 'Tiempo de espera agotado'}), 408
+        return jsonify({'success': False, 'error': 'Connection timeout'}), 408
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
