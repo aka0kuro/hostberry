@@ -200,17 +200,39 @@
                         <div class="progress">
                             <div class="progress-bar bg-{{ 'success' if network.signal|int > 70 else 'warning' if network.signal|int > 40 else 'danger' }}" 
                                  style="width: {{ network.signal }}%">
-                                {{ network.signal }}%
+                                {{ network.signal|replace('%%', '%') }}
                             </div>
                         </div>
                     </div>
-                    <button class="btn btn-primary btn-block mt-2 btn-connect" 
-                            data-bs-toggle="modal" 
-                            data-bs-target="#connectModal"
-                            data-ssid="{{ network.ssid }}"
-                            data-security="{{ network.security }}">
-                        <i class="bi bi-wifi"></i> Conectar
-                    </button>
+                    <table class="table table-striped wifi-table">
+                        <tbody>
+                            <tr>
+                                <th>{% trans %}SSID{% endtrans %}</th>
+                                <td>{{ network.ssid }}</td>
+                            </tr>
+                            <tr>
+                                <th>{% trans %}Security{% endtrans %}</th>
+                                <td>{{ network.security }}</td>
+                            </tr>
+                            <tr>
+                                <th>{% trans %}Signal{% endtrans %}</th>
+                                <td>{{ network.signal|replace('%%', '%') }}</td>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <td>
+                                    <button class="btn btn-sm btn-connect" 
+                                            data-toggle="modal" 
+                                            data-target="#connectModal"
+                                            data-ssid="{{ network.ssid }}"
+                                            data-security="{{ network.security }}"
+                                            data-signal="{{ network.signal }}">
+                                        <i class="bi bi-wifi"></i> {% trans %}Connect{% endtrans %}
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -223,29 +245,43 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="connectModalLabel">{% trans %}Connect to Network{% endtrans %}</h5>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form id="wifiConnectForm">
+                    <form id="connectForm">
                         <div class="form-group">
-                            <label for="ssid">{% trans %}Network Name{% endtrans %}</label>
-                            <input type="text" class="form-control" id="ssid" readonly>
+                            <label for="ssid">{% trans %}Network Name (SSID){% endtrans %}</label>
+                            <input type="text" class="form-control" id="ssid" name="ssid" readonly>
                         </div>
                         <div class="form-group">
                             <label for="password">{% trans %}Password{% endtrans %}</label>
-                            <input type="password" class="form-control" id="password" placeholder="{% trans %}Enter password{% endtrans %}">
+                            <input type="password" class="form-control" id="password" name="password" placeholder="{% trans %}Leave empty for open networks{% endtrans %}">
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">{% trans %}Cancel{% endtrans %}</button>
-                    <button class="btn btn-primary" id="connectBtn">{% trans %}Connect{% endtrans %}</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans %}Cancel{% endtrans %}</button>
+                    <button type="button" class="btn btn-primary" id="connectBtn">{% trans %}Connect{% endtrans %}</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+    // Configurar modal con SSID seleccionado
+    $('#connectModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var ssid = button.data('ssid');
+        var security = button.data('security');
+        var signal = button.data('signal');
+        var modal = $(this);
+        modal.find('#ssid').val(ssid);
+        modal.find('#security').val(security);
+        modal.find('#signal').val(signal);
+    });
+    </script>
 
     <!-- Script para verificar estado WiFi -->
     <script>
@@ -303,23 +339,6 @@
 <script>
 // Initialize DataTable
 $(document).ready(function() {
-    // Connect modal handler
-    $('#connectModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget);
-        var ssid = button.data('ssid');
-        var security = button.data('security');
-        
-        var modal = $(this);
-        modal.find('.modal-title').text('Connect to: ' + ssid);
-        modal.find('#ssid').val(ssid);
-        
-        if(security === '--') {
-            modal.find('#password').prop('disabled', true).val('');
-        } else {
-            modal.find('#password').prop('disabled', false);
-        }
-    });
-
     // Connect button handler
     $('#connectBtn').click(function() {
         var ssid = $('#ssid').val();
