@@ -1,326 +1,202 @@
 {% extends 'base.html' %}
-
-{% block title %}{% trans %}WiFi Scanner{% endtrans %}{% endblock %}
-
 {% block content %}
-<div class="container-fluid">
-    <!-- Mensaje de estado WiFi -->
-    <div id="wifiStatusAlert" class="alert alert-warning d-none">
-        <i class="bi bi-wifi-off"></i>
-        <span id="wifiStatusText"></span>
-        <button id="enableWifiBtn" class="btn btn-sm btn-success ms-2 d-none">
-            <i class="bi bi-power"></i> {% trans %}Enable WiFi{% endtrans %}
-        </button>
-    </div>
-
-    <!-- Mensajes de error -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="alert alert-danger mt-3">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                {% for category, message in messages %}
-                    {{ message }}
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-
-    <!-- Encabezado y botón de rescan -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            <i class="bi bi-wifi"></i> {% trans %}WiFi Networks{% endtrans %}
-        </h1>
-        <button id="rescanBtn" class="btn btn-primary">
-            <span id="rescanText">{% trans %}Rescan{% endtrans %}</span>
-            <span id="rescanSpinner" class="spinner-border spinner-border-sm d-none"></span>
-        </button>
-    </div>
-
-    <!-- Mobile Optimization -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <style>
-        /* Estilos optimizados para móviles */
-        .wifi-table th:nth-child(3),
-        .wifi-table td:nth-child(3) {
-            display: none;
-        }
-
-        .network-card {
-            transition: all 0.3s ease;
-            margin-bottom: 15px;
-        }
-        
-        .network-card:hover {
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        }
-        
-        .btn-connect {
-            white-space: nowrap;
-        }
-
-        @media (max-width: 768px) {
-            .stats-card {
-                margin-bottom: 15px;
-            }
-            
-            .table-responsive {
-                display: block;
-                width: 100%;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            .btn-connect {
-                padding: 8px 12px;
-                font-size: 14px;
-            }
-            
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .progress {
-                height: 25px;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .card-body {
-                padding: 1rem;
-            }
-            
-            body {
-                font-size: 16px;
-            }
-            
-            .modal-dialog {
-                margin: 0.5rem auto;
-            }
-        }
-        
-        /* Mejoras visuales */
-        .signal-indicator .progress-bar {
-            font-weight: bold;
-            color: #000;
-            text-shadow: 0 0 2px rgba(255,255,255,0.5);
-        }
-        
-        #connectModal .modal-body {
-            padding-bottom: 0;
-        }
-        
-        .connection-status {
-            font-weight: bold;
-        }
-        
-        .connected {
-            color: #28a745;
-        }
-        
-        .disconnected {
-            color: #dc3545;
-        }
-    </style>
-
-    <!-- Stats Cards -->
-    <div class="row mb-4">
-        <!-- Total Networks -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                {% trans %}Available Networks{% endtrans %}
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ networks|length }}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-wifi fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Strongest Signal -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                {% trans %}Strongest Signal{% endtrans %}
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ networks|map(attribute='signal')|max }}%
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-bar-chart-line fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Secured Networks -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                {% trans %}Secured Networks{% endtrans %}
-                            </div>
-                            <div class="row no-gutters align-items-center">
-                                <div class="col-auto">
-                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">
-                                        {{ networks|selectattr('security', '!=', '--')|list|length }}
+<div class="container mt-4">
+    <h2><i class="bi bi-wifi"></i> Redes WiFi Disponibles</h2>
+    
+    <div class="card shadow mt-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nombre (SSID)</th>
+                            <th>Señal</th>
+                            <th>Seguridad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for network in networks %}
+                        <tr>
+                            <td>{{ network.ssid }}</td>
+                            <td>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ network.signal }}" 
+                                         aria-valuenow="{{ network.signal.split('%')[0] }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ network.signal }}
                                     </div>
                                 </div>
-                                <div class="col">
-                                    <div class="progress progress-sm mr-2">
-                                        <div class="progress-bar bg-info" role="progressbar" 
-                                             style="width: {{ (networks|selectattr('security', '!=', '--')|list|length / networks|length * 100) if networks|length > 0 else 0 }}%" 
-                                             aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-shield-lock fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+                            </td>
+                            <td>{{ network.security }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <button class="btn btn-primary mt-3" onclick="location.reload()">
+                <i class="bi bi-arrow-repeat"></i> Volver a Escanear
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <button class="btn btn-primary mt-3" onclick="location.reload()">
+                <i class="bi bi-arrow-repeat"></i> Volver a Escanear
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para contraseña -->
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Conectar a <span id="networkName"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="wifiPassword" class="form-label">Contraseña WiFi</label>
+                    <input type="password" class="form-control" id="wifiPassword">
                 </div>
             </div>
-        </div>
-
-        <!-- Current Connection -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                {% trans %}Current Connection{% endtrans %}
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800 connection-status {% if current_connection %}connected{% else %}disconnected{% endif %}">
-                                {{ current_connection or 'Disconnected' }}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-activity fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmConnection()">Conectar</button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Network Cards -->
-    <div class="row g-2">
-        {% for network in networks %}
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="card network-card {% if current_connection == network.ssid %}border-success{% endif %}">
-                <div class="card-body">
-                    <h5 class="card-title d-flex justify-content-between">
-                        <span>{{ network.ssid }}</span>
-                        {% if current_connection == network.ssid %}
-                            <span class="badge bg-success">{% trans %}Connected{% endtrans %}</span>
-                        {% endif %}
-                    </h5>
-                    <div class="signal-indicator mb-3">
-                        <div class="progress">
-                            <div class="progress-bar bg-{{ 'success' if network.signal|int > 70 else 'warning' if network.signal|int > 40 else 'danger' }}" 
-                                 style="width: {{ network.signal|replace('%', '') }}%">
-                                {{ network.signal|replace('%', '') }}%
-                            </div>
-                        </div>
-                    </div>
-                    <table class="table table-striped wifi-table">
-                        <tbody>
-                            <tr>
-                                <th>{% trans %}Security{% endtrans %}</th>
-                                <td>{{ network.security or 'Open' }}</td>
-                            </tr>
-                            <tr>
-                                <th>{% trans %}Signal{% endtrans %}</th>
-                                <td>{{ network.signal|replace('%', '') }}%</td>
-                            </tr>
-                            <tr>
-                                <th></th>
-                                <td class="text-end">
-                                    <button class='btn btn-sm btn-connect btn-{{ "outline-success" if current_connection == network.ssid else "primary" }}' 
-                                            data-toggle='modal' 
-                                            data-target='#connectModal' 
-                                            data-ssid='{{ network.ssid }}' 
-                                            data-security='{{ network.security if network.security else "Open" }}'>
-                                        <i class='bi bi-wifi'></i> 
-                                        {% if current_connection == network.ssid %}
-                                            {% trans %}Reconnect{% endtrans %}
-                                        {% else %}
-                                            {% trans %}Connect{% endtrans %}
-                                        {% endif %}
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Gráfico de intensidad
+const ctx = document.getElementById('signalChart').getContext('2d');
+const chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: {{ networks|map(attribute='ssid')|list|tojson }},
+        datasets: [{
+            label: 'Intensidad de señal (%)',
+            data: {{ networks|map(attribute='signal')|map('replace', '%', '')|list|tojson }},
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    }
+});
+
+// Conexión a red
+function connectToNetwork(ssid) {
+    document.getElementById('networkName').textContent = ssid;
+    const modal = new bootstrap.Modal(document.getElementById('passwordModal'));
+    modal.show();
+}
+
+function confirmConnection() {
+    const ssid = document.getElementById('networkName').textContent;
+    const password = document.getElementById('wifiPassword').value;
+    
+    fetch('/wifi_connect', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ssid, password})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            alert('¡Conectado exitosamente a ' + ssid + '!');
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    });
+}
+</script>
+{% endblock %}
+
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+
+                                    <i class="bi bi-plug"></i> {% trans %}Connect{% endtrans %}
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-        {% endfor %}
     </div>
+</div>
 
-    <!-- Connect Modal -->
-    <div class="modal fade" id="connectModal" tabindex="-1" role="dialog" aria-labelledby="connectModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="connectModalLabel">{% trans %}Connect to Network{% endtrans %}</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="connectForm">
-                        <div class="form-group">
-                            <label for="ssid">{% trans %}Network Name (SSID){% endtrans %}</label>
-                            <input type="text" class="form-control" id="ssid" name="ssid" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label for="password">{% trans %}Password{% endtrans %}</label>
-                            <input type="password" class="form-control" id="password" name="password" placeholder="{% trans %}Leave empty for open networks{% endtrans %}">
-                            <small class="form-text text-muted">
-                                {% trans %}For WEP/WPA/WPA2 secured networks{% endtrans %}
-                            </small>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans %}Cancel{% endtrans %}</button>
-                    <button type="button" class="btn btn-primary" id="connectBtn">{% trans %}Connect{% endtrans %}</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Error Toast -->
-    <div class="position-fixed bottom-0 right-0 p-3" style="z-index: 5; right: 0; bottom: 0;">
-        <div id="errorToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true" data-delay="5000">
-            <div class="toast-header bg-danger text-white">
-                <strong class="mr-auto">{% trans %}Error{% endtrans %}</strong>
-                <button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+<!-- Connect Modal -->
+<div class="modal fade" id="connectModal" tabindex="-1" role="dialog" aria-labelledby="connectModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="connectModalLabel">{% trans %}Connect to Network{% endtrans %}</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
                 </button>
             </div>
-            <div class="toast-body" id="errorToastBody">
-                {% trans %}An error occurred while connecting{% endtrans %}
+            <div class="modal-body">
+                <form id="wifiConnectForm">
+                    <div class="form-group">
+                        <label for="ssid">{% trans %}Network Name{% endtrans %}</label>
+                        <input type="text" class="form-control" id="ssid" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">{% trans %}Password{% endtrans %}</label>
+                        <input type="password" class="form-control" id="password" placeholder="{% trans %}Enter password{% endtrans %}">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">{% trans %}Cancel{% endtrans %}</button>
+                <button class="btn btn-primary" id="connectBtn">{% trans %}Connect{% endtrans %}</button>
             </div>
         </div>
     </div>
@@ -330,114 +206,178 @@
 {% block scripts %}
 {{ super() }}
 <script>
-// Configuración global de eventos
+// Initialize DataTable
 $(document).ready(function() {
-    // 1. Manejador de conexión WiFi
-    $(document).on('click', '#connectBtn', async function() {
-        const btn = $(this);
-        const originalHtml = btn.html();
-        const modal = $('#connectModal');
-        
-        // Estado de carga
-        btn.prop('disabled', true).html(
-            '<span class="spinner-border spinner-border-sm"></span> {% trans %}Connecting...{% endtrans %}'
-        );
-        
-        try {
-            const formData = {
-                ssid: $('#ssid').val(),
-                password: $('#password').val()
-            };
-            
-            console.log('Enviando datos de conexión:', formData);
-            
-            const response = await fetch('/wifi_connect', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify(formData)
-            });
-            
-            const data = await response.json();
-            console.log('Respuesta del servidor:', data);
-            
-            if (!response.ok || !data.success) {
-                throw new Error(data.error || '{% trans %}Connection failed{% endtrans %}');
-            }
-            
-            // Éxito - recargar después de 1s
-            modal.modal('hide');
-            setTimeout(() => location.reload(), 1000);
-            
-        } catch (error) {
-            console.error('Error de conexión:', error);
-            $('#errorToastBody').text(error.message);
-            $('#errorToast').toast('show');
-        } finally {
-            btn.prop('disabled', false).html(originalHtml);
-        }
+    $('#wifiTable').DataTable({
+        "pageLength": 10,
+        "order": [[1, 'desc']]
     });
-    
-    // 2. Manejador de rescan
-    $(document).on('click', '#rescanBtn', async function() {
-        const btn = $(this);
-        const originalHtml = btn.html();
-        
-        btn.prop('disabled', true).html(
-            '<span class="spinner-border spinner-border-sm"></span> {% trans %}Scanning...{% endtrans %}'
-        );
-        
-        try {
-            console.log('Iniciando rescan WiFi');
-            
-            const response = await fetch('/api/rescan_wifi', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                }
-            });
-            
-            const data = await response.json();
-            console.log('Respuesta de rescan:', data);
-            
-            if (!response.ok || !data.success) {
-                throw new Error(data.error || '{% trans %}Scan failed{% endtrans %}');
-            }
-            
-            // Éxito - recargar
-            location.reload();
-            
-        } catch (error) {
-            console.error('Error en rescan:', error);
-            $('#errorToastBody').text(error.message);
-            $('#errorToast').toast('show');
-        } finally {
-            btn.prop('disabled', false).html(originalHtml);
-        }
-    });
-    
-    // 3. Configuración inicial
-    checkWifiStatus();
-});
 
-// Función para verificar estado WiFi
-function checkWifiStatus() {
-    fetch('/api/wifi_status')
-        .then(response => response.json())
-        .then(data => {
-            const alert = $('#wifiStatusAlert');
-            const text = $('#wifiStatusText');
-            const btn = $('#enableWifiBtn');
-            
-            if (!data.enabled) {
-                alert.removeClass('d-none');
-                text.text('{% trans %}WiFi is disabled{% endtrans %}');
-                btn.removeClass('d-none');
+    // Connect modal handler
+    $('#connectModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var ssid = button.data('ssid');
+        var security = button.data('security');
+        
+        var modal = $(this);
+        modal.find('.modal-title').text('Connect to: ' + ssid);
+        modal.find('#ssid').val(ssid);
+        
+        if(security === '--') {
+            modal.find('#password').prop('disabled', true).val('');
+        } else {
+            modal.find('#password').prop('disabled', false);
+        }
+    });
+
+    // Connect button handler
+    $('#connectBtn').click(function() {
+        var ssid = $('#ssid').val();
+        var password = $('#password').val();
+        
+        $.post('/wifi_connect', {
+            ssid: ssid,
+            password: password
+        }, function(data) {
+            if(data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
             }
-        })
-        .catch(error => console.error('Error:', error));
-}
+        }).fail(function() {
+            alert('Connection failed');
+        });
+    });
+});
+</script>
+{% endblock %}
+
+    // Connect button handler
+    $('#connectBtn').click(function() {
+        var ssid = $('#ssid').val();
+        var password = $('#password').val();
+        
+        $.post('/wifi_connect', {
+            ssid: ssid,
+            password: password
+        }, function(data) {
+            if(data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        }).fail(function() {
+            alert('Connection failed');
+        });
+    });
+});
+</script>
+{% endblock %}
+
+            modal.find('#password').prop('disabled', true).val('');
+        } else {
+            modal.find('#password').prop('disabled', false);
+        }
+    });
+
+    // Connect button handler
+    $('#connectBtn').click(function() {
+        var ssid = $('#ssid').val();
+        var password = $('#password').val();
+        
+        $.post('/wifi_connect', {
+            ssid: ssid,
+            password: password
+        }, function(data) {
+            if(data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        }).fail(function() {
+            alert('Connection failed');
+        });
+    });
+});
+</script>
+{% endblock %}
+
+$(document).ready(function() {
+    // Connect modal handler
+    $('#connectModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var ssid = button.data('ssid');
+        var security = button.data('security');
+        
+        var modal = $(this);
+        modal.find('.modal-title').text('Connect to: ' + ssid);
+        modal.find('#ssid').val(ssid);
+        
+        if(security === '--') {
+            modal.find('#password').prop('disabled', true).val('');
+        } else {
+            modal.find('#password').prop('disabled', false);
+        }
+    });
+
+    // Connect button handler
+    $('#connectBtn').click(function() {
+        var ssid = $('#ssid').val();
+        var password = $('#password').val();
+        
+        $.post('/wifi_connect', {
+            ssid: ssid,
+            password: password
+        }, function(data) {
+            if(data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        }).fail(function() {
+            alert('Connection failed');
+        });
+    });
+});
+</script>
+{% endblock %}
+
+        var password = $('#password').val();
+        
+        $.post('/wifi_connect', {
+            ssid: ssid,
+            password: password
+        }, function(data) {
+            if(data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        }).fail(function() {
+            alert('Connection failed');
+        });
+    });
+});
+</script>
+{% endblock %}
+
+});
+</script>
+{% endblock %}
+
+            window.location.reload();
+        }, 2000);
+    });
+    </script>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// Initialize DataTable
+$(document).ready(function() {
+    // Connect button handler
+});
 </script>
 {% endblock %}
