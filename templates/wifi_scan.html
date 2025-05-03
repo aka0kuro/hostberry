@@ -243,11 +243,9 @@
                     </button>
                 </div>
                 <div class="modal-body">
+                    <p id="modalNetworkName"></p>
+                    <p id="modalNetworkSecurity"></p>
                     <form id="connectForm">
-                        <div class="form-group">
-                            <label for="ssid">{% trans %}Network Name (SSID){% endtrans %}</label>
-                            <input type="text" class="form-control" id="ssid" name="ssid" readonly>
-                        </div>
                         <div class="form-group">
                             <label for="password">{% trans %}Password{% endtrans %}</label>
                             <input type="password" class="form-control" id="password" name="password" placeholder="{% trans %}Leave empty for open networks{% endtrans %}">
@@ -256,7 +254,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans %}Cancel{% endtrans %}</button>
-                    <button type="button" class="btn btn-primary" id="connectBtn">{% trans %}Connect{% endtrans %}</button>
+                    <button type="button" class="btn btn-primary" id="confirmConnect">{% trans %}Connect{% endtrans %}</button>
                 </div>
             </div>
         </div>
@@ -264,58 +262,62 @@
 
     <script>
     // Configurar modal con SSID seleccionado
-    $('#connectModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget);
-        var ssid = button.data('ssid');
-        var security = button.data('security');
-        var modal = $(this);
+    $('#connectModal').on('show.bs.modal', function(event) {
+        const button = $(event.relatedTarget);
+        const ssid = button.data('ssid');
+        const security = button.data('security');
         
-        modal.find('#ssid').val(ssid);
+        $('#modalNetworkName').text(ssid);
+        $('#modalNetworkSecurity').html(
+            '<i class="fas fa-' + (security === '--' ? 'unlock' : 'lock') + '"></i> ' +
+            (security === '--' ? 'Open Network' : security + ' Encryption')
+        );
         
-        // Habilitar/deshabilitar campo de contraseña según seguridad
-        if(security === '--' || !security || security === 'Abierta') {
-            modal.find('#password').prop('disabled', true).val('');
+        // Habilitar/deshabilitar campo de contraseña
+        if(security === '--') {
+            $('#password').prop('disabled', true).val('').attr('placeholder', 'Open network (no password)');
         } else {
-            modal.find('#password').prop('disabled', false).focus();
+            $('#password').prop('disabled', false).attr('placeholder', 'Enter WiFi password').focus();
         }
     });
 
-    document.getElementById('connectBtn').addEventListener('click', async function() {
-        const btn = this;
-        const originalText = btn.innerHTML;
+    // Manejador del botón Connect
+    $('#confirmConnect').click(async function() {
+        const btn = $(this);
+        const originalText = btn.html();
         
         // Mostrar estado de carga
-        btn.disabled = true;
-        btn.innerHTML = `
-            <span class="spinner-border spinner-border-sm" role="status"></span>
-            Conectando...
-        `;
+        btn.prop('disabled', true).html(
+            '<span class="spinner-border spinner-border-sm"></span> Connecting...'
+        );
         
         try {
             const response = await fetch('/wifi_connect', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
                 body: JSON.stringify({
-                    ssid: document.getElementById('ssid').value,
-                    password: document.getElementById('password').value
+                    ssid: $('#modalNetworkName').text(),
+                    password: $('#password').val()
                 })
             });
             
             const data = await response.json();
             
             if (!response.ok || !data.success) {
-                throw new Error(data.error || 'Error al conectar');
+                throw new Error(data.error || 'Connection failed');
             }
             
-            // Recargar tras conexión exitosa
-            window.location.reload();
+            $('#connectModal').modal('hide');
+            setTimeout(() => location.reload(), 1000);
             
         } catch (error) {
-            alert(`Error: ${error.message}`);
+            console.error('Error:', error);
+            alert('Error: ' + error.message);
         } finally {
-            // Restaurar estado del botón
-            btn.disabled = false;
-            btn.innerHTML = originalText;
+            btn.prop('disabled', false).html(originalText);
         }
     });
     </script>
