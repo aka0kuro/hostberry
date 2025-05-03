@@ -28,3 +28,4 @@ six==1.17.0
 webencodings==0.5.1
 Werkzeug==2.3.7
 WTForms==3.1.2
+psutils==5.0.0

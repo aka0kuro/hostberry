@@ -305,10 +305,25 @@ def index():
         
         stats = get_system_stats()
         
+        log_file = '/opt/hostberry/logs/hostberry.log'
+        log_lines = []
+        logs_available = False
+        
+        try:
+            if os.path.isfile(log_file):
+                with open(log_file, 'r') as f:
+                    log_lines = f.readlines()[-100:]  # Get last 100 lines
+                    log_lines.reverse()
+                logs_available = True
+        except IOError:
+            pass
+        
         response = make_response(render_template(
             'index.html',
             title=_('Index'),
             stats=stats,
+            logs_available=logs_available,
+            log_lines=log_lines,
             current_lang=get_locale()
         ))
         
