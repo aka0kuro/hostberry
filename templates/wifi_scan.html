@@ -268,15 +268,43 @@
         var button = $(event.relatedTarget);
         var ssid = button.data('ssid');
         var security = button.data('security');
-        var signal = button.data('signal');
         var modal = $(this);
+        
         modal.find('#ssid').val(ssid);
-        modal.find('#security').val(security);
-        modal.find('#signal').val(signal);
+        
+        // Habilitar/deshabilitar campo de contraseña según seguridad
+        if(security === '--' || !security || security === 'Abierta') {
+            modal.find('#password').prop('disabled', true).val('');
+        } else {
+            modal.find('#password').prop('disabled', false).focus();
+        }
+    });
+
+    // Manejador de conexión
+    $('#connectBtn').click(function() {
+        var ssid = $('#ssid').val();
+        var password = $('#password').val();
+        
+        // Mostrar spinner durante la conexión
+        $(this).html('<span class="spinner-border spinner-border-sm"></span> Conectando...');
+        
+        $.post('/wifi_connect', {
+            ssid: ssid,
+            password: password
+        }).done(function(data) {
+            if(data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Failed to connect'));
+                $('#connectBtn').html('{% trans %}Connect{% endtrans %}');
+            }
+        }).fail(function() {
+            alert('Connection failed');
+            $('#connectBtn').html('{% trans %}Connect{% endtrans %}');
+        });
     });
     </script>
 
-    <!-- Script para verificar estado WiFi -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         fetch('/api/wifi_status')
@@ -333,23 +361,6 @@
 // Initialize DataTable
 $(document).ready(function() {
     // Connect button handler
-    $('#connectBtn').click(function() {
-        var ssid = $('#ssid').val();
-        var password = $('#password').val();
-        
-        $.post('/wifi_connect', {
-            ssid: ssid,
-            password: password
-        }, function(data) {
-            if(data.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + data.error);
-            }
-        }).fail(function() {
-            alert('Connection failed');
-        });
-    });
 });
 </script>
 {% endblock %}
