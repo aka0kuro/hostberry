@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}{% trans %}AdBlock Configuration{% endtrans %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="page-title"><i class="bi bi-shield-shaded me-2"></i>{% trans %}AdBlock Configuration{% endtrans %}</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-folder-symlink me-2"></i>{% trans %}Block Lists{% endtrans %}
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('adblock_config') }}">
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="adblock_enabled" name="adblock_enabled" {% if config.ADBLOCK_ENABLED %}checked{% endif %}>
+                            <label class="form-check-label" for="adblock_enabled">{% trans %}Enable AdBlock{% endtrans %}</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">{% trans %}Save Settings{% endtrans %}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-arrow-repeat me-2"></i>{% trans %}Update Lists{% endtrans %}
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('adblock_update') }}" class="btn btn-secondary">
+                        <i class="bi bi-cloud-arrow-down me-1"></i>{% trans %}Update Now{% endtrans %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

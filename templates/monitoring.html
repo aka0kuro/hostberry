@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}{% trans %}System Monitoring{% endtrans %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="page-title"><i class="bi bi-graph-up me-2"></i>{% trans %}System Monitoring{% endtrans %}</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-sliders me-2"></i>{% trans %}Monitoring Settings{% endtrans %}
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('monitoring_config') }}">
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="enable_monitoring" name="enable_monitoring" {% if config.MONITORING_ENABLED %}checked{% endif %}>
+                            <label class="form-check-label" for="enable_monitoring">{% trans %}Enable Monitoring{% endtrans %}</label>
+                        </div>
+                        <div class="mb-3">
+                            <label for="update_interval" class="form-label">{% trans %}Update Interval (seconds){% endtrans %}</label>
+                            <input type="number" class="form-control" id="update_interval" name="update_interval" value="{{ config.MONITORING_INTERVAL }}">
+                        </div>
+                        <button type="submit" class="btn btn-primary">{% trans %}Save Settings{% endtrans %}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-activity me-2"></i>{% trans %}Current Stats{% endtrans %}
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">{% trans %}CPU Usage{% endtrans %}</h5>
+                                    <h2>{{ monitoring_stats.cpu }}%</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">{% trans %}Memory Usage{% endtrans %}</h5>
+                                    <h2>{{ monitoring_stats.memory }}%</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">{% trans %}Disk Usage{% endtrans %}</h5>
+                                    <h2>{{ monitoring_stats.disk }}%</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">{% trans %}Uptime{% endtrans %}</h5>
+                                    <h2>{{ monitoring_stats.uptime }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

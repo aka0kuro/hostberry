@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}{% trans %}VPN Configuration{% endtrans %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="page-title"><i class="bi bi-lock me-2"></i>{% trans %}VPN Configuration{% endtrans %}</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-shield-lock me-2"></i>{% trans %}VPN Settings{% endtrans %}
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('vpn_config') }}">
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="vpn_enabled" name="vpn_enabled" {% if config.VPN_ENABLED %}checked{% endif %}>
+                            <label class="form-check-label" for="vpn_enabled">{% trans %}Enable VPN{% endtrans %}</label>
+                        </div>
+                        <div class="mb-3">
+                            <label for="vpn_provider" class="form-label">{% trans %}VPN Provider{% endtrans %}</label>
+                            <select class="form-select" id="vpn_provider" name="vpn_provider">
+                                {% for provider in vpn_providers %}
+                                    <option value="{{ provider }}" {% if provider == config.VPN_PROVIDER %}selected{% endif %}>{{ provider }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="vpn_country" class="form-label">{% trans %}Country{% endtrans %}</label>
+                            <select class="form-select" id="vpn_country" name="vpn_country">
+                                {% for country in vpn_countries %}
+                                    <option value="{{ country }}" {% if country == config.VPN_COUNTRY %}selected{% endif %}>{{ country }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">{% trans %}Save Settings{% endtrans %}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-shield-check me-2"></i>{% trans %}VPN Status{% endtrans %}
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>{% trans %}Status:{% endtrans %}</strong>
+                        <span class="badge bg-{% if vpn_status.connected %}success{% else %}danger{% endif %}">
+                            {% if vpn_status.connected %}{% trans %}Connected{% endtrans %}{% else %}{% trans %}Disconnected{% endtrans %}{% endif %}
+                        </span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>{% trans %}IP Address:{% endtrans %}</strong> {{ vpn_status.ip_address|default(_('Unknown')) }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>{% trans %}Location:{% endtrans %}</strong> {{ vpn_status.location|default(_('Unknown')) }}
+                    </div>
+                    <div class="mt-4">
+                        <form method="POST" action="{{ url_for('vpn_toggle') }}">
+                            <button type="submit" class="btn btn-{% if vpn_status.connected %}danger{% else %}success{% endif %}">
+                                <i class="bi bi-power me-1"></i>
+                                {% if vpn_status.connected %}{% trans %}Disconnect{% endtrans %}{% else %}{% trans %}Connect{% endtrans %}{% endif %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

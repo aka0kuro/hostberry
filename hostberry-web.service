@@ -1,0 +1,13 @@
+[Unit]
+Description=HostBerry Web Configuration Interface
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/home/blag0rag/Desktop/hostberry
+ExecStart=/usr/bin/python3 /home/blag0rag/Desktop/hostberry/app.py
+Restart=always
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
