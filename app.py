@@ -786,25 +786,15 @@ def network_stats():
         network_stats.last_sent = net.bytes_sent
         network_stats.last_recv = net.bytes_recv
 
-@app.route('/wifi_scan')
+@app.route('/api/wifi/scan', methods=['GET'])
 def wifi_scan():
     try:
-        # Verificar si nmcli está disponible
-        nmcli_path = subprocess.run(['which', 'nmcli'], capture_output=True, text=True)
-        if not nmcli_path.stdout.strip():
-            flash('nmcli no está instalado', 'danger')
-            return redirect(url_for('index'))
+        # 1. Verificar estado WiFi
+        status = subprocess.run(['nmcli', 'radio', 'wifi'], capture_output=True, text=True)
+        if 'disabled' in status.stdout.lower():
+            return jsonify({'success': False, 'error': 'WiFi radio is disabled'}), 400
             
-        # Verificar estado WiFi
-        wifi_status = subprocess.run(['rfkill', 'list', 'wifi'], capture_output=True, text=True)
-        if 'Soft blocked: yes' in wifi_status.stdout:
-            flash('WiFi is disabled. Please enable WiFi first.', 'warning')
-            return redirect(url_for('index'))
-            
-        # Escanear redes con rescan primero
-        subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'rescan'], timeout=10)
-        
-        # Obtener lista completa de redes
+        # 2. Escanear redes
         result = subprocess.run(
             ['nmcli', '-t', '-f', 'SSID,SIGNAL,SECURITY,BSSID', 'device', 'wifi', 'list'],
             capture_output=True,
@@ -815,22 +805,8 @@ def wifi_scan():
         if result.returncode != 0:
             raise Exception(result.stderr or 'Failed to scan networks')
         
+        # 3. Procesar resultados
         networks = []
-        current_connection = None
-        
-        # Obtener conexión actual
-        conn_result = subprocess.run(
-            ['nmcli', '-t', '-f', 'NAME,TYPE,DEVICE', 'connection', 'show', '--active'],
-            capture_output=True,
-            text=True
-        )
-        if conn_result.returncode == 0:
-            for line in conn_result.stdout.splitlines():
-                if 'wifi' in line.lower():
-                    current_connection = line.split(':')[0]
-                    break
-        
-        # Procesar resultados
         for line in result.stdout.splitlines():
             if line and line.count(':') >= 3:
                 parts = line.split(':')
@@ -841,45 +817,36 @@ def wifi_scan():
                     'bssid': parts[3]
                 })
         
-        return render_template('wifi_scan.html', 
-                            networks=networks,
-                            current_connection=current_connection)
+        return jsonify({'success': True, 'networks': networks})
         
     except subprocess.TimeoutExpired:
-        app.logger.error('WiFi scan timeout')
-        flash('WiFi scan timed out. Please try again.', 'danger')
+        return jsonify({'success': False, 'error': 'Scan timeout'}), 408
     except Exception as e:
         app.logger.error(f'WiFi scan error: {str(e)}')
-        flash(f'Failed to scan WiFi networks: {str(e)}', 'danger')
-        
-    return redirect(url_for('index'))
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/wifi_connect', methods=['POST'])
+@app.route('/api/wifi/connect', methods=['POST'])
 def wifi_connect():
     try:
         data = request.get_json()
-        if not data or 'ssid' not in data:
-            return jsonify({'success': False, 'error': 'Invalid request data'}), 400
+        if not data or not data.get('ssid'):
+            return jsonify({'success': False, 'error': 'SSID is required'}), 400
             
-        ssid = data['ssid'].strip()
-        password = data.get('password', '').strip()
+        # Sanitización y validación
+        ssid = re.sub(r'[^\w \-]', '', data['ssid']).strip()
+        password = data.get('password', '')
         
-        # Validación mejorada
         if not ssid:
-            return jsonify({'success': False, 'error': 'SSID cannot be empty'}), 400
-        
-        # Sanitización más robusta
-        if not re.match(r'^[a-zA-Z0-9 _\-]+$', ssid):
             return jsonify({'success': False, 'error': 'Invalid SSID format'}), 400
-        
-        # Construir comando de forma segura
-        cmd = ['sudo', 'nmcli', 'device', 'wifi', 'connect', ssid]
+            
+        # Construir comando seguro
+        cmd = ['nmcli', 'device', 'wifi', 'connect', ssid]
         if password:
             if len(password) < 8:
-                return jsonify({'success': False, 'error': 'Password too short'}), 400
+                return jsonify({'success': False, 'error': 'Password must be at least 8 characters'}), 400
             cmd.extend(['password', password])
-        
-        # Ejecutar con timeout
+            
+        # Ejecutar conexión
         result = subprocess.run(
             cmd,
             capture_output=True,
@@ -890,47 +857,37 @@ def wifi_connect():
         if result.returncode == 0:
             return jsonify({'success': True, 'message': 'Connected successfully'})
         else:
-            error_msg = result.stderr.split('\n')[0] if result.stderr else 'Unknown error'
+            error_msg = result.stderr.split('\n')[0] if result.stderr else 'Connection failed'
             return jsonify({'success': False, 'error': error_msg}), 400
             
     except subprocess.TimeoutExpired:
         return jsonify({'success': False, 'error': 'Connection timeout'}), 408
     except Exception as e:
         app.logger.error(f'WiFi connection error: {str(e)}')
-        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/wifi_status', methods=['GET'])
+@app.route('/api/wifi/status', methods=['GET'])
 def wifi_status():
     try:
-        # Verificar estado del radio WiFi
-        radio_result = subprocess.run(['nmcli', 'radio', 'wifi'], capture_output=True, text=True)
-        radio_on = 'enabled' in radio_result.stdout.lower()
-        
-        # Verificar bloqueo por rfkill
-        rfkill_result = subprocess.run(['rfkill', 'list', 'wifi'], capture_output=True, text=True)
-        soft_blocked = 'Soft blocked: yes' in rfkill_result.stdout
-        hard_blocked = 'Hard blocked: yes' in rfkill_result.stdout
+        # Obtener estado completo
+        radio = subprocess.run(['nmcli', 'radio', 'wifi'], capture_output=True, text=True)
+        rfkill = subprocess.run(['rfkill', 'list', 'wifi'], capture_output=True, text=True)
         
         return jsonify({
-            'enabled': radio_on and not soft_blocked,
-            'soft_blocked': soft_blocked,
-            'hard_blocked': hard_blocked,
-            'radio_status': 'on' if radio_on else 'off'
+            'enabled': 'enabled' in radio.stdout.lower(),
+            'soft_blocked': 'Soft blocked: yes' in rfkill.stdout,
+            'hard_blocked': 'Hard blocked: yes' in rfkill.stdout
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/enable_wifi', methods=['POST'])
+@app.route('/api/wifi/enable', methods=['POST'])
 def enable_wifi():
     try:
-        # Desbloquear WiFi si está bloqueado
-        subprocess.run(['sudo', 'rfkill', 'unblock', 'wifi'], check=True)
-        
-        # Encender radio WiFi
-        subprocess.run(['sudo', 'nmcli', 'radio', 'wifi', 'on'], check=True)
-        
-        # Esperar a que el dispositivo esté listo
-        time.sleep(2)
+        # Desbloquear y activar WiFi
+        subprocess.run(['rfkill', 'unblock', 'wifi'], check=True)
+        subprocess.run(['nmcli', 'radio', 'wifi', 'on'], check=True)
+        time.sleep(2)  # Esperar activación
         
         return jsonify({'success': True})
     except subprocess.CalledProcessError as e:
@@ -939,6 +896,21 @@ def enable_wifi():
             'error': str(e),
             'stderr': e.stderr.decode() if e.stderr else None
         }), 500
+
+@app.route('/connect', methods=['POST'])
+def connect():
+    data = request.get_json()
+    ssid = data.get('ssid')
+    password = data.get('password')
+
+    if not ssid or not password:
+        return jsonify({'message': 'SSID and password are required.'}), 400
+
+    try:
+        subprocess.check_call(['nmcli', 'dev', 'wifi', 'connect', ssid, 'password', password])
+        return jsonify({'message': 'Connected successfully!'})
+    except subprocess.CalledProcessError as e:
+        return jsonify({'message': f'Failed to connect: {str(e)}'}), 400
 
 def read_lines_filter(filename):
     try:
