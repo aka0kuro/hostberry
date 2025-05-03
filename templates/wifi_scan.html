@@ -199,8 +199,8 @@
                     <div class="signal-indicator">
                         <div class="progress">
                             <div class="progress-bar bg-{{ 'success' if network.signal|int > 70 else 'warning' if network.signal|int > 40 else 'danger' }}" 
-                                 style="width: {{ network.signal }}%">
-                                {{ network.signal|replace('%%', '%') }}
+                                 style="width: {{ network.signal|replace('%', '') }}%">
+                                {{ network.signal|replace('%', '') }}%
                             </div>
                         </div>
                     </div>
@@ -216,7 +216,7 @@
                             </tr>
                             <tr>
                                 <th>{% trans %}Signal{% endtrans %}</th>
-                                <td>{{ network.signal|replace('%%', '%') }}</td>
+                                <td>{{ network.signal|replace('%', '') }}%</td>
                             </tr>
                             <tr>
                                 <th></th>
