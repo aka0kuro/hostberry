@@ -86,109 +86,82 @@
         </div>
     </div>
 
-    <!-- Networks Table -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">{% trans %}Available Networks{% endtrans %}</h6>
-            <button id="rescanBtn" class="btn btn-sm btn-primary">
-                <i class="fas fa-sync-alt"></i> {% trans %}Rescan{% endtrans %}
-            </button>
+    <!-- Networks Cards -->
+    <div class="row">
+        {% for network in networks %}
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+            <div class="card border-{{ 'success' if current_connection and current_connection.ssid == network.ssid else 'primary' }} h-100">
+                <div class="card-header bg-{{ 'success' if current_connection and current_connection.ssid == network.ssid else 'primary' }} text-white">
+                    <h5 class="mb-0">{{ network.ssid }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>{% trans %}Signal:{% endtrans %}</span>
+                        <strong>{{ network.signal }}</strong>
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-{{ 'success' if network.signal|replace('%','')|int > 70 else 'warning' if network.signal|replace('%','')|int > 30 else 'danger' }}" 
+                             style="width: {{ network.signal|replace('%','') }}%"></div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>{% trans %}Security:{% endtrans %}</span>
+                        <span class="badge bg-{{ 'success' if network.security == 'WPA2' else 'warning' if network.security == 'WPA' else 'danger' if network.security == 'WEP' else 'secondary' }}">
+                            {{ network.security if network.security != '--' else 'Open' }}
+                        </span>
+                    </div>
+                    
+                    {% if current_connection and current_connection.ssid == network.ssid %}
+                        <button class="btn btn-success w-100" disabled>
+                            <i class="fas fa-check-circle"></i> {% trans %}Connected{% endtrans %}
+                        </button>
+                    {% else %}
+                        <button class="btn btn-primary w-100 connect-btn" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#connectModal"
+                                data-ssid="{{ network.ssid }}"
+                                data-security="{{ network.security }}">
+                            <i class="fas fa-plug"></i> {% trans %}Connect{% endtrans %}
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>{% trans %}SSID{% endtrans %}</th>
-                            <th>{% trans %}Signal{% endtrans %}</th>
-                            <th>{% trans %}Security{% endtrans %}</th>
-                            <th>{% trans %}Status{% endtrans %}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for network in networks %}
-                        <tr>
-                            <td>{{ network.ssid }}</td>
-                            <td>
-                                <div class="progress">
-                                    <div class="progress-bar bg-{{ 'success' if network.signal|replace('%','')|int > 70 else 'warning' if network.signal|replace('%','')|int > 30 else 'danger' }}" 
-                                         role="progressbar" 
-                                         style="width: {{ network.signal|replace('%','') }}%"
-                                         aria-valuenow="{{ network.signal|replace('%','') }}"
-                                         aria-valuemin="0"
-                                         aria-valuemax="100">
-                                        {{ network.signal }}
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                {% if network.security == 'WPA2' %}
-                                    <span class="badge bg-success">WPA2</span>
-                                {% elif network.security == 'WPA' %}
-                                    <span class="badge bg-warning text-dark">WPA</span>
-                                {% elif network.security == 'WEP' %}
-                                    <span class="badge bg-danger">WEP</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">Open</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if current_connection and current_connection.ssid == network.ssid %}
-                                    <span class="badge bg-success">
-                                        <i class="fas fa-check"></i> {% trans %}Connected{% endtrans %}
-                                    </span>
-                                {% else %}
-                                    <button class="btn btn-sm btn-primary connect-btn" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#connectModal"
-                                            data-ssid="{{ network.ssid }}"
-                                            data-security="{{ network.security }}">
-                                        <i class="fas fa-plug"></i> {% trans %}Connect{% endtrans %}
-                                    </button>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        {% endfor %}
+    </div>
+
+    <!-- Connect Modal -->
+    <div class="modal fade" id="connectModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-wifi"></i> {% trans %}Connect to Network{% endtrans %}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <h6 id="modalNetworkName" class="mb-0"></h6>
+                        <small id="modalNetworkSecurity" class="text-muted"></small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">{% trans %}Password{% endtrans %}</label>
+                        <input type="password" class="form-control" id="password" placeholder="{% if network.security == '--' %}Open network (no password){% else %}Enter WiFi password{% endif %}" {% if network.security == '--' %}disabled{% endif %}>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans %}Cancel{% endtrans %}</button>
+                    <button type="button" class="btn btn-primary" id="confirmConnect">
+                        <i class="fas fa-plug"></i> {% trans %}Connect{% endtrans %}
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Connect Modal -->
-<div class="modal fade" id="connectModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">{% trans %}Connect to Network{% endtrans %}</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="connectForm">
-                    <div class="form-group">
-                        <label>{% trans %}Network{% endtrans %}</label>
-                        <input type="text" class="form-control" id="ssid" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label>{% trans %}Security{% endtrans %}</label>
-                        <input type="text" class="form-control" id="security" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">{% trans %}Password{% endtrans %}</label>
-                        <input type="password" class="form-control" id="password" placeholder="{% trans %}Enter password{% endtrans %}">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans %}Cancel{% endtrans %}</button>
-                <button type="button" class="btn btn-primary" id="confirmConnect">{% trans %}Connect{% endtrans %}</button>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
@@ -198,8 +171,11 @@ $(document).ready(function() {
     // Connect modal handler
     $('#connectModal').on('show.bs.modal', function(event) {
         const button = $(event.relatedTarget);
-        $('#ssid').val(button.data('ssid'));
-        $('#security').val(button.data('security'));
+        $('#modalNetworkName').text(button.data('ssid'));
+        $('#modalNetworkSecurity').html(`
+            <i class="fas fa-${button.data('security') === '--' ? 'unlock' : 'lock'}"></i>
+            ${button.data('security') === '--' ? 'Open Network' : button.data('security') + ' Encryption'}
+        `);
     });
 
     // Connect button handler
@@ -219,7 +195,7 @@ $(document).ready(function() {
                     'X-CSRFToken': '{{ csrf_token() }}'
                 },
                 body: JSON.stringify({
-                    ssid: $('#ssid').val(),
+                    ssid: $('#modalNetworkName').text(),
                     password: $('#password').val()
                 })
             });
