@@ -735,6 +735,10 @@ def read_lines_filter(filename):
     except IOError:
         return []
 
+def file_exists(filename):
+    return os.path.isfile(filename)
+
+app.jinja_env.tests['file_exists'] = file_exists
 app.jinja_env.filters['read_lines'] = read_lines_filter
 
 if __name__ == '__main__':
