@@ -334,170 +334,111 @@
 {{ super() }}
 <script>
 $(document).ready(function() {
-    // Configurar modal con SSID seleccionado
-    $('#connectModal').on('show.bs.modal', function (event) {
+    // Asegurar que jQuery está cargado
+    if (typeof jQuery == 'undefined') {
+        console.error('jQuery no está cargado');
+        return;
+    }
+
+    // Verificar estado WiFi al cargar
+    checkWifiStatus();
+
+    // Configurar modal de conexión
+    $('#connectModal').on('show.bs.modal', function(event) {
         var button = $(event.relatedTarget);
         var ssid = button.data('ssid');
         var security = button.data('security');
-        var modal = $(this);
         
-        // Limpiar errores anteriores
-        modal.find('.alert-danger').remove();
-        modal.find('#password').val('');
+        $('#ssid').val(ssid);
+        $('#connectModal').data('security', security);
         
-        modal.find('#ssid').val(ssid);
-        
-        // Habilitar/deshabilitar campo de contraseña según seguridad
-        if(security === '--' || security === 'Open' || !security) {
-            modal.find('#password').prop('disabled', true).val('').attr('placeholder', '{% trans %}No password needed{% endtrans %}');
+        // Habilitar/deshabilitar password
+        if(!security || security === 'Open' || security === '--') {
+            $('#password').prop('disabled', true).val('').attr('placeholder', 'No se necesita contraseña');
         } else {
-            modal.find('#password').prop('disabled', false).attr('placeholder', '{% trans %}Enter password for ' + security + ' network{% endtrans %}').focus();
+            $('#password').prop('disabled', false).attr('placeholder', 'Contraseña para ' + security).focus();
         }
     });
 
-    // Manejar conexión WiFi
-    document.getElementById('connectBtn').addEventListener('click', async function() {
-        const btn = this;
-        const modal = $('#connectModal');
-        const originalText = btn.innerHTML;
-        const errorToast = $('#errorToast');
+    // Manejador del botón Connect
+    $('#connectBtn').off('click').on('click', async function() {
+        const btn = $(this);
+        const originalHtml = btn.html();
         
-        // Mostrar estado de carga
-        btn.disabled = true;
-        btn.innerHTML = `
-            <span class="spinner-border spinner-border-sm" role="status"></span>
-            {% trans %}Connecting...{% endtrans %}
-        `;
+        btn.prop('disabled', true).html(
+            '<span class="spinner-border spinner-border-sm"></span> Conectando...'
+        );
         
         try {
-            const ssid = document.getElementById('ssid').value;
-            const password = document.getElementById('password').value;
-            const security = modal.data('security');
-            
-            // Validación básica
-            if (!ssid) {
-                throw new Error('{% trans %}Network name is required{% endtrans %}');
-            }
-            
-            // Validación para redes seguras
-            if (security && security !== 'Open' && security !== '--' && !password) {
-                throw new Error('{% trans %}Password is required for secured networks{% endtrans %}');
-            }
-            
             const response = await fetch('/wifi_connect', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token() }}'
                 },
-                body: JSON.stringify({ 
-                    ssid: ssid,
-                    password: password,
-                    security: security
+                body: JSON.stringify({
+                    ssid: $('#ssid').val(),
+                    password: $('#password').val()
                 })
             });
             
             const data = await response.json();
             
-            if (!response.ok) {
-                throw new Error(data.error || '{% trans %}Connection failed{% endtrans %}');
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || 'Error de conexión');
             }
             
-            if (!data.success) {
-                throw new Error(data.message || '{% trans %}Connection failed{% endtrans %}');
-            }
-            
-            // Cerrar modal y recargar
-            modal.modal('hide');
-            setTimeout(() => window.location.reload(), 1000);
+            $('#connectModal').modal('hide');
+            setTimeout(() => location.reload(), 1000);
             
         } catch (error) {
-            console.error('Connection error:', error);
-            
-            // Mostrar error en toast
-            $('#errorToastBody').text(error.message);
-            errorToast.toast('show');
-            
-            // Mostrar error en el modal también
-            const errorElement = document.createElement('div');
-            errorElement.className = 'alert alert-danger mt-3';
-            errorElement.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${error.message}`;
-            
-            // Eliminar mensajes anteriores
-            const existingError = modal.find('.alert-danger');
-            if (existingError.length) existingError.remove();
-            
-            modal.find('.modal-body').prepend(errorElement);
-            
+            console.error('Error:', error);
+            showErrorToast(error.message);
         } finally {
-            // Restaurar estado del botón
-            btn.disabled = false;
-            btn.innerHTML = originalText;
+            btn.prop('disabled', false).html(originalHtml);
         }
     });
 
-    // Verificar estado WiFi al cargar
-    fetch('/api/wifi_status')
-        .then(response => response.json())
-        .then(data => {
-            const alert = document.getElementById('wifiStatusAlert');
-            const text = document.getElementById('wifiStatusText');
-            const btn = document.getElementById('enableWifiBtn');
-            
-            if (!data.enabled) {
-                alert.classList.remove('d-none');
-                text.textContent = '{% trans %}WiFi is disabled{% endtrans %}';
-                btn.classList.remove('d-none');
-            }
-        })
-        .catch(error => console.error('Error checking WiFi status:', error));
-    
-    // Activar WiFi
-    document.getElementById('enableWifiBtn').addEventListener('click', function() {
-        const btn = this;
-        const originalText = btn.innerHTML;
+    // Manejador del botón Enable WiFi
+    $('#enableWifiBtn').off('click').on('click', function() {
+        const btn = $(this);
+        const originalHtml = btn.html();
         
-        btn.disabled = true;
-        btn.innerHTML = `
-            <span class="spinner-border spinner-border-sm" role="status"></span>
-            {% trans %}Enabling...{% endtrans %}
-        `;
+        btn.prop('disabled', true).html(
+            '<span class="spinner-border spinner-border-sm"></span> Activando...'
+        );
         
-        fetch('/api/enable_wifi', { 
+        fetch('/api/enable_wifi', {
             method: 'POST',
             headers: {
                 'X-CSRFToken': '{{ csrf_token() }}'
             }
         })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    $('#errorToastBody').text(data.error || '{% trans %}Failed to enable WiFi{% endtrans %}');
-                    $('#errorToast').toast('show');
-                }
-            })
-            .catch(error => {
-                console.error('Error enabling WiFi:', error);
-                $('#errorToastBody').text('{% trans %}Error enabling WiFi{% endtrans %}');
-                $('#errorToast').toast('show');
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                throw new Error(data.error || 'Error al activar WiFi');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorToast(error.message);
+        })
+        .finally(() => {
+            btn.prop('disabled', false).html(originalHtml);
+        });
     });
-    
-    // Manejar rescan
-    document.getElementById('rescanBtn').addEventListener('click', function() {
-        const btn = this;
-        const spinner = document.getElementById('rescanSpinner');
-        const text = document.getElementById('rescanText');
+
+    // Manejador del botón Rescan
+    $('#rescanBtn').off('click').on('click', function() {
+        const btn = $(this);
+        const originalHtml = btn.html();
         
-        btn.disabled = true;
-        spinner.classList.remove('d-none');
-        text.textContent = '{% trans %}Scanning...{% endtrans %}';
+        btn.prop('disabled', true).html(
+            '<span class="spinner-border spinner-border-sm"></span> Escaneando...'
+        );
         
         fetch('/api/rescan_wifi', {
             method: 'POST',
@@ -505,26 +446,39 @@ $(document).ready(function() {
                 'X-CSRFToken': '{{ csrf_token() }}'
             }
         })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                throw new Error(data.error || 'Error al escanear');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorToast(error.message);
+        })
+        .finally(() => {
+            btn.prop('disabled', false).html(originalHtml);
+        });
+    });
+
+    function checkWifiStatus() {
+        fetch('/api/wifi_status')
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    $('#errorToastBody').text(data.error || '{% trans %}Scan failed{% endtrans %}');
-                    $('#errorToast').toast('show');
+                if (!data.enabled) {
+                    $('#wifiStatusAlert').removeClass('d-none');
+                    $('#wifiStatusText').text('WiFi está desactivado');
+                    $('#enableWifiBtn').removeClass('d-none');
                 }
-            })
-            .catch(error => {
-                console.error('Rescan error:', error);
-                $('#errorToastBody').text('{% trans %}Scan error{% endtrans %}');
-                $('#errorToast').toast('show');
-            })
-            .finally(() => {
-                btn.disabled = false;
-                spinner.classList.add('d-none');
-                text.textContent = '{% trans %}Rescan{% endtrans %}';
             });
-    });
+    }
+
+    function showErrorToast(message) {
+        $('#errorToastBody').text(message);
+        $('#errorToast').toast('show');
+    }
 });
 </script>
 {% endblock %}
