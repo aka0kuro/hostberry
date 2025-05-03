@@ -15,10 +15,16 @@ echo "Moving project to /opt/hostberry..."
 sudo mkdir -p /opt/hostberry
 sudo chown -R $USER:$USER /opt/hostberry
 sudo cp -r . /opt/hostberry/
+# Ensure service file is in the right location
+if [ -f "hostberry-web.service" ]; then
+    sudo cp hostberry-web.service /opt/hostberry/
+fi
 cd /opt/hostberry
 
 # Install project dependencies
 echo "Installing Python dependencies..."
+python -m venv venv
+source venv/bin/activate
 pip3 install -r requirements.txt
 
 # Set up configuration
