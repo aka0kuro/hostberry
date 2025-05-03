@@ -216,29 +216,34 @@ if (window.jQuery) {
 
 async function rescanNetworks() {
     try {
+        console.log('Iniciando escaneo WiFi...');
+        
         const response = await fetch('/api/wifi/scan');
+        console.log('Respuesta recibida:', response.status);
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error('Error en respuesta:', errorText);
+            throw new Error(`Error HTTP ${response.status}: ${errorText}`);
         }
         
         const data = await response.json();
+        console.log('Datos recibidos:', data);
         
         if (!data.success) {
-            throw new Error(data.error || 'Failed to scan networks');
+            throw new Error(data.error || 'Error en el servidor');
         }
         
         updateNetworkList(data.networks);
         
     } catch (error) {
-        console.error('Scan error:', error);
-        showToast(`Error scanning: ${error.message}`, 'danger');
+        console.error('Error en rescanNetworks:', error);
+        showToast(`Error: ${error.message}`, 'danger');
         
-        // Mostrar estado de error en la UI
         $('#network-list').html(`
             <div class="list-group-item text-danger">
                 <i class="fas fa-exclamation-triangle me-2"></i>
-                Error al escanear redes: ${error.message}
+                ${error.message}
             </div>
         `);
     }

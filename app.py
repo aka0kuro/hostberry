@@ -789,8 +789,12 @@ def network_stats():
 @app.route('/api/wifi/scan', methods=['GET'])
 def wifi_scan():
     try:
+        app.logger.info('Iniciando escaneo WiFi...')
+        
         # 1. Verificar estado WiFi
         status = subprocess.run(['nmcli', 'radio', 'wifi'], capture_output=True, text=True)
+        app.logger.debug(f'Estado WiFi: {status.stdout}')
+        
         if 'disabled' in status.stdout.lower():
             return jsonify({'success': False, 'error': 'WiFi radio is disabled'}), 400
             
@@ -801,6 +805,7 @@ def wifi_scan():
             text=True,
             timeout=30
         )
+        app.logger.debug(f'Resultado nmcli: {result.stdout}')
         
         if result.returncode != 0:
             raise Exception(result.stderr or 'Failed to scan networks')
@@ -817,12 +822,14 @@ def wifi_scan():
                     'bssid': parts[3]
                 })
         
+        app.logger.info(f'Encontradas {len(networks)} redes WiFi')
         return jsonify({'success': True, 'networks': networks})
         
     except subprocess.TimeoutExpired:
+        app.logger.error('Timeout al escanear WiFi')
         return jsonify({'success': False, 'error': 'Scan timeout'}), 408
     except Exception as e:
-        app.logger.error(f'WiFi scan error: {str(e)}')
+        app.logger.error(f'Error en wifi_scan: {str(e)}')
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/wifi/connect', methods=['POST'])
