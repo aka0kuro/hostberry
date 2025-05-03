@@ -22,6 +22,7 @@ import logging
 import logging.config
 import os
 import secrets
+import json
 
 # Initialize environment and logging
 if not os.path.exists('.env'):
@@ -449,6 +450,38 @@ def security_logs():
         app.logger.error(f"Error retrieving security logs: {str(e)}")
         return render_template('security_logs.html', logs=[])
 
+@app.route('/security/save', methods=['POST'])
+def save_security_settings():
+    try:
+        # Get form data
+        settings = {
+            'SESSION_COOKIE_SECURE': request.form.get('cookie_secure') == 'true',
+            'SESSION_COOKIE_HTTPONLY': request.form.get('cookie_httponly') == 'true',
+            'SESSION_COOKIE_SAMESITE': request.form.get('cookie_samesite', 'Lax'),
+            'PERMANENT_SESSION_LIFETIME': int(request.form.get('session_lifetime', 86400))
+        }
+        
+        # Update runtime configuration
+        for key, value in settings.items():
+            app.config[key] = value
+            
+        # Save to persistent config file
+        config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(settings, f, indent=4)
+            
+        # Update .env file with timestamp
+        with open('.env', 'a') as f:
+            f.write(f'\n# Security settings updated at {datetime.datetime.now()}\n')
+            
+        flash(_('Security settings saved successfully'), 'success')
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        app.logger.error(f'Error saving security settings: {str(e)}')
+        flash(_('Failed to save security settings'), 'danger')
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/monitoring', methods=['GET', 'POST'])
 def monitoring_config():
     if request.method == 'POST':
@@ -752,6 +785,99 @@ def network_stats():
     finally:
         network_stats.last_sent = net.bytes_sent
         network_stats.last_recv = net.bytes_recv
+
+@app.route('/wifi_scan')
+def wifi_scan():
+    try:
+        # Verificar si nmcli está disponible
+        nmcli_path = subprocess.run(['which', 'nmcli'], capture_output=True, text=True)
+        if not nmcli_path.stdout.strip():
+            raise Exception('nmcli no está instalado')
+            
+        # Escanear redes
+        result = subprocess.run(
+            ['nmcli', '-t', '-f', 'SSID,SIGNAL,SECURITY', 'device', 'wifi', 'list'],
+            capture_output=True,
+            text=True,
+            timeout=30  # Timeout de 30 segundos
+        )
+        
+        if result.returncode != 0:
+            raise Exception(f'Error en nmcli: {result.stderr}')
+        
+        # Procesar resultados
+        networks = []
+        for line in result.stdout.splitlines():
+            if line and line.count(':') >= 2:  # Verificar formato
+                parts = line.split(':')
+                networks.append({
+                    'ssid': parts[0] if parts[0] else 'Oculta',
+                    'signal': f'{parts[1]}%',
+                    'security': parts[2] if parts[2] else 'Abierta'
+                })
+        
+        return render_template('wifi_scan.html', networks=networks)
+        
+    except subprocess.TimeoutExpired:
+        app.logger.error('Tiempo de espera agotado para nmcli')
+        flash('El escaneo WiFi tardó demasiado', 'danger')
+    except Exception as e:
+        app.logger.error(f'Error escaneando redes: {str(e)}')
+        flash(f'Error al escanear: {str(e)}', 'danger')
+        
+    return redirect(url_for('index'))
+
+@app.route('/wifi_connect', methods=['POST'])
+def wifi_connect():
+    try:
+        data = request.get_json()
+        ssid = data['ssid']
+        password = data.get('password', '')
+        
+        # Comando para conexión
+        if password:
+            cmd = f"nmcli device wifi connect '{ssid}' password '{password}'"
+        else:
+            cmd = f"nmcli device wifi connect '{ssid}'"
+            
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error': result.stderr})
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/wifi_scan', methods=['GET'])
+def api_wifi_scan():
+    try:
+        # Reutilizar lógica de wifi_scan()
+        result = subprocess.run(
+            ['nmcli', '-t', '-f', 'SSID,SIGNAL,SECURITY', 'device', 'wifi', 'list'],
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        
+        if result.returncode != 0:
+            return jsonify({'success': False, 'error': result.stderr})
+            
+        networks = []
+        for line in result.stdout.splitlines():
+            if line and line.count(':') >= 2:
+                parts = line.split(':')
+                networks.append({
+                    'ssid': parts[0] if parts[0] else 'Oculta',
+                    'signal': f'{parts[1]}%',
+                    'security': parts[2] if parts[2] else 'Abierta'
+                })
+                
+        return jsonify({'success': True, 'networks': networks})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 def read_lines_filter(filename):
     try:

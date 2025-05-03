@@ -2,10 +2,160 @@
 <html lang="{{ get_locale() }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0">
     <title>{% block title %}HostBerry{% endblock %}</title>
+    
+    <!-- Mobile Optimization -->
+    <style>
+        @media (max-width: 992px) {
+            /* Sidebar como menú hamburguesa */
+            .sidebar {
+                position: fixed;
+                width: 260px;
+                left: -260px;
+                transition: all 0.3s;
+                z-index: 1050;
+                height: 100vh;
+                overflow-y: auto;
+            }
+            
+            .sidebar.active {
+                left: 0;
+            }
+            
+            /* Botón hamburguesa */
+            .navbar-toggler {
+                display: block;
+            }
+            
+            /* Contenido principal */
+            .content {
+                margin-left: 0;
+                padding: 15px;
+            }
+            
+            /* Header más compacto */
+            .topbar {
+                padding: 10px 15px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            /* Cards en columna */
+            .stats-card {
+                margin-bottom: 15px;
+            }
+            
+            /* Texto más legible */
+            body {
+                font-size: 15px;
+            }
+            
+            h1, h2, h3 {
+                font-size: 1.5rem;
+            }
+            
+            /* Forms responsivos */
+            .form-control {
+                font-size: 16px;
+                padding: 12px;
+            }
+            
+            /* Botones más grandes */
+            .btn {
+                padding: 10px 16px;
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            /* Header ultra compacto */
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 8px;
+            }
+            
+            /* Footer simplificado */
+            .footer {
+                text-align: center;
+                padding: 10px;
+            }
+            
+            /* Menús desplegables */
+            .dropdown-menu {
+                position: static;
+                float: none;
+                width: 100%;
+            }
+            
+            /* Cards más compactas */
+            .card-body {
+                padding: 1rem;
+            }
+        }
+    </style>
+    
+    <!-- Desktop Optimization -->
+    <style>
+        /* Desktop Styles */
+        @media (min-width: 1200px) {
+            /* Sidebar fija y ancha */
+            .sidebar {
+                width: 280px;
+                position: fixed;
+                height: 100vh;
+                overflow-y: auto;
+            }
+            
+            /* Contenido principal con margen */
+            .content {
+                margin-left: 280px;
+                padding: 2rem;
+            }
+            
+            /* Header espaciado */
+            .topbar {
+                padding: 1.5rem 2rem;
+            }
+            
+            /* Grid para cards */
+            .card-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 1.5rem;
+            }
+            
+            /* Tablas expandidas */
+            .table-responsive {
+                display: table;
+                width: 100%;
+            }
+            
+            /* Menús desplegables completos */
+            .dropdown-menu {
+                min-width: 240px;
+            }
+        }
+        
+        /* Pantallas muy grandes */
+        @media (min-width: 1600px) {
+            .sidebar {
+                width: 320px;
+            }
+            
+            .content {
+                margin-left: 320px;
+                padding: 3rem;
+            }
+        }
+    </style>
+    
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- Estilos base -->
     <style>
         body {
             background-color: var(--bg-color);
@@ -279,8 +429,19 @@
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
-    <div class="sidebar p-3">
+<body class="light">
+    <!-- Navbar Mobile -->
+    <nav class="navbar navbar-expand-lg d-lg-none navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">HostBerry</a>
+            <button class="navbar-toggler" type="button" id="mobileMenuToggler">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+    </nav>
+    
+    <!-- Sidebar -->
+    <div class="sidebar bg-dark text-white" id="sidebar">
         <div class="text-center mb-4">
             <h4>HostBerry</h4>
         </div>
@@ -300,6 +461,12 @@
                 <a class="nav-link" href="{{ url_for('network_config') }}">
                     <i class="bi bi-hdd-network me-2 {% if not config.NETWORK_ENABLED %}text-secondary{% endif %}"></i>
                     {% trans %}Network{% endtrans %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('wifi_scan') }}">
+                    <i class="bi bi-wifi me-2"></i>
+                    {% trans %}WiFi Scan{% endtrans %}
                 </a>
             </li>
             <li class="nav-item">
@@ -352,7 +519,8 @@
         </div>
     </div>
 
-    <div class="main-content">
+    <!-- Contenido principal -->
+    <div class="content" id="mainContent">
         <header>
             <div class="container-fluid">
             </div>
@@ -391,6 +559,18 @@
         // Initialize theme
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.body.className = savedTheme;
+        
+        // Toggle sidebar en móviles
+        document.getElementById('mobileMenuToggler').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+        
+        // Cerrar sidebar al hacer clic fuera
+        document.getElementById('mainContent').addEventListener('click', function() {
+            if (window.innerWidth < 992) {
+                document.getElementById('sidebar').classList.remove('active');
+            }
+        });
     </script>
 </body>
 </html>

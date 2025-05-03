@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+
+{% block title %}{% trans %}WiFi Scanner{% endtrans %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Mensajes de error -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert alert-danger mt-3">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                {% for category, message in messages %}
+                    {{ message }}
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Botón de rescan con feedback -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="bi bi-wifi"></i> {% trans %}WiFi Networks{% endtrans %}
+        </h1>
+        <button id="rescanBtn" class="btn btn-primary">
+            <span id="rescanText">{% trans %}Rescan{% endtrans %}</span>
+            <span id="rescanSpinner" class="spinner-border spinner-border-sm d-none"></span>
+        </button>
+    </div>
+
+    <!-- Mobile Optimization -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <style>
+        @media (max-width: 768px) {
+            /* Cards en columna */
+            .stats-card {
+                margin-bottom: 15px;
+            }
+            
+            /* Tabla responsive */
+            .table-responsive {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Ocultar columnas menos importantes */
+            .wifi-table th:nth-child(3),
+            .wifi-table td:nth-child(3) {
+                display: none;
+            }
+            
+            /* Botones más grandes */
+            .btn-connect {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            
+            /* Header más compacto */
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            /* Progress bars más visibles */
+            .progress {
+                height: 25px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            /* Cards más compactas */
+            .card-body {
+                padding: 1rem;
+            }
+            
+            /* Texto más grande */
+            body {
+                font-size: 16px;
+            }
+        }
+    </style>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <!-- Total Networks -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                {% trans %}Available Networks{% endtrans %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ networks|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-wifi fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Strongest Signal -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                {% trans %}Strongest Signal{% endtrans %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ networks|map(attribute='signal')|max }}%
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-bar-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secured Networks -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                {% trans %}Secured Networks{% endtrans %}
+                            </div>
+                            <div class="row no-gutters align-items-center">
+                                <div class="col-auto">
+                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">
+                                        {{ networks|selectattr('security', '!=', '--')|list|length }}
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="progress progress-sm mr-2">
+                                        <div class="progress-bar bg-info" role="progressbar" 
+                                             style="width: {{ (networks|selectattr('security', '!=', '--')|list|length / networks|length * 100) if networks|length > 0 else 0 }}%" 
+                                             aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-shield-lock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Connection -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                {% trans %}Current Connection{% endtrans %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ current_connection or 'Disconnected' }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-activity fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Network Cards -->
+    <div class="row g-2">
+        {% for network in networks %}
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card network-card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ network.ssid }}</h5>
+                    <div class="signal-indicator">
+                        <div class="progress">
+                            <div class="progress-bar bg-{{ 'success' if network.signal|int > 70 else 'warning' if network.signal|int > 40 else 'danger' }}" 
+                                 style="width: {{ network.signal }}%">
+                                {{ network.signal }}%
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-block mt-2 btn-connect" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#connectModal"
+                            data-ssid="{{ network.ssid }}"
+                            data-security="{{ network.security }}">
+                        <i class="bi bi-wifi"></i> Conectar
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Connect Modal -->
+    <div class="modal fade" id="connectModal" tabindex="-1" role="dialog" aria-labelledby="connectModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="connectModalLabel">{% trans %}Connect to Network{% endtrans %}</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="wifiConnectForm">
+                        <div class="form-group">
+                            <label for="ssid">{% trans %}Network Name{% endtrans %}</label>
+                            <input type="text" class="form-control" id="ssid" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">{% trans %}Password{% endtrans %}</label>
+                            <input type="password" class="form-control" id="password" placeholder="{% trans %}Enter password{% endtrans %}">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">{% trans %}Cancel{% endtrans %}</button>
+                    <button class="btn btn-primary" id="connectBtn">{% trans %}Connect{% endtrans %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('rescanBtn').addEventListener('click', function() {
+    const btn = this;
+    const spinner = document.getElementById('rescanSpinner');
+    const text = document.getElementById('rescanText');
+    
+    btn.disabled = true;
+    spinner.classList.remove('d-none');
+    text.textContent = '{% trans %}Scanning...{% endtrans %}';
+    
+    // Recargar la página después de 2 segundos (simulando scan)
+    setTimeout(() => {
+        window.location.reload();
+    }, 2000);
+});
+</script>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// Initialize DataTable
+$(document).ready(function() {
+    // Connect modal handler
+    $('#connectModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var ssid = button.data('ssid');
+        var security = button.data('security');
+        
+        var modal = $(this);
+        modal.find('.modal-title').text('Connect to: ' + ssid);
+        modal.find('#ssid').val(ssid);
+        
+        if(security === '--') {
+            modal.find('#password').prop('disabled', true).val('');
+        } else {
+            modal.find('#password').prop('disabled', false);
+        }
+    });
+
+    // Connect button handler
+    $('#connectBtn').click(function() {
+        var ssid = $('#ssid').val();
+        var password = $('#password').val();
+        
+        $.post('/wifi_connect', {
+            ssid: ssid,
+            password: password
+        }, function(data) {
+            if(data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        }).fail(function() {
+            alert('Connection failed');
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,59 +1,111 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h5>{% trans %}WireGuard Configuration{% endtrans %}</h5>
-    </div>
-    <div class="card-body">
-        <form method="POST" enctype="multipart/form-data">
-            <div class="mb-3">
-                <label for="wg_file" class="form-label"><i class="bi bi-file-earmark-arrow-up me-1"></i>{% trans %}Upload WireGuard Configuration (.conf){% endtrans %}</label>
-                <input class="form-control" type="file" id="wg_file" name="wg_file" accept=".conf" required>
-            </div>
-            <div class="d-grid gap-2 mt-4">
-                <button type="submit" class="btn btn-primary btn-lg shadow"><i class="bi bi-upload me-1"></i> {% trans %}Upload & Apply{% endtrans %}</button>
-                <a href="{{ url_for('index') }}" class="btn btn-secondary btn-lg"><i class="bi bi-x-circle"></i> {% trans %}Cancel{% endtrans %}</a>
-            </div>
-        </form>
-        <hr>
-        <p class="text-muted">{% trans %}Upload a valid WireGuard configuration file (.conf) to configure the tunnel. The system will apply the configuration automatically. Make sure wireguard-tools is installed.{% endtrans %}</p>
-        {% if status %}
-        <hr>
-        <div class="alert alert-success">
-            <strong>{% trans %}Status:{% endtrans %}</strong> Interface <code>wg0</code> is <b>{% if interface_active %}{% trans %}active{% endtrans %}{% else %}{% trans %}inactive{% endtrans %}{% endif %}</b>.<br>
-            {% if ip %}<strong>{% trans %}IP:{% endtrans %}</strong> <code>{{ ip }}</code><br>{% endif %}
-            <form method="post" class="d-inline">
-                <input type="hidden" name="action" value="down">
-                <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-x-octagon"></i> {% trans %}Deactivate{% endtrans %}</button>
+<div class="container-fluid px-0 px-md-3">
+    <!-- Mobile Optimization -->
+    <style>
+        @media (max-width: 768px) {
+            .wg-card {
+                margin-bottom: 1rem;
+            }
+            
+            .wg-form-input {
+                font-size: 16px;
+                padding: 12px;
+            }
+            
+            .wg-btn {
+                padding: 12px;
+                font-size: 16px;
+            }
+            
+            .wg-peer-list {
+                font-size: 14px;
+            }
+            
+            .wg-peer-item {
+                padding: 10px 0;
+                border-bottom: 1px solid #eee;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .wg-card-body {
+                padding: 1rem;
+            }
+            
+            .wg-status-alert {
+                font-size: 14px;
+            }
+            
+            code {
+                word-break: break-all;
+            }
+        }
+    </style>
+
+    <div class="card wg-card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5><i class="bi bi-shield-lock"></i> {% trans %}WireGuard VPN{% endtrans %}</h5>
+        </div>
+        <div class="card-body wg-card-body">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="wg_file" class="form-label">
+                        <i class="bi bi-file-earmark-arrow-up"></i> {% trans %}WireGuard Config File{% endtrans %}
+                    </label>
+                    <input class="form-control wg-form-input" type="file" id="wg_file" name="wg_file" accept=".conf" required>
+                </div>
+                
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary wg-btn">
+                        <i class="bi bi-upload"></i> {% trans %}Upload & Apply{% endtrans %}
+                    </button>
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary wg-btn">
+                        <i class="bi bi-x-circle"></i> {% trans %}Cancel{% endtrans %}
+                    </a>
+                </div>
             </form>
-            {% if peers and peers|length > 0 %}
-                <strong>{% trans %}Peers:{% endtrans %}</strong>
-                <ul>
-                {% for peer in peers %}
-                    <li>
-                        <b>{% trans %}PubKey:{% endtrans %}</b> <code>{{ peer.pubkey }}</code><br>
-                        <b>{% trans %}Endpoint:{% endtrans %}</b> <code>{{ peer.endpoint }}</code><br>
-                        <b>{% trans %}Allowed IPs:{% endtrans %}</b> <code>{{ peer.allowed }}</code><br>
-                        <b>{% trans %}Latest Handshake:{% endtrans %}</b> {{ peer.handshake }}<br>
-                        <b>{% trans %}Transfer:{% endtrans %}</b> {{ peer.transfer }}
-                    </li>
-                {% endfor %}
-                </ul>
-            {% else %}
-                <em>{% trans %}No peers configured.{% endtrans %}</em>
+            
+            {% if status %}
+            <div class="alert alert-info wg-status-alert mt-4">
+                <strong>{% trans %}Status:{% endtrans %}</strong> 
+                <span class="badge bg-{% if interface_active %}success{% else %}danger{% endif %}">
+                    {% if interface_active %}{% trans %}Active{% endtrans %}{% else %}{% trans %}Inactive{% endtrans %}{% endif %}
+                </span>
+                {% if ip %}<br><strong>{% trans %}IP:{% endtrans %}</strong> <code>{{ ip }}</code>{% endif %}
+                
+                <form method="post" class="mt-2">
+                    <input type="hidden" name="action" value="{% if interface_active %}down{% else %}up{% endif %}">
+                    <button type="submit" class="btn btn-sm btn-{% if interface_active %}danger{% else %}success{% endif %} wg-btn">
+                        <i class="bi bi-power"></i> 
+                        {% if interface_active %}{% trans %}Deactivate{% endtrans %}{% else %}{% trans %}Activate{% endtrans %}{% endif %}
+                    </button>
+                </form>
+            </div>
             {% endif %}
+            
+            {% if peers and peers|length > 0 %}
+            <hr>
+            <h5><i class="bi bi-people-fill"></i> {% trans %}Connected Peers{% endtrans %}</h5>
+            <div class="wg-peer-list">
+                {% for peer in peers %}
+                <div class="wg-peer-item">
+                    <p><strong>{% trans %}PubKey:{% endtrans %}</strong> <code>{{ peer.pubkey }}</code></p>
+                    <p><strong>{% trans %}Endpoint:{% endtrans %}</strong> <code>{{ peer.endpoint }}</code></p>
+                    <p><strong>{% trans %}Allowed IPs:{% endtrans %}</strong> <code>{{ peer.allowed }}</code></p>
+                    <p><strong>{% trans %}Latest Handshake:{% endtrans %}</strong> {{ peer.handshake }}</p>
+                    <p><strong>{% trans %}Transfer:{% endtrans %}</strong> {{ peer.transfer }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <hr>
+            <p class="text-muted small">
+                <i class="bi bi-info-circle"></i> {% trans %}Upload a valid WireGuard .conf file to configure the VPN tunnel{% endtrans %}
+            </p>
         </div>
-        {% else %}
-        <hr>
-        <div class="alert alert-warning">
-            <strong>{% trans %}Status:{% endtrans %}</strong> Interface <code>wg0</code> is <b>{% trans %}inactive{% endtrans %}</b> {% trans %}or not configured.{% endtrans %}
-            <form method="post" class="d-inline">
-                <input type="hidden" name="action" value="up">
-                <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check-circle"></i> {% trans %}Activate{% endtrans %}</button>
-            </form>
-        </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
