@@ -32,40 +32,19 @@
                             <td>{{ network.ssid }}</td>
                             <td>
                                 <div class="progress">
-                                    <div class="progress-bar bg-{{ 'success' if network.signal|replace('%','')|int > 70 else 'warning' if network.signal|replace('%','')|int > 30 else 'danger' }}" 
-                                         role="progressbar" 
-                                         style="width: {{ network.signal|replace('%','') }}%"
-                                         aria-valuenow="{{ network.signal|replace('%','') }}"
-                                         aria-valuemin="0"
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ network.signal|replace('%','') }}%;" 
+                                         aria-valuenow="{{ network.signal|replace('%','') }}" 
+                                         aria-valuemin="0" 
                                          aria-valuemax="100">
                                         {{ network.signal }}
                                     </div>
                                 </div>
                             </td>
-                            <td>
-                                {% if network.security == 'WPA2' %}
-                                    <span class="badge bg-success">
-                                        <i class="fas fa-lock"></i> WPA2
-                                    </span>
-                                {% elif network.security == 'WPA' %}
-                                    <span class="badge bg-warning text-dark">
-                                        <i class="fas fa-lock"></i> WPA
-                                    </span>
-                                {% elif network.security == 'WEP' %}
-                                    <span class="badge bg-danger">
-                                        <i class="fas fa-unlock"></i> WEP
-                                    </span>
-                                {% else %}
-                                    <span class="badge bg-secondary">
-                                        <i class="fas fa-globe"></i> Open
-                                    </span>
-                                {% endif %}
-                            </td>
+                            <td>{{ network.security }}</td>
                             <td>
                                 <button class="btn btn-sm btn-primary connect-btn" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#connectModal"
-                                        data-ssid="{{ network.ssid }}"
+                                        data-ssid="{{ network.ssid }}" 
                                         data-security="{{ network.security }}"
                                         {% if not wifi_enabled %}disabled{% endif %}>
                                     <i class="fas fa-plug"></i> {% trans %}Connect{% endtrans %}
