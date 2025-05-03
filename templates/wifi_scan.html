@@ -216,23 +216,31 @@ if (window.jQuery) {
 
 async function rescanNetworks() {
     try {
-        const response = await fetch('/api/wifi/scan', {
-            headers: {
-                'X-CSRFToken': '{{ csrf_token() }}'
-            }
-        });
+        const response = await fetch('/api/wifi/scan');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (!data.success) {
-            throw new Error(data.error || 'Scan failed');
+            throw new Error(data.error || 'Failed to scan networks');
         }
         
-        // Actualizar UI con redes
         updateNetworkList(data.networks);
         
     } catch (error) {
         console.error('Scan error:', error);
-        alert('Error: ' + error.message);
+        showToast(`Error scanning: ${error.message}`, 'danger');
+        
+        // Mostrar estado de error en la UI
+        $('#network-list').html(`
+            <div class="list-group-item text-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Error al escanear redes: ${error.message}
+            </div>
+        `);
     }
 }
 

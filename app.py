@@ -912,6 +912,33 @@ def connect():
     except subprocess.CalledProcessError as e:
         return jsonify({'message': f'Failed to connect: {str(e)}'}), 400
 
+@app.route('/wifi_scan')
+def wifi_scan_page():
+    try:
+        # Verificar estado WiFi
+        status = subprocess.run(['nmcli', 'radio', 'wifi'], capture_output=True, text=True)
+        wifi_enabled = 'enabled' in status.stdout.lower()
+        
+        # Obtener conexión actual
+        current_conn = None
+        conn_result = subprocess.run(
+            ['nmcli', '-t', '-f', 'NAME,TYPE,DEVICE', 'connection', 'show', '--active'],
+            capture_output=True,
+            text=True
+        )
+        if conn_result.returncode == 0:
+            for line in conn_result.stdout.splitlines():
+                if 'wifi' in line.lower():
+                    current_conn = line.split(':')[0]
+                    break
+        
+        return render_template('wifi_scan.html', 
+                             wifi_enabled=wifi_enabled,
+                             current_connection=current_conn)
+    except Exception as e:
+        app.logger.error(f'Error loading WiFi page: {str(e)}')
+        return render_template('wifi_scan.html', error=str(e))
+
 def read_lines_filter(filename):
     try:
         with open(filename, 'r') as f:
