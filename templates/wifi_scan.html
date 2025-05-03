@@ -200,7 +200,7 @@
                         <div class="progress">
                             <div class="progress-bar bg-{{ 'success' if network.signal|int > 70 else 'warning' if network.signal|int > 40 else 'danger' }}" 
                                  style="width: {{ network.signal|replace('%', '') }}%">
-                                {{ network.signal|replace('%', '') }}%
+                                {{ network.signal|replace('%', '') }}
                             </div>
                         </div>
                     </div>
@@ -280,27 +280,44 @@
         }
     });
 
-    // Manejador de conexión
-    $('#connectBtn').click(function() {
-        var ssid = $('#ssid').val();
-        var password = $('#password').val();
-        
-        // Mostrar spinner durante la conexión
-        $(this).html('<span class="spinner-border spinner-border-sm"></span> Conectando...');
-        
-        $.post('/wifi_connect', {
-            ssid: ssid,
-            password: password
-        }).done(function(data) {
-            if(data.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + (data.error || 'Failed to connect'));
-                $('#connectBtn').html('{% trans %}Connect{% endtrans %}');
-            }
-        }).fail(function() {
-            alert('Connection failed');
-            $('#connectBtn').html('{% trans %}Connect{% endtrans %}');
+    $(document).ready(function() {
+        // Manejador de conexión robusto
+        $(document).off('click', '#connectBtn').on('click', '#connectBtn', function() {
+            const btn = $(this);
+            const originalHtml = btn.html();
+            
+            // Deshabilitar botón y mostrar spinner
+            btn.prop('disabled', true).html(
+                '<span class="spinner-border spinner-border-sm"></span> Conectando...'
+            );
+            
+            // Obtener datos del formulario
+            const formData = {
+                ssid: $('#ssid').val(),
+                password: $('#password').val()
+            };
+            
+            // Enviar petición AJAX
+            $.ajax({
+                url: '/wifi_connect',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    if(response.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + (response.error || 'Error desconocido'));
+                    }
+                },
+                error: function(xhr) {
+                    const errorMsg = xhr.responseJSON?.error || 'Error de conexión';
+                    alert('Error: ' + errorMsg);
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html(originalHtml);
+                }
+            });
         });
     });
     </script>
