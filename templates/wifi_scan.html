@@ -9,7 +9,7 @@
         <i class="bi bi-wifi-off"></i>
         <span id="wifiStatusText"></span>
         <button id="enableWifiBtn" class="btn btn-sm btn-success ms-2 d-none">
-            <i class="bi bi-power"></i> Activar WiFi
+            <i class="bi bi-power"></i> {% trans %}Enable WiFi{% endtrans %}
         </button>
     </div>
 
@@ -25,7 +25,7 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Botón de rescan con feedback -->
+    <!-- Encabezado y botón de rescan -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">
             <i class="bi bi-wifi"></i> {% trans %}WiFi Networks{% endtrans %}
@@ -39,19 +39,30 @@
     <!-- Mobile Optimization -->
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <style>
-        /* Mover todo el CSS aquí */
+        /* Estilos optimizados para móviles */
         .wifi-table th:nth-child(3),
         .wifi-table td:nth-child(3) {
             display: none;
         }
 
+        .network-card {
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+        
+        .network-card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-connect {
+            white-space: nowrap;
+        }
+
         @media (max-width: 768px) {
-            /* Cards en columna */
             .stats-card {
                 margin-bottom: 15px;
             }
             
-            /* Tabla responsive */
             .table-responsive {
                 display: block;
                 width: 100%;
@@ -59,34 +70,56 @@
                 -webkit-overflow-scrolling: touch;
             }
             
-            /* Botones más grandes */
             .btn-connect {
                 padding: 8px 12px;
                 font-size: 14px;
             }
             
-            /* Header más compacto */
             .page-header {
                 flex-direction: column;
                 align-items: flex-start;
             }
             
-            /* Progress bars más visibles */
             .progress {
                 height: 25px;
             }
         }
         
         @media (max-width: 576px) {
-            /* Cards más compactas */
             .card-body {
                 padding: 1rem;
             }
             
-            /* Texto más grande */
             body {
                 font-size: 16px;
             }
+            
+            .modal-dialog {
+                margin: 0.5rem auto;
+            }
+        }
+        
+        /* Mejoras visuales */
+        .signal-indicator .progress-bar {
+            font-weight: bold;
+            color: #000;
+            text-shadow: 0 0 2px rgba(255,255,255,0.5);
+        }
+        
+        #connectModal .modal-body {
+            padding-bottom: 0;
+        }
+        
+        .connection-status {
+            font-weight: bold;
+        }
+        
+        .connected {
+            color: #28a745;
+        }
+        
+        .disconnected {
+            color: #dc3545;
         }
     </style>
 
@@ -176,7 +209,7 @@
                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                 {% trans %}Current Connection{% endtrans %}
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            <div class="h5 mb-0 font-weight-bold text-gray-800 connection-status {% if current_connection %}connected{% else %}disconnected{% endif %}">
                                 {{ current_connection or 'Disconnected' }}
                             </div>
                         </div>
@@ -193,26 +226,27 @@
     <div class="row g-2">
         {% for network in networks %}
         <div class="col-12 col-md-6 col-lg-4">
-            <div class="card network-card">
+            <div class="card network-card {% if current_connection == network.ssid %}border-success{% endif %}">
                 <div class="card-body">
-                    <h5 class="card-title">{{ network.ssid }}</h5>
-                    <div class="signal-indicator">
+                    <h5 class="card-title d-flex justify-content-between">
+                        <span>{{ network.ssid }}</span>
+                        {% if current_connection == network.ssid %}
+                            <span class="badge bg-success">{% trans %}Connected{% endtrans %}</span>
+                        {% endif %}
+                    </h5>
+                    <div class="signal-indicator mb-3">
                         <div class="progress">
                             <div class="progress-bar bg-{{ 'success' if network.signal|int > 70 else 'warning' if network.signal|int > 40 else 'danger' }}" 
                                  style="width: {{ network.signal|replace('%', '') }}%">
-                                {{ network.signal|replace('%', '') }}
+                                {{ network.signal|replace('%', '') }}%
                             </div>
                         </div>
                     </div>
                     <table class="table table-striped wifi-table">
                         <tbody>
                             <tr>
-                                <th>{% trans %}SSID{% endtrans %}</th>
-                                <td>{{ network.ssid }}</td>
-                            </tr>
-                            <tr>
                                 <th>{% trans %}Security{% endtrans %}</th>
-                                <td>{{ network.security }}</td>
+                                <td>{{ network.security or 'Open' }}</td>
                             </tr>
                             <tr>
                                 <th>{% trans %}Signal{% endtrans %}</th>
@@ -220,8 +254,19 @@
                             </tr>
                             <tr>
                                 <th></th>
-                                <td>
-                                    <button class='btn btn-sm btn-connect' data-toggle='modal' data-target='#connectModal' data-ssid='{{ network.ssid }}' data-security='{{ network.security if network.security else "Abierta" }}'><i class='bi bi-wifi'></i> {% trans %}Connect{% endtrans %}</button>
+                                <td class="text-end">
+                                    <button class='btn btn-sm btn-connect btn-{{ "outline-success" if current_connection == network.ssid else "primary" }}' 
+                                            data-toggle='modal' 
+                                            data-target='#connectModal' 
+                                            data-ssid='{{ network.ssid }}' 
+                                            data-security='{{ network.security if network.security else "Open" }}'>
+                                        <i class='bi bi-wifi'></i> 
+                                        {% if current_connection == network.ssid %}
+                                            {% trans %}Reconnect{% endtrans %}
+                                        {% else %}
+                                            {% trans %}Connect{% endtrans %}
+                                        {% endif %}
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -251,6 +296,9 @@
                         <div class="form-group">
                             <label for="password">{% trans %}Password{% endtrans %}</label>
                             <input type="password" class="form-control" id="password" name="password" placeholder="{% trans %}Leave empty for open networks{% endtrans %}">
+                            <small class="form-text text-muted">
+                                {% trans %}For WEP/WPA/WPA2 secured networks{% endtrans %}
+                            </small>
                         </div>
                     </form>
                 </div>
@@ -262,7 +310,27 @@
         </div>
     </div>
 
-    <script>
+    <!-- Error Toast -->
+    <div class="position-fixed bottom-0 right-0 p-3" style="z-index: 5; right: 0; bottom: 0;">
+        <div id="errorToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true" data-delay="5000">
+            <div class="toast-header bg-danger text-white">
+                <strong class="mr-auto">{% trans %}Error{% endtrans %}</strong>
+                <button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="toast-body" id="errorToastBody">
+                {% trans %}An error occurred while connecting{% endtrans %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+$(document).ready(function() {
     // Configurar modal con SSID seleccionado
     $('#connectModal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget);
@@ -270,88 +338,159 @@
         var security = button.data('security');
         var modal = $(this);
         
+        // Limpiar errores anteriores
+        modal.find('.alert-danger').remove();
+        modal.find('#password').val('');
+        
         modal.find('#ssid').val(ssid);
         
         // Habilitar/deshabilitar campo de contraseña según seguridad
-        if(security === '--' || !security || security === 'Abierta') {
-            modal.find('#password').prop('disabled', true).val('');
+        if(security === '--' || !security || security === 'Open') {
+            modal.find('#password').prop('disabled', true).val('').attr('placeholder', '{% trans %}No password needed{% endtrans %}');
         } else {
-            modal.find('#password').prop('disabled', false).focus();
+            modal.find('#password').prop('disabled', false).attr('placeholder', '{% trans %}Enter password for ' + security + ' network{% endtrans %}').focus();
         }
     });
 
+    // Manejar conexión WiFi
     document.getElementById('connectBtn').addEventListener('click', async function() {
         const btn = this;
+        const modal = $('#connectModal');
         const originalText = btn.innerHTML;
+        const errorToast = $('#errorToast');
         
         // Mostrar estado de carga
         btn.disabled = true;
         btn.innerHTML = `
             <span class="spinner-border spinner-border-sm" role="status"></span>
-            Conectando...
+            {% trans %}Connecting...{% endtrans %}
         `;
         
         try {
+            const ssid = document.getElementById('ssid').value;
+            const password = document.getElementById('password').value;
+            const security = $(event.relatedTarget).data('security');
+            
+            // Validación básica
+            if (!ssid) {
+                throw new Error('{% trans %}Network name is required{% endtrans %}');
+            }
+            
+            // Validación para redes seguras
+            if (security && security !== 'Open' && security !== '--' && !password) {
+                throw new Error('{% trans %}Password is required for secured networks{% endtrans %}');
+            }
+            
+            // Mostrar datos en consola para depuración
+            console.log('Attempting to connect to:', { ssid, password, security });
+            
             const response = await fetch('/wifi_connect', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    ssid: document.getElementById('ssid').value,
-                    password: document.getElementById('password').value
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'  // Protección CSRF
+                },
+                body: JSON.stringify({ 
+                    ssid: ssid,
+                    password: password,
+                    security: security
                 })
             });
             
             const data = await response.json();
+            console.log('Server response:', data);
             
-            if (!response.ok || !data.success) {
-                throw new Error(data.error || 'Error al conectar');
+            if (!response.ok) {
+                throw new Error(data.error || '{% trans %}Connection failed{% endtrans %}');
             }
             
-            // Recargar tras conexión exitosa
-            window.location.reload();
+            if (!data.success) {
+                throw new Error(data.message || '{% trans %}Connection failed{% endtrans %}');
+            }
+            
+            // Cerrar modal y recargar
+            modal.modal('hide');
+            setTimeout(() => window.location.reload(), 1000);
             
         } catch (error) {
-            alert(`Error: ${error.message}`);
+            console.error('Connection error:', error);
+            
+            // Mostrar error en toast
+            $('#errorToastBody').text(error.message);
+            errorToast.toast('show');
+            
+            // Mostrar error en el modal también
+            const errorElement = document.createElement('div');
+            errorElement.className = 'alert alert-danger mt-3';
+            errorElement.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${error.message}`;
+            
+            // Eliminar mensajes anteriores
+            const existingError = modal.find('.alert-danger');
+            if (existingError.length) existingError.remove();
+            
+            modal.find('.modal-body').prepend(errorElement);
+            
         } finally {
             // Restaurar estado del botón
             btn.disabled = false;
             btn.innerHTML = originalText;
         }
     });
-    </script>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        fetch('/api/wifi_status')
+    // Verificar estado WiFi al cargar
+    fetch('/api/wifi_status')
+        .then(response => response.json())
+        .then(data => {
+            const alert = document.getElementById('wifiStatusAlert');
+            const text = document.getElementById('wifiStatusText');
+            const btn = document.getElementById('enableWifiBtn');
+            
+            if (!data.enabled) {
+                alert.classList.remove('d-none');
+                text.textContent = '{% trans %}WiFi is disabled{% endtrans %}';
+                btn.classList.remove('d-none');
+            }
+        })
+        .catch(error => console.error('Error checking WiFi status:', error));
+    
+    // Activar WiFi
+    document.getElementById('enableWifiBtn').addEventListener('click', function() {
+        const btn = this;
+        const originalText = btn.innerHTML;
+        
+        btn.disabled = true;
+        btn.innerHTML = `
+            <span class="spinner-border spinner-border-sm" role="status"></span>
+            {% trans %}Enabling...{% endtrans %}
+        `;
+        
+        fetch('/api/enable_wifi', { 
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token() }}'  // Protección CSRF
+            }
+        })
             .then(response => response.json())
             .then(data => {
-                const alert = document.getElementById('wifiStatusAlert');
-                const text = document.getElementById('wifiStatusText');
-                const btn = document.getElementById('enableWifiBtn');
-                
-                if (!data.enabled) {
-                    alert.classList.remove('d-none');
-                    text.textContent = 'El WiFi está desactivado';
-                    btn.classList.remove('d-none');
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    $('#errorToastBody').text(data.error || '{% trans %}Failed to enable WiFi{% endtrans %}');
+                    $('#errorToast').toast('show');
                 }
+            })
+            .catch(error => {
+                console.error('Error enabling WiFi:', error);
+                $('#errorToastBody').text('{% trans %}Error enabling WiFi{% endtrans %}');
+                $('#errorToast').toast('show');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
             });
-        
-        // Activar WiFi
-        document.getElementById('enableWifiBtn').addEventListener('click', function() {
-            fetch('/api/enable_wifi', { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.reload();
-                    } else {
-                        alert('Error: ' + data.error);
-                    }
-                });
-        });
     });
-    </script>
-
-    <script>
+    
+    // Manejar rescan
     document.getElementById('rescanBtn').addEventListener('click', function() {
         const btn = this;
         const spinner = document.getElementById('rescanSpinner');
@@ -361,21 +500,32 @@
         spinner.classList.remove('d-none');
         text.textContent = '{% trans %}Scanning...{% endtrans %}';
         
-        // Recargar la página después de 2 segundos (simulando scan)
-        setTimeout(() => {
-            window.location.reload();
-        }, 2000);
+        fetch('/api/rescan_wifi', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token() }}'  // Protección CSRF
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    $('#errorToastBody').text(data.error || '{% trans %}Scan failed{% endtrans %}');
+                    $('#errorToast').toast('show');
+                }
+            })
+            .catch(error => {
+                console.error('Rescan error:', error);
+                $('#errorToastBody').text('{% trans %}Scan error{% endtrans %}');
+                $('#errorToast').toast('show');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                spinner.classList.add('d-none');
+                text.textContent = '{% trans %}Rescan{% endtrans %}';
+            });
     });
-    </script>
-</div>
-{% endblock %}
-
-{% block scripts %}
-{{ super() }}
-<script>
-// Initialize DataTable
-$(document).ready(function() {
-    // Connect button handler
 });
 </script>
 {% endblock %}
