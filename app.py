@@ -44,7 +44,7 @@ csrf = CSRFProtect(app)
 
 # Configure secure session settings
 app.config.update(
-    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SECURE=False,  # Cambia a True en producción con HTTPS
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
     PERMANENT_SESSION_LIFETIME=86400,
