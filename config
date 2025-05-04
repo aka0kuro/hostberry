@@ -1,4 +1,3 @@
-# ¡ADVERTENCIA! No almacenes contraseñas reales aquí en producción. Usa un archivo .env para datos sensibles.
 # Configuración básica
 AP_IFACE="wlan0"
 WIFI_IFACE="wlan0"
