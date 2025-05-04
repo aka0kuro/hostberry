@@ -447,6 +447,7 @@ def security_config():
         },
         timezones=pytz.all_timezones,
         time_formats=['%Y-%m-%d %H:%M', '%d/%m/%Y %H:%M', '%m/%d/%Y %I:%M %p'],
+        pytz=pytz
     )
 
 @app.route('/security/logs')
