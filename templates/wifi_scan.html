@@ -1,30 +1,130 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}{% trans %}WiFi Scanner{% endtrans %}{% endblock %}
+{% block title %}{% trans %}WiFi Center{% endtrans %}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">
-                <i class="fas fa-wifi me-2"></i>Redes WiFi Disponibles
-                <button id="rescanBtn" class="btn btn-sm btn-light float-end">
-                    <i class="fas fa-sync-alt me-1"></i>Escanear
-                </button>
-            </h5>
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-wifi me-2"></i>{% trans %}WiFi Center{% endtrans %}</h1>
+        <div>
+            <button id="rescanBtn" class="btn btn-primary btn-sm">
+                <i class="fas fa-sync-alt me-1"></i> {% trans %}Rescan{% endtrans %}
+            </button>
         </div>
-        
-        <div class="card-body p-0">
-            <div id="wifiStatusAlert" class="alert alert-warning d-none mb-0 rounded-0">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <span id="wifiStatusText"></span>
-                <button id="enableWifiBtn" class="btn btn-sm btn-outline-dark ms-2 d-none">
-                    Activar WiFi
-                </button>
+    </div>
+
+    <!-- WiFi Status Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                {% trans %}WiFi Status{% endtrans %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="wifiStatusTextCard">
+                                <span id="wifiStatusText">-</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-wifi fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <div id="network-list" class="list-group list-group-flush">
-                <!-- Las redes se agregarán dinámicamente aquí -->
+        </div>
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                {% trans %}Current Connection{% endtrans %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="currentConnection">-</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-network-wired fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-12 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                {% trans %}Available Networks{% endtrans %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="networksCount">-</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-signal fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WiFi Networks List & Modal -->
+    <div class="row">
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-wifi me-1"></i> {% trans %}WiFi Networks{% endtrans %}
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div id="wifiStatusAlert" class="alert alert-warning d-none mb-0 rounded-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="wifiStatusTextInline"></span>
+                        <button id="enableWifiBtn" class="btn btn-sm btn-outline-dark ms-2 d-none">
+                            {% trans %}Enable WiFi{% endtrans %}
+                        </button>
+                    </div>
+                    <div id="network-list" class="list-group list-group-flush">
+                        <!-- Las redes se agregarán dinámicamente aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-clock-history me-1"></i> {% trans %}Recent WiFi Activity{% endtrans %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="activity-feed">
+                        <div class="activity-item">
+                            <div class="activity-badge success">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="font-weight-bold">{% trans %}WiFi Scan{% endtrans %}</div>
+                                <div class="text-muted small" id="lastScanTime">-</div>
+                                <div>{% trans %}Last scan completed successfully{% endtrans %}</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-badge info">
+                                <i class="bi bi-info-circle"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="font-weight-bold">{% trans %}WiFi Status Check{% endtrans %}</div>
+                                <div class="text-muted small" id="lastStatusCheck">-</div>
+                                <div>{% trans %}Status checked{% endtrans %}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -34,7 +134,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">Conectar a red</h5>
+                    <h5 class="modal-title">{% trans %}Connect to Network{% endtrans %}</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -45,11 +145,11 @@
                             <input type="text" id="ssid" class="form-control" readonly>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Contraseña</label>
-                            <input type="password" id="password" class="form-control" placeholder="Ingresa la contraseña">
+                            <label class="form-label">{% trans %}Password{% endtrans %}</label>
+                            <input type="password" id="password" class="form-control" placeholder="{% trans %}Enter password{% endtrans %}">
                             <div class="form-text">
                                 <i class="fas fa-lock me-1"></i>
-                                <span id="securityTypeText">Red segura</span>
+                                <span id="securityTypeText">{% trans %}Secured Network{% endtrans %}</span>
                             </div>
                         </div>
                         <div class="progress d-none" id="connectProgress">
@@ -58,15 +158,15 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans %}Cancel{% endtrans %}</button>
                     <button type="button" id="connectBtn" class="btn btn-primary">
-                        <i class="fas fa-plug me-1"></i>Conectar
+                        <i class="fas fa-plug me-1"></i>{% trans %}Connect{% endtrans %}
                     </button>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <!-- Contenedor para notificaciones estilo Toast -->
     <div id="toastContainer" style="position: fixed; bottom: 10px; right: 10px;"></div>
 </div>
