@@ -271,12 +271,6 @@ if (window.jQuery) {
                 });
         });
 
-        // 3. Botón Rescan
-        $(document).off('click', '#rescanBtn').on('click', '#rescanBtn', async function(e) {
-            e.preventDefault();
-            await rescanNetworks();
-        });
-
         // 4. Delegación para los botones "Conectar" de cada red
         // Usa delegación para asegurar que funcione con elementos generados dinámicamente
         $('#network-list').off('click', '.connect-btn').on('click', '.connect-btn', function(e) {
@@ -440,6 +434,31 @@ $('#togglePassword').on('click', function() {
         pwd.attr('type', 'password');
         icon.removeClass('fa-eye-slash').addClass('fa-eye');
     }
+});
+</script>
+
+{% block scripts %}
+{{ super() }}
+<script>
+$(document).ready(function() {
+    $("#rescanBtn").click(function() {
+        $.ajax({
+            url: "{{ url_for('rescan_wifi') }}",
+            type: "POST",
+            beforeSend: function() {
+                $("#rescanBtn").prop("disabled", true)
+                    .html('<i class="fas fa-spinner fa-spin me-1"></i> {% trans %}Scanning...{% endtrans %}');
+            },
+            success: function() {
+                location.reload();
+            },
+            error: function() {
+                alert("{% trans %}Error scanning networks{% endtrans %}");
+                $("#rescanBtn").prop("disabled", false)
+                    .html('<i class="fas fa-sync-alt me-1"></i> {% trans %}Rescan{% endtrans %}');
+            }
+        });
+    });
 });
 </script>
 {% endblock %}

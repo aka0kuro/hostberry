@@ -329,6 +329,7 @@ def index():
                     for line in reversed(raw_lines):
                         line = line.strip()
                         if line:
+                            # Parse timestamp and message
                             parts = line.split(' ', 2)
                             if len(parts) >= 3:
                                 logs.append({'timestamp': ' '.join(parts[:2]), 'message': parts[2]})
@@ -986,6 +987,14 @@ def connect():
         return jsonify({'message': 'Connected successfully!'})
     except subprocess.CalledProcessError as e:
         return jsonify({'message': f'Failed to connect: {str(e)}'}), 400
+
+@app.route('/rescan_wifi', methods=['POST'])
+def rescan_wifi():
+    try:
+        subprocess.run(["iwlist", "wlan0", "scan"], check=True)
+        return "", 200
+    except subprocess.CalledProcessError:
+        return "", 500
 
 @app.route('/wifi_scan')
 def wifi_scan_page():
