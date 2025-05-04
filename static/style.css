@@ -1,24 +1,41 @@
+/* Reset y estilos base */
+:root {
+    --sidebar-width: 260px;
+    --transition-speed: 0.3s;
+    --primary-gradient: linear-gradient(90deg, #0d6efd 0%, #007bff 100%);
+    --success-gradient: linear-gradient(90deg, #198754 0%, #20c997 100%);
+}
+
 body {
     background-color: #fff;
-}
-
-#network-list {
-    max-height: 300px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    /* Ajusta el valor de max-height si prefieres más o menos alto */
-}
-
     color: #212529;
     font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
     padding-bottom: 32px;
 }
 
-.card {
-    margin-bottom: 28px;
-    border-radius: 1rem;
-    border: none;
-    box-shadow: 0 0.25rem 1rem rgba(0,0,0,0.08);
+/* Optimización de listas de red */
+#network-list {
+    max-height: 300px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/* Network chart container */
+.network-chart-container {
+    height: 150px;
+}
+
+/* Toast container fixed position */
+.toast-container-fixed {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    z-index: 1080;
+}
+
+.card-component {
+    margin-bottom: 2rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
 }
 
 .card-header {
@@ -26,15 +43,16 @@ body {
     font-size: 1.18rem;
     border-radius: 1rem 1rem 0 0;
     letter-spacing: 0.02em;
-    background: linear-gradient(90deg, #0d6efd 0%, #007bff 100%);
+    background: var(--primary-gradient);
     color: #fff;
+    padding: 1rem 1.25rem;
 }
 
 .card-header.bg-success {
-    background: linear-gradient(90deg, #198754 0%, #20c997 100%) !important;
+    background: var(--success-gradient) !important;
 }
 .card-header.bg-primary {
-    background: linear-gradient(90deg, #0d6efd 0%, #007bff 100%) !important;
+    background: var(--primary-gradient) !important;
 }
 .card-header.bg-dark {
     background: linear-gradient(90deg, #212529 0%, #0d6efd 100%) !important;
@@ -47,7 +65,7 @@ body {
     margin-bottom: 28px;
     border-radius: 0 0 1rem 1rem;
     box-shadow: 0 0.1rem 0.5rem rgba(0,0,0,0.10);
-    background: linear-gradient(90deg, #0d6efd 0%, #007bff 100%) !important;
+    background: var(--primary-gradient) !important;
 }
 
 input.form-control, select.form-control, textarea.form-control {
@@ -63,6 +81,26 @@ input.form-control:focus, select.form-control:focus, textarea.form-control:focus
 .form-switch .form-check-input {
     width: 2.5em;
     height: 1.5em;
+}
+
+.form-component {
+    padding: 1.5rem;
+}
+
+@media (max-width: 576px) {
+    .form-component {
+        padding: 1rem;
+    }
+}
+
+.btn-action {
+    padding: 12px;
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.btn-action i {
+    margin-right: 5px;
 }
 
 .btn {
@@ -96,7 +134,7 @@ body.dark-theme {
     color: #fff;
 }
 
-body.dark-theme .card {
+body.dark-theme .card-component {
     background-color: #181a1b;
     color: #fff;
     box-shadow: 0 0.125rem 0.5rem rgba(0,0,0,0.25);
@@ -156,4 +194,187 @@ body.dark-theme .alert {
     background-color: #181a1b;
     color: #fff;
     border-color: #dc3545;
+}
+
+/* Layout principal */
+.sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    z-index: 100;
+    padding: 48px 0 0;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    transition: all var(--transition-speed);
+}
+
+.content {
+    margin-left: var(--sidebar-width);
+    padding: 20px;
+    transition: all var(--transition-speed);
+}
+
+/* Sidebar styles */
+.sidebar-logo {
+    position: absolute;
+    bottom: 0;
+    width: calc(100% - 1.5rem);
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.sidebar-logo img {
+    max-width: 80%;
+    height: auto;
+}
+
+/* WireGuard specific styles */
+.wg-card {
+    margin-bottom: 2rem;
+}
+
+.wg-card-body {
+    padding: 1.5rem;
+}
+
+.wg-status-alert {
+    font-size: 1rem;
+}
+
+.wg-form-input {
+    font-size: 16px;
+    padding: 12px;
+}
+
+.wg-btn {
+    padding: 12px;
+    font-size: 16px;
+}
+
+.wg-peer-list {
+    font-size: 14px;
+}
+
+.wg-peer-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+@media (max-width: 576px) {
+    .wg-card-body {
+        padding: 1rem;
+    }
+    
+    .wg-status-alert {
+        font-size: 14px;
+    }
+    
+    .wg-peer-list code {
+        word-break: break-all;
+    }
+}
+
+/* Log styles */
+.log-container {
+    height: 200px;
+    overflow-y: auto;
+    font-size: 0.8rem;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.log-entry {
+    border-bottom: 1px solid #dee2e6;
+    padding: 5px 0;
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+.log-entry small {
+    color: #6c757d;
+}
+
+/* System status cards */
+.status-card {
+    padding: 15px 0;
+}
+
+.status-card i {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+
+.status-card p {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 0;
+}
+
+.status-card small {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+/* Metric colors */
+.cpu-color { color: #0d6efd; }
+.mem-color { color: #198754; }
+.disk-color { color: #fd7e14; }
+.temp-color { color: #dc3545; }
+
+/* Mobile styles */
+@media (max-width: 992px) {
+    .sidebar {
+        transform: translateX(calc(-1 * var(--sidebar-width)));
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    .content {
+        margin-left: 0;
+        padding: 15px;
+    }
+    
+    /* Menú hamburguesa */
+    .navbar-toggler {
+        display: block;
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 1050;
+    }
+}
+
+@media (max-width: 768px) {
+    .card-component {
+        margin-bottom: 1.5rem;
+    }
+    
+    .card-header {
+        font-size: 1rem;
+    }
+    
+    .status-card {
+        padding: 10px 0;
+    }
+}
+
+@media (max-width: 576px) {
+    body {
+        padding-bottom: 20px;
+    }
+    
+    .log-container {
+        height: 150px;
+    }
+    
+    .btn-action {
+        padding: 10px;
+        font-size: 14px;
+    }
 }

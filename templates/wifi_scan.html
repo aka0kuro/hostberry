@@ -90,7 +90,7 @@
                             {% trans %}Enable WiFi{% endtrans %}
                         </button>
                     </div>
-                    <div id="network-list" class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                    <div id="network-list" class="list-group list-group-flush">
                         <!-- Las redes se agregarán dinámicamente aquí -->
                     </div>
                 </div>
@@ -140,42 +140,34 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="wifiConnectForm" method="post">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <div class="mb-3">
-                            <label class="form-label">SSID</label>
-                            <input type="text" id="ssid" class="form-control" readonly>
+                    <div class="mb-3">
+                        <label class="form-label">{% trans %}Network{% endtrans %}</label>
+                        <input type="text" class="form-control" id="ssid" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">{% trans %}Password{% endtrans %}</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="password" placeholder="{% trans %}WiFi password{% endtrans %}">
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="fas fa-eye" id="eyeIcon"></i>
+                            </button>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">{% trans %}Password{% endtrans %}</label>
-                            <div class="input-group">
-    <input type="password" id="password" class="form-control" placeholder="{% trans %}Enter password{% endtrans %}">
-    <button class="btn btn-outline-secondary" type="button" id="togglePassword" tabindex="-1" aria-label="Mostrar/Ocultar contraseña">
-        <i class="fas fa-eye" id="eyeIcon"></i>
-    </button>
-</div>
-<div class="form-text">
-    <i class="fas fa-lock me-1"></i>
-    <span id="securityTypeText">{% trans %}Secured Network{% endtrans %}</span>
-</div>
+                        <div class="form-text">
+                            <i class="fas fa-lock me-1"></i>
+                            <span id="securityTypeText">{% trans %}Secured Network{% endtrans %}</span>
                         </div>
-                        <div class="progress d-none" id="connectProgress">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
-                        </div>
-                    </form>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans %}Cancel{% endtrans %}</button>
-                    <button type="button" id="connectBtn" class="btn btn-primary">
-                        <i class="fas fa-plug me-1"></i>{% trans %}Connect{% endtrans %}
-                    </button>
+                    <button type="button" class="btn btn-primary" id="connectBtn">{% trans %}Connect{% endtrans %}</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Contenedor para notificaciones estilo Toast -->
-    <div id="toastContainer" style="position: fixed; bottom: 10px; right: 10px;"></div>
+    <div id="toastContainer" class="toast-container-fixed"></div>
 </div>
 
 <script>
@@ -376,50 +368,52 @@ async function rescanNetworks() {
 }
 
 async function connectToNetwork() {
-    const ssid = $('#ssid').val();
-    const password = $('#password').val();
-    
     const modal = $('#connectModal');
-    const connectBtn = $('#connectBtn');
+    const ssid = modal.find('#ssid').val();
+    const password = modal.find('#password').val();
+    const connectBtn = modal.find('#connectBtn');
     const originalText = connectBtn.html();
-    const progress = $('#connectProgress');
     
-    // Mostrar estado de conexión
     connectBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Conectando...');
-    progress.removeClass('d-none');
     
     try {
+        console.log('Enviando solicitud de conexión a:', ssid);
+        
         const response = await fetch('/api/wifi/connect', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token() }}'
             },
-            body: JSON.stringify({ ssid, password })
+            body: JSON.stringify({ 
+                ssid: ssid,
+                password: password 
+            })
         });
         
-        let data, raw;
-        try {
-            raw = await response.text();
-            data = JSON.parse(raw);
-        } catch (jsonErr) {
-            throw new Error('Respuesta inesperada del servidor al conectar WiFi. Puede que la sesión haya expirado o haya un error en el backend.');
+        console.log('Respuesta recibida:', response.status);
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({
+                error: `Error HTTP ${response.status}: ${response.statusText}`
+            }));
+            throw new Error(errorData.error || 'Error en la conexión');
         }
         
+        const data = await response.json();
         if (!data.success) {
-            throw new Error(data.error || 'Connection failed');
+            throw new Error(data.error || 'Error desconocido');
         }
         
         showToast('¡Conectado exitosamente!', 'success');
         modal.modal('hide');
-        setTimeout(() => location.reload(), 1500);
+        setTimeout(() => location.reload(), 2000);
         
     } catch (error) {
-        console.error('Connection error:', error);
+        console.error('Error en conexión WiFi:', error);
         showToast(`Error: ${error.message}`, 'danger');
     } finally {
         connectBtn.prop('disabled', false).html(originalText);
-        progress.addClass('d-none');
     }
 }
 

@@ -835,26 +835,36 @@ def wifi_scan():
 
 @app.route('/api/wifi/connect', methods=['POST'])
 def wifi_connect():
+    app.logger.info(f"Headers recibidos: {dict(request.headers)}")
+    
+    # Verificar CSRF token para formularios HTML (excepto API JSON)
+    if request.content_type != 'application/json':
+        try:
+            csrf.protect()
+        except Exception as e:
+            app.logger.error(f"CSRF error: {str(e)}")
+            return jsonify({'success': False, 'error': 'Invalid CSRF token'}), 403
+    
     try:
         data = request.get_json()
+        app.logger.info(f"Datos recibidos: {data}")
+        
         if not data or not data.get('ssid'):
             return jsonify({'success': False, 'error': 'SSID is required'}), 400
             
-        # Sanitización y validación
         ssid = re.sub(r'[^\w \-]', '', data['ssid']).strip()
         password = data.get('password', '')
         
         if not ssid:
             return jsonify({'success': False, 'error': 'Invalid SSID format'}), 400
             
-        # Construir comando seguro
+        if password and len(password) < 8:
+            return jsonify({'success': False, 'error': 'Password must be at least 8 characters'}), 400
+            
         cmd = ['nmcli', 'device', 'wifi', 'connect', ssid]
         if password:
-            if len(password) < 8:
-                return jsonify({'success': False, 'error': 'Password must be at least 8 characters'}), 400
             cmd.extend(['password', password])
             
-        # Ejecutar conexión
         result = subprocess.run(
             cmd,
             capture_output=True,
@@ -863,30 +873,31 @@ def wifi_connect():
         )
         
         if result.returncode == 0:
-            # Guardar en wpa_supplicant.conf si hay contraseña
+            # Guardar en wpa_supplicant.conf
             if password:
                 wpa_conf = '/etc/wpa_supplicant/wpa_supplicant.conf'
                 network_block = f'''\nnetwork={{\n    ssid=\"{ssid}\"\n    psk=\"{password}\"\n    key_mgmt=WPA-PSK\n}}\n'''
                 try:
-                    # Solo añadir si no existe ya la red
                     if os.path.exists(wpa_conf):
                         with open(wpa_conf, 'r') as f:
-                            content = f.read()
-                        if ssid not in content:
-                            with open(wpa_conf, 'a') as f:
-                                f.write(network_block)
+                            if ssid not in f.read():
+                                with open(wpa_conf, 'a') as f:
+                                    f.write(network_block)
                     else:
                         with open(wpa_conf, 'w') as f:
                             f.write('ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=ES\n')
                             f.write(network_block)
                 except Exception as e:
-                    app.logger.error(f'Error al guardar en wpa_supplicant.conf: {str(e)}')
+                    app.logger.error(f'Error saving WiFi config: {str(e)}')
+            
             return jsonify({'success': True, 'message': 'Connected successfully'})
         else:
             error_msg = result.stderr.split('\n')[0] if result.stderr else 'Connection failed'
+            app.logger.error(f'WiFi connection failed: {error_msg}')
             return jsonify({'success': False, 'error': error_msg}), 400
             
     except subprocess.TimeoutExpired:
+        app.logger.error('WiFi connection timeout')
         return jsonify({'success': False, 'error': 'Connection timeout'}), 408
     except Exception as e:
         app.logger.error(f'WiFi connection error: {str(e)}')
