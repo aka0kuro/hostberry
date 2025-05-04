@@ -182,22 +182,31 @@
 function updateNetworkList(networks) {
     const list = $('#network-list');
     list.empty();
-    
+    // Actualiza contador de redes si existe
+    if ($('#networksCount').length) {
+        $('#networksCount').text(networks.length);
+    }
+    if (!networks.length) {
+        list.append(`
+            <div class="list-group-item text-warning text-center">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                No se encontraron redes WiFi
+            </div>
+        `);
+        return;
+    }
     // Ordenar por intensidad de señal (mayor primero)
     networks.sort((a, b) => parseInt(b.signal) - parseInt(a.signal));
-    
     networks.forEach(network => {
         const signalStrength = parseInt(network.signal);
         let signalClass = 'text-danger';
         if (signalStrength > 70) signalClass = 'text-success';
         else if (signalStrength > 40) signalClass = 'text-warning';
-        
         const securityIcon = network.security === 'Open' ? 'fa-unlock' : 'fa-lock';
-        
         list.append(`
             <div class="list-group-item list-group-item-action">
                 <div class="d-flex w-100 justify-content-between">
-                    <h6 class="mb-1">${network.ssid}</h6>
+                    <h6 class="mb-1">${network.ssid || 'Hidden Network'}</h6>
                     <small class="${signalClass}">
                         <i class="fas fa-signal me-1"></i>${network.signal}
                     </small>
@@ -217,6 +226,38 @@ function updateNetworkList(networks) {
         `);
     });
 }
+
+// Botón Rescan UX mejorada
+$("#rescanBtn").off('click').on('click', async function() {
+    const btn = $(this);
+    btn.prop("disabled", true)
+        .html('<i class="fas fa-spinner fa-spin me-1"></i> Escaneando...');
+    // Spinner en el área de redes
+    $('#network-list').html(`
+        <div class="list-group-item text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2 mb-0">Escaneando redes WiFi...</p>
+        </div>
+    `);
+    try {
+        const response = await fetch('/api/wifi/scan');
+        const data = await response.json();
+        if (!data.success) throw new Error(data.error || 'Error scanning networks');
+        updateNetworkList(data.networks);
+    } catch (error) {
+        $('#network-list').html(`
+            <div class="list-group-item text-danger text-center">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${error.message}
+            </div>
+        `);
+    } finally {
+        btn.prop("disabled", false)
+            .html('<i class="fas fa-sync-alt me-1"></i> Rescan');
+    }
+});
 
 // Mostrar notificación estilo Toast
 function showToast(message, type = 'info') {
