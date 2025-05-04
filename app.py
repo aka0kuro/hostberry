@@ -335,7 +335,8 @@ def index():
             stats=stats,
             logs_available=logs_available,
             log_lines=log_lines,
-            current_lang=get_locale()
+            current_lang=get_locale(),
+            logs=log_lines
         ))
         
         # Add cache control headers to prevent caching
