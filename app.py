@@ -992,15 +992,25 @@ def enable_wifi():
 
 # Función utilitaria para saber si la interfaz wifi está bloqueada
 
-def is_wifi_blocked():
+def is_wifi_blocked_or_disabled():
     import subprocess
     try:
+        # Verifica rfkill
         result = subprocess.run(['rfkill', 'list', 'wifi'], capture_output=True, text=True)
         output = result.stdout.lower()
-        return 'soft blocked: yes' in output or 'hard blocked: yes' in output or 'blocked: yes' in output
+        blocked = (
+            'soft blocked: yes' in output or
+            'hard blocked: yes' in output or
+            'blocked: yes' in output
+        )
+        # Verifica nmcli
+        nmcli_result = subprocess.run(['nmcli', 'radio', 'wifi'], capture_output=True, text=True)
+        wifi_status = nmcli_result.stdout.strip().lower()
+        disabled = (wifi_status == 'disabled')
+        return blocked or disabled
     except Exception as e:
         import logging
-        logging.error(f'Error checking rfkill: {e}')
+        logging.error(f'Error checking rfkill/nmcli: {e}')
         return False
 
 @app.route('/wifi_scan')
@@ -1013,7 +1023,7 @@ def wifi_scan_page():
         status = subprocess.run(['nmcli', 'radio', 'wifi'], capture_output=True, text=True)
         wifi_enabled = 'enabled' in status.stdout.lower()
         app.logger.debug(f'[WiFi Page] Estado WiFi: {status.stdout.strip()}')
-        wifi_blocked = is_wifi_blocked()
+        wifi_blocked = is_wifi_blocked_or_disabled()
 
         # Obtener conexión actual
         current_conn = None
