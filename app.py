@@ -1039,7 +1039,7 @@ def wifi_scan_page():
                     break
         app.logger.debug(f'[WiFi Page] Conexión actual: {current_conn}')
 
-        app.logger.debug(f'[WiFi Page] wifi_blocked: {wifi_blocked}')
+        app.logger.debug(f'[WiFi Page] wifi_blocked: {wifi_blocked} | wifi_enabled: {wifi_enabled}')
         return render_template(
             'wifi_scan.html',
             wifi_blocked=wifi_blocked,
