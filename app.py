@@ -922,11 +922,15 @@ def connect():
 
 @app.route('/wifi_scan')
 def wifi_scan_page():
+    """
+    Renderiza la página de escaneo WiFi. Nunca debe retornar JSON, solo HTML.
+    """
     try:
         # Verificar estado WiFi
         status = subprocess.run(['nmcli', 'radio', 'wifi'], capture_output=True, text=True)
         wifi_enabled = 'enabled' in status.stdout.lower()
-        
+        app.logger.debug(f'[WiFi Page] Estado WiFi: {status.stdout.strip()}')
+
         # Obtener conexión actual
         current_conn = None
         conn_result = subprocess.run(
@@ -939,12 +943,16 @@ def wifi_scan_page():
                 if 'wifi' in line.lower():
                     current_conn = line.split(':')[0]
                     break
-        
-        return render_template('wifi_scan.html', 
-                             wifi_enabled=wifi_enabled,
-                             current_connection=current_conn)
+        app.logger.debug(f'[WiFi Page] Conexión actual: {current_conn}')
+
+        return render_template(
+            'wifi_scan.html',
+            wifi_enabled=wifi_enabled,
+            current_connection=current_conn
+        )
     except Exception as e:
-        app.logger.error(f'Error loading WiFi page: {str(e)}')
+        app.logger.error(f'[WiFi Page] Error cargando página WiFi: {str(e)}')
+        # Nunca retornar JSON aquí
         return render_template('wifi_scan.html', error=str(e))
 
 def read_lines_filter(filename):
