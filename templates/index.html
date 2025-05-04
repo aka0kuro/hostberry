@@ -8,10 +8,10 @@
             <div class="card h-100">
                 <a href="{{ url_for('adblock_config') }}" class="card-link">
                     <div class="card-body text-center">
-                        <i class="bi bi-shield-shaded fs-1 {% if not config.ADBLOCK_ENABLED %}text-secondary{% endif %}"></i>
+                        <i class="bi bi-shield-shaded fs-1 {% if not adblock_enabled %}text-secondary{% endif %}"></i>
                         <h5 class="card-title mt-3">{% trans %}AdBlock{% endtrans %}</h5>
-                        <span class="badge {% if config.ADBLOCK_ENABLED %}bg-success{% else %}bg-secondary{% endif %}">
-                            {% if config.ADBLOCK_ENABLED %}{% trans %}Activo{% endtrans %}{% else %}{% trans %}Inactivo{% endtrans %}{% endif %}
+                        <span class="badge {% if adblock_enabled %}bg-success{% else %}bg-secondary{% endif %}">
+                            {% if adblock_enabled %}{% trans %}Activo{% endtrans %}{% else %}{% trans %}Inactivo{% endtrans %}{% endif %}
                         </span>
                     </div>
                 </a>
@@ -22,10 +22,10 @@
             <div class="card h-100">
                 <a href="{{ url_for('vpn_config') }}" class="card-link">
                     <div class="card-body text-center">
-                        <i class="bi bi-lock fs-1 {% if not config.VPN_ENABLED %}text-secondary{% endif %}"></i>
+                        <i class="bi bi-lock fs-1 {% if not vpn_enabled %}text-secondary{% endif %}"></i>
                         <h5 class="card-title mt-3">{% trans %}VPN{% endtrans %}</h5>
-                        <span class="badge {% if config.VPN_ENABLED %}bg-success{% else %}bg-secondary{% endif %}">
-                            {% if config.VPN_ENABLED %}{% trans %}Activo{% endtrans %}{% else %}{% trans %}Inactivo{% endtrans %}{% endif %}
+                        <span class="badge {% if vpn_enabled %}bg-success{% else %}bg-secondary{% endif %}">
+                            {% if vpn_enabled %}{% trans %}Activo{% endtrans %}{% else %}{% trans %}Inactivo{% endtrans %}{% endif %}
                         </span>
                     </div>
                 </a>
@@ -35,10 +35,10 @@
             <div class="card h-100">
                 <a href="{{ url_for('security_config') }}" class="card-link">
                     <div class="card-body text-center">
-                        <i class="bi bi-fire fs-1 {% if not config.FIREWALL_ENABLED %}text-secondary{% endif %}"></i>
+                        <i class="bi bi-fire fs-1 {% if not firewall_enabled %}text-secondary{% endif %}"></i>
                         <h5 class="card-title mt-3">{% trans %}Firewall{% endtrans %}</h5>
-                        <span class="badge {% if config.FIREWALL_ENABLED %}bg-success{% else %}bg-secondary{% endif %}">
-                            {% if config.FIREWALL_ENABLED %}{% trans %}Activo{% endtrans %}{% else %}{% trans %}Inactivo{% endtrans %}{% endif %}
+                        <span class="badge {% if firewall_enabled %}bg-success{% else %}bg-secondary{% endif %}">
+                            {% if firewall_enabled %}{% trans %}Activo{% endtrans %}{% else %}{% trans %}Inactivo{% endtrans %}{% endif %}
                         </span>
                     </div>
                 </a>
@@ -46,6 +46,7 @@
         </div>
     </div>
 
+    <!-- Segunda fila: System Status y Red Conectada -->
     <!-- Segunda fila: System Status en una línea -->
     <div class="row mb-4">
         <div class="col-md-6">
@@ -55,23 +56,36 @@
                     <div class="d-flex justify-content-around text-center">
                         <div>
                             <i class="bi bi-cpu text-primary fs-4"></i>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title text-center"><i class="bi bi-diagram-3"></i> {% trans %}Red Conectada{% endtrans %}</h5>
-                                    <ul class="list-group list-group-flush">
-                                        <li class="list-group-item"><strong>Interfaz:</strong> {{ network_interface }}</li>
-                                        <li class="list-group-item"><strong>IP local:</strong> {{ local_ip }}</li>
-                                        <li class="list-group-item"><strong>SSID WiFi:</strong> {{ wifi_ssid if wifi_ssid else 'N/A' }}</li>
-                                        <li class="list-group-item"><strong>hostapd:</strong> {{ hostapd_status }}</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
                             <p class="mb-0">{{ stats.cpu_usage }}%</p>
                             <small>CPU</small>
                         </div>
+                        <div>
+                            <i class="bi bi-thermometer-half text-warning fs-4"></i>
+                            <p class="mb-0">{{ stats.cpu_temp }}°C</p>
+                            <small>{% trans %}Temp{% endtrans %}</small>
+                        </div>
+                        <div>
+                            <i class="bi bi-memory text-info fs-4"></i>
+                            <p class="mb-0">{{ stats.memory_usage }}%</p>
+                            <small>{% trans %}Memoria{% endtrans %}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title text-center"><i class="bi bi-diagram-3"></i> {% trans %}Red Conectada{% endtrans %}</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>Interfaz:</strong> {{ network_interface }}</li>
+                        <li class="list-group-item"><strong>IP local:</strong> {{ local_ip }}</li>
+                        <li class="list-group-item"><strong>SSID WiFi:</strong> {{ wifi_ssid if wifi_ssid else 'N/A' }}</li>
+                        <li class="list-group-item"><strong>hostapd:</strong> {{ hostapd_status }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
                         <div>
                             <i class="bi bi-thermometer-half text-warning fs-4"></i>
                             <p class="mb-0">{{ stats.cpu_temp }}°C</p>
