@@ -235,41 +235,89 @@ $(document).ready(function() {
         });
     }
 
-    // Botón Rescan - Escaneo WiFi
+    // Botón Rescan - Escaneo WiFi con timeout
     $("#rescanBtn").off('click').on('click', async function() {
         const btn = $(this);
+        const originalHtml = btn.html();
         btn.prop("disabled", true)
            .html('<i class="fas fa-spinner fa-spin me-1"></i> Escaneando...');
         
-        // Mostrar spinner en el área de redes
+        // Mostrar spinner con tiempo estimado
         $('#network-list').html(`
             <div class="list-group-item text-center">
-                <div class="spinner-border text-primary" role="status">
+                <div class="spinner-border text-primary mb-2" role="status">
                     <span class="visually-hidden">Cargando...</span>
                 </div>
-                <p class="mt-2 mb-0">Escaneando redes WiFi...</p>
+                <p class="mb-1">Buscando redes WiFi...</p>
+                <small class="text-muted">Esto puede tomar 10-15 segundos</small>
             </div>
         `);
 
         try {
-            const response = await fetch('/api/wifi/scan');
+            // Timeout de 20 segundos para el escaneo
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 20000);
+            
+            const response = await fetch('/api/wifi/scan', { 
+                signal: controller.signal 
+            }).finally(() => clearTimeout(timeoutId));
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(
+                    errorData.error || 
+                    `Error ${response.status}: ${response.statusText}`
+                );
+            }
+            
             const data = await response.json();
             
             if (!data.success) {
-                throw new Error(data.error || 'Error al escanear redes');
+                throw new Error(
+                    data.error || 
+                    'El servidor no devolvió resultados válidos'
+                );
             }
             
-            updateNetworkList(data.networks);
+            // Mostrar feedback si no hay redes
+            if (data.networks.length === 0) {
+                $('#network-list').html(`
+                    <div class="list-group-item text-center text-warning">
+                        <i class="fas fa-wifi-slash fa-2x mb-2"></i>
+                        <h5>No se encontraron redes</h5>
+                        <small class="text-muted">
+                            Intenta acercarte al router o verificar la antena WiFi
+                        </small>
+                    </div>
+                `);
+            } else {
+                updateNetworkList(data.networks);
+            }
+            
         } catch (error) {
+            let errorMessage = error.message;
+            let icon = 'fa-exclamation-triangle';
+            
+            if (error.name === 'AbortError') {
+                errorMessage = 'El escaneo tardó demasiado. Intenta nuevamente.';
+                icon = 'fa-clock';
+            } else if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Error de conexión con el servidor';
+                icon = 'fa-plug';
+            }
+            
             $('#network-list').html(`
-                <div class="list-group-item text-danger text-center">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    ${error.message}
+                <div class="list-group-item text-center text-danger">
+                    <i class="fas ${icon} fa-2x mb-2"></i>
+                    <h5>${errorMessage}</h5>
+                    <button class="btn btn-sm btn-outline-secondary mt-2" onclick="$('#rescanBtn').click()">
+                        <i class="fas fa-redo me-1"></i> Reintentar
+                    </button>
                 </div>
             `);
+            
         } finally {
-            btn.prop("disabled", false)
-               .html('<i class="fas fa-sync-alt me-1"></i> Rescan');
+            btn.prop("disabled", false).html(originalHtml);
         }
     });
 
@@ -302,27 +350,6 @@ $(document).ready(function() {
             }
         });
     });
-
-        // Botón Rescan
-        $("#rescanBtn").off('click').on('click', async function() {
-            console.log("Rescan button clicked");
-            const btn = $(this);
-            btn.prop("disabled", true)
-                .html('<i class="fas fa-spinner fa-spin me-1"></i> {% trans %}Scanning...{% endtrans %}');
-            try {
-                const response = await fetch('/api/wifi/scan');
-                const data = await response.json();
-                if (!data.success) {
-                    throw new Error(data.error || 'Error scanning networks');
-                }
-                updateNetworkList(data.networks);
-            } catch (error) {
-                alert(error.message);
-            } finally {
-                btn.prop("disabled", false)
-                    .html('<i class="fas fa-sync-alt me-1"></i> {% trans %}Rescan{% endtrans %}');
-            }
-        });
 });
 </script>
 {% endblock %}
