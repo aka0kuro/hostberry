@@ -323,8 +323,16 @@ def index():
         try:
             if os.path.isfile(log_file):
                 with open(log_file, 'r') as f:
-                    log_lines = f.readlines()[-100:]  # Get last 100 lines
-                    log_lines.reverse()
+                    raw_lines = f.readlines()[-100:]
+                    logs = []
+                    for line in reversed(raw_lines):
+                        line = line.strip()
+                        if line:
+                            parts = line.split(' ', 2)
+                            if len(parts) >= 3:
+                                logs.append({'timestamp': ' '.join(parts[:2]), 'message': parts[2]})
+                            else:
+                                logs.append({'timestamp': '', 'message': line})
                 logs_available = True
         except IOError:
             pass
@@ -334,9 +342,8 @@ def index():
             title=_('Index'),
             stats=stats,
             logs_available=logs_available,
-            log_lines=log_lines,
             current_lang=get_locale(),
-            logs=log_lines
+            logs=logs
         ))
         
         # Add cache control headers to prevent caching
