@@ -2,13 +2,31 @@
 :root {
     --sidebar-width: 260px;
     --transition-speed: 0.3s;
-    --primary-gradient: linear-gradient(90deg, #0d6efd 0%, #007bff 100%);
-    --success-gradient: linear-gradient(90deg, #198754 0%, #20c997 100%);
+    
+    /* Light Theme Colors */
+    --primary-light: #0d6efd;
+    --secondary-light: #6c757d;
+    --background-light: #ffffff;
+    --text-light: #212529;
+    --card-bg-light: #ffffff;
+    
+    /* Dark Theme Colors */ 
+    --primary-dark: #5e72e4;
+    --secondary-dark: #8898aa;
+    --background-dark: #172b4d;
+    --text-dark: #f8f9fa;
+    --card-bg-dark: #1a1f2e;
+    
+    /* Gradients */
+    --primary-gradient: linear-gradient(90deg, var(--primary-light) 0%, #007bff 100%);
+    --primary-gradient-dark: linear-gradient(90deg, var(--primary-dark) 0%, #825ee4 100%);
+    --success-gradient: linear-gradient(90deg, #2dce89 0%, #2dcecc 100%);
+    --danger-gradient: linear-gradient(90deg, #f5365c 0%, #f56036 100%);
 }
 
 body {
-    background-color: #fff;
-    color: #212529;
+    background-color: var(--background-light);
+    color: var(--text-light);
     font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
     padding-bottom: 32px;
 }
@@ -130,70 +148,63 @@ hr {
 
 /* === DARK THEME === */
 body.dark-theme {
-    background-color: #181a1b;
-    color: #fff;
+    background-color: var(--background-dark);
+    color: var(--text-dark);
 }
 
 body.dark-theme .card-component {
-    background-color: #181a1b;
-    color: #fff;
+    background-color: var(--card-bg-dark);
+    color: var(--text-dark);
     box-shadow: 0 0.125rem 0.5rem rgba(0,0,0,0.25);
-    border: 1.5px solid #dc3545;
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
 body.dark-theme .card-header {
-    background: linear-gradient(90deg, #dc3545 0%, #181a1b 100%) !important;
-    color: #fff;
+    background: var(--primary-gradient-dark) !important;
+    color: var(--text-dark);
 }
+
 body.dark-theme .card-header.bg-success {
-    background: linear-gradient(90deg, #dc3545 0%, #20c997 100%) !important;
-    color: #fff;
+    background: var(--success-gradient) !important;
 }
+
 body.dark-theme .card-header.bg-primary {
-    background: linear-gradient(90deg, #dc3545 0%, #007bff 100%) !important;
-    color: #fff;
+    background: var(--primary-gradient-dark) !important;
 }
+
 body.dark-theme .card-header.bg-dark {
-    background: linear-gradient(90deg, #181a1b 0%, #dc3545 100%) !important;
-    color: #fff;
+    background: linear-gradient(90deg, #1a1f2e 0%, #5e72e4 100%) !important;
 }
+
 body.dark-theme .card-header.bg-danger {
-    background: linear-gradient(90deg, #dc3545 0%, #fd7e14 100%) !important;
-    color: #fff;
+    background: var(--danger-gradient) !important;
 }
+
 body.dark-theme .navbar {
-    background: linear-gradient(90deg, #181a1b 0%, #dc3545 100%) !important;
+    background: var(--primary-gradient-dark) !important;
     box-shadow: 0 0.1rem 0.5rem rgba(0,0,0,0.25);
 }
-body.dark-theme .btn-primary,
-body.dark-theme .btn-danger,
-body.dark-theme .btn-info,
-body.dark-theme .btn-warning,
-body.dark-theme .btn-secondary {
-    border: none;
+
+body.dark-theme .btn-primary {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
 }
-body.dark-theme .btn,
-body.dark-theme .btn-primary,
-body.dark-theme .btn-danger,
-body.dark-theme .btn-info,
-body.dark-theme .btn-warning,
-body.dark-theme .btn-secondary {
-    background-color: #dc3545;
-    color: #fff;
-}
+
 body.dark-theme .form-control {
-    background-color: #23272b;
-    color: #fff;
-    border: 1px solid #dc3545;
+    background-color: #2a3042;
+    color: var(--text-dark);
+    border: 1px solid rgba(255,255,255,0.1);
 }
+
 body.dark-theme .form-check-input:checked {
-    background-color: #dc3545;
-    border-color: #dc3545;
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
 }
+
 body.dark-theme .alert {
-    background-color: #181a1b;
-    color: #fff;
-    border-color: #dc3545;
+    background-color: #2a3042;
+    color: var(--text-dark);
+    border-color: rgba(255,255,255,0.1);
 }
 
 /* Layout principal */
