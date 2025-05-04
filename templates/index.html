@@ -36,11 +36,11 @@
             <div class="card h-100">
                 <a href="{{ url_for('security_config') }}" class="card-link">
                     <div class="card-body text-center">
-                        <i class="bi bi-fire fs-1 {% if not config.FIREWALL_ENABLED %}text-secondary{% endif %}"></i>
+                        <i class="bi bi-shield-{{ 'check' if config.FIREWALL_ENABLED else 'x' }} fa-2x text-{{ 'success' if config.FIREWALL_ENABLED else 'danger' }}"></i>
                         <h5 class="card-title mt-3">{% trans %}Firewall{% endtrans %}</h5>
-                        <span class="badge {% if config.FIREWALL_ENABLED %}bg-success{% else %}bg-secondary{% endif %}">
+                        <div class="card border-left-{{ 'success' if config.FIREWALL_ENABLED else 'danger' }} shadow h-100 py-2">
                             {% if config.FIREWALL_ENABLED %}{% trans %}Activo{% endtrans %}{% else %}{% trans %}Inactivo{% endtrans %}{% endif %}
-                        </span>
+                        </div>
                     </div>
                 </a>
             </div>

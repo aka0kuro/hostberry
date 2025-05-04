@@ -338,13 +338,17 @@ def index():
         except IOError:
             pass
         
+        current_config = config.get_current_config()
         response = make_response(render_template(
             'index.html',
             title=_('Index'),
             stats=stats,
-            logs_available=logs_available,
+            logs=logs,
             current_lang=get_locale(),
-            logs=logs
+            logs_available=logs_available,
+            adblock_enabled=current_config.get('ADBLOCK_ENABLED', False),
+            vpn_enabled=current_config.get('VPN_ENABLED', False),
+            firewall_enabled=current_config.get('FIREWALL_ENABLED', False)
         ))
         
         # Add cache control headers to prevent caching
