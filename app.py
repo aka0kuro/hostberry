@@ -133,7 +133,7 @@ def get_locale():
 
 def get_logs():
     """Read and parse application logs"""
-    log_file = 'logs/hostberry.log'
+    log_file = '/opt/hostberry/logs/hostberry.log'
     logs = []
     try:
         with open(log_file, 'r') as f:
