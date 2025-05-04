@@ -984,10 +984,15 @@ def rescan_wifi():
 @app.route('/enable_wifi', methods=['POST'])
 def enable_wifi():
     import subprocess
+    import logging
     try:
+        logging.info('[Enable WiFi] Ejecutando rfkill unblock wifi...')
         subprocess.run(['rfkill', 'unblock', 'wifi'], check=True)
+        logging.info('[Enable WiFi] Ejecutando nmcli radio wifi on...')
+        subprocess.run(['nmcli', 'radio', 'wifi', 'on'], check=True)
         return '', 200
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
+        logging.error(f'[Enable WiFi] Error: {e}')
         return '', 500
 
 # Función utilitaria para saber si la interfaz wifi está bloqueada
