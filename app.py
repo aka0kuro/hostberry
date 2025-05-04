@@ -996,6 +996,22 @@ def rescan_wifi():
     except subprocess.CalledProcessError:
         return "", 500
 
+@app.route('/enable_wifi', methods=['POST'])
+def enable_wifi():
+    import subprocess
+    try:
+        subprocess.run(['rfkill', 'unblock', 'wifi'], check=True)
+        return '', 200
+    except subprocess.CalledProcessError:
+        return '', 500
+
+# Función utilitaria para saber si la interfaz wifi está bloqueada
+
+def is_wifi_blocked():
+    import subprocess
+    result = subprocess.run(['rfkill', 'list', 'wifi'], capture_output=True, text=True)
+    return 'Soft blocked: yes' in result.stdout or 'Hard blocked: yes' in result.stdout
+
 @app.route('/wifi_scan')
 def wifi_scan_page():
     """
@@ -1023,13 +1039,14 @@ def wifi_scan_page():
 
         return render_template(
             'wifi_scan.html',
+            wifi_blocked=wifi_blocked,
             wifi_enabled=wifi_enabled,
             current_connection=current_conn
         )
     except Exception as e:
         app.logger.error(f'[WiFi Page] Error cargando página WiFi: {str(e)}')
         # Nunca retornar JSON aquí
-        return render_template('wifi_scan.html', error=str(e))
+        return render_template('wifi_scan.html', wifi_blocked=wifi_blocked, error=str(e))
 
 def read_lines_filter(filename):
     try:
