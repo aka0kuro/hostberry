@@ -147,6 +147,37 @@ hr {
 }
 
 /* === DARK THEME === */
+
+body.blue {
+    background-color: #eaf4fb;
+    color: #0d6efd;
+}
+body.blue .card-component {
+    background-color: #f0f8ff;
+    color: #0d6efd;
+    border: 1px solid #0d6efd;
+}
+body.blue .navbar,
+body.blue .card-header {
+    background: linear-gradient(90deg, #0d6efd 0%, #007bff 100%) !important;
+    color: #fff;
+}
+
+body.red {
+    background-color: #fff0f0;
+    color: #dc3545;
+}
+body.red .card-component {
+    background-color: #fff5f5;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+body.red .navbar,
+body.red .card-header {
+    background: linear-gradient(90deg, #dc3545 0%, #fd7e14 100%) !important;
+    color: #fff;
+}
+
 body.dark-theme {
     background-color: var(--background-dark);
     color: var(--text-dark);
