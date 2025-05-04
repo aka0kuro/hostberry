@@ -155,7 +155,7 @@
                 <label class="form-label fw-bold text-white">Nombre de red (SSID)</label>
                 <div class="input-group border border-secondary rounded bg-secondary bg-opacity-10">
                   <span class="input-group-text bg-dark border-0 text-white"><i class="fas fa-network-wired"></i></span>
-                  <input type="text" class="form-control bg-dark text-white border-0" id="connectSSID" readonly style="color: #ffffff !important;">
+                  <input type="text" class="form-control bg-dark text-white border-0 fw-semibold" id="connectSSID" readonly style="color:#fff !important;font-weight:600 !important;">
                 </div>
               </div>
               
@@ -164,7 +164,7 @@
                 <label class="form-label fw-bold text-white">Tipo de seguridad</label>
                 <div class="input-group border border-secondary rounded bg-secondary bg-opacity-10">
                   <span class="input-group-text bg-dark border-0 text-white"><i class="fas fa-lock"></i></span>
-                  <input type="text" class="form-control bg-dark text-white border-0" id="connectSecurity" readonly style="color: #ffffff !important;">
+                  <input type="text" class="form-control bg-dark text-white border-0 fw-semibold" id="connectSecurity" readonly style="color:#fff !important;font-weight:600 !important;">
                 </div>
               </div>
               
@@ -414,8 +414,8 @@ $(document).on('click', '.connect-btn', function() {
   const security = $(this).attr('data-security') || $(this).data('security') || 'WPA2';
 
   // Autocompleta y bloquea los campos de nombre de red y seguridad
-  $('#connectSSID').val(ssid).prop('readonly', true);
-  $('#connectSecurity').val(security === 'Open' ? 'Abierta' : 'Protegida (WPA2)').prop('readonly', true);
+  $('#connectSSID').val(ssid).prop('readonly', true).css({'color':'#fff','font-weight':'600'});
+  $('#connectSecurity').val(security === 'Open' ? 'Abierta' : 'Protegida (WPA2)').prop('readonly', true).css({'color':'#fff','font-weight':'600'});
 
   // Limpia el campo de contraseña y habilítalo solo si la red no es abierta
   $('#connectPassword').val('').prop('disabled', security === 'Open' ? true : false);
