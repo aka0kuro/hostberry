@@ -139,7 +139,7 @@
         </div>
     </div>
 
-    <!-- Modal de conexión WiFi - Estilo mejorado -->
+    <!-- Modal de conexión WiFi - Contraste mejorado -->
     <div class="modal fade" id="connectModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark border border-secondary">
@@ -152,27 +152,27 @@
               <!-- Campo SSID -->
               <div class="mb-3">
                 <label class="form-label fw-bold text-white">Nombre de red (SSID)</label>
-                <div class="input-group border border-secondary rounded">
+                <div class="input-group border border-secondary rounded bg-secondary bg-opacity-10">
                   <span class="input-group-text bg-dark border-0 text-white"><i class="fas fa-network-wired"></i></span>
-                  <input type="text" class="form-control bg-dark text-white border-0" id="connectSSID" readonly>
+                  <input type="text" class="form-control bg-dark text-white border-0" id="connectSSID" readonly style="color: #ffffff !important;">
                 </div>
               </div>
               
               <!-- Campo Seguridad -->
               <div class="mb-3">
                 <label class="form-label fw-bold text-white">Tipo de seguridad</label>
-                <div class="input-group border border-secondary rounded">
+                <div class="input-group border border-secondary rounded bg-secondary bg-opacity-10">
                   <span class="input-group-text bg-dark border-0 text-white"><i class="fas fa-lock"></i></span>
-                  <input type="text" class="form-control bg-dark text-white border-0" id="connectSecurity" readonly>
+                  <input type="text" class="form-control bg-dark text-white border-0" id="connectSecurity" readonly style="color: #ffffff !important;">
                 </div>
               </div>
               
               <!-- Campo Contraseña -->
               <div class="mb-4" id="passwordField">
                 <label class="form-label fw-bold text-white">Contraseña</label>
-                <div class="input-group border border-secondary rounded">
+                <div class="input-group border border-secondary rounded bg-secondary bg-opacity-10">
                   <span class="input-group-text bg-dark border-0 text-white"><i class="fas fa-key"></i></span>
-                  <input type="password" class="form-control bg-dark text-white border-0" id="connectPassword" placeholder="Ingresa la contraseña">
+                  <input type="password" class="form-control bg-dark text-white border-0" id="connectPassword" placeholder="Ingresa la contraseña" style="color: #ffffff !important;">
                   <button class="btn btn-outline-light border-0 toggle-password" type="button">
                     <i class="fas fa-eye"></i>
                   </button>
@@ -412,10 +412,10 @@ $(document).on('click', '.connect-btn', function() {
   const ssid = btn.data('ssid') || 'Red oculta';
   const security = btn.data('security') || 'WPA2';
   
-  // Auto-completar campos
-  $('#connectSSID').val(ssid);
-  $('#connectSecurity').val(security === 'Open' ? 'Abierta' : 'Protegida (WPA2)');
-  $('#connectPassword').val('').prop('disabled', security === 'Open');
+  // Auto-completar campos con estilos forzados
+  $('#connectSSID').val(ssid).css('color', '#fff');
+  $('#connectSecurity').val(security === 'Open' ? 'Abierta' : 'Protegida (WPA2)').css('color', '#fff');
+  $('#connectPassword').val('').prop('disabled', security === 'Open').css('color', '#fff');
   
   // Mostrar modal
   $('#connectModal').modal('show');
