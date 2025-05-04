@@ -4,15 +4,9 @@
 
 {% block content %}
 <div class="container-fluid">
-    <!-- DEBUG: Mostrar valor de wifi_blocked (el botón solo aparece si es True) -->
-    <div class="alert alert-info mb-2">DEBUG: wifi_blocked = {{ wifi_blocked }}</div>
     {% if wifi_blocked %}
-    <button id="enableWifiBtn" class="btn btn-warning btn-sm ms-2">
-        <i class="fas fa-power-off me-1"></i> {% trans %}Enable WiFi{% endtrans %}
-    </button>
-    {% else %}
-    <button id="enableWifiBtn" class="btn btn-warning btn-sm ms-2 d-none">
-        <i class="fas fa-power-off me-1"></i> {% trans %}Enable WiFi{% endtrans %}
+    <button id="enableWifiBtn" class="btn btn-warning btn-sm ms-2" aria-label="Enable WiFi">
+        <i class="fas fa-power-off me-1" aria-hidden="true"></i> {% trans %}Enable WiFi{% endtrans %}
     </button>
     {% endif %}
 
@@ -23,15 +17,7 @@
             <button id="rescanBtn" class="btn btn-primary btn-sm">
                 <i class="fas fa-sync-alt me-1"></i> {% trans %}Rescan{% endtrans %}
             </button>
-            {% if wifi_blocked %}
-            <button id="enableWifiBtn" class="btn btn-warning btn-sm ms-2">
-                <i class="fas fa-power-off me-1"></i> {% trans %}Enable WiFi{% endtrans %}
-            </button>
-            {% else %}
-            <button id="enableWifiBtn" class="btn btn-warning btn-sm ms-2 d-none">
-                <i class="fas fa-power-off me-1"></i> {% trans %}Enable WiFi{% endtrans %}
-            </button>
-            {% endif %}
+
         </div>
     </div>
 
