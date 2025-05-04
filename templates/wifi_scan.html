@@ -11,6 +11,15 @@
             <button id="rescanBtn" class="btn btn-primary btn-sm">
                 <i class="fas fa-sync-alt me-1"></i> {% trans %}Rescan{% endtrans %}
             </button>
+            {% if wifi_blocked %}
+            <button id="enableWifiBtn" class="btn btn-warning btn-sm ms-2">
+                <i class="fas fa-power-off me-1"></i> {% trans %}Enable WiFi{% endtrans %}
+            </button>
+            {% else %}
+            <button id="enableWifiBtn" class="btn btn-warning btn-sm ms-2 d-none">
+                <i class="fas fa-power-off me-1"></i> {% trans %}Enable WiFi{% endtrans %}
+            </button>
+            {% endif %}
         </div>
     </div>
 
@@ -441,11 +450,6 @@ $('#togglePassword').on('click', function() {
 {{ super() }}
 <script>
 $(document).ready(function() {
-    // Mostrar botón Enable WiFi si la interfaz está bloqueada
-    {% if wifi_blocked %}
-    $('#enableWifiBtn').removeClass('d-none');
-    {% endif %}
-
     // Botón Enable WiFi
     $('#enableWifiBtn').click(function() {
         var btn = $(this);
