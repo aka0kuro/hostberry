@@ -441,6 +441,30 @@ $('#togglePassword').on('click', function() {
 {{ super() }}
 <script>
 $(document).ready(function() {
+    // Mostrar botón Enable WiFi si la interfaz está bloqueada
+    {% if wifi_blocked %}
+    $('#enableWifiBtn').removeClass('d-none');
+    {% endif %}
+
+    // Botón Enable WiFi
+    $('#enableWifiBtn').click(function() {
+        var btn = $(this);
+        btn.prop('disabled', true)
+           .html('<i class="fas fa-spinner fa-spin me-1"></i> {% trans %}Enabling...{% endtrans %}');
+        $.ajax({
+            url: "{{ url_for('enable_wifi') }}",
+            type: "POST",
+            success: function() {
+                location.reload();
+            },
+            error: function() {
+                alert("{% trans %}Error enabling WiFi interface{% endtrans %}");
+                btn.prop('disabled', false)
+                   .html('<i class="fas fa-power-off me-1"></i> {% trans %}Enable WiFi{% endtrans %}');
+            }
+        });
+    });
+
     // Botón Rescan
     $("#rescanBtn").click(function() {
         console.log("Rescan button clicked");
