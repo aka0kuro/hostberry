@@ -470,7 +470,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('wifi_scan') }}">
+                <a class="nav-link" href="{{ url_for('wifi_scan_page') }}">
                     <i class="bi bi-wifi me-2"></i>
                     {% trans %}WiFi Scan{% endtrans %}
                 </a>
@@ -514,8 +514,8 @@
                     <span>{% trans %}Language{% endtrans %}</span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') }}?lang_changed=1">English</a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('set_language', lang='es') }}?lang_changed=1">Español</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en', next=request.path) }}">English</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('set_language', lang='es', next=request.path) }}">Español</a></li>
                 </ul>
             </div>
             <!-- HostBerry Logo -->
