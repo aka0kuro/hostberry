@@ -401,25 +401,26 @@ class SecurityConfigForm(FlaskForm):
 @app.route('/security_config', methods=['GET', 'POST'])
 def security_config():
     global config
-    form = SecurityConfigForm()
     
-    if form.validate_on_submit():
+    if request.method == 'POST':
         try:
+            firewall_enabled = 'enable_firewall' in request.form
+            block_icmp = request.form.get('block_icmp') == '1'
+            timezone = request.form.get('timezone')
+            time_format = request.form.get('time_format')
             success = config.update_config({
-                'FIREWALL_ENABLED': form.enable_firewall.data,
-                'BLOCK_ICMP': form.block_icmp.data == '1',
-                'TIMEZONE': form.timezone.data,
-                'TIME_FORMAT': form.time_format.data
+                'FIREWALL_ENABLED': firewall_enabled,
+                'BLOCK_ICMP': block_icmp,
+                'TIMEZONE': timezone,
+                'TIME_FORMAT': time_format
             })
-            
             if success:
                 flash(_('Configuración guardada correctamente'), 'success')
-                # Recargar configuración inmediatamente
-                current_config = config.get_current_config()
+                return redirect(url_for('security_config'))
             else:
                 flash(_('Error al guardar la configuración'), 'danger')
         except Exception as e:
-            flash(_('Error crítico: %(error)s', error=str(e)), 'danger')
+            flash(_('Error al procesar el formulario: %(error)s', error=str(e)), 'danger')
     
     current_config = config.get_current_config()
     # Get current security status
