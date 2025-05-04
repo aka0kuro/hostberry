@@ -150,25 +150,25 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">{% trans %}Network{% endtrans %}</label>
-                        <input type="text" class="form-control" id="ssid" readonly>
+                        <input type="text" class="form-control" id="connectSSID" readonly>
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">{% trans %}Password{% endtrans %}</label>
                         <div class="input-group">
-                            <input type="password" class="form-control" id="password" placeholder="{% trans %}WiFi password{% endtrans %}">
+                            <input type="password" class="form-control" id="connectPassword" placeholder="{% trans %}WiFi password{% endtrans %}">
                             <button class="btn btn-outline-secondary" type="button" id="togglePassword">
                                 <i class="fas fa-eye" id="eyeIcon"></i>
                             </button>
                         </div>
                         <div class="form-text">
                             <i class="fas fa-lock me-1"></i>
-                            <span id="securityTypeText">{% trans %}Secured Network{% endtrans %}</span>
+                            <span id="connectSecurityText">{% trans %}Secured Network{% endtrans %}</span>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans %}Cancel{% endtrans %}</button>
-                    <button type="button" class="btn btn-primary" id="connectBtn">{% trans %}Connect{% endtrans %}</button>
+                    <button type="button" class="btn btn-primary" id="connectSubmitBtn">{% trans %}Connect{% endtrans %}</button>
                 </div>
             </div>
         </div>
@@ -323,6 +323,67 @@ $(document).ready(function() {
 
     // Escanear al cargar la página
     $("#rescanBtn").click();
+
+    // Delegación de eventos para los botones Conectar
+    $(document).on('click', '.connect-btn', function() {
+        const btn = $(this);
+        const ssid = btn.data('ssid');
+        const security = btn.data('security');
+        
+        // Configurar y mostrar modal
+        $('#connectSSID').text(ssid || 'Red oculta');
+        $('#connectSecurityText').text(security === 'Open' ? 'Abierta' : 'Protegida');
+        $('#connectPassword').val('').prop('disabled', security === 'Open');
+        
+        // Resetear formulario
+        $('#wifiConnectForm').trigger('reset');
+        $('#connectModal').modal('show');
+    });
+
+    // Manejar envío del formulario de conexión
+    $('#wifiConnectForm').on('submit', async function(e) {
+        e.preventDefault();
+        
+        const ssid = $('#connectSSID').text();
+        const security = $('#connectSecurityText').text() === 'Abierta' ? 'Open' : 'WPA';
+        const password = $('#connectPassword').val();
+        const submitBtn = $('#connectSubmitBtn');
+        
+        // Validación
+        if (security !== 'Open' && !password) {
+            showToast('¡La red requiere contraseña!', 'warning');
+            return;
+        }
+        
+        submitBtn.prop('disabled', true)
+            .html('<i class="fas fa-spinner fa-spin me-1"></i> Conectando...');
+        
+        try {
+            const response = await fetch('/api/wifi/connect', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    ssid: ssid,
+                    password: security === 'Open' ? '' : password
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Error al conectar');
+            }
+            
+            showToast(`¡Conectado a ${ssid}!`, 'success');
+            $('#connectModal').modal('hide');
+            setTimeout(() => location.reload(), 2000);
+            
+        } catch (error) {
+            showToast(error.message, 'danger');
+        } finally {
+            submitBtn.prop('disabled', false).html('Conectar');
+        }
+    });
 });
 </script>
 

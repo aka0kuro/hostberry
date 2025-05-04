@@ -876,73 +876,49 @@ def wifi_scan():
 
 @app.route('/api/wifi/connect', methods=['POST'])
 def wifi_connect():
-    app.logger.info(f"Headers recibidos: {dict(request.headers)}")
-    
-    # Verificar CSRF token para formularios HTML (excepto API JSON)
-    if request.content_type != 'application/json':
-        try:
-            csrf.protect()
-        except Exception as e:
-            app.logger.error(f"CSRF error: {str(e)}")
-            return jsonify({'success': False, 'error': 'Invalid CSRF token'}), 403
-    
     try:
         data = request.get_json()
-        app.logger.info(f"Datos recibidos: {data}")
-        
-        if not data or not data.get('ssid'):
-            return jsonify({'success': False, 'error': 'SSID is required'}), 400
-            
-        ssid = re.sub(r'[^\w \-]', '', data['ssid']).strip()
+        ssid = data.get('ssid')
         password = data.get('password', '')
-        
+
         if not ssid:
-            return jsonify({'success': False, 'error': 'Invalid SSID format'}), 400
-            
-        if password and len(password) < 8:
-            return jsonify({'success': False, 'error': 'Password must be at least 8 characters'}), 400
-            
-        cmd = ['nmcli', 'device', 'wifi', 'connect', ssid]
+            return jsonify({'success': False, 'error': 'SSID requerido'}), 400
+
+        # Construir comando nmcli
+        cmd = ['sudo', 'nmcli', 'device', 'wifi', 'connect', f'"{ssid}"']
         if password:
-            cmd.extend(['password', password])
-            
+            cmd.extend(['password', f'"{password}"'])
+
+        # Ejecutar con timeout
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
-            timeout=60
+            timeout=30
         )
-        
-        if result.returncode == 0:
-            # Guardar en wpa_supplicant.conf
-            if password:
-                wpa_conf = '/etc/wpa_supplicant/wpa_supplicant.conf'
-                network_block = f'''\nnetwork={{\n    ssid=\"{ssid}\"\n    psk=\"{password}\"\n    key_mgmt=WPA-PSK\n}}\n'''
-                try:
-                    if os.path.exists(wpa_conf):
-                        with open(wpa_conf, 'r') as f:
-                            if ssid not in f.read():
-                                with open(wpa_conf, 'a') as f:
-                                    f.write(network_block)
-                    else:
-                        with open(wpa_conf, 'w') as f:
-                            f.write('ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=ES\n')
-                            f.write(network_block)
-                except Exception as e:
-                    app.logger.error(f'Error saving WiFi config: {str(e)}')
-            
-            return jsonify({'success': True, 'message': 'Connected successfully'})
-        else:
-            error_msg = result.stderr.split('\n')[0] if result.stderr else 'Connection failed'
-            app.logger.error(f'WiFi connection failed: {error_msg}')
-            return jsonify({'success': False, 'error': error_msg}), 400
-            
+
+        if result.returncode != 0:
+            error_msg = result.stderr.strip() or 'Error desconocido al conectar'
+            return jsonify({
+                'success': False,
+                'error': error_msg
+            }), 400
+
+        return jsonify({
+            'success': True,
+            'message': f'Conectado a {ssid}'
+        })
+
     except subprocess.TimeoutExpired:
-        app.logger.error('WiFi connection timeout')
-        return jsonify({'success': False, 'error': 'Connection timeout'}), 408
+        return jsonify({
+            'success': False,
+            'error': 'Timeout al conectar (30s)'
+        }), 408
     except Exception as e:
-        app.logger.error(f'WiFi connection error: {str(e)}')
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @app.route('/api/wifi/status', methods=['GET'])
 def wifi_status():
