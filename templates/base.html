@@ -4,28 +4,283 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}HostBerry{% endblock %}</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
-    
-    <!-- Custom CSS -->
-    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
-    
-    <!-- jQuery debe ir antes de cualquier script que lo use -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: var(--bg-color);
+            transition: background-color 0.3s ease;
+        }
+        
+        body.light {
+            --primary: #9199a7;
+            --secondary: #e0eaf8;
+            --sidebar-bg: white;
+            --card-bg: white;
+            --bg-color: white;
+            --text-color: #000000;
+            --border-color: #60a7ee;
+            --input-bg: white;
+            --table-bg: white;
+            --table-hover: #f1f8ff;
+        }
+        
+        body.blue {
+            --primary: #001a66;
+            --secondary: #0b5ed7;
+            --sidebar-bg: linear-gradient(135deg, var(--primary), var(--secondary));
+            --card-bg: #000d33;
+            --text-color: #000000;
+            --bg-color: #5e9bf7;
+            --border-color: #002699;
+            --input-bg: #00134d;
+            --table-bg: #00134d;
+            --table-hover: #002080;
+        }
+        
+        body.red {
+            --primary: #400000;
+            --secondary: #bb2d3b;
+            --sidebar-bg: linear-gradient(135deg, var(--primary), var(--secondary));
+            --card-bg: #1a0000;
+            --text-color: #000000;
+            --bg-color: #f35969;
+            --border-color: #800000;
+            --input-bg: #330000;
+            --table-bg: #330000;
+            --table-hover: #4d0000;
+        }
+        
+        body.dark {
+            --primary: #2b2c2c;
+            --secondary: #121416;
+            --sidebar-bg: linear-gradient(135deg, var(--primary), var(--secondary));
+            --card-bg: #2c3034;
+            --bg-color: #2a2a2b;
+            --text-color: #ffffff;
+            --border-color: #495057;
+            --input-bg: #2c3034;
+            --table-bg: #2c3034;
+            --table-hover: #343a40;
+        }
+
+        /* Global Styles */
+        .sidebar {
+            background: var(--sidebar-bg);
+        }
+        
+        .card, .modal-content {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+        }
+        
+        .form-control, .form-select, .form-check-input {
+            background-color: var(--input-bg);
+            border-color: var(--border-color);
+        }
+        
+        .table {
+            background-color: var(--table-bg);
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: var(--table-hover);
+        }
+        
+        .alert {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+        }
+        
+        .nav-tabs .nav-link.active {
+            background-color: var(--card-bg);
+            border-color: var(--border-color) var(--border-color) var(--card-bg);
+        }
+        
+        .dropdown-menu {
+            background-color: color-mix(in srgb, var(--card-bg) 90%, var(--primary)) !important;
+            border: 1px solid color-mix(in srgb, var(--primary) 40%, var(--border-color)) !important;
+            backdrop-filter: blur(5px);
+        }
+        
+        .dropdown-item {
+            color: color-mix(in srgb, var(--text-color) 90%, white) !important;
+        }
+        
+        .dropdown-item:hover {
+            background-color: color-mix(in srgb, var(--primary) 30%, var(--card-bg)) !important;
+            color: white !important;
+        }
+        
+        .dropdown-toggle::after {
+            border-top-color: rgba(255,255,255,0.9) !important;
+        }
+        
+        .text-muted {
+            opacity: 0.7;
+        }
+        
+        :root {
+            --primary: #6f42c1;
+            --secondary: #6610f2;
+            --light: #f8f9fa;
+            --dark: #212529;
+        }
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            width: 220px;
+        }
+        .main-content {
+            margin-left: 220px;
+            padding: 20px;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .nav-link {
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+        .nav-link:hover, .nav-link.active {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .network-info {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        .network-info i {
+            margin-right: 0.3rem;
+        }
+        .card-link {
+            text-decoration: none;
+            color: inherit;
+        }
+        .card-link:hover {
+            transform: translateY(-2px);
+            transition: transform 0.2s;
+        }
+        .text-start p {
+            margin-bottom: 0.5rem;
+        }
+        
+        .log-container {
+            height: 200px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .log-entry {
+            border-bottom: 1px solid #dee2e6;
+            padding: 5px 0;
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        .log-entry small {
+            color: #6c757d;
+        }
+        
+        /* Estilos para la fila de estado del sistema */
+        .status-card {
+            padding: 15px 0;
+        }
+        .status-card i {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        .status-card p {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 0;
+        }
+        .status-card small {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        /* Colores para métricas */
+        .cpu-color { color: #0d6efd; }
+        .temp-color { color: #fd7e14; }
+        .mem-color { color: #20c997; }
+        
+        /* Debug Styles */
+        * {
+            color: #ffffff !important;
+            background-color: var(--bg-color) !important;
+        }
+        
+        /* Force all text white for debugging */
+        body, body *, 
+        .card, .card *, 
+        .table, .table *, 
+        .form-control, .form-select, .form-check-input {
+            color: #ffffff !important;
+        }
+        
+        /* Sidebar specific styles */
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+        
+        .sidebar h4 {
+            color: white !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.85) !important;
+            transition: all 0.2s;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: white !important;
+            background-color: rgba(255,255,255,0.2) !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        .nav-link i {
+            color: inherit !important;
+        }
+        
+        /* Remove debug styles for sidebar */
+        .sidebar * {
+            color: inherit !important;
+            background-color: transparent !important;
+        }
+        
+        body {
+            color: var(--text-color) !important;
+        }
+        
+        /* Force light theme text color */
+        body.light, body.light * {
+            color: var(--text-color) !important;
+        }
+        
+        /* Force text color for blue and red themes */
+        body.blue, body.blue * {
+            color: #000000 !important;
+        }
+        
+        body.red, body.red * {
+            color: #000000 !important;
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="d-flex light">
-    <!-- Botón hamburguesa para móvil -->
-    <button class="navbar-toggler d-lg-none position-fixed" data-bs-toggle="collapse" data-bs-target="#sidebar">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    
-    <!-- Sidebar -->
-    <div class="sidebar bg-dark text-white" id="sidebar">
+<body>
+    <div class="sidebar p-3">
         <div class="text-center mb-4">
             <h4>HostBerry</h4>
         </div>
@@ -45,12 +300,6 @@
                 <a class="nav-link" href="{{ url_for('network_config') }}">
                     <i class="bi bi-hdd-network me-2 {% if not config.NETWORK_ENABLED %}text-secondary{% endif %}"></i>
                     {% trans %}Network{% endtrans %}
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('wifi_scan_page') }}">
-                    <i class="bi bi-wifi me-2"></i>
-                    {% trans %}WiFi Scan{% endtrans %}
                 </a>
             </li>
             <li class="nav-item">
@@ -92,19 +341,22 @@
                     <span>{% trans %}Language{% endtrans %}</span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en', next=request.path) }}">English</a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('set_language', lang='es', next=request.path) }}">Español</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') }}?lang_changed=1">English</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('set_language', lang='es') }}?lang_changed=1">Español</a></li>
                 </ul>
             </div>
             <!-- HostBerry Logo -->
-            <div class="sidebar-logo">
-                <img src="{{ url_for('static', filename='hostberry.png') }}" alt="HostBerry Logo">
+            <div class="text-center mt-auto mb-3" style="position: absolute; bottom: 0; width: calc(100% - 1.5rem);">
+                <img src="{{ url_for('static', filename='hostberry.png') }}" alt="HostBerry Logo" style="max-width: 80%; height: auto;">
             </div>
         </div>
     </div>
 
-    <!-- Contenido principal -->
-    <div class="content">
+    <div class="main-content">
+        <header>
+            <div class="container-fluid">
+            </div>
+        </header>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -139,18 +391,6 @@
         // Initialize theme
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.body.className = savedTheme;
-        
-        // Toggle sidebar en móviles
-        document.getElementById('mobileMenuToggler').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('active');
-        });
-        
-        // Cerrar sidebar al hacer clic fuera
-        document.getElementById('mainContent').addEventListener('click', function() {
-            if (window.innerWidth < 992) {
-                document.getElementById('sidebar').classList.remove('active');
-            }
-        });
     </script>
 </body>
 </html>

@@ -1,13 +1,7 @@
-<!DOCTYPE html>
-<html>
 {% extends "base.html" %}
 
-<head>
-    <title>Error</title>
-</head>
-
 {% block content %}
-<div class="container mt-5" role="alert" aria-label="Error de aplicación">
+<div class="container mt-5">
     <div class="alert alert-danger">
         <h4 class="alert-heading">{% trans %}Error{% endtrans %}</h4>
         <p>{{ error }}</p>
