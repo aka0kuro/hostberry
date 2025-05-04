@@ -838,6 +838,8 @@ def wifi_scan():
         if 'disabled' in status.stdout.lower():
             return jsonify({'success': False, 'error': 'WiFi radio is disabled'}), 400
             
+        # 1.5. Forzar escaneo
+        subprocess.run(['nmcli', 'device', 'wifi', 'rescan'], capture_output=True, text=True)
         # 2. Escanear redes
         result = subprocess.run(
             ['nmcli', '-t', '-f', 'SSID,SIGNAL,SECURITY,BSSID', 'device', 'wifi', 'list'],
@@ -973,13 +975,6 @@ def connect():
     except subprocess.CalledProcessError as e:
         return jsonify({'message': f'Failed to connect: {str(e)}'}), 400
 
-@app.route('/rescan_wifi', methods=['POST'])
-def rescan_wifi():
-    try:
-        subprocess.run(["iwlist", "wlan0", "scan"], check=True)
-        return "", 200
-    except subprocess.CalledProcessError:
-        return "", 500
 
 @app.route('/enable_wifi', methods=['POST'])
 def enable_wifi():

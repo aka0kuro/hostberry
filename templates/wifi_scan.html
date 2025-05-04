@@ -469,24 +469,24 @@ $(document).ready(function() {
     });
 
         // Botón Rescan
-        $("#rescanBtn").off('click').on('click', function() {
+        $("#rescanBtn").off('click').on('click', async function() {
             console.log("Rescan button clicked");
-            $.ajax({
-                url: "{{ url_for('rescan_wifi') }}",
-                type: "POST",
-                beforeSend: function() {
-                    $("#rescanBtn").prop("disabled", true)
-                        .html('<i class="fas fa-spinner fa-spin me-1"></i> {% trans %}Scanning...{% endtrans %}');
-                },
-                success: function() {
-                    location.reload();
-                },
-                error: function() {
-                    alert("{% trans %}Error scanning networks{% endtrans %}");
-                    $("#rescanBtn").prop("disabled", false)
-                        .html('<i class="fas fa-sync-alt me-1"></i> {% trans %}Rescan{% endtrans %}');
+            const btn = $(this);
+            btn.prop("disabled", true)
+                .html('<i class="fas fa-spinner fa-spin me-1"></i> {% trans %}Scanning...{% endtrans %}');
+            try {
+                const response = await fetch('/api/wifi/scan');
+                const data = await response.json();
+                if (!data.success) {
+                    throw new Error(data.error || 'Error scanning networks');
                 }
-            });
+                updateNetworkList(data.networks);
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                btn.prop("disabled", false)
+                    .html('<i class="fas fa-sync-alt me-1"></i> {% trans %}Rescan{% endtrans %}');
+            }
         });
 });
 </script>
