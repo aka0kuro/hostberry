@@ -1007,6 +1007,7 @@ def wifi_scan_page():
         status = subprocess.run(['nmcli', 'radio', 'wifi'], capture_output=True, text=True)
         wifi_enabled = 'enabled' in status.stdout.lower()
         app.logger.debug(f'[WiFi Page] Estado WiFi: {status.stdout.strip()}')
+        wifi_blocked = is_wifi_blocked()
 
         # Obtener conexión actual
         current_conn = None
@@ -1030,6 +1031,7 @@ def wifi_scan_page():
         )
     except Exception as e:
         app.logger.error(f'[WiFi Page] Error cargando página WiFi: {str(e)}')
+        wifi_blocked = False
         # Nunca retornar JSON aquí
         return render_template('wifi_scan.html', wifi_blocked=wifi_blocked, error=str(e))
 
