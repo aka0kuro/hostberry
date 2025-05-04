@@ -398,12 +398,11 @@ async function connectToNetwork() {
             body: JSON.stringify({ ssid, password })
         });
         
-        let data;
+        let data, raw;
         try {
-            data = await response.json();
+            raw = await response.text();
+            data = JSON.parse(raw);
         } catch (jsonErr) {
-            // Si la respuesta no es JSON (por ejemplo, HTML de error)
-            const text = await response.text();
             throw new Error('Respuesta inesperada del servidor al conectar WiFi. Puede que la sesión haya expirado o haya un error en el backend.');
         }
         
