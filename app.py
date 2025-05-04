@@ -957,21 +957,6 @@ def wifi_status():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/wifi/enable', methods=['POST'])
-def enable_wifi():
-    try:
-        # Desbloquear y activar WiFi
-        subprocess.run(['rfkill', 'unblock', 'wifi'], check=True)
-        subprocess.run(['nmcli', 'radio', 'wifi', 'on'], check=True)
-        time.sleep(2)  # Esperar activación
-        
-        return jsonify({'success': True})
-    except subprocess.CalledProcessError as e:
-        return jsonify({
-            'success': False, 
-            'error': str(e),
-            'stderr': e.stderr.decode() if e.stderr else None
-        }), 500
 
 @app.route('/connect', methods=['POST'])
 def connect():
