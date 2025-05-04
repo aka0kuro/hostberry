@@ -53,23 +53,23 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title text-center"><i class="bi bi-speedometer2"></i> {% trans %}Estado del Sistema{% endtrans %}</h5>
-                    <div class="d-flex justify-content-around text-center">
-                        <div>
-                            <i class="bi bi-cpu text-primary fs-4"></i>
-                            <p class="mb-0">{{ stats.cpu_usage }}%</p>
-                            <small>CPU</small>
-                        </div>
-                        <div>
-                            <i class="bi bi-thermometer-half text-warning fs-4"></i>
-                            <p class="mb-0">{{ stats.cpu_temp }}°C</p>
-                            <small>{% trans %}Temp{% endtrans %}</small>
-                        </div>
-                        <div>
-                            <i class="bi bi-memory text-info fs-4"></i>
-                            <p class="mb-0">{{ stats.memory_usage }}%</p>
-                            <small>{% trans %}Memoria{% endtrans %}</small>
-                        </div>
-                    </div>
+                    <div class="row text-center">
+    <div class="col">
+        <div><i class="bi bi-cpu"></i></div>
+        <div>{{ stats.cpu_usage }}%</div>
+        <small>CPU</small>
+    </div>
+    <div class="col">
+        <div><i class="bi bi-thermometer-half"></i></div>
+        <div>{{ stats.cpu_temp }}°C</div>
+        <small>{% trans %}Temp{% endtrans %}</small>
+    </div>
+    <div class="col">
+        <div><i class="bi bi-memory"></i></div>
+        <div>{{ stats.memory_usage }}%</div>
+        <small>{% trans %}Memoria{% endtrans %}</small>
+    </div>
+</div>
                 </div>
             </div>
         </div>
@@ -137,6 +137,42 @@
                         <small class="text-primary"><i class="bi bi-upload"></i> <span id="uploadValue">0</span> KB/s</small>
                         <small class="text-success"><i class="bi bi-download"></i> <span id="downloadValue">0</span> KB/s</small>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-journal-text"></i> {% trans %}Registro del Sistema{% endtrans %}</h5>
+                <!-- Aquí va el contenido del registro del sistema -->
+                <div id="system-log">
+                    {% if logs %}
+                        <ul class="list-group list-group-flush">
+                        {% for log in logs %}
+                            <li class="list-group-item small">{{ log }}</li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <span class="text-muted">{% trans %}No hay registros recientes.{% endtrans %}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-graph-up"></i> {% trans %}Tráfico de Red{% endtrans %}</h5>
+                <div style="height: 150px">
+                    <canvas id="networkChart"></canvas>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <small class="text-primary"><i class="bi bi-upload"></i> <span id="uploadValue">0</span> KB/s</small>
+                    <small class="text-success"><i class="bi bi-download"></i> <span id="downloadValue">0</span> KB/s</small>
                 </div>
             </div>
         </div>
