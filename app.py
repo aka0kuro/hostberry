@@ -863,6 +863,24 @@ def wifi_connect():
         )
         
         if result.returncode == 0:
+            # Guardar en wpa_supplicant.conf si hay contraseña
+            if password:
+                wpa_conf = '/etc/wpa_supplicant/wpa_supplicant.conf'
+                network_block = f'''\nnetwork={{\n    ssid=\"{ssid}\"\n    psk=\"{password}\"\n    key_mgmt=WPA-PSK\n}}\n'''
+                try:
+                    # Solo añadir si no existe ya la red
+                    if os.path.exists(wpa_conf):
+                        with open(wpa_conf, 'r') as f:
+                            content = f.read()
+                        if ssid not in content:
+                            with open(wpa_conf, 'a') as f:
+                                f.write(network_block)
+                    else:
+                        with open(wpa_conf, 'w') as f:
+                            f.write('ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=ES\n')
+                            f.write(network_block)
+                except Exception as e:
+                    app.logger.error(f'Error al guardar en wpa_supplicant.conf: {str(e)}')
             return jsonify({'success': True, 'message': 'Connected successfully'})
         else:
             error_msg = result.stderr.split('\n')[0] if result.stderr else 'Connection failed'
