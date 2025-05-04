@@ -90,7 +90,7 @@
                             {% trans %}Enable WiFi{% endtrans %}
                         </button>
                     </div>
-                    <div id="network-list" class="list-group list-group-flush">
+                    <div id="network-list" class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
                         <!-- Las redes se agregarán dinámicamente aquí -->
                     </div>
                 </div>
@@ -148,11 +148,16 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">{% trans %}Password{% endtrans %}</label>
-                            <input type="password" id="password" class="form-control" placeholder="{% trans %}Enter password{% endtrans %}">
-                            <div class="form-text">
-                                <i class="fas fa-lock me-1"></i>
-                                <span id="securityTypeText">{% trans %}Secured Network{% endtrans %}</span>
-                            </div>
+                            <div class="input-group">
+    <input type="password" id="password" class="form-control" placeholder="{% trans %}Enter password{% endtrans %}">
+    <button class="btn btn-outline-secondary" type="button" id="togglePassword" tabindex="-1" aria-label="Mostrar/Ocultar contraseña">
+        <i class="fas fa-eye" id="eyeIcon"></i>
+    </button>
+</div>
+<div class="form-text">
+    <i class="fas fa-lock me-1"></i>
+    <span id="securityTypeText">{% trans %}Secured Network{% endtrans %}</span>
+</div>
                         </div>
                         <div class="progress d-none" id="connectProgress">
                             <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
@@ -424,5 +429,17 @@ function checkWifiStatus() {
         })
         .catch(error => console.error('Error:', error));
 }
+// Mostrar/ocultar contraseña
+$('#togglePassword').on('click', function() {
+    const pwd = $('#password');
+    const icon = $('#eyeIcon');
+    if (pwd.attr('type') === 'password') {
+        pwd.attr('type', 'text');
+        icon.removeClass('fa-eye').addClass('fa-eye-slash');
+    } else {
+        pwd.attr('type', 'password');
+        icon.removeClass('fa-eye-slash').addClass('fa-eye');
+    }
+});
 </script>
 {% endblock %}

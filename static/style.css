@@ -1,5 +1,14 @@
 body {
     background-color: #fff;
+}
+
+#network-list {
+    max-height: 300px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* Ajusta el valor de max-height si prefieres más o menos alto */
+}
+
     color: #212529;
     font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
     padding-bottom: 32px;
