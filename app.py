@@ -401,6 +401,7 @@ class SecurityConfigForm(FlaskForm):
 @app.route('/security_config', methods=['GET', 'POST'])
 def security_config():
     global config
+    form = SecurityConfigForm()
     
     if request.method == 'POST':
         try:
