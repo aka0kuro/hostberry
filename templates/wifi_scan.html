@@ -409,16 +409,18 @@ $(document).ready(function() {
 
 // Configurar modal al hacer click en Conectar
 $(document).on('click', '.connect-btn', function() {
-  const btn = $(this);
-  const ssid = btn.attr('data-ssid') || btn.data('ssid') || 'Red oculta';
-  const security = btn.attr('data-security') || btn.data('security') || 'WPA2';
-  
-  // Auto-completar campos con estilos forzados
-  $('#connectSSID').val(ssid);
-  $('#connectSecurity').val(security === 'Open' ? 'Abierta' : 'Protegida (WPA2)');
-  $('#connectPassword').val('').prop('disabled', security === 'Open');
-  
-  // Mostrar modal
+  // Obtén los datos de la red seleccionada
+  const ssid = $(this).attr('data-ssid') || $(this).data('ssid') || 'Red oculta';
+  const security = $(this).attr('data-security') || $(this).data('security') || 'WPA2';
+
+  // Autocompleta y bloquea los campos de nombre de red y seguridad
+  $('#connectSSID').val(ssid).prop('readonly', true);
+  $('#connectSecurity').val(security === 'Open' ? 'Abierta' : 'Protegida (WPA2)').prop('readonly', true);
+
+  // Limpia el campo de contraseña y habilítalo solo si la red no es abierta
+  $('#connectPassword').val('').prop('disabled', security === 'Open' ? true : false);
+
+  // Muestra el modal
   $('#connectModal').modal('show');
 });
 
