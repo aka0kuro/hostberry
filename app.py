@@ -1006,7 +1006,7 @@ def is_wifi_blocked_or_disabled():
         # Verifica nmcli
         nmcli_result = subprocess.run(['nmcli', 'radio', 'wifi'], capture_output=True, text=True)
         wifi_status = nmcli_result.stdout.strip().lower()
-        disabled = (wifi_status == 'disabled')
+        disabled = ('disable' in wifi_status)
         return blocked or disabled
     except Exception as e:
         import logging
