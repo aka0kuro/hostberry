@@ -137,7 +137,7 @@ if (window.jQuery) {
     $(document).ready(function() {
         console.log('jQuery loaded, initializing WiFi scan...');
 
-        // 1. Botón Connect
+        // 1. Botón Connect del modal
         $(document).off('click', '#connectBtn').on('click', '#connectBtn', async function(e) {
             e.preventDefault();
             await connectToNetwork();
@@ -148,37 +148,53 @@ if (window.jQuery) {
             e.preventDefault();
             const btn = $(this);
             const originalHtml = btn.html();
-            
-            btn.prop('disabled', true).html(
-                '<span class="spinner-border spinner-border-sm"></span> Activando...'
-            );
-            
-            fetch('/api/enable_wifi', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    throw new Error(data.error || 'Error al activar WiFi');
-                }
-                location.reload();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error: ' + error.message);
-            })
-            .finally(() => {
-                btn.prop('disabled', false).html(originalHtml);
-            });
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Activando...');
+            fetch('/api/wifi/enable', { method: 'POST' })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al activar WiFi');
+                    }
+                    return response;
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.error || 'Error al activar WiFi');
+                    }
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error: ' + error.message);
+                })
+                .finally(() => {
+                    btn.prop('disabled', false).html(originalHtml);
+                });
         });
 
         // 3. Botón Rescan
         $(document).off('click', '#rescanBtn').on('click', '#rescanBtn', async function(e) {
             e.preventDefault();
             await rescanNetworks();
+        });
+
+        // 4. Delegación para los botones "Conectar" de cada red
+        // Usa delegación para asegurar que funcione con elementos generados dinámicamente
+        $('#network-list').off('click', '.connect-btn').on('click', '.connect-btn', function(e) {
+            e.preventDefault();
+            // Extrae SSID y seguridad del botón
+            const ssid = $(this).data('ssid');
+            const security = $(this).data('security') || 'WPA/WPA2';
+            // Rellena el modal
+            $('#ssid').val(ssid);
+            $('#securityTypeText').text(security === 'Open' ? 'Red abierta' : 'Red segura');
+            if (security === 'Open') {
+                $('#password').val('').prop('disabled', true).attr('placeholder', 'No requiere contraseña');
+            } else {
+                $('#password').val('').prop('disabled', false).attr('placeholder', 'Ingresa la contraseña');
+            }
+            // Muestra el modal
+            $('#connectModal').modal('show');
         });
 
         // Configuración inicial

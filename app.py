@@ -32,20 +32,47 @@ def filter_flights(data, departure, arrival, date):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    import logging
+    from datetime import datetime as dt
     flights = []
     error = None
     if request.method == 'POST':
-        departure = request.form.get('departure')
-        arrival = request.form.get('arrival')
-        date = request.form.get('date')
-
-        if not departure:
-            error = "Por favor, ingresa una ciudad de salida."
-        else:
-            data = load_flight_data()
-            flights = filter_flights(data, departure, arrival, date)
-
+        departure = request.form.get('departure', '').strip()
+        arrival = request.form.get('arrival', '').strip()
+        date = request.form.get('date', '').strip()
+        logger = logging.getLogger('App')
+        try:
+            if not departure:
+                error = "Por favor, ingresa una ciudad de salida."
+            elif date and not _is_valid_date(date):
+                error = "Formato de fecha inválido. Usa AAAA-MM-DD."
+            else:
+                data = load_flight_data()
+                flights = filter_flights(data, departure, arrival, date)
+        except Exception as e:
+            logger.error(f"Error procesando formulario: {e}")
+            error = "Ocurrió un error procesando la solicitud."
     return render_template('index.html', flights=flights, error=error)
+
+def _is_valid_date(date_str):
+    try:
+        dt.strptime(date_str, "%Y-%m-%d")
+        return True
+    except Exception:
+        return False
+
+from flask import jsonify
+
+@app.route('/api/wifi/scan', methods=['GET'])
+def wifi_scan():
+    # Simulación de redes WiFi encontradas
+    networks = [
+        {"ssid": "HostBerry-5G", "signal": 82, "security": "WPA2"},
+        {"ssid": "Casa", "signal": 67, "security": "WPA/WPA2"},
+        {"ssid": "Invitados", "signal": 54, "security": "Open"},
+        {"ssid": "Oficina", "signal": 39, "security": "WPA2"}
+    ]
+    return jsonify({"networks": networks})
 
 if __name__ == '__main__':
     app.run(debug=True)

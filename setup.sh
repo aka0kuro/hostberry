@@ -53,9 +53,12 @@ cd /opt/hostberry
 
 # Install project dependencies
 echo "Installing Python dependencies..."
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
-pip3 install -r requirements.txt
+if ! pip3 install -r requirements.txt; then
+    echo "Error instalando dependencias Python. Abortando instalación."
+    exit 1
+fi
 
 # Set up configuration
 if [ ! -f ".env" ]; then

@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid">
+<!-- Página principal mejorada para accesibilidad y claridad -->
+<div class="container-fluid" role="main" aria-label="Panel principal de HostBerry">
+    <h1 class="visually-hidden">Panel HostBerry</h1>
+    <p class="visually-hidden">Accede a las principales funciones de red, seguridad y monitoreo.</p>
     <!-- Primera fila: Iconos principales -->
     <div class="row mb-4">
         <div class="col-md-4 mb-4">

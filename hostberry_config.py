@@ -25,7 +25,7 @@ console_handler.setFormatter(logging.Formatter('%(levelname)s - %(message)s'))
 logger.addHandler(console_handler)
 
 class HostBerryConfig:
-    CONFIG_FILE = '/etc/hostberry/config.json'
+    CONFIG_FILE = os.environ.get('HOSTBERRY_CONFIG_FILE', '/etc/hostberry/config.json')
     DEFAULT_CONFIG = {
         'AP_IFACE': 'wlan_ap0',
         'WIFI_IFACE': 'wlan0',
@@ -84,17 +84,25 @@ class HostBerryConfig:
     def update_config(self, new_config):
         logger.info('Actualizando configuración')
         try:
+            # Validar valores
+            for key, value in new_config.items():
+                if key in self.DEFAULT_CONFIG and type(value) != type(self.DEFAULT_CONFIG[key]):
+                    logger.error(f'Tipo inválido para {key}: esperado {type(self.DEFAULT_CONFIG[key])}, recibido {type(value)}')
+                    return False
             # Obtener configuración actual
             current_config = self.get_current_config()
             current_config.update(new_config)
-            
+            # Backup automático
+            backup_path = self.CONFIG_FILE + '.bak_' + datetime.now().strftime('%Y%m%d%H%M%S')
+            if os.path.exists(self.CONFIG_FILE):
+                shutil.copy2(self.CONFIG_FILE, backup_path)
+                logger.info(f'Backup de configuración creado en {backup_path}')
             # Guardar en archivo temporal
             temp_path = '/tmp/hostberry_config.tmp'
             with open(temp_path, 'w') as f:
                 json.dump(current_config, f, indent=4)
                 f.flush()
                 os.fsync(f.fileno())
-            
             # Mover a ubicación final
             shutil.move(temp_path, self.CONFIG_FILE)
             logger.debug('Configuración actualizada correctamente')
