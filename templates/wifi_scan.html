@@ -427,6 +427,35 @@ $(document).on('click', '.connect-btn', function() {
 // Resto del código JavaScript permanece igual...
 </script>
 
+<!-- Toast container -->
+<div id="toast-container" style="position: fixed; top: 1rem; right: 1rem; z-index: 9999;"></div>
+<script>
+function showToast(message, type = 'info') {
+  // type: 'success', 'danger', 'warning', 'info'
+  let bg = {
+    success: 'bg-success',
+    danger: 'bg-danger',
+    warning: 'bg-warning',
+    info: 'bg-info'
+  }[type] || 'bg-info';
+
+  const toastId = 'toast-' + Date.now();
+  const toast = $(
+    `<div id="${toastId}" class="toast align-items-center text-white ${bg} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2500" style="min-width:220px;">
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>`
+  );
+
+  $('#toast-container').append(toast);
+  const bsToast = new bootstrap.Toast(toast[0]);
+  bsToast.show();
+  toast.on('hidden.bs.toast', function () { $(this).remove(); });
+}
+</script>
+
 <style>
 .custom-close-x {
   filter: invert(0.7) grayscale(1);
