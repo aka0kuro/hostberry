@@ -468,26 +468,26 @@ $(document).ready(function() {
         });
     });
 
-    // Botón Rescan
-    $("#rescanBtn").click(function() {
-        console.log("Rescan button clicked");
-        $.ajax({
-            url: "{{ url_for('rescan_wifi') }}",
-            type: "POST",
-            beforeSend: function() {
-                $("#rescanBtn").prop("disabled", true)
-                    .html('<i class="fas fa-spinner fa-spin me-1"></i> {% trans %}Scanning...{% endtrans %}');
-            },
-            success: function() {
-                location.reload();
-            },
-            error: function() {
-                alert("{% trans %}Error scanning networks{% endtrans %}");
-                $("#rescanBtn").prop("disabled", false)
-                    .html('<i class="fas fa-sync-alt me-1"></i> {% trans %}Rescan{% endtrans %}');
-            }
+        // Botón Rescan
+        $("#rescanBtn").off('click').on('click', function() {
+            console.log("Rescan button clicked");
+            $.ajax({
+                url: "{{ url_for('rescan_wifi') }}",
+                type: "POST",
+                beforeSend: function() {
+                    $("#rescanBtn").prop("disabled", true)
+                        .html('<i class="fas fa-spinner fa-spin me-1"></i> {% trans %}Scanning...{% endtrans %}');
+                },
+                success: function() {
+                    location.reload();
+                },
+                error: function() {
+                    alert("{% trans %}Error scanning networks{% endtrans %}");
+                    $("#rescanBtn").prop("disabled", false)
+                        .html('<i class="fas fa-sync-alt me-1"></i> {% trans %}Rescan{% endtrans %}');
+                }
+            });
         });
-    });
     // Aquí puedes agregar el resto de la lógica JS de la página si es necesario.
 });
 </script>
