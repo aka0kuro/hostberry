@@ -204,17 +204,18 @@ def block_on_failed_attempts():
     if ip in BLOCKED_IPS:
         return render_template('blocked.html', reason=_('Too many failed attempts.')), 403
     if request.endpoint == 'security_config' and request.method == 'POST':
-        ssh_port = request.form.get('ssh_port')
-        try:
-            port = int(ssh_port)
-            if port < 1 or port > 65535:
-                raise ValueError
-        except Exception:
-            FAILED_ATTEMPTS[ip] += 1
-            if FAILED_ATTEMPTS[ip] >= max_attempts:
-                BLOCKED_IPS.add(ip)
-            flash(_('Invalid SSH port. Attempt counted as failed.'), 'danger')
-            return redirect(url_for('security_config'))
+        if 'ssh_port' in request.form:
+            ssh_port = request.form.get('ssh_port')
+            try:
+                port = int(ssh_port)
+                if port < 1 or port > 65535:
+                    raise ValueError
+            except Exception:
+                FAILED_ATTEMPTS[ip] += 1
+                if FAILED_ATTEMPTS[ip] >= max_attempts:
+                    BLOCKED_IPS.add(ip)
+                flash(_('Invalid SSH port. Attempt counted as failed.'), 'danger')
+                return redirect(url_for('security_config'))
 
 @app.route('/blocked')
 def blocked():
