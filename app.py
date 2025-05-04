@@ -339,6 +339,24 @@ def index():
             pass
         
         current_config = config.get_current_config()
+        # Obtener información de red
+        try:
+            interface = subprocess.check_output(['hostname', '-I'], text=True).strip().split()[0]
+        except Exception:
+            interface = 'Desconocido'
+        try:
+            ip_addr = subprocess.check_output(['hostname', '-I'], text=True).strip().split()[0]
+        except Exception:
+            ip_addr = 'Desconocida'
+        try:
+            ssid = subprocess.check_output(['iwgetid', '-r'], text=True).strip()
+        except Exception:
+            ssid = ''
+        try:
+            hostapd_status = subprocess.check_output(['systemctl', 'is-active', 'hostapd'], text=True).strip()
+        except Exception:
+            hostapd_status = 'unknown'
+
         response = make_response(render_template(
             'index.html',
             title=_('Index'),
@@ -348,7 +366,11 @@ def index():
             logs_available=logs_available,
             adblock_enabled=current_config.get('ADBLOCK_ENABLED', False),
             vpn_enabled=current_config.get('VPN_ENABLED', False),
-            firewall_enabled=current_config.get('FIREWALL_ENABLED', False)
+            firewall_enabled=current_config.get('FIREWALL_ENABLED', False),
+            network_interface=interface,
+            local_ip=ip_addr,
+            wifi_ssid=ssid,
+            hostapd_status=hostapd_status
         ))
         
         # Add cache control headers to prevent caching
