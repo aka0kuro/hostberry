@@ -8,11 +8,11 @@
             <div class="card h-100">
                 <a href="{{ url_for('adblock_config') }}" class="card-link">
                     <div class="card-body text-center">
-                        <i class="bi bi-shield-fill-check fa-2x text-{{ 'success' if adblock_enabled else 'danger' }}"></i>
+                        <i class="bi bi-shield-shaded fs-1 {% if not config.ADBLOCK_ENABLED %}text-secondary{% endif %}"></i>
                         <h5 class="card-title mt-3">{% trans %}AdBlock{% endtrans %}</h5>
-                        <div class="card border-left-{{ 'success' if adblock_enabled else 'danger' }} shadow h-100 py-2">
-                            {% if adblock_enabled %}{% trans %}Activo{% endtrans %}{% else %}{% trans %}Inactivo{% endtrans %}{% endif %}
-                        </div>
+                        <span class="badge {% if config.ADBLOCK_ENABLED %}bg-success{% else %}bg-secondary{% endif %}">
+                            {% if config.ADBLOCK_ENABLED %}{% trans %}Activo{% endtrans %}{% else %}{% trans %}Inactivo{% endtrans %}{% endif %}
+                        </span>
                     </div>
                 </a>
             </div>
@@ -22,15 +22,11 @@
             <div class="card h-100">
                 <a href="{{ url_for('vpn_config') }}" class="card-link">
                     <div class="card-body text-center">
-                        <i class="bi bi-shield-lock fa-2x text-{{ 'success' if vpn_enabled else 'danger' }}"></i>
+                        <i class="bi bi-lock fs-1 {% if not config.VPN_ENABLED %}text-secondary{% endif %}"></i>
                         <h5 class="card-title mt-3">{% trans %}VPN{% endtrans %}</h5>
-                        <div class="card border-left-{{ 'success' if vpn_enabled else 'danger' }} shadow h-100 py-2">
-                            {% if vpn_enabled %}{% trans %}Activo{% endtrans %}{% else %}{% trans %}Inactivo{% endtrans %}{% endif %}
-                        </div>
-<h5 class="card-title mt-3">{% trans %}VPN{% endtrans %}</h5>
-<div class="card border-left-{{ 'success' if vpn_enabled else 'danger' }} shadow h-100 py-2">
-    {% if vpn_enabled %}{% trans %}Activo{% endtrans %}{% else %}{% trans %}Inactivo{% endtrans %}{% endif %}
-</div>
+                        <span class="badge {% if config.VPN_ENABLED %}bg-success{% else %}bg-secondary{% endif %}">
+                            {% if config.VPN_ENABLED %}{% trans %}Activo{% endtrans %}{% else %}{% trans %}Inactivo{% endtrans %}{% endif %}
+                        </span>
                     </div>
                 </a>
             </div>
