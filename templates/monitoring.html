@@ -13,20 +13,33 @@
     <div class="row">
         <div class="col-lg-6">
             <div class="card shadow mb-4">
-                <div class="card-header bg-primary text-white">
-                    <i class="bi bi-sliders me-2"></i>{% trans %}Monitoring Settings{% endtrans %}
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-sliders me-1"></i>{% trans %}Monitoring Settings{% endtrans %}
+                    </h6>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('monitoring_config') }}">
-                        <div class="mb-3 form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="enable_monitoring" name="enable_monitoring" {% if config.MONITORING_ENABLED %}checked{% endif %}>
-                            <label class="form-check-label" for="enable_monitoring">{% trans %}Enable Monitoring{% endtrans %}</label>
+                        <div class="form-group row mb-3">
+                            <label class="col-sm-4 col-form-label">{% trans %}Enable Monitoring{% endtrans %}</label>
+                            <div class="col-sm-8">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="enable_monitoring" name="enable_monitoring" {% if config.MONITORING_ENABLED %}checked{% endif %}>
+                                    <label class="form-check-label" for="enable_monitoring"></label>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="update_interval" class="form-label">{% trans %}Update Interval (seconds){% endtrans %}</label>
-                            <input type="number" class="form-control" id="update_interval" name="update_interval" value="{{ config.MONITORING_INTERVAL }}">
+                        <div class="form-group row mb-3">
+                            <label class="col-sm-4 col-form-label" for="update_interval">{% trans %}Update Interval (seconds){% endtrans %}</label>
+                            <div class="col-sm-8">
+                                <input type="number" class="form-control" id="update_interval" name="update_interval" value="{{ config.MONITORING_INTERVAL }}">
+                            </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">{% trans %}Save Settings{% endtrans %}</button>
+                        <div class="form-group row">
+                            <div class="col-sm-12">
+                                <button type="submit" class="btn btn-primary">{% trans %}Save Settings{% endtrans %}</button>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -34,8 +47,10 @@
 
         <div class="col-lg-6">
             <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <i class="bi bi-activity me-2"></i>{% trans %}Current Stats{% endtrans %}
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-activity me-1"></i>{% trans %}Current Stats{% endtrans %}
+                    </h6>
                 </div>
                 <div class="card-body">
                     <div class="row">
