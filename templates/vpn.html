@@ -96,8 +96,11 @@ function updateVPNStatus() {
             
             // Update toggle button text
             const toggleBtn = document.getElementById('toggle-vpn');
-            toggleBtn.textContent = data.status === 'Connected' ? '{{ _("Disconnect VPN") }}' : '{{ _("Connect VPN") }}';
-            toggleBtn.className = `btn w-100 ${data.status === 'Connected' ? 'btn-danger' : 'btn-primary'}`;
+            toggleBtn.textContent = data.status === 'Conectado' ? '{{ _("Disconnect VPN") }}' : '{{ _("Connect VPN") }}';
+            toggleBtn.className = `btn w-100 ${data.status === 'Conectado' ? 'btn-danger' : 'btn-primary'}`;
+        })
+        .catch(error => {
+            console.error('Error updating VPN status:', error);
         });
 }
 
@@ -116,6 +119,10 @@ document.getElementById('toggle-vpn').addEventListener('click', function() {
         } else {
             alert(data.error || '{{ _("Error toggling VPN") }}');
         }
+    })
+    .catch(error => {
+        console.error('Error toggling VPN:', error);
+        alert('{{ _("Error toggling VPN") }}');
     });
 });
 
@@ -146,6 +153,10 @@ document.getElementById('vpn-config-form').addEventListener('submit', function(e
         } else {
             alert(data.error || '{{ _("Error saving VPN configuration") }}');
         }
+    })
+    .catch(error => {
+        console.error('Error saving VPN configuration:', error);
+        alert('{{ _("Error saving VPN configuration") }}');
     });
 });
 
