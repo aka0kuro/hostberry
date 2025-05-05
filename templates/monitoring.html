@@ -140,49 +140,83 @@ $(document).ready(function() {
     // Función para actualizar las estadísticas
     async function updateStats() {
         try {
-            console.log('Iniciando actualización de estadísticas...');
+            console.log('[MONITORING] Iniciando actualización de estadísticas...');
             const response = await fetch('/api/monitoring/stats');
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(`[MONITORING] HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            
             if (data.error) {
-                console.error('Error en la respuesta:', data.error);
+                console.error('[MONITORING] Error en la respuesta:', data.error);
                 return;
             }
-            
-            console.log('Datos recibidos:', data);
-            
+            console.log('[MONITORING] Datos recibidos:', data);
+
             // Actualizar uptime
-            $('#uptimeValue').text(data.uptime);
-            
-            // Actualizar CPU
-            $('#cpuUsage').text(data.cpu + '%');
-            $('#cpuTemp').text(data.detailed.cpu_temp + '°C');
-            
-            // Actualizar Memoria
-            $('#memoryUsage').text(
-                typeof data.memory !== 'undefined' ? data.memory + '%' : 'N/A'
-            );
-            if (typeof data.detailed.swap_usage !== 'undefined') {
-                $('#swapUsage').text(data.detailed.swap_usage + '%');
+            if ($('#uptimeValue').length) {
+                $('#uptimeValue').text(data.uptime || 'N/A');
             } else {
-                $('#swapUsage').text('N/A');
+                console.warn('[MONITORING] No se encontró #uptimeValue');
             }
-            // Mostrar detalles de memoria si existen
-            if (data.detailed) {
-                if (typeof data.detailed.mem_total !== 'undefined') {
-                    $('#memoryUsage').attr('title', 'Total: ' + data.detailed.mem_total + '\nUsada: ' + data.detailed.mem_used + '\nLibre: ' + data.detailed.mem_available);
+
+            // Actualizar CPU
+            if ($('#cpuUsage').length) {
+                $('#cpuUsage').text(
+                    typeof data.cpu !== 'undefined' ? data.cpu + '%' : 'N/A'
+                );
+            } else {
+                console.warn('[MONITORING] No se encontró #cpuUsage');
+            }
+            if ($('#cpuTemp').length) {
+                $('#cpuTemp').text(
+                    data.detailed && typeof data.detailed.cpu_temp !== 'undefined' ? data.detailed.cpu_temp + '°C' : 'N/A'
+                );
+            } else {
+                console.warn('[MONITORING] No se encontró #cpuTemp');
+            }
+
+            // Actualizar Memoria
+            if ($('#memoryUsage').length) {
+                $('#memoryUsage').text(
+                    typeof data.memory !== 'undefined' ? data.memory + '%' : 'N/A'
+                );
+                if (data.detailed && typeof data.detailed.mem_total !== 'undefined') {
+                    $('#memoryUsage').attr('title',
+                        'Total: ' + data.detailed.mem_total + '\nUsada: ' + data.detailed.mem_used + '\nLibre: ' + data.detailed.mem_available
+                    );
                 }
+            } else {
+                console.warn('[MONITORING] No se encontró #memoryUsage');
             }
+            if ($('#swapUsage').length) {
+                if (data.detailed && typeof data.detailed.swap_usage !== 'undefined') {
+                    $('#swapUsage').text(data.detailed.swap_usage + '%');
+                } else {
+                    $('#swapUsage').text('N/A');
+                }
+            } else {
+                console.warn('[MONITORING] No se encontró #swapUsage');
+            }
+
             // Actualizar Disco
-            $('#diskTotal').text(data.detailed.disk_total || 'N/A');
-            $('#diskUsed').text(data.detailed.disk_used || 'N/A');
-            $('#diskFree').text(data.detailed.disk_free || 'N/A');
-            
+            if ($('#diskTotal').length) {
+                $('#diskTotal').text(data.detailed && data.detailed.disk_total ? data.detailed.disk_total : 'N/A');
+            } else {
+                console.warn('[MONITORING] No se encontró #diskTotal');
+            }
+            if ($('#diskUsed').length) {
+                $('#diskUsed').text(data.detailed && data.detailed.disk_used ? data.detailed.disk_used : 'N/A');
+            } else {
+                console.warn('[MONITORING] No se encontró #diskUsed');
+            }
+            if ($('#diskFree').length) {
+                $('#diskFree').text(data.detailed && data.detailed.disk_free ? data.detailed.disk_free : 'N/A');
+            } else {
+                console.warn('[MONITORING] No se encontró #diskFree');
+            }
+
         } catch (error) {
-            console.error('Error al actualizar estadísticas:', error);
+            console.error('[MONITORING] Error al actualizar estadísticas:', error);
         }
     }
 
@@ -194,9 +228,7 @@ $(document).ready(function() {
             updateInterval = null;
         }
         const interval = parseInt($('#update_interval').val()) * 1000 || 4000;
-        // Actualizar inmediatamente
         updateStats();
-        // Configurar intervalo para actualizaciones futuras
         updateInterval = setInterval(function() {
             updateStats();
         }, interval);
@@ -213,32 +245,24 @@ $(document).ready(function() {
     // Escuchar el envío del formulario
     $('form').on('submit', function(e) {
         e.preventDefault();
-        console.log('Enviando formulario...');
-        
+        console.log('[MONITORING] Enviando formulario...');
         const formData = new FormData(this);
-
         const interval = $('#update_interval').val();
-        
-        console.log('Datos del formulario:', {
-
-            update_interval: interval
-        });
-        
+        console.log('[MONITORING] Datos del formulario:', { update_interval: interval });
         fetch(this.action, {
             method: 'POST',
             body: formData
         })
         .then(response => {
             if (response.ok) {
-                console.log('Configuración guardada correctamente');
-                // Recargar la página para mostrar el mensaje de éxito
+                console.log('[MONITORING] Configuración guardada correctamente');
                 window.location.reload();
             } else {
-                throw new Error('Error al guardar la configuración');
+                throw new Error('[MONITORING] Error al guardar la configuración');
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('[MONITORING] Error:', error);
         });
     });
 });
