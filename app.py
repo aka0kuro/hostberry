@@ -801,28 +801,8 @@ def vpn_config():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/vpn', methods=['GET', 'POST'])
-def vpn_config():
-    if request.method == 'POST':
-        new_config = {
-            'VPN_ENABLED': request.form.get('vpn_enabled') == 'on',
-            'VPN_PROVIDER': request.form.get('vpn_provider'),
-            'VPN_COUNTRY': request.form.get('vpn_country')
-        }
-        config.update_config(new_config)
-        flash(_('VPN configuration updated successfully!'), 'success')
-        return redirect(url_for('vpn_config'))
-    
-    current_config = config.get_current_config()
-    return render_template('vpn.html', 
-        config=current_config,
-        vpn_providers=['OpenVPN', 'WireGuard', 'IPSec'],
-        vpn_countries=['US', 'UK', 'DE', 'FR', 'JP'],
-        vpn_status={
-            'connected': False,
-            'ip_address': None,
-            'location': None
-        }
-    )
+def vpn_page():
+    return render_template('vpn.html')
 
 @app.route('/vpn/toggle', methods=['POST'])
 def vpn_toggle():
@@ -832,7 +812,7 @@ def vpn_toggle():
     except Exception as e:
         app.logger.error(f"VPN toggle error: {e}")
         flash(_('Error toggling VPN connection'), 'danger')
-    return redirect(url_for('vpn_config'))
+    return redirect(url_for('vpn_page'))
 
 @app.route('/adblock', methods=['GET', 'POST'])
 def adblock_config():
