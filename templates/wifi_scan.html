@@ -151,29 +151,29 @@
             <form id="wifiConnectForm">
               <!-- Campo SSID -->
               <div class="mb-3">
-                <label class="form-label fw-bold text-white">Nombre de red (SSID)</label>
+                <label class="form-label fw-bold">Nombre de red (SSID)</label>
                 <div class="input-group">
-                  <span class="input-group-text bg-dark border-secondary text-white"><i class="fas fa-network-wired"></i></span>
-                  <input type="text" class="form-control bg-dark text-white border-secondary" id="connectSSID" name="ssid" readonly style="background-color: #212529 !important; color: white !important;">
+                  <span class="input-group-text"><i class="fas fa-network-wired"></i></span>
+                  <input type="text" class="form-control" id="connectSSID" name="ssid" readonly>
                   <input type="hidden" id="connectSSIDHidden" name="ssid_hidden">
                 </div>
               </div>
               <!-- Campo Seguridad -->
               <div class="mb-3">
-                <label class="form-label fw-bold text-white">Tipo de seguridad</label>
+                <label class="form-label fw-bold">Tipo de seguridad</label>
                 <div class="input-group">
-                  <span class="input-group-text bg-dark border-secondary text-white"><i class="fas fa-lock"></i></span>
-                  <input type="text" class="form-control bg-dark text-white border-secondary" id="connectSecurity" name="security" readonly style="background-color: #212529 !important; color: white !important;">
+                  <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                  <input type="text" class="form-control" id="connectSecurity" name="security" readonly>
                   <input type="hidden" id="connectSecurityHidden" name="security_hidden">
                 </div>
               </div>
               <!-- Campo Contraseña -->
               <div class="mb-4" id="passwordField">
-                <label class="form-label fw-bold text-white">Contraseña</label>
+                <label class="form-label fw-bold">Contraseña</label>
                 <div class="input-group">
-                  <span class="input-group-text bg-dark border-secondary text-white"><i class="fas fa-key"></i></span>
-                  <input type="password" class="form-control bg-dark text-white border-secondary" id="connectPassword" name="password" placeholder="Contraseña" autocomplete="current-password" required style="background-color: #212529 !important; color: white !important;">
-                  <button class="btn bg-dark border-secondary text-white" type="button" id="togglePwd" tabindex="-1" style="background-color: #212529 !important;">
+                  <span class="input-group-text"><i class="fas fa-key"></i></span>
+                  <input type="password" class="form-control" id="connectPassword" name="password" placeholder="Contraseña" autocomplete="current-password" required>
+                  <button class="btn" type="button" id="togglePwd" tabindex="-1">
                     <i class="fas fa-eye" id="togglePwdIcon"></i>
                   </button>
                 </div>
