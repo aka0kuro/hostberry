@@ -200,6 +200,18 @@
 
 <script>
 $(document).ready(function() {
+  // Mostrar/ocultar contraseña WiFi
+  $(document).on('click', '#togglePwd', function() {
+    const pwdInput = $('#connectPassword');
+    const icon = $('#togglePwdIcon');
+    if (pwdInput.attr('type') === 'password') {
+      pwdInput.attr('type', 'text');
+      icon.removeClass('fa-eye').addClass('fa-eye-slash');
+    } else {
+      pwdInput.attr('type', 'password');
+      icon.removeClass('fa-eye-slash').addClass('fa-eye');
+    }
+  });
     // Función para actualizar la lista de redes
     function updateNetworkList(networks) {
         const list = $('#network-list');
