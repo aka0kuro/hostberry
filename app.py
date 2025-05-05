@@ -590,6 +590,28 @@ def monitoring_config():
         }
     )
 
+@app.route('/api/monitoring/stats')
+def monitoring_stats_api():
+    """Endpoint para obtener estadísticas de monitoreo en tiempo real"""
+    try:
+        cpu = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory().percent
+        disk = psutil.disk_usage('/').percent
+        uptime = datetime.datetime.now() - datetime.datetime.fromtimestamp(psutil.boot_time())
+        uptime_str = str(uptime).split('.')[0]  # Remove microseconds
+        
+        return jsonify({
+            'cpu': cpu,
+            'memory': memory,
+            'disk': disk,
+            'uptime': uptime_str
+        })
+    except Exception as e:
+        app.logger.error(f"Error getting monitoring stats: {str(e)}")
+        return jsonify({
+            'error': str(e)
+        }), 500
+
 @app.route('/apply', methods=['POST'])
 def apply_config():
     try:
