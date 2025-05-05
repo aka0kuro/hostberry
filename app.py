@@ -934,13 +934,6 @@ network={{
 
     return jsonify({'status': 'ok', 'message': f'Conectado a {ssid}', 'wpa_conf_path': wpa_path})
 
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
 @app.route('/api/wifi/status', methods=['GET'])
 def wifi_status():
     try:
