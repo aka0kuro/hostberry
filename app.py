@@ -596,15 +596,7 @@ def monitoring_stats_api():
     try:
         app.logger.info("Solicitud de estadísticas de monitoreo recibida")
         
-        # Verificar si el monitoreo está habilitado
-        current_config = config.get_current_config()
-        app.logger.debug(f"Configuración actual: {current_config}")
-        
-        if not current_config.get('MONITORING_ENABLED', False):
-            app.logger.warning("El monitoreo está deshabilitado")
-            return jsonify({
-                'error': 'Monitoring is disabled'
-            }), 400
+        # Siempre devolver estadísticas de monitoreo, sin importar la configuración
 
         # Estadísticas básicas
         cpu = psutil.cpu_percent(interval=1)
