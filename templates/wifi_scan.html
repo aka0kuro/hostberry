@@ -412,22 +412,33 @@ $(document).ready(function() {
       // Validación previa
       const ssid = $('#connectSSIDHidden').val();
       const security = $('#connectSecurityHidden').val();
+      const password = $('#connectPassword').val();
+      
       if (!ssid || !security) {
         showToast('Faltan datos de red. Selecciona una red WiFi válida.', 'danger');
         return btn.prop('disabled', false).html(originalText);
       }
+      
       btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Conectando...');
       
       try {
         const response = await fetch('/api/wifi/connect', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
           body: JSON.stringify({
             ssid: ssid,
             security: security,
-            password: $('#connectPassword').val()
+            password: security === 'Open' ? '' : password
           })
         });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+        }
         
         const data = await response.json();
         if (data.success) {
