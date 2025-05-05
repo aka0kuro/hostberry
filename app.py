@@ -907,16 +907,32 @@ def wifi_scan():
 def wifi_connect():
     data = request.get_json()
     ssid = data.get('ssid')
+    security = data.get('security')
     password = data.get('password')
 
-    if not ssid or not password:
-        return jsonify({'status': 'error', 'message': 'SSID y contraseña son requeridos'}), 400
+    if not ssid:
+        return jsonify({'success': False, 'error': 'El SSID es requerido'}), 400
 
-    # Generar wpa_supplicant.conf (en /tmp para pruebas seguras)
-    wpa_path = '/tmp/wpa_supplicant.conf'
+    if security != 'Open' and not password:
+        return jsonify({'success': False, 'error': 'La contraseña es requerida para redes protegidas'}), 400
+
     try:
+        # Generar wpa_supplicant.conf (en /tmp para pruebas seguras)
+        wpa_path = '/tmp/wpa_supplicant.conf'
         with open(wpa_path, 'w') as f:
-            f.write(f"""
+            if security == 'Open':
+                f.write(f"""
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=US
+
+network={{
+    ssid=\"{ssid}\"
+    key_mgmt=NONE
+}}
+""")
+            else:
+                f.write(f"""
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
 country=US
@@ -926,13 +942,30 @@ network={{
     psk=\"{password}\"
 }}
 """)
+
+        # Intentar conectar usando nmcli
+        cmd = ['nmcli', 'dev', 'wifi', 'connect', ssid]
+        if security != 'Open':
+            cmd.extend(['password', password])
+        
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            return jsonify({
+                'success': True, 
+                'message': f'Conectado exitosamente a {ssid}'
+            })
+        else:
+            return jsonify({
+                'success': False, 
+                'error': f'Error al conectar: {result.stderr.strip()}'
+            }), 400
+
     except Exception as e:
-        return jsonify({'status': 'error', 'message': f'Error escribiendo archivo: {e}'}), 500
-
-    # (Opcional) reiniciar servicio de red o hacer algo más
-    # subprocess.run(['wpa_cli', '-i', 'wlan0', 'reconfigure'])
-
-    return jsonify({'status': 'ok', 'message': f'Conectado a {ssid}', 'wpa_conf_path': wpa_path})
+        return jsonify({
+            'success': False, 
+            'error': f'Error en la conexión: {str(e)}'
+        }), 500
 
 @app.route('/api/wifi/status', methods=['GET'])
 def wifi_status():
