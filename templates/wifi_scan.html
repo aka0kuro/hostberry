@@ -495,6 +495,60 @@ $(document).ready(function() {
         btn.prop('disabled', false).html(originalText);
       }
     });
+
+    // Función para actualizar el estado WiFi
+    async function updateWifiStatus() {
+        try {
+            const response = await fetch('/api/wifi/status');
+            const data = await response.json();
+            
+            // Actualizar estado WiFi
+            let wifiStatusText;
+            if (data.soft_blocked || data.hard_blocked) {
+                wifiStatusText = '{% trans %}Blocked{% endtrans %}';
+            } else if (data.connected) {
+                wifiStatusText = '{% trans %}Connected{% endtrans %}';
+            } else if (data.enabled) {
+                wifiStatusText = '{% trans %}Enabled{% endtrans %}';
+            } else {
+                wifiStatusText = '{% trans %}Disabled{% endtrans %}';
+            }
+            
+            $('#wifiStatusText').text(wifiStatusText);
+            $('#wifiStatusTextCard').text(wifiStatusText);
+            
+            // Actualizar conexión actual
+            if (data.connected && data.current_connection) {
+                $('#currentConnection').text(data.current_connection);
+            } else {
+                $('#currentConnection').text('{% trans %}Not connected{% endtrans %}');
+            }
+            
+            // Actualizar botones de conexión
+            $('.connect-btn').each(function() {
+                const btn = $(this);
+                const ssid = btn.data('ssid');
+                if (data.connected && data.current_connection === ssid) {
+                    btn.html('<i class="fas fa-check me-1"></i> {% trans %}Connected{% endtrans %}')
+                       .removeClass('btn-outline-primary')
+                       .addClass('btn-success')
+                       .prop('disabled', true);
+                } else {
+                    btn.html('{% trans %}Connect{% endtrans %}')
+                       .removeClass('btn-success')
+                       .addClass('btn-outline-primary')
+                       .prop('disabled', false);
+                }
+            });
+            
+        } catch (error) {
+            console.error('Error al actualizar estado WiFi:', error);
+        }
+    }
+
+    // Actualizar estado cada 5 segundos
+    setInterval(updateWifiStatus, 5000);
+    updateWifiStatus(); // Actualizar inmediatamente al cargar
 });
 
 // Configurar modal al hacer click en Conectar

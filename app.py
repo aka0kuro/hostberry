@@ -999,12 +999,31 @@ def wifi_status():
         radio = subprocess.run(['nmcli', 'radio', 'wifi'], capture_output=True, text=True)
         rfkill = subprocess.run(['rfkill', 'list', 'wifi'], capture_output=True, text=True)
         
+        # Obtener conexión actual
+        current_conn = None
+        conn_result = subprocess.run(
+            ['nmcli', '-t', '-f', 'NAME,TYPE,DEVICE', 'connection', 'show', '--active'],
+            capture_output=True,
+            text=True
+        )
+        if conn_result.returncode == 0:
+            for line in conn_result.stdout.splitlines():
+                if 'wifi' in line.lower():
+                    current_conn = line.split(':')[0]
+                    break
+        
+        # Verificar si hay una conexión activa
+        is_connected = current_conn is not None
+        
         return jsonify({
             'enabled': 'enabled' in radio.stdout.lower(),
             'soft_blocked': 'Soft blocked: yes' in rfkill.stdout,
-            'hard_blocked': 'Hard blocked: yes' in rfkill.stdout
+            'hard_blocked': 'Hard blocked: yes' in rfkill.stdout,
+            'connected': is_connected,
+            'current_connection': current_conn
         })
     except Exception as e:
+        app.logger.error(f'Error en wifi_status: {str(e)}')
         return jsonify({'error': str(e)}), 500
 
 
