@@ -594,9 +594,14 @@ def monitoring_config():
 def monitoring_stats_api():
     """Endpoint para obtener estadísticas de monitoreo en tiempo real"""
     try:
+        app.logger.info("Solicitud de estadísticas de monitoreo recibida")
+        
         # Verificar si el monitoreo está habilitado
         current_config = config.get_current_config()
+        app.logger.debug(f"Configuración actual: {current_config}")
+        
         if not current_config.get('MONITORING_ENABLED', False):
+            app.logger.warning("El monitoreo está deshabilitado")
             return jsonify({
                 'error': 'Monitoring is disabled'
             }), 400
@@ -607,6 +612,8 @@ def monitoring_stats_api():
         disk = psutil.disk_usage('/')
         uptime = datetime.datetime.now() - datetime.datetime.fromtimestamp(psutil.boot_time())
         uptime_str = str(uptime).split('.')[0]  # Remove microseconds
+        
+        app.logger.debug(f"Estadísticas básicas - CPU: {cpu}, Memoria: {memory.percent}, Disco: {disk.percent}")
         
         # Información detallada
         cpu_freq = psutil.cpu_freq()
@@ -623,7 +630,8 @@ def monitoring_stats_api():
                 # Alternativa para Raspberry Pi
                 with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
                     cpu_temp = float(f.read()) / 1000
-        except:
+        except Exception as e:
+            app.logger.warning(f"No se pudo obtener la temperatura del CPU: {str(e)}")
             cpu_temp = 0
             
         # Formatear tamaños en formato legible
@@ -665,11 +673,11 @@ def monitoring_stats_api():
             }
         }
         
-        app.logger.debug(f"Monitoring stats response: {response_data}")
+        app.logger.debug(f"Respuesta de monitoreo: {response_data}")
         return jsonify(response_data)
         
     except Exception as e:
-        app.logger.error(f"Error getting monitoring stats: {str(e)}")
+        app.logger.error(f"Error al obtener estadísticas de monitoreo: {str(e)}", exc_info=True)
         return jsonify({
             'error': str(e)
         }), 500
