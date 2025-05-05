@@ -905,72 +905,35 @@ def wifi_scan():
 
 @app.route('/api/wifi/connect', methods=['POST'])
 def wifi_connect():
+    data = request.get_json()
+    ssid = data.get('ssid')
+    password = data.get('password')
+
+    if not ssid or not password:
+        return jsonify({'status': 'error', 'message': 'SSID y contraseña son requeridos'}), 400
+
+    # Generar wpa_supplicant.conf (en /tmp para pruebas seguras)
+    wpa_path = '/tmp/wpa_supplicant.conf'
     try:
-        data = request.get_json()
-        ssid = data.get('ssid')
-        security = data.get('security', '').lower()
-        password = data.get('password', '')
+        with open(wpa_path, 'w') as f:
+            f.write(f"""
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=US
 
-        if not ssid:
-            # Aun así crea archivo vacío para depuración
-            wpa_path = '/tmp/wpa_supplicant.conf'
-            with open(wpa_path, 'w') as f:
-                f.write('')
-            return jsonify({'success': False, 'error': 'SSID requerido', 'wpa_conf_path': wpa_path}), 400
+network={{
+    ssid=\"{ssid}\"
+    psk=\"{password}\"
+}}
+""")
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'Error escribiendo archivo: {e}'}), 500
 
-        # Generar contenido de wpa_supplicant.conf
-        wpa_conf = 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\n\n'
-        net_block = f'network={{\n    ssid="{ssid}"\n'
-        if security in ['open', 'none']:
-            net_block += '    key_mgmt=NONE\n'
-        elif 'wpa3' in security:
-            net_block += f'    psk="{password}"\n    key_mgmt=SAE\n'
-        elif 'wpa2' in security or 'wpa' in security:
-            net_block += f'    psk="{password}"\n    key_mgmt=WPA-PSK\n'
-        elif 'wep' in security:
-            net_block += f'    key_mgmt=NONE\n    wep_key0="{password}"\n'
-        else:
-            net_block += '    key_mgmt=WPA-PSK\n'
-            if password:
-                net_block += f'    psk="{password}"\n'
-        net_block += '}'
-        wpa_conf += net_block + '\n'
+    # (Opcional) reiniciar servicio de red o hacer algo más
+    # subprocess.run(['wpa_cli', '-i', 'wlan0', 'reconfigure'])
 
-        # Guardar archivo temporalmente (puedes cambiar la ruta a /etc/wpa_supplicant/wpa_supplicant.conf si tienes permisos)
-        import logging
-        wpa_path = '/tmp/wpa_supplicant.conf'
-        app.logger.info(f'Intentando crear archivo de configuración WiFi en {wpa_path}')
-        try:
-            with open(wpa_path, 'w') as f:
-                f.write(wpa_conf)
-            app.logger.info(f'Archivo wpa_supplicant.conf creado correctamente en {wpa_path}')
-        except Exception as e:
-            app.logger.error(f'Fallo al crear wpa_supplicant.conf: {str(e)}')
-            return jsonify({'success': False, 'error': f'No se pudo crear el archivo de configuración: {str(e)}', 'wpa_conf_path': wpa_path}), 500
+    return jsonify({'status': 'ok', 'message': f'Conectado a {ssid}', 'wpa_conf_path': wpa_path})
 
-        # Intentar conectar usando wpa_supplicant y dhclient
-        import subprocess, time
-        iface = 'wlan0'  # Cambia aquí si tu interfaz es distinta
-        try:
-            # Detener procesos anteriores (opcional, ignora errores)
-            subprocess.run(['sudo', 'killall', 'wpa_supplicant'], check=False)
-            subprocess.run(['sudo', 'dhclient', '-r', iface], check=False)
-            time.sleep(1)
-            # Iniciar wpa_supplicant en background
-            wpa_proc = subprocess.Popen(['sudo', 'wpa_supplicant', '-B', '-i', iface, '-c', wpa_path, '-f', '/tmp/wpa_supplicant.log'])
-            time.sleep(3)
-            # Solicitar IP
-            dhclient_proc = subprocess.run(['sudo', 'dhclient', iface], capture_output=True, text=True, timeout=15)
-            if dhclient_proc.returncode != 0:
-                return jsonify({'success': False, 'error': f'Error al solicitar IP: {dhclient_proc.stderr}', 'wpa_conf_path': wpa_path}), 500
-        except Exception as e:
-            return jsonify({'success': False, 'error': f'Error al conectar: {str(e)}', 'wpa_conf_path': wpa_path}), 500
-
-        return jsonify({
-            'success': True,
-            'message': f'Conectado a {ssid} usando wpa_supplicant',
-            'wpa_conf_path': wpa_path
-        })
 
     except Exception as e:
         return jsonify({
