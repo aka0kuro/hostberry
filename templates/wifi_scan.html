@@ -142,10 +142,9 @@
     <!-- Modal de conexión WiFi - Contraste mejorado -->
     <div class="modal fade" id="connectModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark border border-secondary">
+        <div class="modal-content bg-dark">
           <div class="modal-header border-bottom border-secondary">
             <h5 class="modal-title text-white fw-bold"><i class="fas fa-wifi me-2"></i>Conectar a red</h5>
-            <!-- X de cerrar visible -->
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -153,28 +152,28 @@
               <!-- Campo SSID -->
               <div class="mb-3">
                 <label class="form-label fw-bold text-white">Nombre de red (SSID)</label>
-                <div class="input-group border border-secondary rounded bg-secondary bg-opacity-10">
-                  <span class="input-group-text bg-dark border-0 text-white"><i class="fas fa-network-wired"></i></span>
-                  <input type="text" class="form-control bg-dark text-white border-0 fw-semibold" id="connectSSID" name="ssid" readonly style="color:#fff !important;font-weight:600 !important;">
+                <div class="input-group">
+                  <span class="input-group-text bg-dark border-secondary text-white"><i class="fas fa-network-wired"></i></span>
+                  <input type="text" class="form-control bg-dark text-white border-secondary" id="connectSSID" name="ssid" readonly>
                   <input type="hidden" id="connectSSIDHidden" name="ssid_hidden">
                 </div>
               </div>
               <!-- Campo Seguridad -->
               <div class="mb-3">
                 <label class="form-label fw-bold text-white">Tipo de seguridad</label>
-                <div class="input-group border border-secondary rounded bg-secondary bg-opacity-10">
-                  <span class="input-group-text bg-dark border-0 text-white"><i class="fas fa-lock"></i></span>
-                  <input type="text" class="form-control bg-dark text-white border-0 fw-semibold" id="connectSecurity" name="security" readonly style="color:#fff !important;font-weight:600 !important;">
+                <div class="input-group">
+                  <span class="input-group-text bg-dark border-secondary text-white"><i class="fas fa-lock"></i></span>
+                  <input type="text" class="form-control bg-dark text-white border-secondary" id="connectSecurity" name="security" readonly>
                   <input type="hidden" id="connectSecurityHidden" name="security_hidden">
                 </div>
               </div>
               <!-- Campo Contraseña -->
               <div class="mb-4" id="passwordField">
                 <label class="form-label fw-bold text-white">Contraseña</label>
-                <div class="input-group border border-secondary rounded bg-secondary bg-opacity-10">
-                  <span class="input-group-text bg-dark border-0 text-white"><i class="fas fa-key"></i></span>
-                  <input type="password" class="form-control bg-dark text-white border-0" id="connectPassword" name="password" placeholder="Contraseña" autocomplete="current-password" required>
-                  <button class="btn btn-outline-secondary text-white" type="button" id="togglePwd" tabindex="-1">
+                <div class="input-group">
+                  <span class="input-group-text bg-dark border-secondary text-white"><i class="fas fa-key"></i></span>
+                  <input type="password" class="form-control bg-dark text-white border-secondary" id="connectPassword" name="password" placeholder="Contraseña" autocomplete="current-password" required>
+                  <button class="btn bg-dark border-secondary text-white" type="button" id="togglePwd" tabindex="-1">
                     <i class="fas fa-eye" id="togglePwdIcon"></i>
                   </button>
                 </div>
