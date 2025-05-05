@@ -146,7 +146,7 @@
           <div class="modal-header border-bottom border-secondary">
             <h5 class="modal-title text-white fw-bold"><i class="fas fa-wifi me-2"></i>Conectar a red</h5>
             <!-- X de cerrar visible -->
-            <button type="button" class="btn-close btn-close-white custom-close-x" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <form id="wifiConnectForm">
@@ -610,10 +610,7 @@ function showToast(message, type = 'info') {
 </script>
 
 <style>
-.custom-close-x {
-  filter: invert(0.7) grayscale(1);
-  opacity: 0.9;
-}
+/* Eliminamos el estilo custom-close-x */
 </style>
 
 {% endblock %}
