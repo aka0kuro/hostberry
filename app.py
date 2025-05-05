@@ -937,11 +937,15 @@ def wifi_connect():
         wpa_conf += net_block + '\n'
 
         # Guardar archivo temporalmente (puedes cambiar la ruta a /etc/wpa_supplicant/wpa_supplicant.conf si tienes permisos)
+        import logging
         wpa_path = '/tmp/wpa_supplicant.conf'
+        app.logger.info(f'Intentando crear archivo de configuración WiFi en {wpa_path}')
         try:
             with open(wpa_path, 'w') as f:
                 f.write(wpa_conf)
+            app.logger.info(f'Archivo wpa_supplicant.conf creado correctamente en {wpa_path}')
         except Exception as e:
+            app.logger.error(f'Fallo al crear wpa_supplicant.conf: {str(e)}')
             return jsonify({'success': False, 'error': f'No se pudo crear el archivo de configuración: {str(e)}', 'wpa_conf_path': wpa_path}), 500
 
         # Intentar conectar usando wpa_supplicant y dhclient
