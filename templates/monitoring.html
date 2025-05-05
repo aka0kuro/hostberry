@@ -59,7 +59,7 @@
                             <div class="card bg-light">
                                 <div class="card-body text-center">
                                     <h5 class="card-title">{% trans %}CPU Usage{% endtrans %}</h5>
-                                    <h2>{{ monitoring_stats.cpu }}%</h2>
+                                    <h2 id="cpuValue">{{ monitoring_stats.cpu }}%</h2>
                                 </div>
                             </div>
                         </div>
@@ -67,7 +67,7 @@
                             <div class="card bg-light">
                                 <div class="card-body text-center">
                                     <h5 class="card-title">{% trans %}Memory Usage{% endtrans %}</h5>
-                                    <h2>{{ monitoring_stats.memory }}%</h2>
+                                    <h2 id="memoryValue">{{ monitoring_stats.memory }}%</h2>
                                 </div>
                             </div>
                         </div>
@@ -77,7 +77,7 @@
                             <div class="card bg-light">
                                 <div class="card-body text-center">
                                     <h5 class="card-title">{% trans %}Disk Usage{% endtrans %}</h5>
-                                    <h2>{{ monitoring_stats.disk }}%</h2>
+                                    <h2 id="diskValue">{{ monitoring_stats.disk }}%</h2>
                                 </div>
                             </div>
                         </div>
@@ -85,7 +85,7 @@
                             <div class="card bg-light">
                                 <div class="card-body text-center">
                                     <h5 class="card-title">{% trans %}Uptime{% endtrans %}</h5>
-                                    <h2>{{ monitoring_stats.uptime }}</h2>
+                                    <h2 id="uptimeValue">{{ monitoring_stats.uptime }}</h2>
                                 </div>
                             </div>
                         </div>
@@ -95,4 +95,53 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+$(document).ready(function() {
+    // Función para actualizar las estadísticas
+    async function updateStats() {
+        try {
+            const response = await fetch('/api/monitoring/stats');
+            const data = await response.json();
+            
+            // Actualizar CPU
+            $('#cpuValue').text(data.cpu + '%');
+            
+            // Actualizar Memoria
+            $('#memoryValue').text(data.memory + '%');
+            
+            // Actualizar Disco
+            $('#diskValue').text(data.disk + '%');
+            
+            // Actualizar Uptime
+            $('#uptimeValue').text(data.uptime);
+            
+        } catch (error) {
+            console.error('Error al actualizar estadísticas:', error);
+        }
+    }
+
+    // Verificar si el monitoreo está activado
+    const isMonitoringEnabled = $('#enable_monitoring').is(':checked');
+    
+    // Si está activado, actualizar cada X segundos
+    if (isMonitoringEnabled) {
+        const interval = parseInt($('#update_interval').val()) * 1000;
+        setInterval(updateStats, interval);
+        updateStats(); // Actualizar inmediatamente
+    }
+
+    // Escuchar cambios en el switch de monitoreo
+    $('#enable_monitoring').change(function() {
+        if ($(this).is(':checked')) {
+            const interval = parseInt($('#update_interval').val()) * 1000;
+            setInterval(updateStats, interval);
+            updateStats(); // Actualizar inmediatamente
+        }
+    });
+});
+</script>
 {% endblock %}
