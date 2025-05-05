@@ -594,6 +594,13 @@ def monitoring_config():
 def monitoring_stats_api():
     """Endpoint para obtener estadísticas de monitoreo en tiempo real"""
     try:
+        # Verificar si el monitoreo está habilitado
+        current_config = config.get_current_config()
+        if not current_config.get('MONITORING_ENABLED', False):
+            return jsonify({
+                'error': 'Monitoring is disabled'
+            }), 400
+
         # Estadísticas básicas
         cpu = psutil.cpu_percent(interval=1)
         memory = psutil.virtual_memory()
@@ -627,11 +634,11 @@ def monitoring_stats_api():
                 bytes /= 1024
             return f"{bytes:.1f} TB"
         
-        return jsonify({
+        response_data = {
             # Estadísticas básicas
-            'cpu': cpu,
-            'memory': memory.percent,
-            'disk': disk.percent,
+            'cpu': round(cpu, 1),
+            'memory': round(memory.percent, 1),
+            'disk': round(disk.percent, 1),
             'uptime': uptime_str,
             
             # Información detallada
@@ -656,7 +663,11 @@ def monitoring_stats_api():
                 'net_recv': format_size(net_io.bytes_recv),
                 'net_connections': connections
             }
-        })
+        }
+        
+        app.logger.debug(f"Monitoring stats response: {response_data}")
+        return jsonify(response_data)
+        
     except Exception as e:
         app.logger.error(f"Error getting monitoring stats: {str(e)}")
         return jsonify({
