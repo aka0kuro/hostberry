@@ -256,6 +256,8 @@ $(document).ready(function() {
             else if (signalStrength > 40) signalClass = 'text-warning';
 
             const securityIcon = network.security === 'Open' ? 'fa-unlock' : 'fa-lock';
+            const currentSSID = $('#currentConnection').text();
+            const isConnected = currentSSID === network.ssid;
 
             list.append(`
                 <div class="list-group-item list-group-item-action">
@@ -270,10 +272,11 @@ $(document).ready(function() {
                             <i class="fas ${securityIcon} me-1"></i>
                             ${network.security || 'Open'}
                         </small>
-                        <button class="btn btn-sm btn-outline-primary connect-btn" 
+                        <button class="btn btn-sm ${isConnected ? 'btn-success' : 'btn-outline-primary'} connect-btn" 
                                 data-ssid="${network.ssid}"
-                                data-security="${network.security}">
-                            Conectar
+                                data-security="${network.security}"
+                                ${isConnected ? 'disabled' : ''}>
+                            ${isConnected ? '<i class="fas fa-check me-1"></i> Conectado' : 'Conectar'}
                         </button>
                     </div>
                 </div>
@@ -540,6 +543,10 @@ $(document).ready(function() {
                        .prop('disabled', false);
                 }
             });
+            
+            // Actualizar contador de redes
+            const networkCount = $('.connect-btn').length;
+            $('#networksCount').text(networkCount);
             
         } catch (error) {
             console.error('Error al actualizar estado WiFi:', error);
