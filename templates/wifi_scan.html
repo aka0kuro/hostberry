@@ -1,531 +1,59 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WiFi Scanner</title>
+</head>
+<body>
+    <h1>Redes WiFi disponibles</h1>
+    <ul id="wifi-list"></ul>
 
-{% block title %}{% trans %}WiFi Center{% endtrans %}{% endblock %}
+    <h2>Conectar a red WiFi</h2>
+    <label for="ssid">SSID:</label>
+    <input type="text" id="ssid" readonly><br>
+    <label for="password">Contraseña:</label>
+    <input type="password" id="password"><br>
+    <button onclick="connect()">Conectar</button>
 
-{% block content %}
-<div class="container-fluid">
+    <p id="response"></p>
 
-    {% if wifi_blocked %}
-    <button id="enableWifiBtn" class="btn btn-warning btn-sm ms-2" aria-label="Enable WiFi">
-        <i class="fas fa-power-off me-1" aria-hidden="true"></i> {% trans %}Enable WiFi{% endtrans %}
-    </button>
-    {% endif %}
-
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-wifi me-2"></i>{% trans %}WiFi Center{% endtrans %}</h1>
-        <div>
-            <button id="rescanBtn" class="btn btn-primary btn-sm">
-                <i class="fas fa-sync-alt me-1"></i> {% trans %}Rescan{% endtrans %}
-            </button>
-
-        </div>
-    </div>
-
-    <!-- WiFi Status Cards (Mejoradas para accesibilidad y consistencia) -->
-    <div class="row mb-4">
-        <!-- Estado WiFi -->
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row align-items-center g-0">
-                        <div class="col flex-grow-1">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1" id="wifiStatusLabel">
-                                {% trans %}WiFi Status{% endtrans %}
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="wifiStatusTextCard" aria-labelledby="wifiStatusLabel">
-                                <span id="wifiStatusText">-</span>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-wifi fa-2x text-gray-300" aria-hidden="true" title="WiFi status"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Conexión actual -->
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                {% trans %}Current Connection{% endtrans %}
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="currentConnection">-</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-network-wired fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-4 col-md-12 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                {% trans %}Available Networks{% endtrans %}
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="networksCount">-</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-signal fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- WiFi Networks List & Modal -->
-    <div class="row">
-        <div class="col-lg-7 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-wifi me-1"></i> {% trans %}WiFi Networks{% endtrans %}
-                    </h6>
-                </div>
-                <div class="card-body p-0">
-                    <div id="wifiStatusAlert" class="alert alert-warning d-none mb-0 rounded-0">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <span id="wifiStatusTextInline"></span>
-                        <button id="enableWifiBtn" class="btn btn-sm btn-outline-dark ms-2 d-none">
-                            {% trans %}Enable WiFi{% endtrans %}
-                        </button>
-                    </div>
-                    <div id="network-list" class="list-group list-group-flush">
-                        <!-- Las redes se agregarán dinámicamente aquí -->
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-5 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="bi bi-clock-history me-1"></i> {% trans %}Recent WiFi Activity{% endtrans %}
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="activity-feed">
-                        <div class="activity-item">
-                            <div class="activity-badge success">
-                                <i class="bi bi-check-circle"></i>
-                            </div>
-                            <div class="activity-content">
-                                <div class="font-weight-bold">{% trans %}WiFi Scan{% endtrans %}</div>
-                                <div class="text-muted small" id="lastScanTime">-</div>
-                                <div>{% trans %}Last scan completed successfully{% endtrans %}</div>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-badge info">
-                                <i class="bi bi-info-circle"></i>
-                            </div>
-                            <div class="activity-content">
-                                <div class="font-weight-bold">{% trans %}WiFi Status Check{% endtrans %}</div>
-                                <div class="text-muted small" id="lastStatusCheck">-</div>
-                                <div>{% trans %}Status checked{% endtrans %}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de conexión WiFi - Contraste mejorado -->
-    <div class="modal fade" id="connectModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark border border-secondary">
-          <div class="modal-header border-bottom border-secondary">
-            <h5 class="modal-title text-white fw-bold"><i class="fas fa-wifi me-2"></i>Conectar a red</h5>
-            <!-- X de cerrar visible -->
-            <button type="button" class="btn-close btn-close-white custom-close-x" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form id="wifiConnectForm">
-              <!-- Campo SSID -->
-              <div class="mb-3">
-                <label class="form-label fw-bold text-white">Nombre de red (SSID)</label>
-                <div class="input-group border border-secondary rounded bg-secondary bg-opacity-10">
-                  <span class="input-group-text bg-dark border-0 text-white"><i class="fas fa-network-wired"></i></span>
-                  <input type="text" class="form-control bg-dark text-white border-0 fw-semibold" id="connectSSID" name="ssid" readonly style="color:#fff !important;font-weight:600 !important;">
-                  <input type="hidden" id="connectSSIDHidden" name="ssid_hidden">
-                </div>
-              </div>
-              <!-- Campo Seguridad -->
-              <div class="mb-3">
-                <label class="form-label fw-bold text-white">Tipo de seguridad</label>
-                <div class="input-group border border-secondary rounded bg-secondary bg-opacity-10">
-                  <span class="input-group-text bg-dark border-0 text-white"><i class="fas fa-lock"></i></span>
-                  <input type="text" class="form-control bg-dark text-white border-0 fw-semibold" id="connectSecurity" name="security" readonly style="color:#fff !important;font-weight:600 !important;">
-                  <input type="hidden" id="connectSecurityHidden" name="security_hidden">
-                </div>
-              </div>
-              <!-- Campo Contraseña -->
-              <div class="mb-4" id="passwordField">
-                <label class="form-label fw-bold text-white">Contraseña</label>
-                <div class="input-group border border-secondary rounded bg-secondary bg-opacity-10">
-                  <span class="input-group-text bg-dark border-0 text-white"><i class="fas fa-key"></i></span>
-                  <div class="input-group">
-                    <input type="password" class="form-control" id="connectPassword" name="password" placeholder="Contraseña" autocomplete="current-password" required>
-                    <button class="btn btn-outline-secondary" type="button" id="togglePwd" tabindex="-1">
-                      <i class="fas fa-eye" id="togglePwdIcon"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Botón de conexión -->
-              <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold py-2" id="connectSubmitBtn">
-                  <i class="fas fa-plug me-2"></i>Conectar ahora
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Contenedor para notificaciones estilo Toast -->
-    <div id="toastContainer" class="toast-container-fixed"></div>
-</div>
-
-<script>
-$(document).ready(function() {
-  // Mostrar/ocultar contraseña WiFi
-  $(document).on('click', '#togglePwd', function() {
-    const pwdInput = $('#connectPassword');
-    const icon = $('#togglePwdIcon');
-    if (pwdInput.attr('type') === 'password') {
-      pwdInput.attr('type', 'text');
-      icon.removeClass('fa-eye').addClass('fa-eye-slash');
-    } else {
-      pwdInput.attr('type', 'password');
-      icon.removeClass('fa-eye-slash').addClass('fa-eye');
-    }
-  });
-    // Función para actualizar la lista de redes
-    function updateNetworkList(networks) {
-        const list = $('#network-list');
-        list.empty();
-        
-        // Actualiza contador si existe
-        if ($('#networksCount').length) {
-            $('#networksCount').text(networks.length);
+    <script>
+        async function loadWifiList() {
+            const res = await fetch('/api/wifi/scan');
+            const data = await res.json();
+            const list = document.getElementById('wifi-list');
+            list.innerHTML = '';
+            data.ssids.forEach(ssid => {
+                const li = document.createElement('li');
+                li.textContent = ssid;
+                li.onclick = () => document.getElementById('ssid').value = ssid;
+                list.appendChild(li);
+            });
         }
 
-        if (!networks.length) {
-            list.append(`
-                <div class="list-group-item text-warning text-center">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    No se encontraron redes WiFi
-                </div>
-            `);
-            return;
+        async function connect() {
+            const ssid = document.getElementById('ssid').value;
+            const password = document.getElementById('password').value;
+
+            const responseEl = document.getElementById('response');
+            responseEl.textContent = 'Conectando...';
+
+            const res = await fetch('/api/wifi/connect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ssid, password })
+            });
+
+            try {
+                const data = await res.json();
+                responseEl.textContent = data.message;
+            } catch (err) {
+                responseEl.textContent = 'Error: respuesta no válida del servidor.';
+            }
         }
 
-        // Ordenar por señal (mayor primero)
-        networks.sort((a, b) => parseInt(b.signal) - parseInt(a.signal));
-
-        networks.forEach(network => {
-            const signalStrength = parseInt(network.signal);
-            let signalClass = 'text-danger';
-            if (signalStrength > 70) signalClass = 'text-success';
-            else if (signalStrength > 40) signalClass = 'text-warning';
-
-            const securityIcon = network.security === 'Open' ? 'fa-unlock' : 'fa-lock';
-
-            list.append(`
-                <div class="list-group-item list-group-item-action">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h6 class="mb-1">${network.ssid || 'Red oculta'}</h6>
-                        <small class="${signalClass}">
-                            <i class="fas fa-signal me-1"></i>${network.signal}%
-                        </small>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <small>
-                            <i class="fas ${securityIcon} me-1"></i>
-                            ${network.security || 'Open'}
-                        </small>
-                        <button class="btn btn-sm btn-outline-primary connect-btn" 
-                                data-ssid="${network.ssid}"
-                                data-security="${network.security}">
-                            Conectar
-                        </button>
-                    </div>
-                </div>
-            `);
-        });
-    }
-
-    // Botón Rescan - Escaneo WiFi con timeout
-    $("#rescanBtn").off('click').on('click', async function() {
-        const btn = $(this);
-        const originalHtml = btn.html();
-        btn.prop("disabled", true)
-           .html('<i class="fas fa-spinner fa-spin me-1"></i> Escaneando...');
-        
-        // Mostrar spinner con tiempo estimado
-        $('#network-list').html(`
-            <div class="list-group-item text-center">
-                <div class="spinner-border text-primary mb-2" role="status">
-                    <span class="visually-hidden">Cargando...</span>
-                </div>
-                <p class="mb-1">Buscando redes WiFi...</p>
-                <small class="text-muted">Esto puede tomar 10-15 segundos</small>
-            </div>
-        `);
-
-        try {
-            // Timeout de 20 segundos para el escaneo
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 20000);
-            
-            const response = await fetch('/api/wifi/scan', { 
-                signal: controller.signal 
-            }).finally(() => clearTimeout(timeoutId));
-            
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(
-                    errorData.error || 
-                    `Error ${response.status}: ${response.statusText}`
-                );
-            }
-            
-            const data = await response.json();
-            
-            if (!data.success) {
-                throw new Error(
-                    data.error || 
-                    'El servidor no devolvió resultados válidos'
-                );
-            }
-            
-            // Mostrar feedback si no hay redes
-            if (data.networks.length === 0) {
-                $('#network-list').html(`
-                    <div class="list-group-item text-center text-warning">
-                        <i class="fas fa-wifi-slash fa-2x mb-2"></i>
-                        <h5>No se encontraron redes</h5>
-                        <small class="text-muted">
-                            Intenta acercarte al router o verificar la antena WiFi
-                        </small>
-                    </div>
-                `);
-            } else {
-                updateNetworkList(data.networks);
-            }
-            
-        } catch (error) {
-            let errorMessage = error.message;
-            let icon = 'fa-exclamation-triangle';
-            
-            if (error.name === 'AbortError') {
-                errorMessage = 'El escaneo tardó demasiado. Intenta nuevamente.';
-                icon = 'fa-clock';
-            } else if (error.message.includes('Failed to fetch')) {
-                errorMessage = 'Error de conexión con el servidor';
-                icon = 'fa-plug';
-            }
-            
-            $('#network-list').html(`
-                <div class="list-group-item text-center text-danger">
-                    <i class="fas ${icon} fa-2x mb-2"></i>
-                    <h5>${errorMessage}</h5>
-                    <button class="btn btn-sm btn-outline-secondary mt-2" onclick="$('#rescanBtn').click()">
-                        <i class="fas fa-redo me-1"></i> Reintentar
-                    </button>
-                </div>
-            `);
-            
-        } finally {
-            btn.prop("disabled", false).html(originalHtml);
-        }
-    });
-
-    // Escanear al cargar la página
-    $("#rescanBtn").click();
-
-    // Delegación de eventos para los botones Conectar
-    $(document).on('click', '.connect-btn', function() {
-        const btn = $(this);
-        const ssid = btn.data('ssid');
-        let security = btn.data('security');
-        // Normaliza el tipo de seguridad para mostrarlo correctamente
-        let securityLabel = 'Protegida';
-        if (!security || security.toLowerCase() === 'open') {
-            securityLabel = 'Abierta (Open)';
-            security = 'Open';
-        } else if (/wpa3/i.test(security)) {
-            securityLabel = 'WPA3';
-        } else if (/wpa2/i.test(security)) {
-            securityLabel = 'WPA2';
-        } else if (/wpa/i.test(security)) {
-            securityLabel = 'WPA';
-        } else if (/wep/i.test(security)) {
-            securityLabel = 'WEP';
-        } else {
-            securityLabel = security;
-        }
-        // Autocompleta y bloquea los campos de nombre de red y seguridad
-        $('#connectSSID').val(ssid || 'Red oculta').prop('readonly', true).css({'color':'#fff','font-weight':'600'});
-        $('#connectSSIDHidden').val(ssid || 'Red oculta');
-        $('#connectSecurity').val(securityLabel).prop('readonly', true).css({'color':'#fff','font-weight':'600'});
-        $('#connectSecurityHidden').val(security);
-        // Limpia el campo de contraseña y habilítalo solo si la red no es abierta
-        $('#connectPassword').val('').prop('disabled', security === 'Open');
-        // Muestra el modal
-        $('#connectModal').modal('show');
-    });
-
-    // Toggle para mostrar/ocultar contraseña
-    $(document).on('click', '.toggle-password', function() {
-      const icon = $(this).find('i');
-      const passwordField = $('#connectPassword');
-      
-      if (passwordField.attr('type') === 'password') {
-        passwordField.attr('type', 'text');
-        icon.removeClass('fa-eye').addClass('fa-eye-slash');
-      } else {
-        passwordField.attr('type', 'password');
-        icon.removeClass('fa-eye-slash').addClass('fa-eye');
-      }
-    });
-
-    // Manejar conexión WiFi
-    $('#wifiConnectForm').off('submit').on('submit', async function(e) {
-      e.preventDefault();
-      
-      const btn = $('#connectSubmitBtn');
-      const originalText = btn.html();
-      
-      // Validación previa
-      const ssid = $('#connectSSIDHidden').val();
-      const security = $('#connectSecurityHidden').val();
-      if (!ssid || !security) {
-        showToast('Faltan datos de red. Selecciona una red WiFi válida.', 'danger');
-        return btn.prop('disabled', false).html(originalText);
-      }
-      btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Conectando...');
-      
-      try {
-        const response = await fetch('/api/wifi/connect', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            ssid: ssid,
-            security: security,
-            password: $('#connectPassword').val()
-          })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-          showToast(data.message || `¡Conectado a ${$('#connectSSID').val()}!`, 'success');
-          setTimeout(() => location.reload(), 1500);
-        } else {
-          showToast(data.error || 'Error al conectar', 'danger');
-        }
-      } catch (error) {
-        showToast(error.message || 'Error al conectar', 'danger');
-      } finally {
-        btn.prop('disabled', false).html(originalText);
-      }
-    });
-});
-
-// Configurar modal al hacer click en Conectar
-$(document).on('click', '.connect-btn', function() {
-  // Obtén los datos de la red seleccionada
-  const ssid = $(this).attr('data-ssid') || $(this).data('ssid') || '';
-  const security = $(this).attr('data-security') || $(this).data('security') || '';
-
-  // Autocompleta y bloquea los campos de nombre de red y seguridad
-  $('#connectSSID').val(ssid).prop('readonly', true).css({'color':'#fff','font-weight':'600'});
-  $('#connectSSIDHidden').val(ssid);
-  $('#connectSecurity').val(security === 'Open' ? 'Abierta' : 'Protegida (WPA2)').prop('readonly', true).css({'color':'#fff','font-weight':'600'});
-  $('#connectSecurityHidden').val(security);
-
-  // Limpia el campo de contraseña y habilítalo solo si la red no es abierta
-  $('#connectPassword').val('').prop('disabled', security === 'Open' ? true : false);
-
-  // Muestra el modal
-  $('#connectModal').modal('show');
-});
-
-// Resto del código JavaScript permanece igual...
-</script>
-
-<!-- Toast container -->
-<div id="toast-container" style="position: fixed; top: 1rem; right: 1rem; z-index: 9999;"></div>
-<script>
-function showToast(message, type = 'info') {
-  // type: 'success', 'danger', 'warning', 'info'
-  let bg = {
-    success: 'bg-success',
-    danger: 'bg-danger',
-    warning: 'bg-warning',
-    info: 'bg-info'
-  }[type] || 'bg-info';
-
-  const toastId = 'toast-' + Date.now();
-  const toast = $(
-    `<div id="${toastId}" class="toast align-items-center text-white ${bg} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2500" style="min-width:220px;">
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-    </div>`
-  );
-
-  $('#toast-container').append(toast);
-  const bsToast = new bootstrap.Toast(toast[0]);
-  bsToast.show();
-  toast.on('hidden.bs.toast', function () { $(this).remove(); });
-}
-</script>
-
-<style>
-.custom-close-x {
-  filter: invert(0.7) grayscale(1);
-  opacity: 0.9;
-}
-</style>
-
-{% endblock %}
-
-{% block scripts %}
-{{ super() }}
-<script>
-$(document).ready(function() {
-    // Botón Enable WiFi
-    $('#enableWifiBtn').click(function() {
-        var btn = $(this);
-        btn.prop('disabled', true)
-           .html('<i class="fas fa-spinner fa-spin me-1"></i> {% trans %}Enabling...{% endtrans %}');
-        $.ajax({
-            url: "{{ url_for('enable_wifi') }}",
-            type: "POST",
-            success: function() {
-                location.reload();
-            },
-            error: function() {
-                alert("{% trans %}Error enabling WiFi interface{% endtrans %}");
-                btn.prop('disabled', false)
-                   .html('<i class="fas fa-power-off me-1"></i> {% trans %}Enable WiFi{% endtrans %}');
-            }
-        });
-    });
-});
-</script>
-{% endblock %}
+        loadWifiList();
+    </script>
+</body>
+</html>
