@@ -50,115 +50,12 @@
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="bi bi-activity me-1"></i>{% trans %}Current Stats{% endtrans %}
+                        <i class="bi bi-clock me-1"></i>{% trans %}System Uptime{% endtrans %}
                     </h6>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title">{% trans %}CPU Usage{% endtrans %}</h5>
-                                    <h2 id="cpuValue">{{ monitoring_stats.cpu }}%</h2>
-                                    <canvas id="cpuChart" width="100%" height="50"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title">{% trans %}Memory Usage{% endtrans %}</h5>
-                                    <h2 id="memoryValue">{{ monitoring_stats.memory }}%</h2>
-                                    <canvas id="memoryChart" width="100%" height="50"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title">{% trans %}Disk Usage{% endtrans %}</h5>
-                                    <h2 id="diskValue">{{ monitoring_stats.disk }}%</h2>
-                                    <canvas id="diskChart" width="100%" height="50"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title">{% trans %}Uptime{% endtrans %}</h5>
-                                    <h2 id="uptimeValue">{{ monitoring_stats.uptime }}</h2>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Detailed System Information -->
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="bi bi-pc me-1"></i>{% trans %}Detailed System Information{% endtrans %}
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title"><i class="bi bi-cpu me-1"></i>{% trans %}CPU Information{% endtrans %}</h5>
-                                    <div id="cpuInfo">
-                                        <p><strong>{% trans %}Cores{% endtrans %}:</strong> <span id="cpuCores">-</span></p>
-                                        <p><strong>{% trans %}Frequency{% endtrans %}:</strong> <span id="cpuFreq">-</span></p>
-                                        <p><strong>{% trans %}Temperature{% endtrans %}:</strong> <span id="cpuTemp">-</span></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title"><i class="bi bi-memory me-1"></i>{% trans %}Memory Details{% endtrans %}</h5>
-                                    <div id="memoryInfo">
-                                        <p><strong>{% trans %}Total{% endtrans %}:</strong> <span id="memTotal">-</span></p>
-                                        <p><strong>{% trans %}Available{% endtrans %}:</strong> <span id="memAvailable">-</span></p>
-                                        <p><strong>{% trans %}Used{% endtrans %}:</strong> <span id="memUsed">-</span></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title"><i class="bi bi-hdd me-1"></i>{% trans %}Storage Information{% endtrans %}</h5>
-                                    <div id="storageInfo">
-                                        <p><strong>{% trans %}Total Space{% endtrans %}:</strong> <span id="diskTotal">-</span></p>
-                                        <p><strong>{% trans %}Free Space{% endtrans %}:</strong> <span id="diskFree">-</span></p>
-                                        <p><strong>{% trans %}Used Space{% endtrans %}:</strong> <span id="diskUsed">-</span></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title"><i class="bi bi-ethernet me-1"></i>{% trans %}Network Statistics{% endtrans %}</h5>
-                                    <div id="networkInfo">
-                                        <p><strong>{% trans %}Bytes Sent{% endtrans %}:</strong> <span id="netSent">-</span></p>
-                                        <p><strong>{% trans %}Bytes Received{% endtrans %}:</strong> <span id="netRecv">-</span></p>
-                                        <p><strong>{% trans %}Active Connections{% endtrans %}:</strong> <span id="netConns">-</span></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="text-center">
+                        <h2 id="uptimeValue">{{ monitoring_stats.uptime }}</h2>
                     </div>
                 </div>
             </div>
@@ -169,76 +66,8 @@
 
 {% block scripts %}
 {{ super() }}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" integrity="sha256-8ZYzeUTF4aTkQmW+Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q=" crossorigin="anonymous"></script>
 <script>
-// Deshabilitar el mapa fuente de Chart.js
-Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
-Chart.defaults.color = '#666';
-Chart.defaults.plugins.tooltip.enabled = false;
-Chart.defaults.plugins.legend.display = false;
-
 $(document).ready(function() {
-    // Configuración de gráficos
-    const chartConfig = {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                data: [],
-                borderColor: 'rgba(75, 192, 192, 1)',
-                tension: 0.4,
-                fill: false,
-                pointRadius: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    grid: {
-                        display: false
-                    }
-                },
-                x: {
-                    display: false,
-                    grid: {
-                        display: false
-                    }
-                }
-            },
-            animation: false,
-            elements: {
-                line: {
-                    borderWidth: 2
-                }
-            }
-        }
-    };
-
-    // Crear gráficos
-    let cpuChart, memoryChart, diskChart;
-    
-    function initCharts() {
-        const cpuCtx = document.getElementById('cpuChart').getContext('2d');
-        const memoryCtx = document.getElementById('memoryChart').getContext('2d');
-        const diskCtx = document.getElementById('diskChart').getContext('2d');
-        
-        cpuChart = new Chart(cpuCtx, chartConfig);
-        memoryChart = new Chart(memoryCtx, chartConfig);
-        diskChart = new Chart(diskCtx, chartConfig);
-    }
-
-    // Inicializar gráficos
-    initCharts();
-
     // Función para actualizar las estadísticas
     async function updateStats() {
         try {
@@ -256,70 +85,8 @@ $(document).ready(function() {
             
             console.log('Datos recibidos:', data);
             
-            // Actualizar valores básicos
-            $('#cpuValue').text(data.cpu + '%');
-            $('#memoryValue').text(data.memory + '%');
-            $('#diskValue').text(data.disk + '%');
+            // Actualizar uptime
             $('#uptimeValue').text(data.uptime);
-
-            // Actualizar gráficos
-            const now = new Date().toLocaleTimeString();
-            
-            // CPU Chart
-            if (cpuChart) {
-                cpuChart.data.labels.push(now);
-                cpuChart.data.datasets[0].data.push(data.cpu);
-                if (cpuChart.data.labels.length > 10) {
-                    cpuChart.data.labels.shift();
-                    cpuChart.data.datasets[0].data.shift();
-                }
-                cpuChart.update('none');
-            }
-
-            // Memory Chart
-            if (memoryChart) {
-                memoryChart.data.labels.push(now);
-                memoryChart.data.datasets[0].data.push(data.memory);
-                if (memoryChart.data.labels.length > 10) {
-                    memoryChart.data.labels.shift();
-                    memoryChart.data.datasets[0].data.shift();
-                }
-                memoryChart.update('none');
-            }
-
-            // Disk Chart
-            if (diskChart) {
-                diskChart.data.labels.push(now);
-                diskChart.data.datasets[0].data.push(data.disk);
-                if (diskChart.data.labels.length > 10) {
-                    diskChart.data.labels.shift();
-                    diskChart.data.datasets[0].data.shift();
-                }
-                diskChart.update('none');
-            }
-
-            // Actualizar información detallada
-            if (data.detailed) {
-                // CPU Info
-                $('#cpuCores').text(data.detailed.cpu_cores);
-                $('#cpuFreq').text(data.detailed.cpu_freq + ' MHz');
-                $('#cpuTemp').text(data.detailed.cpu_temp + '°C');
-
-                // Memory Info
-                $('#memTotal').text(data.detailed.mem_total);
-                $('#memAvailable').text(data.detailed.mem_available);
-                $('#memUsed').text(data.detailed.mem_used);
-
-                // Storage Info
-                $('#diskTotal').text(data.detailed.disk_total);
-                $('#diskFree').text(data.detailed.disk_free);
-                $('#diskUsed').text(data.detailed.disk_used);
-
-                // Network Info
-                $('#netSent').text(data.detailed.net_sent);
-                $('#netRecv').text(data.detailed.net_recv);
-                $('#netConns').text(data.detailed.net_connections);
-            }
             
         } catch (error) {
             console.error('Error al actualizar estadísticas:', error);
