@@ -206,15 +206,23 @@ $(document).ready(function() {
     };
 
     // Crear gráficos
-    const cpuChart = new Chart(document.getElementById('cpuChart'), {...chartConfig});
-    const memoryChart = new Chart(document.getElementById('memoryChart'), {...chartConfig});
-    const diskChart = new Chart(document.getElementById('diskChart'), {...chartConfig});
+    const cpuChart = new Chart(document.getElementById('cpuChart'), chartConfig);
+    const memoryChart = new Chart(document.getElementById('memoryChart'), chartConfig);
+    const diskChart = new Chart(document.getElementById('diskChart'), chartConfig);
 
     // Función para actualizar las estadísticas
     async function updateStats() {
         try {
             const response = await fetch('/api/monitoring/stats');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const data = await response.json();
+            
+            if (data.error) {
+                console.error('Error en la respuesta:', data.error);
+                return;
+            }
             
             // Actualizar valores básicos
             $('#cpuValue').text(data.cpu + '%');
@@ -232,7 +240,7 @@ $(document).ready(function() {
                 cpuChart.data.labels.shift();
                 cpuChart.data.datasets[0].data.shift();
             }
-            cpuChart.update();
+            cpuChart.update('none'); // Desactivar animación para mejor rendimiento
 
             // Memory Chart
             memoryChart.data.labels.push(now);
@@ -241,7 +249,7 @@ $(document).ready(function() {
                 memoryChart.data.labels.shift();
                 memoryChart.data.datasets[0].data.shift();
             }
-            memoryChart.update();
+            memoryChart.update('none');
 
             // Disk Chart
             diskChart.data.labels.push(now);
@@ -250,7 +258,7 @@ $(document).ready(function() {
                 diskChart.data.labels.shift();
                 diskChart.data.datasets[0].data.shift();
             }
-            diskChart.update();
+            diskChart.update('none');
 
             // Actualizar información detallada
             if (data.detailed) {
@@ -286,16 +294,16 @@ $(document).ready(function() {
     // Si está activado, actualizar cada X segundos
     if (isMonitoringEnabled) {
         const interval = parseInt($('#update_interval').val()) * 1000;
-        setInterval(updateStats, interval);
         updateStats(); // Actualizar inmediatamente
+        setInterval(updateStats, interval);
     }
 
     // Escuchar cambios en el switch de monitoreo
     $('#enable_monitoring').change(function() {
         if ($(this).is(':checked')) {
             const interval = parseInt($('#update_interval').val()) * 1000;
-            setInterval(updateStats, interval);
             updateStats(); // Actualizar inmediatamente
+            setInterval(updateStats, interval);
         }
     });
 });
