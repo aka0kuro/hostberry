@@ -912,7 +912,11 @@ def wifi_connect():
         password = data.get('password', '')
 
         if not ssid:
-            return jsonify({'success': False, 'error': 'SSID requerido'}), 400
+            # Aun así crea archivo vacío para depuración
+            wpa_path = '/tmp/wpa_supplicant.conf'
+            with open(wpa_path, 'w') as f:
+                f.write('')
+            return jsonify({'success': False, 'error': 'SSID requerido', 'wpa_conf_path': wpa_path}), 400
 
         # Generar contenido de wpa_supplicant.conf
         wpa_conf = 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\n\n'
@@ -934,8 +938,11 @@ def wifi_connect():
 
         # Guardar archivo temporalmente (puedes cambiar la ruta a /etc/wpa_supplicant/wpa_supplicant.conf si tienes permisos)
         wpa_path = '/tmp/wpa_supplicant.conf'
-        with open(wpa_path, 'w') as f:
-            f.write(wpa_conf)
+        try:
+            with open(wpa_path, 'w') as f:
+                f.write(wpa_conf)
+        except Exception as e:
+            return jsonify({'success': False, 'error': f'No se pudo crear el archivo de configuración: {str(e)}', 'wpa_conf_path': wpa_path}), 500
 
         # Intentar conectar usando wpa_supplicant y dhclient
         import subprocess, time
@@ -951,9 +958,9 @@ def wifi_connect():
             # Solicitar IP
             dhclient_proc = subprocess.run(['sudo', 'dhclient', iface], capture_output=True, text=True, timeout=15)
             if dhclient_proc.returncode != 0:
-                return jsonify({'success': False, 'error': f'Error al solicitar IP: {dhclient_proc.stderr}'}), 500
+                return jsonify({'success': False, 'error': f'Error al solicitar IP: {dhclient_proc.stderr}', 'wpa_conf_path': wpa_path}), 500
         except Exception as e:
-            return jsonify({'success': False, 'error': f'Error al conectar: {str(e)}'}), 500
+            return jsonify({'success': False, 'error': f'Error al conectar: {str(e)}', 'wpa_conf_path': wpa_path}), 500
 
         return jsonify({
             'success': True,
