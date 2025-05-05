@@ -925,9 +925,10 @@ def wifi_connect():
                 'error': 'No se recibieron datos JSON'
             }), 400
 
-        ssid = data.get('ssid')
-        security = data.get('security')
-        password = data.get('password')
+        # Validar y normalizar datos
+        ssid = data.get('ssid', '').strip()
+        security = data.get('security', 'Open').strip()
+        password = data.get('password', '').strip()
 
         app.logger.debug(f'Datos procesados - SSID: {ssid}, Security: {security}, Password: {"*" * len(password) if password else "None"}')
 
@@ -938,7 +939,11 @@ def wifi_connect():
                 'error': 'El SSID es requerido'
             }), 400
 
-        if security != 'Open' and not password:
+        # Normalizar tipo de seguridad
+        if security.lower() not in ['open', 'wpa2']:
+            security = 'WPA2'  # Por defecto asumimos WPA2 para redes protegidas
+
+        if security.lower() != 'open' and not password:
             app.logger.error('Contraseña faltante para red protegida')
             return jsonify({
                 'success': False,
@@ -947,7 +952,7 @@ def wifi_connect():
 
         # Intentar conectar usando nmcli
         cmd = ['nmcli', 'dev', 'wifi', 'connect', ssid]
-        if security != 'Open':
+        if security.lower() != 'open':
             cmd.extend(['password', password])
         
         app.logger.info(f'Ejecutando comando: {" ".join(cmd)}')

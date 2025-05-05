@@ -414,11 +414,17 @@ $(document).ready(function() {
       const security = $('#connectSecurityHidden').val();
       const password = $('#connectPassword').val();
       
-      console.log('Datos a enviar:', { ssid, security, password });
+      console.log('Datos iniciales:', { ssid, security, password });
       
-      if (!ssid || !security) {
-        showToast('Faltan datos de red. Selecciona una red WiFi válida.', 'danger');
+      if (!ssid) {
+        showToast('Por favor, selecciona una red WiFi.', 'danger');
         return btn.prop('disabled', false).html(originalText);
+      }
+      
+      // Normalizar el tipo de seguridad
+      let normalizedSecurity = 'Open';
+      if (security && security.toLowerCase() !== 'open') {
+        normalizedSecurity = 'WPA2'; // Por defecto asumimos WPA2 para redes protegidas
       }
       
       btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Conectando...');
@@ -426,11 +432,11 @@ $(document).ready(function() {
       try {
         const requestData = {
           ssid: ssid,
-          security: security,
-          password: security === 'Open' ? '' : password
+          security: normalizedSecurity,
+          password: normalizedSecurity === 'Open' ? '' : password
         };
         
-        console.log('Enviando datos:', JSON.stringify(requestData));
+        console.log('Datos normalizados a enviar:', requestData);
         
         const response = await fetch('/api/wifi/connect', {
           method: 'POST',
@@ -441,22 +447,26 @@ $(document).ready(function() {
           body: JSON.stringify(requestData)
         });
         
-        console.log('Respuesta recibida:', response.status, response.statusText);
+        console.log('Respuesta HTTP:', response.status, response.statusText);
         
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          console.error('Error detallado:', errorData);
-          throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+        let responseData;
+        try {
+          responseData = await response.json();
+          console.log('Datos de respuesta:', responseData);
+        } catch (jsonError) {
+          console.error('Error al parsear respuesta JSON:', jsonError);
+          throw new Error('Error al procesar la respuesta del servidor');
         }
         
-        const data = await response.json();
-        console.log('Datos de respuesta:', data);
+        if (!response.ok) {
+          throw new Error(responseData.error || `Error ${response.status}: ${response.statusText}`);
+        }
         
-        if (data.success) {
-          showToast(data.message || `¡Conectado a ${$('#connectSSID').val()}!`, 'success');
+        if (responseData.success) {
+          showToast(responseData.message || `¡Conectado a ${ssid}!`, 'success');
           setTimeout(() => location.reload(), 1500);
         } else {
-          showToast(data.error || 'Error al conectar', 'danger');
+          showToast(responseData.error || 'Error al conectar', 'danger');
         }
       } catch (error) {
         console.error('Error completo:', error);
