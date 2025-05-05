@@ -3,6 +3,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 import subprocess
 import os
 from dotenv import load_dotenv
+import time
+logging.Formatter.converter = time.localtime
 from hostberry_config import HostBerryConfig
 import time
 from werkzeug.utils import secure_filename
@@ -60,23 +62,13 @@ log_dir = 'logs'
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
-# Timezone-aware formatter
-class TimezoneFormatter(logging.Formatter):
-    def formatTime(self, record, datefmt=None):
-        dt = datetime.datetime.fromtimestamp(record.created, pytz.timezone('Europe/Madrid'))
-        if datefmt:
-            return dt.strftime(datefmt)
-        else:
-            return dt.isoformat()
-
 # Configuración detallada
 logging_config = {
     'version': 1,
     'formatters': {
         'detailed': {
-            '()': TimezoneFormatter,
             'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            'datefmt': '%Y-%m-%d %H:%M:%S %Z'
+            'datefmt': '%Y-%m-%d %H:%M:%S'
         },
     },
     'handlers': {
