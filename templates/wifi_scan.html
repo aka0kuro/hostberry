@@ -414,6 +414,8 @@ $(document).ready(function() {
       const security = $('#connectSecurityHidden').val();
       const password = $('#connectPassword').val();
       
+      console.log('Datos a enviar:', { ssid, security, password });
+      
       if (!ssid || !security) {
         showToast('Faltan datos de red. Selecciona una red WiFi válida.', 'danger');
         return btn.prop('disabled', false).html(originalText);
@@ -422,25 +424,34 @@ $(document).ready(function() {
       btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Conectando...');
       
       try {
+        const requestData = {
+          ssid: ssid,
+          security: security,
+          password: security === 'Open' ? '' : password
+        };
+        
+        console.log('Enviando datos:', JSON.stringify(requestData));
+        
         const response = await fetch('/api/wifi/connect', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
           },
-          body: JSON.stringify({
-            ssid: ssid,
-            security: security,
-            password: security === 'Open' ? '' : password
-          })
+          body: JSON.stringify(requestData)
         });
+        
+        console.log('Respuesta recibida:', response.status, response.statusText);
         
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
+          console.error('Error detallado:', errorData);
           throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
         }
         
         const data = await response.json();
+        console.log('Datos de respuesta:', data);
+        
         if (data.success) {
           showToast(data.message || `¡Conectado a ${$('#connectSSID').val()}!`, 'success');
           setTimeout(() => location.reload(), 1500);
@@ -448,6 +459,7 @@ $(document).ready(function() {
           showToast(data.error || 'Error al conectar', 'danger');
         }
       } catch (error) {
+        console.error('Error completo:', error);
         showToast(error.message || 'Error al conectar', 'danger');
       } finally {
         btn.prop('disabled', false).html(originalText);

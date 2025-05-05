@@ -906,14 +906,20 @@ def wifi_scan():
 @app.route('/api/wifi/connect', methods=['POST'])
 def wifi_connect():
     try:
+        app.logger.info('Recibida solicitud de conexión WiFi')
+        
         if not request.is_json:
+            app.logger.error('Content-Type no es application/json')
             return jsonify({
                 'success': False,
                 'error': 'Content-Type debe ser application/json'
             }), 400
 
         data = request.get_json()
+        app.logger.debug(f'Datos recibidos: {data}')
+        
         if not data:
+            app.logger.error('No se recibieron datos JSON')
             return jsonify({
                 'success': False,
                 'error': 'No se recibieron datos JSON'
@@ -923,13 +929,17 @@ def wifi_connect():
         security = data.get('security')
         password = data.get('password')
 
+        app.logger.debug(f'Datos procesados - SSID: {ssid}, Security: {security}, Password: {"*" * len(password) if password else "None"}')
+
         if not ssid:
+            app.logger.error('SSID no proporcionado')
             return jsonify({
                 'success': False,
                 'error': 'El SSID es requerido'
             }), 400
 
         if security != 'Open' and not password:
+            app.logger.error('Contraseña faltante para red protegida')
             return jsonify({
                 'success': False,
                 'error': 'La contraseña es requerida para redes protegidas'
@@ -940,9 +950,13 @@ def wifi_connect():
         if security != 'Open':
             cmd.extend(['password', password])
         
+        app.logger.info(f'Ejecutando comando: {" ".join(cmd)}')
         result = subprocess.run(cmd, capture_output=True, text=True)
         
+        app.logger.debug(f'Resultado nmcli - Código: {result.returncode}, Salida: {result.stdout}, Error: {result.stderr}')
+        
         if result.returncode == 0:
+            app.logger.info(f'Conexión exitosa a {ssid}')
             return jsonify({
                 'success': True,
                 'message': f'Conectado exitosamente a {ssid}'
@@ -956,7 +970,7 @@ def wifi_connect():
             }), 400
 
     except Exception as e:
-        app.logger.error(f'Error en wifi_connect: {str(e)}')
+        app.logger.error(f'Error en wifi_connect: {str(e)}', exc_info=True)
         return jsonify({
             'success': False,
             'error': f'Error en la conexión: {str(e)}'
