@@ -593,6 +593,9 @@ def monitoring_config():
 @app.route('/api/monitoring/stats')
 def monitoring_stats_api():
     try:
+        # Uptime
+        uptime = int(time.time() - psutil.boot_time())
+
         # CPU Stats
         cpu_usage = psutil.cpu_percent(interval=1)
         cpu_temp = get_cpu_temp()
@@ -623,6 +626,7 @@ def monitoring_stats_api():
         net_download = round(net_io.bytes_recv / 1024, 2)
 
         return jsonify({
+            'uptime': uptime,
             'cpu': {
                 'usage': cpu_usage,
                 'temperature': cpu_temp,

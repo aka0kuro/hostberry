@@ -4,10 +4,20 @@
 <div class="container mt-4">
     <h1 class="mb-4">{{ _('System Monitoring') }}</h1>
     
+    <!-- Uptime Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">{{ _('System Uptime') }}</h5>
+        </div>
+        <div class="card-body">
+            <p class="mb-0"><strong>{{ _('Uptime') }}:</strong> <span id="uptime">0 days, 0 hours, 0 minutes</span></p>
+        </div>
+    </div>
+    
     <div class="row">
         <!-- CPU Stats -->
         <div class="col-md-6 mb-4">
-            <div class="card">
+            <div class="card h-100">
                 <div class="card-header">
                     <h5 class="card-title mb-0">{{ _('CPU Information') }}</h5>
                 </div>
@@ -31,7 +41,7 @@
 
         <!-- Memory Stats -->
         <div class="col-md-6 mb-4">
-            <div class="card">
+            <div class="card h-100">
                 <div class="card-header">
                     <h5 class="card-title mb-0">{{ _('Memory Information') }}</h5>
                 </div>
@@ -55,7 +65,7 @@
 
         <!-- Disk Stats -->
         <div class="col-md-6 mb-4">
-            <div class="card">
+            <div class="card h-100">
                 <div class="card-header">
                     <h5 class="card-title mb-0">{{ _('Disk Information') }}</h5>
                 </div>
@@ -79,7 +89,7 @@
 
         <!-- Network Stats -->
         <div class="col-md-6 mb-4">
-            <div class="card">
+            <div class="card h-100">
                 <div class="card-header">
                     <h5 class="card-title mb-0">{{ _('Network Information') }}</h5>
                 </div>
@@ -101,10 +111,20 @@
 </div>
 
 <script>
+function formatUptime(seconds) {
+    const days = Math.floor(seconds / (24 * 60 * 60));
+    const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
+    const minutes = Math.floor((seconds % (60 * 60)) / 60);
+    return `${days} days, ${hours} hours, ${minutes} minutes`;
+}
+
 function updateStats() {
     fetch('/api/monitoring/stats')
         .then(response => response.json())
         .then(data => {
+            // Uptime
+            document.getElementById('uptime').textContent = formatUptime(data.uptime);
+
             // CPU Stats
             document.getElementById('cpu-usage').textContent = data.cpu.usage + '%';
             document.getElementById('cpu-temp').textContent = data.cpu.temperature + '°C';
