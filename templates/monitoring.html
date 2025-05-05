@@ -143,6 +143,8 @@
 <script>
 $(document).ready(function() {
     let updateInterval = null;
+    let isMonitoringEnabled = $('#enable_monitoring').is(':checked');
+    console.log('Estado inicial del monitoreo:', isMonitoringEnabled);
 
     // Función para actualizar las estadísticas
     async function updateStats() {
@@ -185,6 +187,7 @@ $(document).ready(function() {
     // Función para iniciar o detener la actualización
     function toggleMonitoring(isEnabled) {
         console.log('Cambiando estado de monitoreo:', isEnabled);
+        isMonitoringEnabled = isEnabled;
         
         // Limpiar intervalo anterior si existe
         if (updateInterval) {
@@ -202,16 +205,16 @@ $(document).ready(function() {
             
             // Configurar intervalo para actualizaciones futuras
             updateInterval = setInterval(function() {
-                console.log('Ejecutando actualización programada');
-                updateStats();
+                if (isMonitoringEnabled) {
+                    console.log('Ejecutando actualización programada');
+                    updateStats();
+                }
             }, interval);
         }
     }
 
     // Verificar estado inicial
-    const initialState = $('#enable_monitoring').is(':checked');
-    console.log('Estado inicial del monitoreo:', initialState);
-    toggleMonitoring(initialState);
+    toggleMonitoring(isMonitoringEnabled);
 
     // Escuchar cambios en el switch de monitoreo
     $('#enable_monitoring').on('change', function() {
@@ -222,7 +225,7 @@ $(document).ready(function() {
     // Escuchar cambios en el intervalo
     $('#update_interval').on('change', function() {
         console.log('Cambio detectado en el intervalo');
-        if ($('#enable_monitoring').is(':checked')) {
+        if (isMonitoringEnabled) {
             toggleMonitoring(true);
         }
     });
