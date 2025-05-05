@@ -4,6 +4,7 @@ import subprocess
 import os
 from dotenv import load_dotenv
 import time
+import logging
 logging.Formatter.converter = time.localtime
 from hostberry_config import HostBerryConfig
 import time
