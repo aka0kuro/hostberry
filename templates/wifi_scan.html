@@ -443,7 +443,7 @@ $(document).ready(function() {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRFToken': getCookie('csrf_token')
           },
           body: JSON.stringify(requestData)
         });
@@ -568,3 +568,13 @@ $(document).ready(function() {
 });
 </script>
 {% endblock %}
+
+<script>
+// Función auxiliar para obtener cookies
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+</script>
