@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ _('System Monitoring') }}</h1>
+    
+    <div class="row">
+        <!-- CPU Stats -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">{{ _('CPU Information') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p><strong>{{ _('Usage') }}:</strong> <span id="cpu-usage">0%</span></p>
+                            <p><strong>{{ _('Temperature') }}:</strong> <span id="cpu-temp">0°C</span></p>
+                        </div>
+                        <div class="col-6">
+                            <p><strong>{{ _('Cores') }}:</strong> <span id="cpu-cores">0</span></p>
+                            <p><strong>{{ _('Frequency') }}:</strong> <span id="cpu-freq">0 MHz</span></p>
+                        </div>
+                    </div>
+                    <div class="progress">
+                        <div id="cpu-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Memory Stats -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">{{ _('Memory Information') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p><strong>{{ _('Total') }}:</strong> <span id="mem-total">0 GB</span></p>
+                            <p><strong>{{ _('Used') }}:</strong> <span id="mem-used">0 GB</span></p>
+                        </div>
+                        <div class="col-6">
+                            <p><strong>{{ _('Free') }}:</strong> <span id="mem-free">0 GB</span></p>
+                            <p><strong>{{ _('Usage') }}:</strong> <span id="mem-usage">0%</span></p>
+                        </div>
+                    </div>
+                    <div class="progress">
+                        <div id="mem-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Disk Stats -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">{{ _('Disk Information') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p><strong>{{ _('Total') }}:</strong> <span id="disk-total">0 GB</span></p>
+                            <p><strong>{{ _('Used') }}:</strong> <span id="disk-used">0 GB</span></p>
+                        </div>
+                        <div class="col-6">
+                            <p><strong>{{ _('Free') }}:</strong> <span id="disk-free">0 GB</span></p>
+                            <p><strong>{{ _('Usage') }}:</strong> <span id="disk-usage">0%</span></p>
+                        </div>
+                    </div>
+                    <div class="progress">
+                        <div id="disk-progress" class="progress-bar bg-warning" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Stats -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">{{ _('Network Information') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p><strong>{{ _('IP Address') }}:</strong> <span id="net-ip">-</span></p>
+                            <p><strong>{{ _('Upload') }}:</strong> <span id="net-upload">0 KB/s</span></p>
+                        </div>
+                        <div class="col-6">
+                            <p><strong>{{ _('Interface') }}:</strong> <span id="net-interface">-</span></p>
+                            <p><strong>{{ _('Download') }}:</strong> <span id="net-download">0 KB/s</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Logs -->
+    <div class="card mt-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="card-title mb-0">{{ _('System Logs') }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>{{ _('Time') }}</th>
+                            <th>{{ _('Level') }}</th>
+                            <th>{{ _('Message') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-table">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateStats() {
+    fetch('/api/monitoring/stats')
+        .then(response => response.json())
+        .then(data => {
+            // CPU Stats
+            document.getElementById('cpu-usage').textContent = data.cpu.usage + '%';
+            document.getElementById('cpu-temp').textContent = data.cpu.temperature + '°C';
+            document.getElementById('cpu-cores').textContent = data.cpu.cores;
+            document.getElementById('cpu-freq').textContent = data.cpu.frequency + ' MHz';
+            document.getElementById('cpu-progress').style.width = data.cpu.usage + '%';
+
+            // Memory Stats
+            document.getElementById('mem-total').textContent = data.memory.total;
+            document.getElementById('mem-used').textContent = data.memory.used;
+            document.getElementById('mem-free').textContent = data.memory.free;
+            document.getElementById('mem-usage').textContent = data.memory.usage + '%';
+            document.getElementById('mem-progress').style.width = data.memory.usage + '%';
+
+            // Disk Stats
+            document.getElementById('disk-total').textContent = data.disk.total;
+            document.getElementById('disk-used').textContent = data.disk.used;
+            document.getElementById('disk-free').textContent = data.disk.free;
+            document.getElementById('disk-usage').textContent = data.disk.usage + '%';
+            document.getElementById('disk-progress').style.width = data.disk.usage + '%';
+
+            // Network Stats
+            document.getElementById('net-ip').textContent = data.network.ip;
+            document.getElementById('net-interface').textContent = data.network.interface;
+            document.getElementById('net-upload').textContent = data.network.upload;
+            document.getElementById('net-download').textContent = data.network.download;
+
+            // Update logs
+            const logsTable = document.getElementById('logs-table');
+            logsTable.innerHTML = '';
+            data.logs.forEach(log => {
+                const row = logsTable.insertRow();
+                row.insertCell(0).textContent = log.time;
+                row.insertCell(1).textContent = log.level;
+                row.insertCell(2).textContent = log.message;
+            });
+        });
+}
+
+// Update stats every 5 seconds
+setInterval(updateStats, 5000);
+updateStats();
+</script>
+{% endblock %}

@@ -592,87 +592,83 @@ def monitoring_config():
 
 @app.route('/api/monitoring/stats')
 def monitoring_stats_api():
-    """Endpoint para obtener estadísticas de monitoreo en tiempo real"""
     try:
-        app.logger.info("Solicitud de estadísticas de monitoreo recibida")
-        
-        # Siempre devolver estadísticas de monitoreo, sin importar la configuración
+        # CPU Stats
+        cpu_usage = psutil.cpu_percent(interval=1)
+        cpu_temp = get_cpu_temp()
+        cpu_cores = psutil.cpu_count()
+        cpu_freq = psutil.cpu_freq().current if hasattr(psutil.cpu_freq(), 'current') else 0
 
-        # Estadísticas básicas
-        cpu = psutil.cpu_percent(interval=1)
+        # Memory Stats
         memory = psutil.virtual_memory()
+        mem_total = round(memory.total / (1024**3), 2)
+        mem_used = round(memory.used / (1024**3), 2)
+        mem_free = round(memory.free / (1024**3), 2)
+        mem_usage = memory.percent
+
+        # Disk Stats
         disk = psutil.disk_usage('/')
-        uptime = datetime.datetime.now() - datetime.datetime.fromtimestamp(psutil.boot_time())
-        uptime_str = str(uptime).split('.')[0]  # Remove microseconds
-        
-        app.logger.debug(f"Estadísticas básicas - CPU: {cpu}, Memoria: {memory.percent}, Disco: {disk.percent}")
-        
-        # Información detallada
-        cpu_freq = psutil.cpu_freq()
+        disk_total = round(disk.total / (1024**3), 2)
+        disk_used = round(disk.used / (1024**3), 2)
+        disk_free = round(disk.free / (1024**3), 2)
+        disk_usage = disk.percent
+
+        # Network Stats
         net_io = psutil.net_io_counters()
-        connections = len(psutil.net_connections())
+        net_interface = get_network_interface()
+        net_ip = get_ip_address()
         
-        # Obtener temperatura de CPU
-        cpu_temp = None
-        try:
-            temps = psutil.sensors_temperatures()
-            if 'cpu_thermal' in temps:
-                cpu_temp = temps['cpu_thermal'][0].current
-            else:
-                # Alternativa para Raspberry Pi
-                with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
-                    cpu_temp = float(f.read()) / 1000
-        except Exception as e:
-            app.logger.warning(f"No se pudo obtener la temperatura del CPU: {str(e)}")
-            cpu_temp = 0
-            
-        # Formatear tamaños en formato legible
-        def format_size(bytes):
-            for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-                if bytes < 1024:
-                    return f"{bytes:.1f} {unit}"
-                bytes /= 1024
-            return f"{bytes:.1f} TB"
-        
-        response_data = {
-            # Estadísticas básicas
-            'cpu': round(cpu, 1),
-            'memory': round(memory.percent, 1),
-            'disk': round(disk.percent, 1),
-            'uptime': uptime_str,
-            
-            # Información detallada
-            'detailed': {
-                # CPU
-                'cpu_cores': psutil.cpu_count(),
-                'cpu_freq': round(cpu_freq.current, 1) if cpu_freq else 0,
-                'cpu_temp': round(cpu_temp, 1) if cpu_temp is not None else 0,
-                
-                # Memoria
-                'mem_total': format_size(memory.total),
-                'mem_available': format_size(memory.available),
-                'mem_used': format_size(memory.used),
-                
-                # Almacenamiento
-                'disk_total': format_size(disk.total),
-                'disk_free': format_size(disk.free),
-                'disk_used': format_size(disk.used),
-                
-                # Red
-                'net_sent': format_size(net_io.bytes_sent),
-                'net_recv': format_size(net_io.bytes_recv),
-                'net_connections': connections
-            }
-        }
-        
-        app.logger.debug(f"Respuesta de monitoreo: {response_data}")
-        return jsonify(response_data)
-        
-    except Exception as e:
-        app.logger.error(f"Error al obtener estadísticas de monitoreo: {str(e)}", exc_info=True)
+        # Calculate network speed (bytes per second)
+        net_upload = round(net_io.bytes_sent / 1024, 2)
+        net_download = round(net_io.bytes_recv / 1024, 2)
+
+        # Get recent logs
+        logs = []
+        log_file = 'logs/hostberry.log'
+        if os.path.exists(log_file):
+            with open(log_file, 'r') as f:
+                lines = f.readlines()[-10:]  # Get last 10 lines
+                for line in lines:
+                    try:
+                        time, level, message = line.strip().split(' - ', 2)
+                        logs.append({
+                            'time': time,
+                            'level': level,
+                            'message': message
+                        })
+                    except:
+                        continue
+
         return jsonify({
-            'error': str(e)
-        }), 500
+            'cpu': {
+                'usage': cpu_usage,
+                'temperature': cpu_temp,
+                'cores': cpu_cores,
+                'frequency': round(cpu_freq, 2)
+            },
+            'memory': {
+                'total': f"{mem_total} GB",
+                'used': f"{mem_used} GB",
+                'free': f"{mem_free} GB",
+                'usage': mem_usage
+            },
+            'disk': {
+                'total': f"{disk_total} GB",
+                'used': f"{disk_used} GB",
+                'free': f"{disk_free} GB",
+                'usage': disk_usage
+            },
+            'network': {
+                'ip': net_ip,
+                'interface': net_interface,
+                'upload': f"{net_upload} KB/s",
+                'download': f"{net_download} KB/s"
+            },
+            'logs': logs
+        })
+    except Exception as e:
+        app.logger.error(f"Error getting monitoring stats: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/apply', methods=['POST'])
 def apply_config():
