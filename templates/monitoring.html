@@ -61,6 +61,80 @@
             </div>
         </div>
     </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-cpu me-1"></i>{% trans %}CPU Information{% endtrans %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="mb-2"><strong>{% trans %}Usage{% endtrans %}:</strong></p>
+                            <h3 id="cpuUsage">-</h3>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-2"><strong>{% trans %}Temperature{% endtrans %}:</strong></p>
+                            <h3 id="cpuTemp">-</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-memory me-1"></i>{% trans %}Memory Information{% endtrans %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="mb-2"><strong>{% trans %}RAM Usage{% endtrans %}:</strong></p>
+                            <h3 id="memoryUsage">-</h3>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-2"><strong>{% trans %}Swap Usage{% endtrans %}:</strong></p>
+                            <h3 id="swapUsage">-</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-hdd me-1"></i>{% trans %}Disk Information{% endtrans %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p class="mb-2"><strong>{% trans %}Total Space{% endtrans %}:</strong></p>
+                            <h3 id="diskTotal">-</h3>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-2"><strong>{% trans %}Used Space{% endtrans %}:</strong></p>
+                            <h3 id="diskUsed">-</h3>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-2"><strong>{% trans %}Free Space{% endtrans %}:</strong></p>
+                            <h3 id="diskFree">-</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -73,7 +147,6 @@ $(document).ready(function() {
     // Función para actualizar las estadísticas
     async function updateStats() {
         try {
-            console.log('Actualizando estadísticas...');
             const response = await fetch('/api/monitoring/stats');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -85,9 +158,21 @@ $(document).ready(function() {
                 return;
             }
             
-            console.log('Datos recibidos:', data);
             // Actualizar uptime
             $('#uptimeValue').text(data.uptime);
+            
+            // Actualizar CPU
+            $('#cpuUsage').text(data.cpu + '%');
+            $('#cpuTemp').text(data.detailed.cpu_temp + '°C');
+            
+            // Actualizar Memoria
+            $('#memoryUsage').text(data.memory + '%');
+            $('#swapUsage').text(data.detailed.swap_usage + '%');
+            
+            // Actualizar Disco
+            $('#diskTotal').text(data.detailed.disk_total);
+            $('#diskUsed').text(data.detailed.disk_used);
+            $('#diskFree').text(data.detailed.disk_free);
             
         } catch (error) {
             console.error('Error al actualizar estadísticas:', error);
@@ -96,44 +181,31 @@ $(document).ready(function() {
 
     // Función para iniciar o detener la actualización
     function toggleMonitoring(isEnabled) {
-        console.log('Cambiando estado de monitoreo:', isEnabled);
-        
         // Limpiar intervalo anterior si existe
         if (updateInterval) {
-            console.log('Limpiando intervalo anterior');
             clearInterval(updateInterval);
             updateInterval = null;
         }
 
         if (isEnabled) {
             const interval = parseInt($('#update_interval').val()) * 1000;
-            console.log('Configurando nuevo intervalo:', interval, 'ms');
-            
             // Actualizar inmediatamente
             updateStats();
-            
             // Configurar intervalo para actualizaciones futuras
-            updateInterval = setInterval(function() {
-                console.log('Ejecutando actualización programada');
-                updateStats();
-            }, interval);
+            updateInterval = setInterval(updateStats, interval);
         }
     }
 
     // Verificar estado inicial
-    const initialState = $('#enable_monitoring').is(':checked');
-    console.log('Estado inicial del monitoreo:', initialState);
-    toggleMonitoring(initialState);
+    toggleMonitoring($('#enable_monitoring').is(':checked'));
 
     // Escuchar cambios en el switch de monitoreo
     $('#enable_monitoring').on('change', function() {
-        console.log('Cambio detectado en el switch de monitoreo');
         toggleMonitoring($(this).is(':checked'));
     });
 
     // Escuchar cambios en el intervalo
     $('#update_interval').on('change', function() {
-        console.log('Cambio detectado en el intervalo');
         if ($('#enable_monitoring').is(':checked')) {
             toggleMonitoring(true);
         }
@@ -150,7 +222,6 @@ $(document).ready(function() {
         })
         .then(response => {
             if (response.ok) {
-                // Recargar la página para mostrar el mensaje de éxito
                 window.location.reload();
             } else {
                 throw new Error('Error al guardar la configuración');
