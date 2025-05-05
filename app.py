@@ -176,7 +176,7 @@ def get_logs():
 
 @app.context_processor
 def inject_get_locale():
-    return dict(get_locale=get_locale)
+    return dict(get_locale=get_locale, csrf_token=csrf._get_token)
 
 @app.route('/set_language/<lang>')
 def set_language(lang):
