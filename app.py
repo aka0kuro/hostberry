@@ -594,17 +594,68 @@ def monitoring_config():
 def monitoring_stats_api():
     """Endpoint para obtener estadísticas de monitoreo en tiempo real"""
     try:
+        # Estadísticas básicas
         cpu = psutil.cpu_percent(interval=1)
-        memory = psutil.virtual_memory().percent
-        disk = psutil.disk_usage('/').percent
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
         uptime = datetime.datetime.now() - datetime.datetime.fromtimestamp(psutil.boot_time())
         uptime_str = str(uptime).split('.')[0]  # Remove microseconds
         
+        # Información detallada
+        cpu_freq = psutil.cpu_freq()
+        net_io = psutil.net_io_counters()
+        connections = len(psutil.net_connections())
+        
+        # Obtener temperatura de CPU
+        cpu_temp = None
+        try:
+            temps = psutil.sensors_temperatures()
+            if 'cpu_thermal' in temps:
+                cpu_temp = temps['cpu_thermal'][0].current
+            else:
+                # Alternativa para Raspberry Pi
+                with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
+                    cpu_temp = float(f.read()) / 1000
+        except:
+            cpu_temp = 0
+            
+        # Formatear tamaños en formato legible
+        def format_size(bytes):
+            for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+                if bytes < 1024:
+                    return f"{bytes:.1f} {unit}"
+                bytes /= 1024
+            return f"{bytes:.1f} TB"
+        
         return jsonify({
+            # Estadísticas básicas
             'cpu': cpu,
-            'memory': memory,
-            'disk': disk,
-            'uptime': uptime_str
+            'memory': memory.percent,
+            'disk': disk.percent,
+            'uptime': uptime_str,
+            
+            # Información detallada
+            'detailed': {
+                # CPU
+                'cpu_cores': psutil.cpu_count(),
+                'cpu_freq': round(cpu_freq.current, 1) if cpu_freq else 0,
+                'cpu_temp': round(cpu_temp, 1) if cpu_temp is not None else 0,
+                
+                # Memoria
+                'mem_total': format_size(memory.total),
+                'mem_available': format_size(memory.available),
+                'mem_used': format_size(memory.used),
+                
+                # Almacenamiento
+                'disk_total': format_size(disk.total),
+                'disk_free': format_size(disk.free),
+                'disk_used': format_size(disk.used),
+                
+                # Red
+                'net_sent': format_size(net_io.bytes_sent),
+                'net_recv': format_size(net_io.bytes_recv),
+                'net_connections': connections
+            }
         })
     except Exception as e:
         app.logger.error(f"Error getting monitoring stats: {str(e)}")
