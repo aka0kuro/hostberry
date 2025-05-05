@@ -622,23 +622,6 @@ def monitoring_stats_api():
         net_upload = round(net_io.bytes_sent / 1024, 2)
         net_download = round(net_io.bytes_recv / 1024, 2)
 
-        # Get recent logs
-        logs = []
-        log_file = 'logs/hostberry.log'
-        if os.path.exists(log_file):
-            with open(log_file, 'r') as f:
-                lines = f.readlines()[-10:]  # Get last 10 lines
-                for line in lines:
-                    try:
-                        time, level, message = line.strip().split(' - ', 2)
-                        logs.append({
-                            'time': time,
-                            'level': level,
-                            'message': message
-                        })
-                    except:
-                        continue
-
         return jsonify({
             'cpu': {
                 'usage': cpu_usage,
@@ -663,8 +646,7 @@ def monitoring_stats_api():
                 'interface': net_interface,
                 'upload': f"{net_upload} KB/s",
                 'download': f"{net_download} KB/s"
-            },
-            'logs': logs
+            }
         })
     except Exception as e:
         app.logger.error(f"Error getting monitoring stats: {str(e)}")

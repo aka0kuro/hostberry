@@ -8,7 +8,7 @@
         <!-- CPU Stats -->
         <div class="col-md-6 mb-4">
             <div class="card">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header">
                     <h5 class="card-title mb-0">{{ _('CPU Information') }}</h5>
                 </div>
                 <div class="card-body">
@@ -32,7 +32,7 @@
         <!-- Memory Stats -->
         <div class="col-md-6 mb-4">
             <div class="card">
-                <div class="card-header bg-success text-white">
+                <div class="card-header">
                     <h5 class="card-title mb-0">{{ _('Memory Information') }}</h5>
                 </div>
                 <div class="card-body">
@@ -47,7 +47,7 @@
                         </div>
                     </div>
                     <div class="progress">
-                        <div id="mem-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                        <div id="mem-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
@@ -56,7 +56,7 @@
         <!-- Disk Stats -->
         <div class="col-md-6 mb-4">
             <div class="card">
-                <div class="card-header bg-warning text-dark">
+                <div class="card-header">
                     <h5 class="card-title mb-0">{{ _('Disk Information') }}</h5>
                 </div>
                 <div class="card-body">
@@ -71,7 +71,7 @@
                         </div>
                     </div>
                     <div class="progress">
-                        <div id="disk-progress" class="progress-bar bg-warning" role="progressbar" style="width: 0%"></div>
+                        <div id="disk-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
@@ -80,7 +80,7 @@
         <!-- Network Stats -->
         <div class="col-md-6 mb-4">
             <div class="card">
-                <div class="card-header bg-info text-white">
+                <div class="card-header">
                     <h5 class="card-title mb-0">{{ _('Network Information') }}</h5>
                 </div>
                 <div class="card-body">
@@ -95,28 +95,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- System Logs -->
-    <div class="card mt-4">
-        <div class="card-header bg-dark text-white">
-            <h5 class="card-title mb-0">{{ _('System Logs') }}</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>{{ _('Time') }}</th>
-                            <th>{{ _('Level') }}</th>
-                            <th>{{ _('Message') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody id="logs-table">
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
@@ -153,16 +131,6 @@ function updateStats() {
             document.getElementById('net-interface').textContent = data.network.interface;
             document.getElementById('net-upload').textContent = data.network.upload;
             document.getElementById('net-download').textContent = data.network.download;
-
-            // Update logs
-            const logsTable = document.getElementById('logs-table');
-            logsTable.innerHTML = '';
-            data.logs.forEach(log => {
-                const row = logsTable.insertRow();
-                row.insertCell(0).textContent = log.time;
-                row.insertCell(1).textContent = log.level;
-                row.insertCell(2).textContent = log.message;
-            });
         });
 }
 
