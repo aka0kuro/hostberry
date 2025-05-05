@@ -56,7 +56,11 @@ app.config.update(
     BABEL_TRANSLATION_DIRECTORIES='translations',
     BABEL_SUPPORTED_LOCALES=['en', 'es'],
     SESSION_COOKIE_DOMAIN=None,
-    SESSION_COOKIE_PATH=None
+    SESSION_COOKIE_PATH=None,
+    WTF_CSRF_ENABLED=True,
+    WTF_CSRF_CHECK_DEFAULT=True,
+    WTF_CSRF_HEADERS=['X-CSRFToken'],
+    WTF_CSRF_TIME_LIMIT=3600
 )
 
 # Configuración avanzada de logging

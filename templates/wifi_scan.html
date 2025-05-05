@@ -207,6 +207,12 @@ function getCookie(name) {
     return null;
 }
 
+// Función para obtener el token CSRF del meta tag
+function getCSRFToken() {
+    const metaTag = document.querySelector('meta[name="csrf-token"]');
+    return metaTag ? metaTag.getAttribute('content') : null;
+}
+
 $(document).ready(function() {
   // Mostrar/ocultar contraseña WiFi
   $(document).on('click', '#togglePwd', function() {
@@ -451,7 +457,7 @@ $(document).ready(function() {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'X-CSRFToken': getCookie('csrf_token')
+            'X-CSRFToken': getCSRFToken() || getCookie('csrf_token')
           },
           body: JSON.stringify(requestData)
         });
