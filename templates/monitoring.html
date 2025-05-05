@@ -169,8 +169,14 @@
 
 {% block scripts %}
 {{ super() }}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" integrity="sha256-8ZYzeUTF4aTkQmW+Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q=" crossorigin="anonymous"></script>
 <script>
+// Deshabilitar el mapa fuente de Chart.js
+Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+Chart.defaults.color = '#666';
+Chart.defaults.plugins.tooltip.enabled = false;
+Chart.defaults.plugins.legend.display = false;
+
 $(document).ready(function() {
     // Configuración de gráficos
     const chartConfig = {
