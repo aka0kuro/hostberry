@@ -272,12 +272,14 @@ $(document).ready(function() {
                             <i class="fas ${securityIcon} me-1"></i>
                             ${network.security || 'Open'}
                         </small>
-                        <button class="btn btn-sm ${isConnected ? 'btn-success' : 'btn-outline-primary'} connect-btn" 
-                                data-ssid="${network.ssid}"
-                                data-security="${network.security}"
-                                ${isConnected ? 'disabled' : ''}>
-                            ${isConnected ? '<i class="fas fa-check me-1"></i> Conectado' : 'Conectar'}
-                        </button>
+                        ${isConnected ? `
+                            <button class="btn btn-sm btn-success connect-btn" 
+                                    data-ssid="${network.ssid}"
+                                    data-security="${network.security}"
+                                    disabled>
+                                <i class="fas fa-check me-1"></i> Conectado
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
             `);
@@ -533,19 +535,13 @@ $(document).ready(function() {
                 const ssid = btn.data('ssid');
                 if (data.connected && data.current_connection === ssid) {
                     btn.html('<i class="fas fa-check me-1"></i> {% trans %}Connected{% endtrans %}')
-                       .removeClass('btn-outline-primary')
                        .addClass('btn-success')
                        .prop('disabled', true);
-                } else {
-                    btn.html('{% trans %}Connect{% endtrans %}')
-                       .removeClass('btn-success')
-                       .addClass('btn-outline-primary')
-                       .prop('disabled', false);
                 }
             });
             
             // Actualizar contador de redes
-            const networkCount = $('.connect-btn').length;
+            const networkCount = $('.list-group-item').length;
             $('#networksCount').text(networkCount);
             
         } catch (error) {
