@@ -770,21 +770,41 @@ def vpn_config():
 @app.route('/api/vpn/toggle', methods=['POST'])
 def toggle_vpn():
     try:
+        # Verificar si el servicio OpenVPN está instalado
+        try:
+            subprocess.run(['which', 'openvpn'], check=True, capture_output=True)
+        except subprocess.CalledProcessError:
+            return jsonify({'success': False, 'error': 'OpenVPN no está instalado'}), 500
+
         # Verificar estado actual
-        result = subprocess.run(['systemctl', 'is-active', 'openvpn'], capture_output=True, text=True)
-        is_active = result.returncode == 0
+        try:
+            result = subprocess.run(['systemctl', 'is-active', 'openvpn'], capture_output=True, text=True)
+            is_active = result.returncode == 0
+        except subprocess.CalledProcessError:
+            is_active = False
 
         if is_active:
             # Detener VPN
-            subprocess.run(['systemctl', 'stop', 'openvpn'], check=True)
-            return jsonify({'success': True, 'message': 'VPN desconectada'})
+            try:
+                subprocess.run(['systemctl', 'stop', 'openvpn'], check=True)
+                return jsonify({'success': True, 'message': 'VPN desconectada correctamente'})
+            except subprocess.CalledProcessError as e:
+                return jsonify({'success': False, 'error': f'Error al detener OpenVPN: {str(e)}'}), 500
         else:
+            # Verificar si existe la configuración
+            if not os.path.exists('/etc/openvpn/client.conf'):
+                return jsonify({'success': False, 'error': 'No hay configuración VPN guardada'}), 400
+
             # Iniciar VPN
-            subprocess.run(['systemctl', 'start', 'openvpn'], check=True)
-            return jsonify({'success': True, 'message': 'VPN conectada'})
+            try:
+                subprocess.run(['systemctl', 'start', 'openvpn'], check=True)
+                return jsonify({'success': True, 'message': 'VPN conectada correctamente'})
+            except subprocess.CalledProcessError as e:
+                return jsonify({'success': False, 'error': f'Error al iniciar OpenVPN: {str(e)}'}), 500
+
     except Exception as e:
         app.logger.error(f"Error al alternar VPN: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': f'Error inesperado: {str(e)}'}), 500
 
 @app.route('/api/vpn/status')
 def vpn_status():
