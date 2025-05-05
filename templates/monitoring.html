@@ -73,6 +73,7 @@ $(document).ready(function() {
     // Función para actualizar las estadísticas
     async function updateStats() {
         try {
+            console.log('Actualizando estadísticas...');
             const response = await fetch('/api/monitoring/stats');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -84,6 +85,7 @@ $(document).ready(function() {
                 return;
             }
             
+            console.log('Datos recibidos:', data);
             // Actualizar uptime
             $('#uptimeValue').text(data.uptime);
             
@@ -94,31 +96,44 @@ $(document).ready(function() {
 
     // Función para iniciar o detener la actualización
     function toggleMonitoring(isEnabled) {
+        console.log('Cambiando estado de monitoreo:', isEnabled);
+        
         // Limpiar intervalo anterior si existe
         if (updateInterval) {
+            console.log('Limpiando intervalo anterior');
             clearInterval(updateInterval);
             updateInterval = null;
         }
 
         if (isEnabled) {
             const interval = parseInt($('#update_interval').val()) * 1000;
+            console.log('Configurando nuevo intervalo:', interval, 'ms');
+            
             // Actualizar inmediatamente
             updateStats();
+            
             // Configurar intervalo para actualizaciones futuras
-            updateInterval = setInterval(updateStats, interval);
+            updateInterval = setInterval(function() {
+                console.log('Ejecutando actualización programada');
+                updateStats();
+            }, interval);
         }
     }
 
     // Verificar estado inicial
-    toggleMonitoring($('#enable_monitoring').is(':checked'));
+    const initialState = $('#enable_monitoring').is(':checked');
+    console.log('Estado inicial del monitoreo:', initialState);
+    toggleMonitoring(initialState);
 
     // Escuchar cambios en el switch de monitoreo
-    $('#enable_monitoring').change(function() {
+    $('#enable_monitoring').on('change', function() {
+        console.log('Cambio detectado en el switch de monitoreo');
         toggleMonitoring($(this).is(':checked'));
     });
 
     // Escuchar cambios en el intervalo
-    $('#update_interval').change(function() {
+    $('#update_interval').on('change', function() {
+        console.log('Cambio detectado en el intervalo');
         if ($('#enable_monitoring').is(':checked')) {
             toggleMonitoring(true);
         }
