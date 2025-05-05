@@ -805,7 +805,7 @@ def vpn_page():
     return render_template('vpn.html')
 
 @app.route('/vpn/toggle', methods=['POST'])
-def vpn_toggle():
+def toggle_vpn():
     try:
         # Toggle VPN connection logic here
         flash(_('VPN connection toggled successfully'), 'success')
