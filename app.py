@@ -456,8 +456,6 @@ def security_config():
             timezone = request.form.get('timezone')
             time_format = request.form.get('time_format')
             # Cambiar zona horaria del sistema si es válida
-            import pytz
-            import subprocess
             if timezone in pytz.all_timezones:
                 try:
                     subprocess.run(['timedatectl', 'set-timezone', timezone], check=True)
