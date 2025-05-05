@@ -908,41 +908,45 @@ def wifi_connect():
     try:
         data = request.get_json()
         ssid = data.get('ssid')
+        security = data.get('security', '').lower()
         password = data.get('password', '')
 
         if not ssid:
             return jsonify({'success': False, 'error': 'SSID requerido'}), 400
 
-        # Construir comando nmcli
-        cmd = ['sudo', 'nmcli', 'device', 'wifi', 'connect', f'"{ssid}"']
-        if password:
-            cmd.extend(['password', f'"{password}"'])
+        # Generar contenido de wpa_supplicant.conf
+        wpa_conf = 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\n\n'
+        net_block = f'network={{\n    ssid="{ssid}"\n'
+        if security in ['open', 'none']:
+            net_block += '    key_mgmt=NONE\n'
+        elif 'wpa3' in security:
+            net_block += f'    psk="{password}"\n    key_mgmt=SAE\n'
+        elif 'wpa2' in security or 'wpa' in security:
+            net_block += f'    psk="{password}"\n    key_mgmt=WPA-PSK\n'
+        elif 'wep' in security:
+            net_block += f'    key_mgmt=NONE\n    wep_key0="{password}"\n'
+        else:
+            net_block += '    key_mgmt=WPA-PSK\n'
+            if password:
+                net_block += f'    psk="{password}"\n'
+        net_block += '}'
+        wpa_conf += net_block + '\n'
 
-        # Ejecutar con timeout
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=30
-        )
+        # Guardar archivo temporalmente (puedes cambiar la ruta a /etc/wpa_supplicant/wpa_supplicant.conf si tienes permisos)
+        wpa_path = '/tmp/wpa_supplicant.conf'
+        with open(wpa_path, 'w') as f:
+            f.write(wpa_conf)
 
-        if result.returncode != 0:
-            error_msg = result.stderr.strip() or 'Error desconocido al conectar'
-            return jsonify({
-                'success': False,
-                'error': error_msg
-            }), 400
+        # Opcional: aquí podrías ejecutar wpa_supplicant o reiniciar el servicio si lo deseas
+        # subprocess.run(['sudo', 'wpa_supplicant', '-B', '-i', 'wlan0', '-c', wpa_path])
+        # subprocess.run(['sudo', 'dhclient', 'wlan0'])
 
         return jsonify({
             'success': True,
-            'message': f'Conectado a {ssid}'
+            'message': f'wpa_supplicant.conf generado para {ssid}',
+            'wpa_conf_path': wpa_path
         })
 
-    except subprocess.TimeoutExpired:
-        return jsonify({
-            'success': False,
-            'error': 'Timeout al conectar (30s)'
-        }), 408
     except Exception as e:
         return jsonify({
             'success': False,
