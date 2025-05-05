@@ -162,13 +162,24 @@ $(document).ready(function() {
             $('#cpuTemp').text(data.detailed.cpu_temp + '°C');
             
             // Actualizar Memoria
-            $('#memoryUsage').text(data.memory + '%');
-            $('#swapUsage').text(data.detailed.swap_usage + '%');
-            
+            $('#memoryUsage').text(
+                typeof data.memory !== 'undefined' ? data.memory + '%' : 'N/A'
+            );
+            if (typeof data.detailed.swap_usage !== 'undefined') {
+                $('#swapUsage').text(data.detailed.swap_usage + '%');
+            } else {
+                $('#swapUsage').text('N/A');
+            }
+            // Mostrar detalles de memoria si existen
+            if (data.detailed) {
+                if (typeof data.detailed.mem_total !== 'undefined') {
+                    $('#memoryUsage').attr('title', 'Total: ' + data.detailed.mem_total + '\nUsada: ' + data.detailed.mem_used + '\nLibre: ' + data.detailed.mem_available);
+                }
+            }
             // Actualizar Disco
-            $('#diskTotal').text(data.detailed.disk_total);
-            $('#diskUsed').text(data.detailed.disk_used);
-            $('#diskFree').text(data.detailed.disk_free);
+            $('#diskTotal').text(data.detailed.disk_total || 'N/A');
+            $('#diskUsed').text(data.detailed.disk_used || 'N/A');
+            $('#diskFree').text(data.detailed.disk_free || 'N/A');
             
         } catch (error) {
             console.error('Error al actualizar estadísticas:', error);
