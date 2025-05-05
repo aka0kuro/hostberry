@@ -706,6 +706,100 @@ def apply_config():
             'message': str(e)
         }), 500
 
+@app.route('/api/vpn/status')
+def vpn_status():
+    try:
+        # Check if OpenVPN is running
+        result = subprocess.run(['systemctl', 'is-active', 'openvpn'], capture_output=True, text=True)
+        is_active = result.returncode == 0
+
+        # Get VPN IP if connected
+        vpn_ip = None
+        if is_active:
+            try:
+                result = subprocess.run(['ip', 'addr', 'show', 'tun0'], capture_output=True, text=True)
+                ip_match = re.search(r'inet (\d+\.\d+\.\d+\.\d+)', result.stdout)
+                if ip_match:
+                    vpn_ip = ip_match.group(1)
+            except:
+                pass
+
+        # Get network stats
+        net_io = psutil.net_io_counters()
+        upload = round(net_io.bytes_sent / 1024, 2)
+        download = round(net_io.bytes_recv / 1024, 2)
+
+        return jsonify({
+            'status': 'Connected' if is_active else 'Disconnected',
+            'ip': vpn_ip or '-',
+            'upload': f"{upload} KB/s",
+            'download': f"{download} KB/s"
+        })
+    except Exception as e:
+        app.logger.error(f"Error getting VPN status: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/vpn/toggle', methods=['POST'])
+def vpn_toggle():
+    try:
+        # Check current status
+        result = subprocess.run(['systemctl', 'is-active', 'openvpn'], capture_output=True, text=True)
+        is_active = result.returncode == 0
+
+        if is_active:
+            # Stop VPN
+            subprocess.run(['systemctl', 'stop', 'openvpn'], check=True)
+            return jsonify({'success': True, 'message': 'VPN disconnected'})
+        else:
+            # Start VPN
+            subprocess.run(['systemctl', 'start', 'openvpn'], check=True)
+            return jsonify({'success': True, 'message': 'VPN connected'})
+    except Exception as e:
+        app.logger.error(f"Error toggling VPN: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/vpn/config', methods=['POST'])
+def vpn_config():
+    try:
+        if 'vpn_file' not in request.files:
+            return jsonify({'success': False, 'error': 'No file provided'}), 400
+
+        file = request.files['vpn_file']
+        if not file or not file.filename:
+            return jsonify({'success': False, 'error': 'No file selected'}), 400
+
+        if not file.filename.endswith(('.ovpn', '.conf')):
+            return jsonify({'success': False, 'error': 'Invalid file type'}), 400
+
+        # Save credentials
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username and password:
+            with open('/etc/openvpn/auth.txt', 'w') as f:
+                f.write(f"{username}\n{password}\n")
+
+        # Save configuration file
+        config_path = '/etc/openvpn/client.conf'
+        file.save(config_path)
+
+        # Update OpenVPN configuration
+        with open(config_path, 'r') as f:
+            config_content = f.read()
+
+        # Add auth-user-pass if not present
+        if 'auth-user-pass' not in config_content:
+            with open(config_path, 'a') as f:
+                f.write('\nauth-user-pass /etc/openvpn/auth.txt\n')
+
+        # Restart OpenVPN service
+        subprocess.run(['systemctl', 'restart', 'openvpn'], check=True)
+
+        return jsonify({'success': True, 'message': 'VPN configuration updated'})
+    except Exception as e:
+        app.logger.error(f"Error saving VPN configuration: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/vpn', methods=['GET', 'POST'])
 def vpn_config():
     if request.method == 'POST':

@@ -3,76 +3,154 @@
 {% block title %}{% trans %}VPN Configuration{% endtrans %}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col">
-            <h2 class="page-title"><i class="bi bi-lock me-2"></i>{% trans %}VPN Configuration{% endtrans %}</h2>
-        </div>
-    </div>
-
+<div class="container mt-4">
+    <h1 class="mb-4">{{ _('VPN Configuration') }}</h1>
+    
     <div class="row">
-        <div class="col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header bg-primary text-white">
-                    <i class="bi bi-shield-lock me-2"></i>{% trans %}VPN Settings{% endtrans %}
+        <!-- VPN Status -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ _('VPN Status') }}</h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('vpn_config') }}">
-                        <div class="mb-3 form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="vpn_enabled" name="vpn_enabled" {% if config.VPN_ENABLED %}checked{% endif %}>
-                            <label class="form-check-label" for="vpn_enabled">{% trans %}Enable VPN{% endtrans %}</label>
+                    <div class="row">
+                        <div class="col-6">
+                            <p><strong>{{ _('Status') }}:</strong> <span id="vpn-status">-</span></p>
+                            <p><strong>{{ _('IP Address') }}:</strong> <span id="vpn-ip">-</span></p>
+                        </div>
+                        <div class="col-6">
+                            <p><strong>{{ _('Upload') }}:</strong> <span id="vpn-upload">0 KB/s</span></p>
+                            <p><strong>{{ _('Download') }}:</strong> <span id="vpn-download">0 KB/s</span></p>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button id="toggle-vpn" class="btn btn-primary w-100">
+                            {{ _('Toggle VPN') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VPN Configuration -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ _('VPN Configuration') }}</h5>
+                </div>
+                <div class="card-body">
+                    <form id="vpn-config-form" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="vpn-file" class="form-label">{{ _('OpenVPN Configuration File') }}</label>
+                            <input type="file" class="form-control" id="vpn-file" name="vpn_file" accept=".ovpn,.conf">
+                            <div class="form-text">{{ _('Upload your OpenVPN configuration file (.ovpn or .conf)') }}</div>
                         </div>
                         <div class="mb-3">
-                            <label for="vpn_provider" class="form-label">{% trans %}VPN Provider{% endtrans %}</label>
-                            <select class="form-select" id="vpn_provider" name="vpn_provider">
-                                {% for provider in vpn_providers %}
-                                    <option value="{{ provider }}" {% if provider == config.VPN_PROVIDER %}selected{% endif %}>{{ provider }}</option>
-                                {% endfor %}
-                            </select>
+                            <label for="vpn-username" class="form-label">{{ _('Username') }}</label>
+                            <input type="text" class="form-control" id="vpn-username" name="username">
                         </div>
                         <div class="mb-3">
-                            <label for="vpn_country" class="form-label">{% trans %}Country{% endtrans %}</label>
-                            <select class="form-select" id="vpn_country" name="vpn_country">
-                                {% for country in vpn_countries %}
-                                    <option value="{{ country }}" {% if country == config.VPN_COUNTRY %}selected{% endif %}>{{ country }}</option>
-                                {% endfor %}
-                            </select>
+                            <label for="vpn-password" class="form-label">{{ _('Password') }}</label>
+                            <input type="password" class="form-control" id="vpn-password" name="password">
                         </div>
-                        <button type="submit" class="btn btn-primary">{% trans %}Save Settings{% endtrans %}</button>
+                        <button type="submit" class="btn btn-primary w-100">{{ _('Save Configuration') }}</button>
                     </form>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="col-lg-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <i class="bi bi-shield-check me-2"></i>{% trans %}VPN Status{% endtrans %}
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <strong>{% trans %}Status:{% endtrans %}</strong>
-                        <span class="badge bg-{% if vpn_status.connected %}success{% else %}danger{% endif %}">
-                            {% if vpn_status.connected %}{% trans %}Connected{% endtrans %}{% else %}{% trans %}Disconnected{% endtrans %}{% endif %}
-                        </span>
-                    </div>
-                    <div class="mb-3">
-                        <strong>{% trans %}IP Address:{% endtrans %}</strong> {{ vpn_status.ip_address|default(_('Unknown')) }}
-                    </div>
-                    <div class="mb-3">
-                        <strong>{% trans %}Location:{% endtrans %}</strong> {{ vpn_status.location|default(_('Unknown')) }}
-                    </div>
-                    <div class="mt-4">
-                        <form method="POST" action="{{ url_for('vpn_toggle') }}">
-                            <button type="submit" class="btn btn-{% if vpn_status.connected %}danger{% else %}success{% endif %}">
-                                <i class="bi bi-power me-1"></i>
-                                {% if vpn_status.connected %}{% trans %}Disconnect{% endtrans %}{% else %}{% trans %}Connect{% endtrans %}{% endif %}
-                            </button>
-                        </form>
-                    </div>
-                </div>
+    <!-- VPN Logs -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">{{ _('VPN Logs') }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>{{ _('Time') }}</th>
+                            <th>{{ _('Status') }}</th>
+                            <th>{{ _('Message') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vpn-logs">
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function updateVPNStatus() {
+    fetch('/api/vpn/status')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('vpn-status').textContent = data.status;
+            document.getElementById('vpn-ip').textContent = data.ip;
+            document.getElementById('vpn-upload').textContent = data.upload;
+            document.getElementById('vpn-download').textContent = data.download;
+            
+            // Update toggle button text
+            const toggleBtn = document.getElementById('toggle-vpn');
+            toggleBtn.textContent = data.status === 'Connected' ? '{{ _("Disconnect VPN") }}' : '{{ _("Connect VPN") }}';
+            toggleBtn.className = `btn w-100 ${data.status === 'Connected' ? 'btn-danger' : 'btn-primary'}`;
+        });
+}
+
+// Handle VPN toggle
+document.getElementById('toggle-vpn').addEventListener('click', function() {
+    fetch('/api/vpn/toggle', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateVPNStatus();
+        } else {
+            alert(data.error || '{{ _("Error toggling VPN") }}');
+        }
+    });
+});
+
+// Handle form submission
+document.getElementById('vpn-config-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    const fileInput = document.getElementById('vpn-file');
+    const username = document.getElementById('vpn-username').value;
+    const password = document.getElementById('vpn-password').value;
+    
+    if (fileInput.files.length > 0) {
+        formData.append('vpn_file', fileInput.files[0]);
+    }
+    formData.append('username', username);
+    formData.append('password', password);
+    
+    fetch('/api/vpn/config', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('{{ _("VPN configuration saved successfully") }}');
+            updateVPNStatus();
+        } else {
+            alert(data.error || '{{ _("Error saving VPN configuration") }}');
+        }
+    });
+});
+
+// Update status every 5 seconds
+setInterval(updateVPNStatus, 5000);
+updateVPNStatus();
+</script>
 {% endblock %}
