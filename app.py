@@ -937,13 +937,27 @@ def wifi_connect():
         with open(wpa_path, 'w') as f:
             f.write(wpa_conf)
 
-        # Opcional: aquí podrías ejecutar wpa_supplicant o reiniciar el servicio si lo deseas
-        # subprocess.run(['sudo', 'wpa_supplicant', '-B', '-i', 'wlan0', '-c', wpa_path])
-        # subprocess.run(['sudo', 'dhclient', 'wlan0'])
+        # Intentar conectar usando wpa_supplicant y dhclient
+        import subprocess, time
+        iface = 'wlan0'  # Cambia aquí si tu interfaz es distinta
+        try:
+            # Detener procesos anteriores (opcional, ignora errores)
+            subprocess.run(['sudo', 'killall', 'wpa_supplicant'], check=False)
+            subprocess.run(['sudo', 'dhclient', '-r', iface], check=False)
+            time.sleep(1)
+            # Iniciar wpa_supplicant en background
+            wpa_proc = subprocess.Popen(['sudo', 'wpa_supplicant', '-B', '-i', iface, '-c', wpa_path, '-f', '/tmp/wpa_supplicant.log'])
+            time.sleep(3)
+            # Solicitar IP
+            dhclient_proc = subprocess.run(['sudo', 'dhclient', iface], capture_output=True, text=True, timeout=15)
+            if dhclient_proc.returncode != 0:
+                return jsonify({'success': False, 'error': f'Error al solicitar IP: {dhclient_proc.stderr}'}), 500
+        except Exception as e:
+            return jsonify({'success': False, 'error': f'Error al conectar: {str(e)}'}), 500
 
         return jsonify({
             'success': True,
-            'message': f'wpa_supplicant.conf generado para {ssid}',
+            'message': f'Conectado a {ssid} usando wpa_supplicant',
             'wpa_conf_path': wpa_path
         })
 
