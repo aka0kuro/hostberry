@@ -469,6 +469,10 @@ def security_config():
                 'TIMEZONE': timezone,
                 'TIME_FORMAT': time_format
             })
+            # Actualizar el formato de logs en caliente
+            for handler in logging.getLogger().handlers:
+                if hasattr(handler, 'formatter') and handler.formatter:
+                    handler.formatter.datefmt = time_format
             if success:
                 flash(_('Configuración guardada correctamente'), 'success')
                 return redirect(url_for('security_config'))
