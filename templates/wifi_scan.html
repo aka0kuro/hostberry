@@ -279,7 +279,13 @@ $(document).ready(function() {
                                     disabled>
                                 <i class="fas fa-check me-1"></i> Conectado
                             </button>
-                        ` : ''}
+                        ` : `
+                            <button class="btn btn-sm btn-outline-primary connect-btn" 
+                                    data-ssid="${network.ssid}"
+                                    data-security="${network.security}">
+                                Conectar
+                            </button>
+                        `}
                     </div>
                 </div>
             `);

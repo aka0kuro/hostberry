@@ -1000,44 +1000,30 @@ def wifi_status():
         rfkill = subprocess.run(['rfkill', 'list', 'wifi'], capture_output=True, text=True)
         
         # Obtener conexión actual y SSID
-        current_conn = None
         current_ssid = None
         
-        # Primero obtener la conexión activa
-        conn_result = subprocess.run(
-            ['nmcli', '-t', '-f', 'NAME,TYPE,DEVICE', 'connection', 'show', '--active'],
+        # Obtener el SSID de la red conectada
+        ssid_result = subprocess.run(
+            ['nmcli', '-t', '-f', 'SSID', 'device', 'wifi', 'list', '--rescan', 'no'],
             capture_output=True,
             text=True
         )
         
-        if conn_result.returncode == 0:
-            for line in conn_result.stdout.splitlines():
-                if 'wifi' in line.lower():
-                    current_conn = line.split(':')[0]
+        if ssid_result.returncode == 0:
+            for line in ssid_result.stdout.splitlines():
+                if line.strip():
+                    current_ssid = line.strip()
                     break
         
-        # Si hay una conexión WiFi activa, obtener el SSID
-        if current_conn:
-            ssid_result = subprocess.run(
-                ['nmcli', '-t', '-f', 'SSID', 'device', 'wifi', 'list', '--rescan', 'no'],
-                capture_output=True,
-                text=True
-            )
-            if ssid_result.returncode == 0:
-                for line in ssid_result.stdout.splitlines():
-                    if line.strip():
-                        current_ssid = line.strip()
-                        break
-        
         # Verificar si hay una conexión activa
-        is_connected = current_conn is not None
+        is_connected = current_ssid is not None
         
         return jsonify({
             'enabled': 'enabled' in radio.stdout.lower(),
             'soft_blocked': 'Soft blocked: yes' in rfkill.stdout,
             'hard_blocked': 'Hard blocked: yes' in rfkill.stdout,
             'connected': is_connected,
-            'current_connection': current_ssid or current_conn
+            'current_connection': current_ssid
         })
     except Exception as e:
         app.logger.error(f'Error en wifi_status: {str(e)}')
