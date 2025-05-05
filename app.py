@@ -60,12 +60,23 @@ log_dir = 'logs'
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
+# Timezone-aware formatter
+class TimezoneFormatter(logging.Formatter):
+    def formatTime(self, record, datefmt=None):
+        dt = datetime.datetime.fromtimestamp(record.created, pytz.timezone('Europe/Madrid'))
+        if datefmt:
+            return dt.strftime(datefmt)
+        else:
+            return dt.isoformat()
+
 # Configuración detallada
 logging_config = {
     'version': 1,
     'formatters': {
         'detailed': {
-            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            '()': TimezoneFormatter,
+            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S %Z'
         },
     },
     'handlers': {
@@ -132,21 +143,34 @@ def get_locale():
         return app.config['BABEL_DEFAULT_LOCALE']
 
 def get_logs():
-    """Read and parse application logs"""
-    log_file = '/opt/hostberry/logs/hostberry.log'
+    """Read and parse application logs from the last 24 hours"""
+    log_file = 'logs/hostberry.log'  # Use relative path to match logging config
     logs = []
     try:
+        # Calculate cutoff time (24 hours ago)
+        cutoff_time = datetime.datetime.now() - datetime.timedelta(hours=24)
+        
         with open(log_file, 'r') as f:
-            for line in f.readlines()[-50:]:  # Get last 50 lines
+            for line in f.readlines()[-100:]:  # Check last 100 lines for recent entries
                 line = line.strip()
                 if line:
                     # Parse timestamp and message
-                    parts = line.split(' ', 2)  # Split into timestamp, level, message
-                    if len(parts) >= 3:
-                        logs.append({
-                            'timestamp': ' '.join(parts[:2]),
-                            'message': parts[2]
-                        })
+                    parts = line.split(' ', 3)  # Split into timestamp, level, logger, message
+                    if len(parts) >= 4:
+                        try:
+                            log_time = datetime.datetime.strptime(parts[0] + ' ' + parts[1], 
+                                                               '%Y-%m-%d %H:%M:%S,%f')
+                            if log_time > cutoff_time:
+                                logs.append({
+                                    'timestamp': ' '.join(parts[:2]),
+                                    'message': parts[3]
+                                })
+                        except ValueError:
+                            # Fallback for lines with invalid timestamps
+                            logs.append({
+                                'timestamp': '',
+                                'message': line
+                            })
                     else:
                         logs.append({
                             'timestamp': '',
@@ -317,7 +341,7 @@ def index():
         
         stats = get_system_stats()
         
-        log_file = '/opt/hostberry/logs/hostberry.log'
+        log_file = 'logs/hostberry.log'
         log_lines = []
         logs_available = False
         
