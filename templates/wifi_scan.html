@@ -408,6 +408,14 @@ $(document).ready(function() {
       
       const btn = $('#connectSubmitBtn');
       const originalText = btn.html();
+      
+      // Validación previa
+      const ssid = $('#connectSSIDHidden').val();
+      const security = $('#connectSecurityHidden').val();
+      if (!ssid || !security) {
+        showToast('Faltan datos de red. Selecciona una red WiFi válida.', 'danger');
+        return btn.prop('disabled', false).html(originalText);
+      }
       btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Conectando...');
       
       try {
@@ -415,8 +423,8 @@ $(document).ready(function() {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
-            ssid: $('#connectSSIDHidden').val(),
-            security: $('#connectSecurityHidden').val(),
+            ssid: ssid,
+            security: security,
             password: $('#connectPassword').val()
           })
         });
@@ -439,12 +447,14 @@ $(document).ready(function() {
 // Configurar modal al hacer click en Conectar
 $(document).on('click', '.connect-btn', function() {
   // Obtén los datos de la red seleccionada
-  const ssid = $(this).attr('data-ssid') || $(this).data('ssid') || 'Red oculta';
-  const security = $(this).attr('data-security') || $(this).data('security') || 'WPA2';
+  const ssid = $(this).attr('data-ssid') || $(this).data('ssid') || '';
+  const security = $(this).attr('data-security') || $(this).data('security') || '';
 
   // Autocompleta y bloquea los campos de nombre de red y seguridad
   $('#connectSSID').val(ssid).prop('readonly', true).css({'color':'#fff','font-weight':'600'});
+  $('#connectSSIDHidden').val(ssid);
   $('#connectSecurity').val(security === 'Open' ? 'Abierta' : 'Protegida (WPA2)').prop('readonly', true).css({'color':'#fff','font-weight':'600'});
+  $('#connectSecurityHidden').val(security);
 
   // Limpia el campo de contraseña y habilítalo solo si la red no es abierta
   $('#connectPassword').val('').prop('disabled', security === 'Open' ? true : false);
