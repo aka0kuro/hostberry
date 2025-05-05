@@ -408,16 +408,14 @@ $(document).ready(function() {
         });
         
         const data = await response.json();
-        
-        if (!data.success) {
-          throw new Error(data.error || 'Error al conectar');
+        if (data.success) {
+          showToast(data.message || `¡Conectado a ${$('#connectSSID').val()}!`, 'success');
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          showToast(data.error || 'Error al conectar', 'danger');
         }
-        
-        showToast(`¡Conectado a ${$('#connectSSID').val()}!`, 'success');
-        setTimeout(() => location.reload(), 1500);
-        
       } catch (error) {
-        showToast(error.message, 'danger');
+        showToast(error.message || 'Error al conectar', 'danger');
       } finally {
         btn.prop('disabled', false).html(originalText);
       }
