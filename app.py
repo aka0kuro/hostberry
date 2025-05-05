@@ -709,29 +709,39 @@ def apply_config():
 @app.route('/api/vpn/config', methods=['POST'])
 def vpn_config():
     try:
+        # Verificar si se proporcionó un archivo
         if 'vpn_file' not in request.files:
-            return jsonify({'success': False, 'error': 'No se proporcionó archivo'}), 400
+            return jsonify({'success': False, 'error': 'No se proporcionó archivo de configuración'}), 400
 
         file = request.files['vpn_file']
         if not file or not file.filename:
             return jsonify({'success': False, 'error': 'No se seleccionó archivo'}), 400
 
+        # Verificar extensión del archivo
         if not file.filename.endswith(('.ovpn', '.conf')):
-            return jsonify({'success': False, 'error': 'Tipo de archivo inválido'}), 400
+            return jsonify({'success': False, 'error': 'Tipo de archivo inválido. Use .ovpn o .conf'}), 400
+
+        # Crear directorio si no existe
+        vpn_dir = '/etc/openvpn'
+        if not os.path.exists(vpn_dir):
+            os.makedirs(vpn_dir, mode=0o755)
 
         # Guardar credenciales
-        username = request.form.get('username')
-        password = request.form.get('password')
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
         
         if username and password:
-            with open('/etc/openvpn/auth.txt', 'w') as f:
+            auth_file = os.path.join(vpn_dir, 'auth.txt')
+            with open(auth_file, 'w') as f:
                 f.write(f"{username}\n{password}\n")
+            os.chmod(auth_file, 0o600)  # Solo lectura para root
 
         # Guardar archivo de configuración
-        config_path = '/etc/openvpn/client.conf'
+        config_path = os.path.join(vpn_dir, 'client.conf')
         file.save(config_path)
+        os.chmod(config_path, 0o644)  # Lectura para todos, escritura para root
 
-        # Actualizar configuración de OpenVPN
+        # Verificar y actualizar configuración
         with open(config_path, 'r') as f:
             config_content = f.read()
 
@@ -740,13 +750,22 @@ def vpn_config():
             with open(config_path, 'a') as f:
                 f.write('\nauth-user-pass /etc/openvpn/auth.txt\n')
 
-        # Reiniciar servicio OpenVPN
-        subprocess.run(['systemctl', 'restart', 'openvpn'], check=True)
+        # Detener OpenVPN si está corriendo
+        try:
+            subprocess.run(['systemctl', 'stop', 'openvpn'], check=True)
+        except:
+            pass  # Ignorar si el servicio no está corriendo
 
-        return jsonify({'success': True, 'message': 'Configuración VPN actualizada'})
+        # Reiniciar servicio OpenVPN
+        try:
+            subprocess.run(['systemctl', 'restart', 'openvpn'], check=True)
+            return jsonify({'success': True, 'message': 'Configuración VPN actualizada correctamente'})
+        except subprocess.CalledProcessError as e:
+            return jsonify({'success': False, 'error': f'Error al reiniciar OpenVPN: {str(e)}'}), 500
+
     except Exception as e:
         app.logger.error(f"Error al guardar configuración VPN: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': f'Error al guardar configuración: {str(e)}'}), 500
 
 @app.route('/api/vpn/toggle', methods=['POST'])
 def toggle_vpn():
