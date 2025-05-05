@@ -915,8 +915,15 @@ def wifi_connect():
                 'error': 'Content-Type debe ser application/json'
             }), 400
 
-        data = request.get_json()
-        app.logger.debug(f'Datos recibidos: {data}')
+        try:
+            data = request.get_json()
+            app.logger.debug(f'Datos recibidos: {data}')
+        except Exception as e:
+            app.logger.error(f'Error al parsear JSON: {str(e)}')
+            return jsonify({
+                'success': False,
+                'error': 'Error al procesar los datos JSON'
+            }), 400
         
         if not data:
             app.logger.error('No se recibieron datos JSON')

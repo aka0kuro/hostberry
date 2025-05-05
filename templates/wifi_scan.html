@@ -449,13 +449,18 @@ $(document).ready(function() {
         
         console.log('Respuesta HTTP:', response.status, response.statusText);
         
+        // Obtener el texto de la respuesta antes de intentar parsear JSON
+        const responseText = await response.text();
+        console.log('Texto de respuesta:', responseText);
+        
         let responseData;
         try {
-          responseData = await response.json();
-          console.log('Datos de respuesta:', responseData);
+          responseData = JSON.parse(responseText);
+          console.log('Datos de respuesta parseados:', responseData);
         } catch (jsonError) {
           console.error('Error al parsear respuesta JSON:', jsonError);
-          throw new Error('Error al procesar la respuesta del servidor');
+          console.error('Texto que causó el error:', responseText);
+          throw new Error('Error al procesar la respuesta del servidor: ' + responseText);
         }
         
         if (!response.ok) {
