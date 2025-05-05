@@ -181,7 +181,8 @@ $(document).ready(function() {
                 data: [],
                 borderColor: 'rgba(75, 192, 192, 1)',
                 tension: 0.4,
-                fill: false
+                fill: false,
+                pointRadius: 0
             }]
         },
         options: {
@@ -195,24 +196,47 @@ $(document).ready(function() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100
+                    max: 100,
+                    grid: {
+                        display: false
+                    }
                 },
                 x: {
-                    display: false
+                    display: false,
+                    grid: {
+                        display: false
+                    }
                 }
             },
-            animation: false
+            animation: false,
+            elements: {
+                line: {
+                    borderWidth: 2
+                }
+            }
         }
     };
 
     // Crear gráficos
-    const cpuChart = new Chart(document.getElementById('cpuChart'), chartConfig);
-    const memoryChart = new Chart(document.getElementById('memoryChart'), chartConfig);
-    const diskChart = new Chart(document.getElementById('diskChart'), chartConfig);
+    let cpuChart, memoryChart, diskChart;
+    
+    function initCharts() {
+        const cpuCtx = document.getElementById('cpuChart').getContext('2d');
+        const memoryCtx = document.getElementById('memoryChart').getContext('2d');
+        const diskCtx = document.getElementById('diskChart').getContext('2d');
+        
+        cpuChart = new Chart(cpuCtx, chartConfig);
+        memoryChart = new Chart(memoryCtx, chartConfig);
+        diskChart = new Chart(diskCtx, chartConfig);
+    }
+
+    // Inicializar gráficos
+    initCharts();
 
     // Función para actualizar las estadísticas
     async function updateStats() {
         try {
+            console.log('Actualizando estadísticas...');
             const response = await fetch('/api/monitoring/stats');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -224,6 +248,8 @@ $(document).ready(function() {
                 return;
             }
             
+            console.log('Datos recibidos:', data);
+            
             // Actualizar valores básicos
             $('#cpuValue').text(data.cpu + '%');
             $('#memoryValue').text(data.memory + '%');
@@ -234,31 +260,37 @@ $(document).ready(function() {
             const now = new Date().toLocaleTimeString();
             
             // CPU Chart
-            cpuChart.data.labels.push(now);
-            cpuChart.data.datasets[0].data.push(data.cpu);
-            if (cpuChart.data.labels.length > 10) {
-                cpuChart.data.labels.shift();
-                cpuChart.data.datasets[0].data.shift();
+            if (cpuChart) {
+                cpuChart.data.labels.push(now);
+                cpuChart.data.datasets[0].data.push(data.cpu);
+                if (cpuChart.data.labels.length > 10) {
+                    cpuChart.data.labels.shift();
+                    cpuChart.data.datasets[0].data.shift();
+                }
+                cpuChart.update('none');
             }
-            cpuChart.update('none'); // Desactivar animación para mejor rendimiento
 
             // Memory Chart
-            memoryChart.data.labels.push(now);
-            memoryChart.data.datasets[0].data.push(data.memory);
-            if (memoryChart.data.labels.length > 10) {
-                memoryChart.data.labels.shift();
-                memoryChart.data.datasets[0].data.shift();
+            if (memoryChart) {
+                memoryChart.data.labels.push(now);
+                memoryChart.data.datasets[0].data.push(data.memory);
+                if (memoryChart.data.labels.length > 10) {
+                    memoryChart.data.labels.shift();
+                    memoryChart.data.datasets[0].data.shift();
+                }
+                memoryChart.update('none');
             }
-            memoryChart.update('none');
 
             // Disk Chart
-            diskChart.data.labels.push(now);
-            diskChart.data.datasets[0].data.push(data.disk);
-            if (diskChart.data.labels.length > 10) {
-                diskChart.data.labels.shift();
-                diskChart.data.datasets[0].data.shift();
+            if (diskChart) {
+                diskChart.data.labels.push(now);
+                diskChart.data.datasets[0].data.push(data.disk);
+                if (diskChart.data.labels.length > 10) {
+                    diskChart.data.labels.shift();
+                    diskChart.data.datasets[0].data.shift();
+                }
+                diskChart.update('none');
             }
-            diskChart.update('none');
 
             // Actualizar información detallada
             if (data.detailed) {
@@ -290,18 +322,24 @@ $(document).ready(function() {
 
     // Verificar si el monitoreo está activado
     const isMonitoringEnabled = $('#enable_monitoring').is(':checked');
+    console.log('Estado inicial del monitoreo:', isMonitoringEnabled);
     
     // Si está activado, actualizar cada X segundos
     if (isMonitoringEnabled) {
         const interval = parseInt($('#update_interval').val()) * 1000;
+        console.log('Iniciando actualización con intervalo:', interval);
         updateStats(); // Actualizar inmediatamente
         setInterval(updateStats, interval);
     }
 
     // Escuchar cambios en el switch de monitoreo
     $('#enable_monitoring').change(function() {
-        if ($(this).is(':checked')) {
+        const isChecked = $(this).is(':checked');
+        console.log('Cambio en el switch de monitoreo:', isChecked);
+        
+        if (isChecked) {
             const interval = parseInt($('#update_interval').val()) * 1000;
+            console.log('Iniciando actualización con intervalo:', interval);
             updateStats(); // Actualizar inmediatamente
             setInterval(updateStats, interval);
         }
