@@ -21,15 +21,7 @@
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('monitoring_config') }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <div class="form-group row mb-3">
-                            <label class="col-sm-4 col-form-label">{% trans %}Enable Monitoring{% endtrans %}</label>
-                            <div class="col-sm-8">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="enable_monitoring" name="enable_monitoring" {% if config.MONITORING_ENABLED %}checked{% endif %}>
-                                    <label class="form-check-label" for="enable_monitoring"></label>
-                                </div>
-                            </div>
-                        </div>
+                        
                         <div class="form-group row mb-3">
                             <label class="col-sm-4 col-form-label" for="update_interval">{% trans %}Update Interval (seconds){% endtrans %}</label>
                             <div class="col-sm-8">
@@ -143,8 +135,7 @@
 <script>
 $(document).ready(function() {
     let updateInterval = null;
-    let isMonitoringEnabled = $('#enable_monitoring').is(':checked');
-    console.log('Estado inicial del monitoreo:', isMonitoringEnabled);
+    // Monitoreo automático siempre activo
 
     // Función para actualizar las estadísticas
     async function updateStats() {
@@ -184,50 +175,28 @@ $(document).ready(function() {
         }
     }
 
-    // Función para iniciar o detener la actualización
-    function toggleMonitoring(isEnabled) {
-        console.log('Cambiando estado de monitoreo:', isEnabled);
-        isMonitoringEnabled = isEnabled;
-        
+    // Monitoreo automático siempre activo
+    function startMonitoring() {
         // Limpiar intervalo anterior si existe
         if (updateInterval) {
-            console.log('Limpiando intervalo anterior');
             clearInterval(updateInterval);
             updateInterval = null;
         }
-
-        if (isEnabled) {
-            const interval = parseInt($('#update_interval').val()) * 1000;
-            console.log('Configurando nuevo intervalo:', interval, 'ms');
-            
-            // Actualizar inmediatamente
+        const interval = parseInt($('#update_interval').val()) * 1000 || 4000;
+        // Actualizar inmediatamente
+        updateStats();
+        // Configurar intervalo para actualizaciones futuras
+        updateInterval = setInterval(function() {
             updateStats();
-            
-            // Configurar intervalo para actualizaciones futuras
-            updateInterval = setInterval(function() {
-                if (isMonitoringEnabled) {
-                    console.log('Ejecutando actualización programada');
-                    updateStats();
-                }
-            }, interval);
-        }
+        }, interval);
     }
 
-    // Verificar estado inicial
-    toggleMonitoring(isMonitoringEnabled);
-
-    // Escuchar cambios en el switch de monitoreo
-    $('#enable_monitoring').on('change', function() {
-        console.log('Cambio detectado en el switch de monitoreo');
-        toggleMonitoring($(this).is(':checked'));
-    });
+    // Iniciar monitoreo automático al cargar la página
+    startMonitoring();
 
     // Escuchar cambios en el intervalo
     $('#update_interval').on('change', function() {
-        console.log('Cambio detectado en el intervalo');
-        if (isMonitoringEnabled) {
-            toggleMonitoring(true);
-        }
+        startMonitoring();
     });
 
     // Escuchar el envío del formulario
@@ -236,11 +205,11 @@ $(document).ready(function() {
         console.log('Enviando formulario...');
         
         const formData = new FormData(this);
-        const isEnabled = $('#enable_monitoring').is(':checked');
+
         const interval = $('#update_interval').val();
         
         console.log('Datos del formulario:', {
-            enable_monitoring: isEnabled,
+
             update_interval: interval
         });
         
