@@ -454,6 +454,15 @@ def security_config():
             block_icmp = request.form.get('block_icmp') == '1'
             timezone = request.form.get('timezone')
             time_format = request.form.get('time_format')
+            # Cambiar zona horaria del sistema si es válida
+            import pytz
+            import subprocess
+            if timezone in pytz.all_timezones:
+                try:
+                    subprocess.run(['timedatectl', 'set-timezone', timezone], check=True)
+                    app.logger.info(f'Zona horaria del sistema cambiada a {timezone}')
+                except Exception as e:
+                    app.logger.error(f'Error al cambiar la zona horaria del sistema: {e}')
             success = config.update_config({
                 'FIREWALL_ENABLED': firewall_enabled,
                 'BLOCK_ICMP': block_icmp,
