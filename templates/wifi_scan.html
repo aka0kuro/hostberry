@@ -582,7 +582,7 @@ function updateNetworkList(networks) {
         
         const networkSSID = (network.ssid || '{% trans %}Hidden Network{% endtrans %}').trim();
         const isConnectedToThisNetwork = currentConnectedSSID && networkSSID && (currentConnectedSSID === networkSSID);
-        const isSavedNetwork = window.savedNetworks && window.savedNetworks.includes(networkSSID);
+        const isSavedNetwork = window.savedNetworks && window.savedNetworks.some(savedNetwork => savedNetwork.ssid === networkSSID);
         const isLastNetwork = window.lastConnected && window.lastConnected.length > 0 && window.lastConnected[0] === networkSSID;
 
         const listItemHtml = $(`

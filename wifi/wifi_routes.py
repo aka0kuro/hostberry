@@ -116,7 +116,7 @@ def connect_wifi_nmcli(ssid, password=None):
                 result = subprocess.run(command, capture_output=True, text=True, check=False, timeout=45)
                 if result.returncode == 0:
                     app.logger.info(f"Segundo intento de conexión a {ssid} exitoso")
-                    return True
+        return True
                 else:
                     app.logger.error(f"Segundo intento de conexión a {ssid} falló")
                     return False
@@ -249,7 +249,7 @@ def wifi_status():
                 if line.startswith('GENERAL.CONNECTION:'):
                     actual_ssid = line.split(':', 1)[1].strip()
                     if actual_ssid:
-                        connection_info['ssid'] = actual_ssid
+                    connection_info['ssid'] = actual_ssid
                 if line.startswith('GENERAL.STATE:') and '100 (connected)' in line:
                     is_connected = True
                     
@@ -575,7 +575,7 @@ def get_wifi_credentials(ssid=None):
                             return net_data
                     
                     # No se encontró el SSID
-                    return None
+            return None
                 else:
                     # Devolver información sobre redes sin exponer contraseñas
                     networks_info = {}
@@ -606,12 +606,14 @@ def get_wifi_credentials(ssid=None):
 
 @wifi_bp.route('/api/wifi/stored_networks')
 def wifi_stored_networks():
-    """Devuelve la lista de redes WiFi almacenadas"""
+    """Devuelve la lista de redes WiFi almacenadas como un array de SSIDs"""
     try:
         credentials = get_wifi_credentials()
+        # credentials.get('networks', {}) es un dict, así que usamos .keys()
+        ssid_list = list(credentials.get('networks', {}).keys())
         return jsonify({
             'success': True,
-            'networks': credentials.get('networks', []),
+            'networks': ssid_list,
             'last_connected': credentials.get('last_connected', [])
         })
     except Exception as e:
@@ -621,10 +623,10 @@ def wifi_stored_networks():
 def wifi_get_password():
     """Recupera la contraseña almacenada para un SSID específico"""
     try:
-        if not request.is_json:
+            if not request.is_json:
             return jsonify({'success': False, 'error': 'Content-Type debe ser application/json'}), 400
         
-        data = request.get_json()
+            data = request.get_json()
         ssid = data.get('ssid')
         
         if not ssid:
@@ -649,7 +651,7 @@ def wifi_autoconnect():
         current_ssid = get_wifi_ssid()
         if current_ssid:
             return jsonify({
-                'success': True, 
+                'success': True,
                 'already_connected': True,
                 'ssid': current_ssid,
                 'message': f'Already connected to {current_ssid}'
