@@ -1,45 +1,305 @@
 {% extends "base.html" %}
 
-{% block title %}{% trans %}AdBlock Configuration{% endtrans %}{% endblock %}
-
 {% block content %}
-<div class="container-fluid">
+<div class="container mt-4">
+    <h2>AdBlock</h2>
+    
+    <!-- Status Row estilo dashboard -->
     <div class="row mb-4">
-        <div class="col">
-            <h2 class="page-title"><i class="bi bi-shield-shaded me-2"></i>{% trans %}AdBlock Configuration{% endtrans %}</h2>
+        <!-- Estado -->
+        <div class="col-xl-4 col-md-4 mb-4">
+            <div class="card border-left-{% if config.ADBLOCK_ENABLED %}success{% else %}danger{% endif %} shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row align-items-center g-0">
+                        <div class="col flex-grow-1">
+                            <div class="text-xs font-weight-bold text-{% if config.ADBLOCK_ENABLED %}success{% else %}danger{% endif %} text-uppercase mb-1">
+                                Estado
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% if config.ADBLOCK_ENABLED %}
+                                <span class="text-success"><i class="bi bi-shield-check me-2"></i>Activado</span>
+                                {% else %}
+                                <span class="text-danger"><i class="bi bi-shield-x me-2"></i>Desactivado</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            {% if config.ADBLOCK_ENABLED %}
+                            <i class="bi bi-shield-check fa-2x text-success"></i>
+                            {% else %}
+                            <i class="bi bi-shield-x fa-2x text-danger"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Reglas activas -->
+        <div class="col-xl-4 col-md-4 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row align-items-center g-0">
+                        <div class="col flex-grow-1">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Reglas activas
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.rules_active }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-list-check fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Listas activas -->
+        <div class="col-xl-4 col-md-4 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row align-items-center g-0">
+                        <div class="col flex-grow-1">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Listas activas
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.lists_active }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-collection fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header bg-primary text-white">
-                    <i class="bi bi-folder-symlink me-2"></i>{% trans %}Block Lists{% endtrans %}
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('adblock_config') }}">
-                        <div class="mb-3 form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="adblock_enabled" name="adblock_enabled" {% if config.ADBLOCK_ENABLED %}checked{% endif %}>
-                            <label class="form-check-label" for="adblock_enabled">{% trans %}Enable AdBlock{% endtrans %}</label>
+    <!-- Segunda fila: Configuración -->
+    <div class="row mb-4 align-items-stretch">
+        <!-- Bloque 1: Activar AdBlock -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center px-4">
+    <div class="text-xs font-weight-bold text-primary text-uppercase mb-2">Configuración</div>
+    <div class="mb-3">
+        <i class="bi bi-sliders fa-2x text-primary"></i>
+                    </div>
+                    <form id="adblock-config-form" method="post" action="/adblock" class="mt-3 mx-auto" style="max-width: 350px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="form-check form-switch d-flex justify-content-center mb-3">
+                            <input class="form-check-input" type="checkbox" id="adblockEnabledSwitch" name="adblock_enabled" {% if config.ADBLOCK_ENABLED %}checked{% endif %}>
+                            <label class="form-check-label ms-2" for="adblockEnabledSwitch">Enable AdBlock Protection</label>
                         </div>
-                        <button type="submit" class="btn btn-primary">{% trans %}Save Settings{% endtrans %}</button>
+                        <div class="d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary">Guardar configuración</button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
+        <!-- Bloque 2: Actualizaciones -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center px-4">
+    <div class="text-xs font-weight-bold text-info text-uppercase mb-2">Actualización de listas</div>
+    <div class="mb-3">
+        <i class="bi bi-arrow-repeat fa-2x text-info"></i>
+    </div>
+                </div>
 
-        <div class="col-lg-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <i class="bi bi-arrow-repeat me-2"></i>{% trans %}Update Lists{% endtrans %}
+                <div class="mb-3">
+                    <label for="update_frequency" class="form-label">Update Frequency</label>
+                    <select class="form-select" id="update_frequency" name="update_frequency">
+                        <option value="hourly" {% if update_frequency == 'hourly' %}selected{% endif %}>Hourly</option>
+                        <option value="daily" {% if update_frequency == 'daily' %}selected{% endif %}>Daily</option>
+                        <option value="weekly" {% if update_frequency == 'weekly' %}selected{% endif %}>Weekly</option>
+                    </select>
                 </div>
-                <div class="card-body">
-                    <a href="{{ url_for('adblock_update') }}" class="btn btn-secondary">
-                        <i class="bi bi-cloud-arrow-down me-1"></i>{% trans %}Update Now{% endtrans %}
-                    </a>
+
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-primary">Save Configuration</button>
+                    <button type="submit" name="action" value="update" class="btn btn-success">Update Lists Now</button>
                 </div>
+            </form>
+        </div>
+    </div>
+    </div>
+
+    <!-- Tercera fila: Block List -->
+    <div class="row">
+        <div class="col-12">
+            {% block adblock_blocklist_section %}
+            <!-- Gestión de listas de bloqueo aquí (si aplica). Si no, dejar vacío o placeholder. -->
+            {% endblock %}
+        </div>
+    </div>
+
+    <!-- Block Lists Card (ABAJO, CUADRICULADO) -->
+    <div class="card mb-3 mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Block Lists</h5>
+            <form id="blockListsForm" method="POST" action="{{ url_for('adblock_config') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="update_lists">
+                <div class="row g-2">
+    {% for list in config.ADBLOCK_LISTS %}
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="p-2 h-100">
+            <div class="form-check">
+                <input class="form-check-input block-list-checkbox" type="checkbox" 
+                       name="selected_lists" value="{{ list }}"
+                       id="list_{{ loop.index }}"
+                       {% if list in selected_lists %}checked{% endif %}>
+                <label class="form-check-label" for="list_{{ loop.index }}">
+                    <span class="fw-bold">{{ list.split('/')[-1] }}</span>
+                    <span class="text-truncate text-muted d-block">{{ list }}</span>
+                    {% if list == 'easylist' %}
+                    <small class="text-muted">Anuncios comunes.</small>
+                    {% elif list == 'easyprivacy' %}
+                    <small class="text-muted">Rastreadores y scripts.</small>
+                    {% elif list == 'fanboy' %}
+                    <small class="text-muted">Popups y banners.</small>
+                    {% elif list == 'malware' %}
+                    <small class="text-muted">Dominios maliciosos.</small>
+                    {% elif list == 'social' %}
+                    <small class="text-muted">Redes sociales.</small>
+                    {% elif list == 'kadhosts' %}
+                    <small class="text-muted">Phishing/malware.</small>
+                    {% elif list == 'adobe' %}
+                    <small class="text-muted">Adobe Analytics.</small>
+                    {% elif list == 'firstparty' %}
+                    <small class="text-muted">First-party trackers.</small>
+                    {% elif list == 'stevenblack' %}
+                    <small class="text-muted">Múltiples fuentes.</small>
+                    {% elif list == 'windows' %}
+                    <small class="text-muted">Telemetría Windows.</small>
+                    {% else %}
+                    <small class="text-muted">Bloqueo general.</small>
+                    {% endif %}
+                </label>
             </div>
         </div>
     </div>
+    {% endfor %}
 </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary btn-sm">Actualizar listas seleccionadas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Real-Time Blocked Domains Card (ABAJO) -->
+    <div class="card mb-4 mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Últimos dominios bloqueados en tiempo real</h5>
+            <ul id="realtime-blocked-list" class="list-group small mb-0" style="max-height: 300px; overflow-y: auto;">
+                <li class="list-group-item text-muted">Cargando...</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateAdblockStatusUI(status) {
+    const statusDiv = document.getElementById('adblock-update-status');
+    if (!statusDiv) return;
+    if (status.updating) {
+        statusDiv.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> <span>Actualizando listas AdBlock...</span>';
+        statusDiv.className = 'alert alert-info';
+    } else if (status.last_error) {
+        statusDiv.innerHTML = '<strong>Error:</strong> ' + status.last_error;
+        statusDiv.className = 'alert alert-danger';
+    } else if (status.last_result) {
+        statusDiv.innerHTML = '<span class="text-success">Actualización completada.</span>';
+        statusDiv.className = 'alert alert-success';
+    } else {
+        statusDiv.innerHTML = '';
+        statusDiv.className = '';
+    }
+}
+
+function pollAdblockUpdateStatus() {
+    fetch('/adblock/update_status')
+        .then(response => response.json())
+        .then(status => {
+            updateAdblockStatusUI(status);
+            if (status.updating) {
+                setTimeout(pollAdblockUpdateStatus, 2000);
+            } else {
+                // Espera 3 segundos antes de recargar para asegurar que /etc/hosts ya está actualizado
+                setTimeout(function() {
+                    // Solo actualiza la lista en tiempo real y muestra mensaje de éxito, sin recargar la página
+                    fetchRealtimeBlocked();
+                    // Opcional: actualizar estadísticas por AJAX aquí si se desea
+                    const statusDiv = document.getElementById('adblock-update-status');
+                    if (statusDiv) {
+                        statusDiv.innerHTML = '<span class="text-success">Actualización completada.</span>';
+                        statusDiv.className = 'alert alert-success';
+                        setTimeout(function() {
+                            statusDiv.innerHTML = '';
+                            statusDiv.className = '';
+                        }, 3000);
+                    }
+                }, 3000);
+            }
+        })
+        .catch(() => {});
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Añadir el div de estado si no existe
+    let statusDiv = document.getElementById('adblock-update-status');
+    if (!statusDiv) {
+        statusDiv = document.createElement('div');
+        statusDiv.id = 'adblock-update-status';
+        statusDiv.className = '';
+        // Insertar antes de la primera card (después de h2)
+        const container = document.querySelector('.container.mt-4');
+        const h2 = container.querySelector('h2');
+        container.insertBefore(statusDiv, h2.nextSibling);
+    }
+    pollAdblockUpdateStatus();
+});
+function fetchRealtimeBlocked() {
+    console.log('[AdBlock] Ejecutando fetchRealtimeBlocked...');
+    fetch('/adblock/realtime_log')
+        .then(response => response.json())
+        .then(data => {
+            const list = document.getElementById('realtime-blocked-list');
+            list.innerHTML = '';
+            if (data.domains.length === 0) {
+                list.innerHTML = '<li class="list-group-item text-muted">No se han bloqueado dominios recientemente.</li>';
+            } else {
+                data.domains.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item';
+                    // item = {domain: ..., datetime: ...}
+                    // Formatea fecha a DD/MM/YYYY HH:MM:SS
+                    let fecha = item.datetime;
+                    if (fecha && fecha.length >= 19) {
+                        const [date, time] = fecha.split(' ');
+                        if (date && time) {
+                            const [y, m, d] = date.split('-');
+                            fecha = `${d}/${m}/${y} ${time}`;
+                        }
+                    }
+                    li.innerHTML = `<span class='fw-bold'>${item.domain}</span> <span class='text-muted' style='font-size:0.9em'>(${fecha})</span>`;
+                    list.appendChild(li);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('[AdBlock] Error al obtener dominios bloqueados:', error);
+        });
+}
+
+setInterval(fetchRealtimeBlocked, 5000);
+document.addEventListener('DOMContentLoaded', fetchRealtimeBlocked);
+</script>
 {% endblock %}

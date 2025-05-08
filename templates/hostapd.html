@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}{% trans %}WiFi Access Point{% endtrans %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-wifi me-2"></i>{% trans %}WiFi Access Point{% endtrans %}
+        </h1>
+        <div>
+            <button id="toggleAp" class="btn btn-primary btn-sm">
+                <i class="bi bi-power me-2"></i> <span id="toggleText">{% trans %}Start AP{% endtrans %}</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Status Cards -->
+    <div class="row mb-4">
+        <!-- AP Status -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                {% trans %}AP Status{% endtrans %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="apStatus">
+                                {% trans %}Stopped{% endtrans %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-broadcast fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connected Clients -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                {% trans %}Connected Clients{% endtrans %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="clientCount">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-people fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Channel Usage -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                {% trans %}Current Channel{% endtrans %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="currentChannel">-</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-signal fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration Card -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-cog me-1"></i> {% trans %}AP Configuration{% endtrans %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form id="apConfigForm">
+                        <!-- SSID -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans %}Network Name (SSID){% endtrans %}</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-wifi"></i></span>
+                                <input type="text" class="form-control" id="ssid" name="ssid" required>
+                            </div>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans %}Password{% endtrans %}</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                                <input type="password" class="form-control" id="password" name="password" minlength="8" required>
+                                <button class="btn" type="button" id="togglePassword">
+                                    <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">{% trans %}Minimum 8 characters{% endtrans %}</small>
+                        </div>
+
+                        <!-- Channel -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans %}Channel{% endtrans %}</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-signal"></i></span>
+                                <select class="form-select" id="channel" name="channel" required>
+                                    <option value="">{% trans %}Select channel{% endtrans %}</option>
+                                    <!-- Channels will be populated based on band selection -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Band -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans %}Frequency Band{% endtrans %}</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-broadcast-tower"></i></span>
+                                <select class="form-select" id="band" name="band">
+                                    <option value="2.4">2.4 GHz</option>
+                                    <option value="5">5 GHz</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>{% trans %}Save Configuration{% endtrans %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connected Clients List -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-users me-1"></i> {% trans %}Connected Clients{% endtrans %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="clientsTable">
+                            <thead>
+                                <tr>
+                                    <th>{% trans %}MAC Address{% endtrans %}</th>
+                                    <th>{% trans %}Signal{% endtrans %}</th>
+                                    <th>{% trans %}TX Rate{% endtrans %}</th>
+                                    <th>{% trans %}RX Rate{% endtrans %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Client data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto" id="toastTitle">{% trans %}Notification{% endtrans %}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleApBtn = document.getElementById('toggleAp');
+    const toggleText = document.getElementById('toggleText');
+    const apStatus = document.getElementById('apStatus');
+    const clientCount = document.getElementById('clientCount');
+    const currentChannel = document.getElementById('currentChannel');
+    const apConfigForm = document.getElementById('apConfigForm');
+    const clientsTable = document.getElementById('clientsTable').getElementsByTagName('tbody')[0];
+    const toast = new bootstrap.Toast(document.getElementById('toast'));
+    const toastTitle = document.getElementById('toastTitle');
+    const toastMessage = document.getElementById('toastMessage');
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    const bandInputs = document.querySelectorAll('input[name="band"]');
+    const channelSelect = document.getElementById('channel');
+
+    // Channel options for each band
+    const channels = {
+        '2.4': Array.from({length: 13}, (_, i) => i + 1),
+        '5': [36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144]
+    };
+
+    // Update channel options when band changes
+    bandInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const selectedBand = this.value;
+            channelSelect.innerHTML = '<option value="">{% trans %}Select channel{% endtrans %}</option>';
+            channels[selectedBand].forEach(channel => {
+                const option = document.createElement('option');
+                option.value = channel;
+                option.textContent = channel;
+                channelSelect.appendChild(option);
+            });
+        });
+    });
+
+    // Toggle password visibility
+    togglePassword.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.querySelector('i').classList.toggle('fas-eye');
+        this.querySelector('i').classList.toggle('fas-eye-slash');
+    });
+
+    // Show toast notification
+    function showToast(title, message, type = 'success') {
+        toastTitle.textContent = title;
+        toastMessage.textContent = message;
+        toastMessage.className = `toast-body text-${type}`;
+        toast.show();
+    }
+
+    // Update AP status
+    function updateStatus() {
+        fetch('/api/hostapd/status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    apStatus.textContent = data.status === 'running' ? '{% trans %}Running{% endtrans %}' : '{% trans %}Stopped{% endtrans %}';
+                    toggleText.textContent = data.status === 'running' ? '{% trans %}Stop AP{% endtrans %}' : '{% trans %}Start AP{% endtrans %}';
+                    clientCount.textContent = data.clients.length;
+                    currentChannel.textContent = data.channel || '-';
+
+                    // Update clients table
+                    clientsTable.innerHTML = '';
+                    data.clients.forEach(client => {
+                        const row = clientsTable.insertRow();
+                        row.insertCell(0).textContent = client.mac;
+                        row.insertCell(1).textContent = client.signal;
+                        row.insertCell(2).textContent = client.tx_rate;
+                        row.insertCell(3).textContent = client.rx_rate;
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error updating status:', error);
+            });
+    }
+
+    // Toggle AP
+    toggleApBtn.addEventListener('click', function() {
+        fetch('/api/hostapd/toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('{% trans %}Success{% endtrans %}', data.message);
+                updateStatus();
+            } else {
+                showToast('{% trans %}Error{% endtrans %}', data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error toggling AP:', error);
+            showToast('{% trans %}Error{% endtrans %}', '{% trans %}Failed to toggle AP{% endtrans %}', 'danger');
+        });
+    });
+
+    // Save configuration
+    apConfigForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const data = {
+            ssid: formData.get('ssid'),
+            password: formData.get('password'),
+            channel: formData.get('channel'),
+            band: formData.get('band')
+        };
+
+        fetch('/api/hostapd/config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('{% trans %}Success{% endtrans %}', data.message);
+                updateStatus();
+            } else {
+                showToast('{% trans %}Error{% endtrans %}', data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving configuration:', error);
+            showToast('{% trans %}Error{% endtrans %}', '{% trans %}Failed to save configuration{% endtrans %}', 'danger');
+        });
+    });
+
+    // Initial status update and periodic updates
+    updateStatus();
+    setInterval(updateStatus, 5000);
+});
+</script>
+
+<style>
+.toast-container-fixed {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1050;
+}
+</style>
+{% endblock %} 

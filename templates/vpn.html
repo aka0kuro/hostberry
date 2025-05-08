@@ -15,19 +15,24 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-6">
+                        <div class="col-12">
                             <p><strong>{{ _('Status') }}:</strong> <span id="vpn-status">-</span></p>
-                            <p><strong>{{ _('IP Address') }}:</strong> <span id="vpn-ip">-</span></p>
-                        </div>
-                        <div class="col-6">
-                            <p><strong>{{ _('Upload') }}:</strong> <span id="vpn-upload">0 KB/s</span></p>
-                            <p><strong>{{ _('Download') }}:</strong> <span id="vpn-download">0 KB/s</span></p>
+                            <p><strong>{{ _('Public IP') }}:</strong> <span id="vpn-public-ip">-</span></p>
+                            <p><strong>{{ _('VPN IP') }}:</strong> <span id="vpn-ip">-</span></p>
+                            <p><strong>{{ _('Config File') }}:</strong> <span id="vpn-config-file">-</span></p>
                         </div>
                     </div>
                     <div class="mt-3">
                         <button id="toggle-vpn" class="btn btn-primary w-100">
                             {{ _('Toggle VPN') }}
                         </button>
+                    </div>
+                    <div class="mt-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="kill-switch">
+                            <label class="form-check-label" for="kill-switch">{{ _('Kill Switch') }}</label>
+                        </div>
+                        <small class="text-muted">{{ _('Block all internet traffic if VPN disconnects') }}</small>
                     </div>
                 </div>
             </div>
@@ -41,6 +46,7 @@
                 </div>
                 <div class="card-body">
                     <form id="vpn-config-form" enctype="multipart/form-data">
+    <div id="vpn-config-error" class="alert alert-danger d-none" role="alert"></div>
                         <div class="mb-3">
                             <label for="vpn-file" class="form-label">{{ _('OpenVPN Configuration File') }}</label>
                             <input type="file" class="form-control" id="vpn-file" name="vpn_file" accept=".ovpn,.conf">
@@ -50,9 +56,14 @@
                             <label for="vpn-username" class="form-label">{{ _('Username') }}</label>
                             <input type="text" class="form-control" id="vpn-username" name="username">
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-3 position-relative">
                             <label for="vpn-password" class="form-label">{{ _('Password') }}</label>
-                            <input type="password" class="form-control" id="vpn-password" name="password">
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="vpn-password" name="password">
+                                <button type="button" class="btn btn-outline-secondary" id="toggle-password" tabindex="-1">
+                                    <i class="bi bi-eye" id="eye-icon"></i>
+                                </button>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">{{ _('Save Configuration') }}</button>
                     </form>
@@ -85,19 +96,41 @@
 </div>
 
 <script>
+// Mostrar/ocultar contraseña
+const togglePasswordBtn = document.getElementById('toggle-password');
+const passwordInput = document.getElementById('vpn-password');
+const eyeIcon = document.getElementById('eye-icon');
+if (togglePasswordBtn && passwordInput && eyeIcon) {
+    togglePasswordBtn.addEventListener('click', function() {
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+        eyeIcon.classList.toggle('bi-eye');
+        eyeIcon.classList.toggle('bi-eye-slash');
+    });
+}
+
+// Función para obtener el token CSRF
+function getCSRFToken() {
+    const metaTag = document.querySelector('meta[name="csrf-token"]');
+    return metaTag ? metaTag.getAttribute('content') : null;
+}
+
 function updateVPNStatus() {
     fetch('/api/vpn/status')
         .then(response => response.json())
         .then(data => {
             document.getElementById('vpn-status').textContent = data.status;
-            document.getElementById('vpn-ip').textContent = data.ip;
-            document.getElementById('vpn-upload').textContent = data.upload;
-            document.getElementById('vpn-download').textContent = data.download;
+            document.getElementById('vpn-public-ip').textContent = data.public_ip;
+            document.getElementById('vpn-ip').textContent = data.vpn_ip;
+            document.getElementById('vpn-config-file').textContent = data.config_file;
             
             // Update toggle button text
             const toggleBtn = document.getElementById('toggle-vpn');
             toggleBtn.textContent = data.status === 'Conectado' ? '{{ _("Disconnect VPN") }}' : '{{ _("Connect VPN") }}';
             toggleBtn.className = `btn w-100 ${data.status === 'Conectado' ? 'btn-danger' : 'btn-primary'}`;
+            
+            // Update kill switch state
+            document.getElementById('kill-switch').checked = data.killswitch_enabled;
         })
         .catch(error => {
             console.error('Error updating VPN status:', error);
@@ -106,10 +139,15 @@ function updateVPNStatus() {
 
 // Handle VPN toggle
 document.getElementById('toggle-vpn').addEventListener('click', function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> {{ _("Processing...") }}';
+
     fetch('/api/vpn/toggle', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
         }
     })
     .then(response => response.json())
@@ -123,6 +161,35 @@ document.getElementById('toggle-vpn').addEventListener('click', function() {
     .catch(error => {
         console.error('Error toggling VPN:', error);
         alert('{{ _("Error toggling VPN") }}');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        updateVPNStatus();
+    });
+});
+
+// Handle Kill Switch toggle
+document.getElementById('kill-switch').addEventListener('change', function() {
+    const isEnabled = this.checked;
+    fetch('/api/vpn/killswitch', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({ enabled: isEnabled })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            alert(data.error || '{{ _("Error toggling Kill Switch") }}');
+            this.checked = !isEnabled; // Revert the switch
+        }
+    })
+    .catch(error => {
+        console.error('Error toggling Kill Switch:', error);
+        alert('{{ _("Error toggling Kill Switch") }}');
+        this.checked = !isEnabled; // Revert the switch
     });
 });
 
@@ -130,19 +197,18 @@ document.getElementById('toggle-vpn').addEventListener('click', function() {
 document.getElementById('vpn-config-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const formData = new FormData();
-    const fileInput = document.getElementById('vpn-file');
-    const username = document.getElementById('vpn-username').value;
-    const password = document.getElementById('vpn-password').value;
+    const form = this;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> {{ _("Saving...") }}';
     
-    if (fileInput.files.length > 0) {
-        formData.append('vpn_file', fileInput.files[0]);
-    }
-    formData.append('username', username);
-    formData.append('password', password);
+    const formData = new FormData(form);
     
-    fetch('/api/vpn/config', {
+    fetch("{{ url_for('vpn_config_api') }}", {
         method: 'POST',
+        headers: {
+            'X-CSRFToken': getCSRFToken()
+        },
         body: formData
     })
     .then(response => response.json())
@@ -157,6 +223,10 @@ document.getElementById('vpn-config-form').addEventListener('submit', function(e
     .catch(error => {
         console.error('Error saving VPN configuration:', error);
         alert('{{ _("Error saving VPN configuration") }}');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '{{ _("Save Configuration") }}';
     });
 });
 

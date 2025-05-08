@@ -44,6 +44,20 @@ class HostBerryConfig:
         'SYSSTAT_ENABLED': True,
         'IP_WHITELIST': '',
         'FAILED_ATTEMPTS_LIMIT': 5,
+        'ADBLOCK_ENABLED': False,
+        'ADBLOCK_LISTS': [
+            'easylist',
+            'easyprivacy',
+            'fanboy',
+            'malware',
+            'social',
+            'kadhosts',
+            'adobe',
+            'firstparty',
+            'stevenblack',
+            'windows'
+        ],
+        'ADBLOCK_UPDATE_FREQUENCY': 'weekly'
     }
 
     def __init__(self):
