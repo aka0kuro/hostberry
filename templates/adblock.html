@@ -140,7 +140,7 @@
     <div class="card mb-3 mt-4">
         <div class="card-body">
             <h5 class="card-title">Block Lists</h5>
-            <form id="blockListsForm" method="POST" action="{{ url_for('adblock_config') }}">
+            <form id="blockListsForm" method="POST" action="{{ url_for('adblock.adblock_config_page') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="action" value="update_lists">
                 <div class="row g-2">

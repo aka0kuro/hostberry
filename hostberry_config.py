@@ -9,7 +9,7 @@ logger = logging.getLogger('HostBerryConfig')
 logger.setLevel(logging.DEBUG)
 
 # Crear directorio logs si no existe
-log_dir = '/home/blag0rag/Desktop/hostberry/logs'
+log_dir = '/home/kali/hostberry/logs'
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
     logger.info(f'Directorio de logs creado: {log_dir}')

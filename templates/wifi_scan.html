@@ -434,31 +434,73 @@ $('#wifiConnectForm').submit(async function(e) {
     }
 
     try {
+        console.log('Intentando conectar a:', ssid);
+        
+        // Utilizar fetch con timeout para evitar esperas indefinidas
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+        
         const response = await fetch('/api/wifi/connect', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRFToken': getCSRFToken() || getCookie('csrf_token') },
-            body: JSON.stringify({ ssid: ssid, password: password, security: security, save_credentials: saveCredentials })
-        });
+            headers: { 
+                'Content-Type': 'application/json', 
+                'Accept': 'application/json', 
+                'X-CSRFToken': getCSRFToken() || getCookie('csrf_token') 
+            },
+            body: JSON.stringify({ 
+                ssid: ssid, 
+                password: password, 
+                security: security, 
+                save_credentials: saveCredentials 
+            }),
+            signal: controller.signal
+        }).finally(() => clearTimeout(timeoutId));
+        
         const responseData = await response.json();
         
         if (responseData.success) {
+            // 1. Guardar información de conexión en localStorage
             localStorage.setItem(`connection_start_${ssid}`, Date.now().toString());
-            showToast(`{% trans %}Connected to{% endtrans %} ${ssid}!`, 'success');
-            addActivity('connect', `{% trans %}Connected to{% endtrans %} ${ssid}`, {
-                security: security,
-                signal: statusData.connection_info?.signal || '-'
-            });
-            // Save the last connected network
-            saveLastConnectedNetwork(ssid, security, password);
+            
+            // 2. Cerrar el modal primero antes de mostrar mensajes
             $('#connectModal').modal('hide');
-            await loadStatusAndScan();
+            
+            // 3. Mostrar mensaje de éxito
+            showToast(`{% trans %}Connected to{% endtrans %} ${ssid}!`, 'success');
+            addActivity('connect', `{% trans %}Connected to{% endtrans %} ${ssid}`);
+            
+            // 4. Dar tiempo al sistema para completar la conexión antes de actualizar la UI
+            setTimeout(function() {
+                // 5. Intentar actualizar la interfaz con un manejo de errores robusto
+                try {
+                    refreshWifiStatusAndButtons().catch(err => {
+                        console.warn('Error refrescando estado WiFi:', err);
+                    });
+                    
+                    // Esperar un poco más antes de intentar un escaneo completo
+                    setTimeout(function() {
+                        $('#rescanBtn').trigger('click');
+                    }, 3000);
+                } catch (refreshError) {
+                    console.warn('Error actualizando UI después de conexión:', refreshError);
+                }
+            }, 2000);
         } else {
             throw new Error(responseData.error || '{% trans %}Error connecting to network.{% endtrans %}');
         }
     } catch (error) {
         console.error('Error connecting:', error);
-        showToast(error.message, 'danger');
-        addActivity('error', `{% trans %}Failed to connect to{% endtrans %} ${ssid}: ${error.message}`);
+        
+        // Manejar distintos tipos de errores de red
+        let errorMessage = error.message;
+        if (error.name === 'AbortError') {
+            errorMessage = '{% trans %}Connection timeout. The server took too long to respond.{% endtrans %}';
+        } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+            errorMessage = '{% trans %}Network error. Try again in a few seconds.{% endtrans %}';
+        }
+        
+        showToast(errorMessage, 'danger');
+        addActivity('error', `{% trans %}Failed to connect to{% endtrans %} ${ssid}: ${errorMessage}`);
     } finally {
         btn.prop('disabled', false).html(originalText);
     }
@@ -540,12 +582,18 @@ function updateNetworkList(networks) {
         
         const networkSSID = (network.ssid || '{% trans %}Hidden Network{% endtrans %}').trim();
         const isConnectedToThisNetwork = currentConnectedSSID && networkSSID && (currentConnectedSSID === networkSSID);
+        const isSavedNetwork = window.savedNetworks && window.savedNetworks.includes(networkSSID);
+        const isLastNetwork = window.lastConnected && window.lastConnected.length > 0 && window.lastConnected[0] === networkSSID;
 
         const listItemHtml = $(`
             <div class="list-group-item list-group-item-action" data-original-security="${securityType}" data-ssid-name="${networkSSID}">
                 <div class="d-flex w-100 justify-content-between align-items-center">
                     <div>
-                        <h6 class="mb-1 d-inline-block">${networkSSID}</h6>
+                        <h6 class="mb-1 d-inline-block">
+                            ${networkSSID}
+                            ${isSavedNetwork ? '<i class="fas fa-bookmark text-info ms-1" title="{% trans %}Saved network{% endtrans %}"></i>' : ''}
+                            ${isLastNetwork ? '<i class="fas fa-history text-success ms-1" title="{% trans %}Last connected network{% endtrans %}"></i>' : ''}
+                        </h6>
                         <small class="ms-2"><i class="fas ${securityIcon} me-1"></i>${securityType}</small>
                         <small class="${signalClass} ms-2"><i class="fas fa-signal me-1"></i>${signalStrength}%</small>
                     </div>
@@ -622,15 +670,44 @@ $(document).ready(function() {
     });
 
     // Connect Modal Setup (Delegated)
-    $(document).on('click', '.connect-btn', function() {
+    $(document).on('click', '.connect-btn', async function() {
         const ssid = $(this).data('ssid');
         const security = $(this).data('security');
         $('#connectSSID').val(ssid);
         $('#connectSSIDHidden').val(ssid);
         $('#connectSecurity').val(security);
         $('#connectSecurityHidden').val(security);
+        
+        // Restaurar el campo de contraseña y configurarlo según el tipo de seguridad
         $('#connectPassword').val('').prop('disabled', security === 'Open');
-        $('#passwordField').toggle(security !== 'Open'); // Show/hide password field
+        $('#passwordField').toggle(security !== 'Open');
+        
+        // Si está en la lista de redes guardadas y no es Open, autocompletar contraseña
+        if (window.savedNetworks.includes(ssid) && security !== 'Open') {
+            try {
+                $('#connectPassword').val('').attr('placeholder', '{% trans %}Loading password...{% endtrans %}');
+                const response = await fetch('/api/wifi/get_password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRFToken': getCSRFToken() || getCookie('csrf_token')
+                    },
+                    body: JSON.stringify({ ssid: ssid })
+                });
+                
+                const data = await response.json();
+                if (data.success && data.password) {
+                    $('#connectPassword').val(data.password);
+                } else {
+                    $('#connectPassword').attr('placeholder', '{% trans %}Enter password{% endtrans %}');
+                }
+            } catch (e) {
+                console.error('Error recuperando contraseña guardada:', e);
+                $('#connectPassword').attr('placeholder', '{% trans %}Enter password{% endtrans %}');
+            }
+        }
+        
         $('#connectModal').modal('show');
     });
 
@@ -680,7 +757,7 @@ $(document).ready(function() {
         var originalHtml = btn.html();
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> {% trans %}Enabling...{% endtrans %}');
         $.ajax({
-            url: "{{ url_for('enable_wifi') }}", // Make sure this route exists in your Flask app
+            url: "{{ url_for('wifi.enable_radio') }}", // Make sure this route exists in your Flask app
             type: "POST",
             headers: { 'X-CSRFToken': getCSRFToken() || getCookie('csrf_token') },
             success: async function(response) {
@@ -698,6 +775,12 @@ $(document).ready(function() {
             }
         });
     });
+
+    // Cargar las redes guardadas al inicio
+    loadSavedNetworks();
+
+    // Autoconectar a la última red usada
+    attemptAutoConnect();
 
 });
 
@@ -735,6 +818,49 @@ function calculateConnectionDuration(ssid) {
         return `${hours}h ${minutes}m ${seconds}s`;
     }
     return '-';
+}
+
+// Cargar las redes guardadas al inicio
+async function loadSavedNetworks() {
+    try {
+        const response = await fetch('/api/wifi/stored_networks');
+        const data = await response.json();
+        if (data.success) {
+            window.savedNetworks = data.networks || [];
+            window.lastConnected = data.last_connected || [];
+            console.log('Redes guardadas:', window.savedNetworks);
+            console.log('Últimas conexiones:', window.lastConnected);
+        }
+    } catch (e) {
+        console.error('Error cargando redes guardadas:', e);
+        window.savedNetworks = [];
+        window.lastConnected = [];
+    }
+}
+
+// Autoconectar a la última red usada
+async function attemptAutoConnect() {
+    try {
+        // No autoconectar si ya estamos conectados
+        const statusResponse = await fetch('/api/wifi/status');
+        const statusData = await statusResponse.json();
+        if (statusData.connected && statusData.current_connection) {
+            console.log(`Ya conectado a ${statusData.current_connection}, no se intenta autoconexión.`);
+            return;
+        }
+        
+        const response = await fetch('/api/wifi/autoconnect');
+        const data = await response.json();
+        if (data.success) {
+            showToast(`{% trans %}Auto-connected to{% endtrans %} ${data.ssid}`, 'success');
+            addActivity('connect', `{% trans %}Auto-connected to{% endtrans %} ${data.ssid}`);
+            await loadStatusAndScan(); // Actualizar estado
+        } else {
+            console.log('No se pudo autoconectar:', data.message);
+        }
+    } catch (e) {
+        console.error('Error en autoconexión:', e);
+    }
 }
 </script>
 {% endblock %}

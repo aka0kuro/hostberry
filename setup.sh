@@ -51,6 +51,32 @@ if [ -f "hostberry-web.service" ]; then
 fi
 cd /opt/hostberry
 
+# Crear directorios para recursos estáticos
+echo "Creando directorios para recursos estáticos..."
+mkdir -p static/css static/js static/webfonts static/fonts
+
+# Descargar recursos estáticos
+echo "Descargando recursos estáticos..."
+# Bootstrap
+curl -o static/css/bootstrap.min.css https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css
+curl -o static/js/bootstrap.bundle.min.js https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js
+
+# Bootstrap Icons
+curl -o static/css/bootstrap-icons.css https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css
+curl -o static/fonts/bootstrap-icons.woff https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/fonts/bootstrap-icons.woff
+curl -o static/fonts/bootstrap-icons.woff2 https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/fonts/bootstrap-icons.woff2
+
+# jQuery
+curl -o static/js/jquery.min.js https://code.jquery.com/jquery-3.6.0.min.js
+
+# Font Awesome
+curl -o static/css/fontawesome.min.css https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css
+curl -o static/webfonts/fa-solid-900.woff2 https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-solid-900.woff2
+curl -o static/webfonts/fa-solid-900.woff https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-solid-900.woff
+
+# Crear archivo custom.css
+echo "Creando archivo custom.css y connection-status.js para soporte sin conexión..."
+
 # Install project dependencies
 echo "Installing Python dependencies..."
 python3 -m venv venv
@@ -88,5 +114,56 @@ then
     echo "Service installed. Start with: sudo systemctl start hostberry-web"
 fi
 
+# --- Permitir ejecutar adblock.sh con sudo sin contraseña ---
+ADBLOCK_SCRIPT="/opt/hostberry/scripts/adblock.sh"
+SUDOERS_LINE="$(whoami) ALL=(ALL) NOPASSWD: $ADBLOCK_SCRIPT"
+
+# Solo añadir si no existe ya
+if ! sudo grep -Fxq "$SUDOERS_LINE" /etc/sudoers; then
+    echo "$SUDOERS_LINE" | sudo EDITOR='tee -a' visudo
+    echo "Permiso sudoers añadido para $ADBLOCK_SCRIPT"
+else
+    echo "Permiso sudoers ya presente para $ADBLOCK_SCRIPT"
+fi
+
 echo "Installation complete!"
 echo "Run the application with: python3 app.py"
+
+# --- Instalar flask_babel en el entorno virtual ---
+if [ -d "/opt/hostberry/venv" ]; then
+    source /opt/hostberry/venv/bin/activate
+    pip install flask_babel
+    deactivate
+else
+    echo "No se encontró el entorno virtual en /opt/hostberry/venv"
+fi
+
+# --- Añadir flask_babel a requirements.txt si no está ---
+if ! grep -q "^flask_babel" /opt/hostberry/requirements.txt; then
+    echo "flask_babel" >> /opt/hostberry/requirements.txt
+fi
+
+# --- Crear/actualizar el archivo de servicio systemd ---
+SERVICE_FILE="/etc/systemd/system/hostberry.service"
+cat << EOF | sudo tee $SERVICE_FILE > /dev/null
+[Unit]
+Description=HostBerry Web
+After=network.target
+
+[Service]
+User=$(whoami)
+WorkingDirectory=/opt/hostberry
+ExecStart=/opt/hostberry/venv/bin/python3 /opt/hostberry/app.py
+Restart=always
+Environment=FLASK_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# --- Recargar systemd y reiniciar el servicio ---
+sudo systemctl daemon-reload
+sudo systemctl restart hostberry
+sudo systemctl enable hostberry
+
+echo "¡Configuración de systemd y flask_babel completada!"
