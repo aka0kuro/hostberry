@@ -146,6 +146,11 @@ if [ $# -eq 0 ]; then
     show_help
 fi
 
+# Generar certificados SSL si se solicita
+if [ "$GENERATE_CERT" = true ]; then
+    generate_ssl_cert
+fi
+
 # Modo de instalación o actualización
 if [ "$UPDATE_MODE" = false ]; then
     # Modo de instalación: eliminar instalación previa
