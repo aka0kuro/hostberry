@@ -225,12 +225,21 @@ update_hostberry() {
     setup_venv
     
     # Actualizar permisos de scripts
-    chmod +x scripts/*.sh || handle_error "No se pudieron actualizar los permisos de los scripts"
+    if [ -d "scripts" ]; then
+        log "$ANSI_YELLOW" "INFO" "Actualizando permisos de scripts..."
+        find scripts -name "*.sh" -type f -exec chmod +x {} \; || handle_error "No se pudieron actualizar los permisos de los scripts"
+    else
+        log "$ANSI_YELLOW" "WARN" "Directorio 'scripts' no encontrado, omitiendo actualización de permisos"
+    fi
     
     # Actualizar servicio systemd
-    cp "$SYSTEMD_SERVICE" /etc/systemd/system/ || handle_error "No se pudo actualizar el archivo de servicio"
-    systemctl daemon-reload
-    systemctl enable hostberry-web.service
+    if [ -f "$SYSTEMD_SERVICE" ]; then
+        cp "$SYSTEMD_SERVICE" /etc/systemd/system/ || handle_error "No se pudo actualizar el archivo de servicio"
+        systemctl daemon-reload
+        systemctl enable hostberry-web.service
+    else
+        log "$ANSI_YELLOW" "WARN" "Archivo de servicio '$SYSTEMD_SERVICE' no encontrado, omitiendo actualización de servicio"
+    fi
     
     # Generar certificados si se solicita
     if [ "$GENERATE_CERT" = true ]; then
@@ -238,10 +247,16 @@ update_hostberry() {
     fi
     
     # Reiniciar servicio
-    systemctl restart hostberry-web.service || handle_error "No se pudo reiniciar el servicio"
+    if systemctl is-active --quiet hostberry-web.service; then
+        systemctl restart hostberry-web.service || handle_error "No se pudo reiniciar el servicio"
+    else
+        log "$ANSI_YELLOW" "WARN" "Servicio hostberry-web no está activo, omitiendo reinicio"
+    fi
     
     # Limpiar backups antiguos
-    find "$BACKUP_DIR" -type d -mtime +30 -exec rm -rf {} + 2>/dev/null
+    if [ -d "$BACKUP_DIR" ]; then
+        find "$BACKUP_DIR" -type d -mtime +30 -exec rm -rf {} + 2>/dev/null
+    fi
     
     log "$ANSI_GREEN" "INFO" "Actualización de HostBerry completada."
 }
