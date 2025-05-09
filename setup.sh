@@ -28,6 +28,89 @@ handle_error() {
     exit 1
 }
 
+# Mostrar resumen de acciones
+show_summary() {
+    log "$ANSI_GREEN" "[INFO] Resumen de acciones"
+    echo "[RESUMEN] Acciones solicitadas:"
+    [ "$UPDATE_MODE" = true ] && echo "  - Actualización de HostBerry"
+    [ "$GENERATE_CERT" = true ] && echo "  - Generar certificados SSL"
+    [ "$CONFIGURE_NETWORK" = true ] && echo "  - Configurar red y firewall"
+    echo
+}
+
+# Procesar argumentos y ejecutar acciones
+main() {
+    UPDATE_MODE=false
+    GENERATE_CERT=false
+    CONFIGURE_NETWORK=false
+    SHOW_HELP=false
+
+    for arg in "$@"; do
+        case $arg in
+            --update)
+                UPDATE_MODE=true
+                ;;
+            --cert)
+                GENERATE_CERT=true
+                ;;
+            --network)
+                CONFIGURE_NETWORK=true
+                ;;
+            -h|--help)
+                SHOW_HELP=true
+                ;;
+            *)
+                ;;
+        esac
+    done
+
+    if [ "$SHOW_HELP" = true ] || [ $# -eq 0 ]; then
+        show_help
+    fi
+
+    show_summary
+    check_root
+
+    if [ "$UPDATE_MODE" = true ]; then
+        update_hostberry
+        exit 0
+    fi
+    if [ "$GENERATE_CERT" = true ]; then
+        generate_ssl_cert
+        exit 0
+    fi
+    if [ "$CONFIGURE_NETWORK" = true ]; then
+        configure_network
+        exit 0
+    fi
+    # Si no se pasa ningún argumento relevante, mostrar ayuda
+    show_help
+}
+
+main "$@"
+
+# Configurar red y firewall
+configure_network() {
+    log "$ANSI_GREEN" "Configurando red y firewall..."
+    # Instalar UFW si no está
+    apt-get install -y ufw || handle_error "No se pudo instalar UFW"
+    # Permitir puertos esenciales
+    ufw allow 22/tcp   # SSH
+    ufw allow 80/tcp   # HTTP
+    ufw allow 443/tcp  # HTTPS
+    # Habilitar reenvío de IP
+    sed -i 's/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+    sysctl -p
+    # Configurar NAT para compartir Internet
+    IFACE=$(ip route | grep default | awk '{print $5}' | head -n1)
+    iptables -t nat -A POSTROUTING -o "$IFACE" -j MASQUERADE
+    # Guardar reglas
+    iptables-save > /etc/iptables/rules.v4
+    # Habilitar UFW
+    ufw --force enable
+    log "$ANSI_GREEN" "Red y firewall configurados correctamente."
+}
+
 # Comprobar si el script se ejecuta como root
 check_root() {
     if [[ $EUID -ne 0 ]]; then
@@ -37,22 +120,22 @@ check_root() {
 
 # Mostrar ayuda
 show_help() {
-    echo "Uso: sudo ./setup.sh [opciones]"
-    echo ""
+    echo "Uso: ./setup.sh [OPCIONES]"
+    echo
     echo "Opciones:"
-    echo "  --update        Actualizar HostBerry y dependencias"
-    echo "  --cert          Generar certificados SSL con mkcert"
-    echo "  --network       Configurar firewall y red para Raspberry Pi"
-    echo "  --yes           Asumir 'sí' a todas las preguntas"
-    echo "  -h, --help      Mostrar esta ayuda"
-    echo ""
+    echo "  --help         Mostrar esta ayuda y salir"
+    echo "  --update       Actualizar la instalación de HostBerry"
+    echo "  --cert         Generar certificados SSL con mkcert"
+    echo "  --network      Configurar firewall y red para Raspberry Pi"
+    echo
     echo "Ejemplos:"
     echo "  sudo ./setup.sh                   Instalación inicial"
     echo "  sudo ./setup.sh --update          Actualizar HostBerry"
     echo "  sudo ./setup.sh --cert            Generar certificados SSL"
     echo "  sudo ./setup.sh --network         Configurar red y firewall"
     echo "  sudo ./setup.sh --update --cert   Actualizar e instalar certificados"
-    echo ""
+    echo
+    echo "Para más información, consulta la documentación de HostBerry."
     exit 0
 }
 
