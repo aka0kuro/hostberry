@@ -149,6 +149,9 @@ generate_ssl_cert() {
     mkdir -p "$SSL_DIR"
     cd "$SSL_DIR" || handle_error "No se pudo acceder al directorio SSL"
     
+    # Obtener IP local
+    local LOCAL_IP=$(hostname -I | awk '{print $1}')
+    
     log "$ANSI_GREEN" "INFO" "Generando certificados para:"
     echo "  * $LOCAL_IP:5000"
 
