@@ -9,7 +9,7 @@ ANSI_RESET='\033[0m'
 # Variables globales
 SSL_DIR="/etc/hostberry/ssl"
 SSL_HOSTNAME="hostberry.local"
-VENV_DIR="venv"
+VENV_DIR="/opt/hostberry/venv"
 REQUIREMENTS="requirements.txt"
 SYSTEMD_SERVICE="hostberry-web.service"
 BACKUP_DIR="/opt/hostberry_backups"
@@ -79,12 +79,25 @@ check_and_install_deps() {
 
 # Crear o recrear entorno virtual
 setup_venv() {
+    log "$ANSI_YELLOW" "INFO" "Configurando entorno virtual en $VENV_DIR..."
+    
+    # Asegurar que el directorio padre existe
+    mkdir -p "$HOSTBERRY_DIR"
+    chmod 755 "$HOSTBERRY_DIR"
+    chown root:root "$HOSTBERRY_DIR"
+    
     if [ -d "$VENV_DIR" ]; then
         log "$ANSI_YELLOW" "INFO" "Eliminando entorno virtual anterior..."
         rm -rf "$VENV_DIR"
     fi
+    
     log "$ANSI_YELLOW" "INFO" "Creando entorno virtual..."
     python3 -m venv "$VENV_DIR" || handle_error "No se pudo crear el entorno virtual"
+    
+    # Asegurar permisos correctos
+    chmod 755 "$VENV_DIR"
+    chown -R root:root "$VENV_DIR"
+    
     source "$VENV_DIR/bin/activate"
     pip install --upgrade pip || handle_error "No se pudo actualizar pip"
     
@@ -95,8 +108,8 @@ setup_venv() {
     # Verificar si estamos en el directorio correcto
     if [ ! -f "$REQUIREMENTS" ]; then
         # Intentar encontrar requirements.txt en el directorio actual o en el directorio padre
-        if [ -f "/opt/hostberry/$REQUIREMENTS" ]; then
-            REQUIREMENTS="/opt/hostberry/$REQUIREMENTS"
+        if [ -f "$HOSTBERRY_DIR/$REQUIREMENTS" ]; then
+            REQUIREMENTS="$HOSTBERRY_DIR/$REQUIREMENTS"
         elif [ -f "$(dirname "$0")/$REQUIREMENTS" ]; then
             REQUIREMENTS="$(dirname "$0")/$REQUIREMENTS"
         else
@@ -107,6 +120,11 @@ setup_venv() {
     log "$ANSI_YELLOW" "INFO" "Instalando dependencias desde $REQUIREMENTS..."
     # Excluir pytz del requirements.txt ya que lo instalamos por separado
     grep -v "pytz" "$REQUIREMENTS" | pip install --upgrade -r /dev/stdin || handle_error "No se pudieron instalar las dependencias de Python"
+    
+    # Asegurar permisos finales
+    chmod -R 755 "$VENV_DIR"
+    chown -R root:root "$VENV_DIR"
+    log "$ANSI_GREEN" "INFO" "Entorno virtual configurado correctamente en $VENV_DIR"
 }
 
 # Función para generar certificados SSL
