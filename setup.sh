@@ -142,7 +142,7 @@ INTERFACE_PRIORITY_LIST=("eth0" "wlan0" "enp0s3" "enp0s8") # Añade más interfa
 LOCAL_IP=""
 
 for iface in "${INTERFACE_PRIORITY_LIST[@]}"; do
-    ip_addr=$(ip -4 addr show "$iface" 2>/dev/null | grep -oP 'inet \K[\d.]+')
+    ip_addr=$(ip -4 addr show "$iface" 2>/dev/null | grep -oP 'inet \K[\d.]+' || true)
     if [ -n "$ip_addr" ]; then
         LOCAL_IP=$ip_addr
         break
@@ -151,7 +151,7 @@ done
 
 if [ -z "$LOCAL_IP" ]; then
     # Fallback si no se encuentra IP en interfaces prioritarias
-    LOCAL_IP=$(hostname -I | awk '{print $1}')
+    LOCAL_IP=$( (hostname -I | awk '{print $1}') || true)
 fi
 
 if [ -n "$LOCAL_IP" ]; then
