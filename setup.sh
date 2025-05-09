@@ -1,5 +1,61 @@
 #!/bin/bash
 
+# Colores para logs
+ANSI_GREEN='\033[0;32m'
+ANSI_YELLOW='\033[0;33m'
+ANSI_RED='\033[0;31m'
+ANSI_RESET='\033[0m'
+
+# Variables globales
+SSL_DIR="/etc/hostberry/ssl"
+SSL_HOSTNAME="hostberry.local"
+VENV_DIR="venv"
+REQUIREMENTS="requirements.txt"
+SYSTEMD_SERVICE="hostberry-web.service"
+
+# Dependencias del sistema
+DEPS=(python3 python3-pip python3-venv openvpn resolvconf git curl dnsmasq hostapd iptables nftables libnss3-tools ufw openssl wget)
+
+# Función para loguear mensajes
+log() {
+    local color="$1"; shift
+    echo -e "${color}$*${ANSI_RESET}"
+}
+
+# Manejo centralizado de errores
+handle_error() {
+    log "$ANSI_RED" "[ERROR] $*" >&2
+    exit 1
+}
+
+# Comprobar si el script se ejecuta como root
+check_root() {
+    if [[ $EUID -ne 0 ]]; then
+        handle_error "Este script debe ejecutarse como root (sudo)"
+    fi
+}
+
+# Mostrar ayuda
+show_help() {
+    echo "Uso: sudo ./setup.sh [opciones]"
+    echo ""
+    echo "Opciones:"
+    echo "  --update        Actualizar HostBerry y dependencias"
+    echo "  --cert          Generar certificados SSL con mkcert"
+    echo "  --network       Configurar firewall y red para Raspberry Pi"
+    echo "  --yes           Asumir 'sí' a todas las preguntas"
+    echo "  -h, --help      Mostrar esta ayuda"
+    echo ""
+    echo "Ejemplos:"
+    echo "  sudo ./setup.sh                   Instalación inicial"
+    echo "  sudo ./setup.sh --update          Actualizar HostBerry"
+    echo "  sudo ./setup.sh --cert            Generar certificados SSL"
+    echo "  sudo ./setup.sh --network         Configurar red y firewall"
+    echo "  sudo ./setup.sh --update --cert   Actualizar e instalar certificados"
+    echo ""
+    exit 0
+}
+
 set -e
 
 # Funciones de utilidad
@@ -29,9 +85,25 @@ show_help() {
     exit 0
 }
 
-# Variables para certificados SSL
-SSL_DIR="/etc/hostberry/ssl"
-SSL_HOSTNAME="hostberry.local"
+# Comprobar e instalar dependencias
+check_and_install_deps() {
+    log "$ANSI_YELLOW" "Comprobando dependencias del sistema..."
+    apt-get update
+    apt-get install -y "${DEPS[@]}" || handle_error "No se pudieron instalar las dependencias del sistema"
+}
+
+# Crear o recrear entorno virtual
+setup_venv() {
+    if [ -d "$VENV_DIR" ]; then
+        log "$ANSI_YELLOW" "Eliminando entorno virtual anterior..."
+        rm -rf "$VENV_DIR"
+    fi
+    log "$ANSI_YELLOW" "Creando entorno virtual..."
+    python3 -m venv "$VENV_DIR" || handle_error "No se pudo crear el entorno virtual"
+    source "$VENV_DIR/bin/activate"
+    pip install --upgrade pip
+    pip install --upgrade -r "$REQUIREMENTS" || handle_error "No se pudieron instalar las dependencias de Python"
+}
 
 # Función para generar certificados SSL
 generate_ssl_cert() {
@@ -334,45 +406,26 @@ fi
 chmod +x scripts/adblock.sh || handle_error "No se pudo dar permisos de ejecución a scripts/adblock.sh"
 
 # Proceso de actualización o instalación
-if [ "$UPDATE_MODE" = true ]; then
-    echo "Actualizando dependencias y configuración..."
-    
-    # Actualizar dependencias del sistema
+update_hostberry() {
+    log "$ANSI_GREEN" "Actualizando dependencias y configuración..."
     apt-get update
     apt-get upgrade -y
-    apt-get install -y "${DEPS[@]}"
-    
-    # Recrear entorno virtual
-    if [ -d venv ]; then
-        rm -rf venv
-    fi
-    
-    # Crear nuevo entorno virtual
-    python3 -m venv venv || handle_error "No se pudo crear el entorno virtual"
-    
-    # Activar entorno virtual e instalar dependencias
-    source venv/bin/activate
-    pip install --upgrade pip
-    pip install --upgrade -r requirements.txt || handle_error "No se pudieron actualizar las dependencias de Python"
-    
-    # Actualizar permisos de scripts
+    check_and_install_deps
+    setup_venv
     chmod +x scripts/*.sh
-    
-    # Actualizar servicio systemd
-    cp hostberry-web.service /etc/systemd/system/ || handle_error "No se pudo actualizar el archivo de servicio"
+    cp "$SYSTEMD_SERVICE" /etc/systemd/system/ || handle_error "No se pudo actualizar el archivo de servicio"
     systemctl daemon-reload
     systemctl enable hostberry-web.service
-    
-    # Generar certificados SSL si está habilitado
     if [ "$GENERATE_CERT" = true ]; then
-        echo "Generando nuevos certificados SSL..."
+        log "$ANSI_YELLOW" "Generando nuevos certificados SSL..."
         generate_ssl_cert
     fi
-    
-    # Reiniciar servicio
     systemctl restart hostberry-web.service || handle_error "No se pudo reiniciar el servicio"
-    
-    echo "Actualización de HostBerry completada."
+    log "$ANSI_GREEN" "Actualización de HostBerry completada."
+}
+
+if [ "$UPDATE_MODE" = true ]; then
+    update_hostberry
 else
     # Proceso de instalación inicial
     python3 -m venv venv || handle_error "No se pudo crear el entorno virtual"
