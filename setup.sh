@@ -35,24 +35,41 @@ SSL_HOSTNAME="hostberry.local"
 
 # Función para generar certificados con mkcert
 generate_ssl_cert() {
+    # Verificar permisos de root
+    if [ "$EUID" -ne 0 ]; then
+        echo "Error: Este comando debe ejecutarse como root (sudo)"
+        exit 1
+    fi
+
     # Crear directorio SSL si no existe
-    mkdir -p "$SSL_DIR"
+    mkdir -p "$SSL_DIR" || handle_error "No se pudo crear el directorio $SSL_DIR"
+    
+    # Instalar dependencias necesarias
+    apt-get update || handle_error "No se pudo actualizar apt-get"
+    apt-get install -y wget libnss3-tools || handle_error "No se pudieron instalar dependencias"
     
     # Instalar mkcert si no está instalado
     if ! command -v mkcert &> /dev/null; then
         echo "Instalando mkcert..."
-        wget https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-amd64 -O /usr/local/bin/mkcert
-        chmod +x /usr/local/bin/mkcert
-        mkcert -install
+        wget -q https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-amd64 -O /usr/local/bin/mkcert || handle_error "Descarga de mkcert fallida"
+        chmod +x /usr/local/bin/mkcert || handle_error "No se pudo dar permiso de ejecución a mkcert"
+        
+        # Instalar mkcert para el usuario actual y root
+        mkcert -install || handle_error "Instalación de mkcert fallida"
     fi
     
     # Generar certificado
-    cd "$SSL_DIR"
-    mkcert "$SSL_HOSTNAME" "*.$(hostname -d)" localhost 127.0.0.1 ::1
+    cd "$SSL_DIR" || handle_error "No se pudo cambiar al directorio $SSL_DIR"
+    mkcert -cert-file hostberry.crt -key-file hostberry.key "$SSL_HOSTNAME" "*.$(hostname -d)" localhost 127.0.0.1 ::1 || handle_error "Generación de certificados fallida"
     
     # Mostrar información del certificado
     echo "Certificados generados en $SSL_DIR:"
-    ls -l
+    ls -l hostberry.{crt,key}
+    
+    # Establecer permisos seguros
+    chmod 600 hostberry.key || handle_error "No se pudieron establecer permisos seguros"
+    
+    echo "Generación de certificados SSL completada."
 }
 
 # Función para configurar firewall y red
