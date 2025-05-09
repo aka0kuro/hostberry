@@ -1,10 +1,28 @@
-from flask import render_template, jsonify, request, current_app as app
+from flask import render_template, jsonify, request, current_app as app, session, redirect, url_for, flash
 import subprocess
 import os
 import logging
 import json
 from datetime import datetime
+from werkzeug.utils import secure_filename
 from . import wireguard_bp  # Importar el blueprint desde el módulo actual
+
+# --- Seguridad subida archivos ---
+ALLOWED_EXTENSIONS = {'.conf'}
+MAX_FILE_SIZE = 256 * 1024  # 256 KB
+
+def allowed_file(filename):
+    return '.' in filename and os.path.splitext(filename)[1].lower() in ALLOWED_EXTENSIONS
+
+def login_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            flash('Debes iniciar sesión para acceder a esta sección.', 'warning')
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @wireguard_bp.route('/wireguard')
 def wireguard_page():
@@ -53,10 +71,28 @@ def wireguard_page():
                              error=str(e))
 
 @wireguard_bp.route('/wireguard/config', methods=['POST'])
+@login_required
 def wireguard_config():
     """Guardar la configuración de WireGuard"""
     try:
-        config = request.form.get('config', '')
+        # Soporte para subida de archivo
+        if 'wg_file' in request.files:
+            file = request.files['wg_file']
+            if file.filename == '':
+                return jsonify({'success': False, 'error': 'Nombre de archivo vacío'}), 400
+            filename = secure_filename(file.filename)
+            ext = os.path.splitext(filename)[1].lower()
+            if ext not in ALLOWED_EXTENSIONS:
+                return jsonify({'success': False, 'error': 'Extensión no permitida'}), 400
+            file.seek(0, os.SEEK_END)
+            size = file.tell()
+            file.seek(0)
+            if size > MAX_FILE_SIZE:
+                return jsonify({'success': False, 'error': 'Archivo demasiado grande (máx 256KB)'}), 400
+            config = file.read().decode('utf-8', errors='ignore')
+        else:
+            config = request.form.get('config', '')
+
         if not config:
             return jsonify({'success': False, 'error': 'No config provided'}), 400
             

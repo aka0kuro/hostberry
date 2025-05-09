@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response, jsonify, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response, jsonify, abort, send_from_directory
 import subprocess
 import os
 from dotenv import load_dotenv
@@ -26,6 +26,8 @@ import time
 from werkzeug.utils import secure_filename
 import re
 from flask_babel import Babel, gettext as _
+from flask_talisman import Talisman
+
 import logging
 from logging.handlers import RotatingFileHandler
 import psutil
@@ -63,6 +65,46 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = secret_key
 csrf = CSRFProtect(app)
 
+# --- Autenticación básica ---
+from functools import wraps
+import hashlib
+
+USERS = {
+    # Usuario/contraseña por defecto: admin/admin123 (cámbiala tras instalar)
+    'admin': hashlib.sha256('admin123'.encode()).hexdigest()
+}
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            flash('Debes iniciar sesión para acceder a esta sección.', 'warning')
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        hash_pwd = hashlib.sha256(password.encode()).hexdigest()
+        if username in USERS and USERS[username] == hash_pwd:
+            session['logged_in'] = True
+            session['username'] = username
+            flash('Inicio de sesión exitoso.', 'success')
+            next_url = request.args.get('next') or url_for('index')
+            return redirect(next_url)
+        else:
+            flash('Usuario o contraseña incorrectos.', 'danger')
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('Sesión cerrada.', 'info')
+    return redirect(url_for('login'))
+
 # Registrar blueprints WiFi, VPN, AdBlock, hostapd, WireGuard y Security
 app.register_blueprint(wifi_bp)
 app.register_blueprint(vpn_bp)
@@ -73,7 +115,7 @@ app.register_blueprint(security_bp)
 
 # Configure secure session settings
 app.config.update(
-    SESSION_COOKIE_SECURE=False,  # Cambia a True en producción con HTTPS
+    SESSION_COOKIE_SECURE=True,  # Ahora seguro por defecto (HTTPS)
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
     PERMANENT_SESSION_LIFETIME=86400,
@@ -87,6 +129,15 @@ app.config.update(
     WTF_CSRF_HEADERS=['X-CSRFToken'],
     WTF_CSRF_TIME_LIMIT=3600
 )
+
+# Configuración avanzada de seguridad HTTP (Flask-Talisman)
+# Puedes personalizar más políticas CSP según tus necesidades
+Talisman(app, content_security_policy={
+    'default-src': ["'self'"],
+    'img-src': ["'self'", 'data:'],
+    'script-src': ["'self'", 'https:'],
+    'style-src': ["'self'", 'https:'],
+})
 
 # Configuración avanzada de logging
 log_dir = 'logs'
@@ -458,6 +509,7 @@ class SecurityConfigForm(FlaskForm):
     time_format = SelectField('Time Format')
 
 @app.route('/security_config', methods=['GET', 'POST'])
+@login_required
 def security_config():
     global config
     form = SecurityConfigForm()
@@ -520,6 +572,7 @@ def security_config():
     )
 
 @app.route('/security/logs')
+@login_required
 def security_logs():
     try:
         # Sample log data - replace with actual log retrieval
@@ -533,6 +586,7 @@ def security_logs():
         return render_template('security_logs.html', logs=[])
 
 @app.route('/security/save', methods=['POST'])
+@login_required
 def save_security_settings():
     try:
         # Get form data
@@ -782,7 +836,7 @@ def status():
     })
 
 if __name__ == '__main__':
-    # Mostrar IP local al iniciar
+    # Solo para desarrollo local. En producción usar Gunicorn.
     import socket
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -792,4 +846,17 @@ if __name__ == '__main__':
     except Exception:
         local_ip = 'localhost'
     print(f"\n[INFO] Accede a la app desde otros dispositivos en: http://{local_ip}:5000\n")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+
+    # Asegura que el directorio de logs tenga permisos correctos
+    import os
+    log_dir = 'logs'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    try:
+        import pwd
+        os.chown(log_dir, pwd.getpwnam('www-data').pw_uid, pwd.getpwnam('www-data').pw_gid)
+    except Exception:
+        pass  # Ignora si no se puede cambiar el propietario
+
+    # IMPORTANTE: Para producción usa Gunicorn y configura debug=False
+    app.run(host='0.0.0.0', port=5000, debug=False)

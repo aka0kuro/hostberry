@@ -1,13 +1,31 @@
-from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for, current_app as app
+from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for, current_app as app, session
 import os
 import subprocess
 import time
 import re
 import logging
+from werkzeug.utils import secure_filename
 from . import vpn_bp
 from .vpn_utils import vpn_utils
 
 logger = logging.getLogger(__name__)
+
+# --- Seguridad subida archivos ---
+ALLOWED_EXTENSIONS = {'.ovpn', '.conf'}
+MAX_FILE_SIZE = 512 * 1024  # 512 KB
+
+def allowed_file(filename):
+    return '.' in filename and os.path.splitext(filename)[1].lower() in ALLOWED_EXTENSIONS
+
+def login_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            flash('Debes iniciar sesión para acceder a esta sección.', 'warning')
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @vpn_bp.route('/vpn', methods=['GET'])
 def vpn_page():
@@ -22,6 +40,7 @@ def vpn_page():
     return render_template('vpn.html', openvpn_installed=openvpn_installed)
 
 @vpn_bp.route('/api/vpn/config', methods=['POST'])
+@login_required
 def vpn_config_api():
     """API para configurar la VPN"""
     try:
@@ -37,12 +56,19 @@ def vpn_config_api():
             return jsonify({'success': False, 'error': 'No se proporcionó archivo de configuración'}), 400
 
         file = request.files['vpn_file']
-        if not file or not file.filename:
-            return jsonify({'success': False, 'error': 'No se seleccionó archivo'}), 400
+        if file.filename == '':
+            return jsonify({'success': False, 'error': 'Nombre de archivo vacío'}), 400
 
-        # Verificar extensión del archivo
-        if not file.filename.endswith(('.ovpn', '.conf')):
-            return jsonify({'success': False, 'error': 'Tipo de archivo inválido. Use .ovpn o .conf'}), 400
+        # Validar extensión y tamaño
+        filename = secure_filename(file.filename)
+        ext = os.path.splitext(filename)[1].lower()
+        if ext not in ALLOWED_EXTENSIONS:
+            return jsonify({'success': False, 'error': 'Extensión de archivo no permitida'}), 400
+        file.seek(0, os.SEEK_END)
+        size = file.tell()
+        file.seek(0)
+        if size > MAX_FILE_SIZE:
+            return jsonify({'success': False, 'error': 'Archivo demasiado grande (máx 512KB)'}), 400
 
         # Obtener y validar credenciales
         username = request.form.get('username', '').strip()

@@ -3,11 +3,14 @@ Description=HostBerry Web Configuration Interface
 After=network.target
 
 [Service]
-User=root
+User=www-data
+Group=www-data
 WorkingDirectory=/opt/hostberry
-ExecStart=/usr/bin/python3 /opt/hostberry/app.py
+ExecStart=/opt/hostberry/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 app:app
 Restart=always
 Environment=PYTHONUNBUFFERED=1
+StandardOutput=append:/var/log/hostberry/gunicorn.log
+StandardError=append:/var/log/hostberry/gunicorn_error.log
 
 [Install]
 WantedBy=multi-user.target
