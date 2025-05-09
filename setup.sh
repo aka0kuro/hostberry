@@ -57,11 +57,20 @@ else
     fi
 fi
 
-# Clonar el repositorio
+# Manejar clonación del repositorio
 cd /opt
 
-git clone https://github.com/aka0kuro/hostberry.git hostberry || handle_error "No se pudo clonar el repositorio"
-cd /opt/hostberry
+if [ "$UPDATE_MODE" = true ]; then
+    # En modo de actualización, hacer pull en lugar de clonar
+    cd /opt/hostberry
+    git fetch origin
+    git reset --hard origin/main
+    git clean -fdx
+else
+    # En modo de instalación, clonar normalmente
+    git clone https://github.com/aka0kuro/hostberry.git hostberry || handle_error "No se pudo clonar el repositorio"
+    cd /opt/hostberry
+fi
 
 # Si es modo de actualización, restaurar configuraciones personalizadas
 if [ "$UPDATE_MODE" = true ]; then
