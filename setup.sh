@@ -132,9 +132,71 @@ systemctl enable openvpn@client
 # Permisos de la app
 chown -R www-data:www-data /opt/hostberry
 
+# --- Información de Acceso y Estado ---
+echo -e "\n\033[1;34m--- Información de Acceso y Estado ---\033[0m"
+
+# Intentar detectar la IP local principal
+# Usamos hostname -I para obtener todas las IPs y awk para tomar la primera.
+# Puedes cambiar 'eth0' o 'wlan0' si necesitas una interfaz específica.
+INTERFACE_PRIORITY_LIST=("eth0" "wlan0" "enp0s3" "enp0s8") # Añade más interfaces si es necesario
+LOCAL_IP=""
+
+for iface in "${INTERFACE_PRIORITY_LIST[@]}"; do
+    ip_addr=$(ip -4 addr show "$iface" 2>/dev/null | grep -oP 'inet \K[\d.]+')
+    if [ -n "$ip_addr" ]; then
+        LOCAL_IP=$ip_addr
+        break
+    fi
+done
+
+if [ -z "$LOCAL_IP" ]; then
+    # Fallback si no se encuentra IP en interfaces prioritarias
+    LOCAL_IP=$(hostname -I | awk '{print $1}')
+fi
+
+if [ -n "$LOCAL_IP" ]; then
+    echo "La IP local detectada es: \033[1;33m$LOCAL_IP\033[0m"
+    ACCESS_URL_SUGGESTION="Accede a la interfaz web en http://$LOCAL_IP:<PUERTO_GUNICORN_FLASK>"
+else
+    echo "\033[1;31mNo se pudo detectar automáticamente la IP local.\033[0m Verifica tu configuración de red."
+    ACCESS_URL_SUGGESTION="Accede a la interfaz web en la IP de tu servidor y el puerto configurado por Flask/Gunicorn."
+fi
+
+# Comprobar el estado del servicio web
+SERVICE_NAME="hostberry-web.service"
+echo -n "Comprobando estado del servicio '$SERVICE_NAME': "
+if systemctl list-units --full -all | grep -q "$SERVICE_NAME"; then
+    SERVICE_STATUS=$(systemctl is-active "$SERVICE_NAME" 2>/dev/null)
+    if [ "$SERVICE_STATUS" = "active" ]; then
+        echo -e "\033[1;32mActivo\033[0m"
+        echo "Gunicorn/Flask debería estar ejecutándose a través de este servicio."
+        echo "Verifica la configuración de '$SERVICE_NAME' o de tu aplicación para el PUERTO exacto."
+        echo "Puedes intentar ver los logs con: journalctl -u $SERVICE_NAME -n 50 --no-pager"
+    elif [ "$SERVICE_STATUS" = "inactive" ]; then
+        echo -e "\033[1;31mInactivo\033[0m. Puedes intentar iniciarlo con: sudo systemctl start $SERVICE_NAME"
+    elif [ "$SERVICE_STATUS" = "failed" ]; then
+        echo -e "\033[1;31mFallido\033[0m. Revisa los logs con: sudo journalctl -u $SERVICE_NAME"
+    else
+        echo -e "\033[1;33mEstado desconocido ($SERVICE_STATUS)\033[0m. Revisa con: sudo systemctl status $SERVICE_NAME"
+    fi
+else
+    echo -e "\033[1;33mServicio '$SERVICE_NAME' no encontrado o no cargado.\033[0m"
+    echo "Esto puede ser normal si el script de servicio aún no se ha copiado o habilitado."
+fi
+
+echo "Para comprobar procesos específicos de gunicorn o flask manualmente:"
+echo "  ps aux | grep -E 'gunicorn|flask'"
+echo "  pgrep -afl gunicorn"
+echo "  pgrep -afl flask"
+echo "Para verificar puertos en escucha (ej. si tu app usa el puerto 8000 o 5000):"
+echo "  sudo ss -tulnp | grep -E ':8000|:5000'"
+echo -e "\033[1;34m-------------------------------------\033[0m"
+
 # Mensaje final
-echo "\n\033[1;32mInstalación completada correctamente.\033[0m"
-echo "La aplicación Hostberry está instalada en /opt/hostberry y el servicio systemd está configurado como hostberry-web.service."
-echo "Accede a la interfaz web en el puerto configurado por Flask/Gunicorn."
+echo -e "\n\033[1;32mInstalación completada correctamente.\033[0m"
+echo "La aplicación Hostberry está instalada en /opt/hostberry."
+echo "El servicio systemd asociado es '$SERVICE_NAME'."
+echo -e "$ACCESS_URL_SUGGESTION"
+echo "Recuerda reemplazar <PUERTO_GUNICORN_FLASK> con el puerto real que tu aplicación esté usando (e.g., 8000, 5000)."
 echo "Si necesitas configurar OpenVPN, edita /etc/openvpn/client.conf y reinicia el servicio correspondiente."
-echo "\nSi tienes dudas, consulta el README del proyecto.\n"
+echo -e "\nSi tienes dudas, consulta el README del proyecto o los logs del servicio.\n"
