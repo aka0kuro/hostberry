@@ -458,7 +458,10 @@ EOF
     echo "nameserver 127.0.0.1" > /etc/resolv.conf
     
     log "$ANSI_GREEN" "INFO" "DNS local configurado correctamente"
-    log "$ANSI_GREEN" "INFO" "hostberry.local ahora resuelve a ${LOCAL_IP}"
+    log "$ANSI_GREEN" "INFO" "Puedes acceder a HostBerry de las siguientes formas:"
+    log "$ANSI_YELLOW" "INFO" "1. Directamente por IP: http://${LOCAL_IP}"
+    log "$ANSI_YELLOW" "INFO" "2. Por nombre local: http://hostberry.local"
+    log "$ANSI_YELLOW" "INFO" ""
     log "$ANSI_YELLOW" "INFO" "Para acceder desde otros dispositivos, agrega esta línea a su archivo /etc/hosts:"
     log "$ANSI_YELLOW" "INFO" "${LOCAL_IP} hostberry.local"
     log "$ANSI_YELLOW" "INFO" ""
