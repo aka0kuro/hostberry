@@ -209,6 +209,7 @@ configure_network() {
     ufw allow 22/tcp   # SSH
     ufw allow 80/tcp   # HTTP
     ufw allow 443/tcp  # HTTPS
+    ufw allow 5000/tcp # HostBerry Flask/Gunicorn
     ufw allow 53/udp   # DNS
     ufw allow 67/udp   # DHCP
     ufw allow 68/udp   # DHCP
