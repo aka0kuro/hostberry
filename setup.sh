@@ -62,7 +62,6 @@ show_help() {
     echo
     echo "Ejemplos:"
     echo "  sudo ./setup.sh --install         Instalación limpia recomendada"
-    echo "  sudo ./setup.sh                   Instalación inicial (equivalente a --install)"
     echo "  sudo ./setup.sh --update          Actualizar HostBerry"
     echo "  sudo ./setup.sh --cert            Generar certificados SSL"
     echo "  sudo ./setup.sh --network         Configurar red y firewall"
@@ -221,6 +220,7 @@ configure_network() {
     iptables -t nat -A POSTROUTING -o "$IFACE" -j MASQUERADE
     
     # Guardar reglas
+    mkdir -p /etc/iptables
     iptables-save > /etc/iptables/rules.v4 || handle_error "No se pudieron guardar las reglas de iptables"
     
     # Habilitar UFW
