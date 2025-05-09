@@ -237,12 +237,36 @@ update_hostberry() {
     
     # Actualizar servicio systemd
     if [ -f "$HOSTBERRY_DIR/$SYSTEMD_SERVICE" ]; then
+        log "$ANSI_YELLOW" "INFO" "Copiando archivo de servicio systemd..."
         cp "$HOSTBERRY_DIR/$SYSTEMD_SERVICE" /etc/systemd/system/ || handle_error "No se pudo actualizar el archivo de servicio"
         systemctl daemon-reload
         systemctl enable hostberry-web.service
-        log "$ANSI_GREEN" "INFO" "Servicio systemd actualizado"
+        log "$ANSI_GREEN" "INFO" "Servicio systemd actualizado y habilitado"
     else
         log "$ANSI_YELLOW" "WARN" "Archivo de servicio no encontrado en $HOSTBERRY_DIR/$SYSTEMD_SERVICE"
+        log "$ANSI_YELLOW" "INFO" "Creando archivo de servicio systemd..."
+        cat > /etc/systemd/system/hostberry-web.service << 'EOF'
+[Unit]
+Description=HostBerry Web Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/hostberry
+ExecStart=/opt/hostberry/venv/bin/python3 -m flask run --host=0.0.0.0 --port=80
+Restart=always
+RestartSec=10
+Environment="FLASK_APP=app.py"
+Environment="FLASK_ENV=production"
+Environment="PYTHONUNBUFFERED=1"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        systemctl daemon-reload
+        systemctl enable hostberry-web.service
+        log "$ANSI_GREEN" "INFO" "Servicio systemd creado y habilitado"
     fi
     
     # Generar certificados si se solicita

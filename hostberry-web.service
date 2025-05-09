@@ -1,16 +1,17 @@
 [Unit]
-Description=HostBerry Web Configuration Interface
+Description=HostBerry Web Service
 After=network.target
 
 [Service]
-User=www-data
-Group=www-data
+Type=simple
+User=root
 WorkingDirectory=/opt/hostberry
-ExecStart=/opt/hostberry/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8443 --keyfile /etc/hostberry/ssl/hostberry.local+4-key.pem --certfile /etc/hostberry/ssl/hostberry.local+4.pem --ssl-version TLSv1_2 app:app
+ExecStart=/opt/hostberry/venv/bin/python3 -m flask run --host=0.0.0.0 --port=80
 Restart=always
-Environment=PYTHONUNBUFFERED=1
-StandardOutput=append:/var/log/hostberry/gunicorn.log
-StandardError=append:/var/log/hostberry/gunicorn_error.log
+RestartSec=10
+Environment="FLASK_APP=app.py"
+Environment="FLASK_ENV=production"
+Environment="PYTHONUNBUFFERED=1"
 
 [Install]
 WantedBy=multi-user.target
