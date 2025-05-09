@@ -9,7 +9,7 @@ wifi_bp = Blueprint('wifi', __name__)
 
 @wifi_bp.route('/api/wifi/connect', methods=['GET', 'POST'])
 def wifi_connect():
-    """Conecta a una red WiFi"""
+    """Conecta a una red WiFi y SIEMPRE genera el archivo wpa_supplicant.conf aunque la conexión falle."""
     try:
         if request.method == 'POST':
             if not request.is_json:
@@ -17,30 +17,45 @@ def wifi_connect():
             data = request.get_json()
         else:
             data = request.args
-            
+        
         ssid = data.get('ssid', '').strip()
         password = data.get('password', '').strip()
         security = data.get('security', '').strip()
-        
+
         # Validar entrada
         if not wifi_security.validate_ssid(ssid):
             return jsonify({'success': False, 'error': 'SSID inválido'}), 400
-            
         if password and not wifi_security.validate_password(password):
             return jsonify({'success': False, 'error': 'Contraseña inválida'}), 400
-            
         if not ssid:
             return jsonify({'success': False, 'error': 'El SSID es requerido'}), 400
-            
+
+        # --- Generar SIEMPRE el archivo wpa_supplicant.conf antes de intentar conectar ---
+        try:
+            wpa_conf_path = '/etc/wpa_supplicant/wpa_supplicant.conf'
+            wpa_content = f'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=ES\n\nnetwork={{\n    ssid="{ssid}"\n'
+            if password:
+                wpa_content += f'    psk="{password}"\n'
+            if security and security.upper() != 'NONE':
+                wpa_content += f'    key_mgmt={security}\n'
+            else:
+                wpa_content += '    key_mgmt=NONE\n'
+            wpa_content += '}'
+            os.makedirs(os.path.dirname(wpa_conf_path), exist_ok=True)
+            with open(wpa_conf_path, 'w') as f:
+                f.write(wpa_content)
+        except Exception as e:
+            app.logger.error(f'Error generando wpa_supplicant.conf: {str(e)}')
+            # Seguimos adelante, ya que el usuario espera el archivo generado siempre
+
         # Intentar conectar usando el gestor de conexión
         if wifi_connection.connect(ssid, password, security):
-            # Guardar credenciales si se proporcionó contraseña
             if password:
                 wifi_utils.save_credentials(ssid, password, security)
             return jsonify({'success': True, 'message': f'Conectado exitosamente a {ssid}'}), 200
         else:
             return jsonify({'success': False, 'error': 'Error al conectar a la red WiFi'}), 500
-            
+
     except Exception as e:
         app.logger.error(f'Error en wifi_connect: {str(e)}')
         return jsonify({'success': False, 'error': str(e)}), 500
