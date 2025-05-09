@@ -44,39 +44,28 @@ def vpn_config_api():
         if not file.filename.endswith(('.ovpn', '.conf')):
             return jsonify({'success': False, 'error': 'Tipo de archivo inválido. Use .ovpn o .conf'}), 400
 
+        # Obtener y validar credenciales
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        if not username or not password:
+            return jsonify({
+                'success': False,
+                'error': 'Usuario y contraseña son requeridos'
+            }), 400
+
+        # Guardar credenciales
+        success, message = vpn_utils.save_credentials(username, password)
+        if not success:
+            return jsonify({
+                'success': False,
+                'error': f'Error guardando credenciales: {message}'
+            }), 500
+
         # Crear directorio si no existe
         vpn_dir = '/etc/openvpn'
         if not os.path.exists(vpn_dir):
             os.makedirs(vpn_dir, mode=0o755)
-
-        # Guardar credenciales de forma segura
-        username = request.form.get('username', '').strip()
-        password = request.form.get('password', '').strip()
-        auth_file = os.path.join(vpn_dir, 'auth.txt')
-        
-        # Si falta username o password, devolver error claro y no continuar
-        if not username or not password:
-            logger.error(f"Faltan credenciales: username='{username}', password={'sí' if password else 'no'}")
-            return jsonify({'success': False, 'error': 'Debes ingresar usuario y contraseña para la VPN.'}), 400
-        try:
-            # Verificar permisos del directorio
-            if not os.access(vpn_dir, os.W_OK):
-                logger.error(f"Sin permisos de escritura en {vpn_dir}")
-                return jsonify({
-                    'success': False, 
-                    'error': f'No se tienen permisos de escritura en {vpn_dir}'
-                }), 500
-            # Guardar credenciales (aunque estén vacíos, para forzar consistencia)
-            with open(auth_file, 'w') as f:
-                f.write(f"{username}\n{password}\n")
-            os.chmod(auth_file, 0o600)
-            logger.info(f"Credenciales guardadas correctamente en {auth_file} (usuario='{username}', password={'sí' if password else 'no'})")
-        except Exception as e:
-            logger.error(f"Error al guardar credenciales: {str(e)}")
-            return jsonify({
-                'success': False, 
-                'error': f'Error al guardar credenciales: {str(e)}'
-            }), 500
 
         # Guardar archivo de configuración
         config_path = os.path.join(vpn_dir, 'client.conf')
@@ -211,14 +200,13 @@ def vpn_status_api():
         is_active = status.returncode == 0
 
         # Obtener información de conexión
-        public_ip = '-'
+        public_ip = vpn_utils.get_public_ip()
         vpn_ip = '-'
         if is_active:
             try:
-                public_ip = subprocess.getoutput("curl -s ifconfig.me")
                 vpn_ip = subprocess.getoutput("ip addr show tun0 | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1")
             except Exception as e:
-                logger.warning(f"Error obteniendo IPs: {str(e)}")
+                logger.warning(f"Error obteniendo IP VPN: {str(e)}")
 
         # Verificar configuración
         config_file = '/etc/openvpn/client.conf' if os.path.exists('/etc/openvpn/client.conf') else None
@@ -248,21 +236,19 @@ def toggle_vpn():
 
         status = subprocess.run(['systemctl', 'is-active', 'openvpn'], capture_output=True, text=True)
         if status.returncode == 0:
-            # Detener VPN
+            # Desactivar VPN
             subprocess.run(['systemctl', 'stop', 'openvpn'], check=True)
             vpn_utils.restore_original_routing()
-            msg = 'VPN detenida correctamente'
+            return jsonify({'success': True, 'message': 'VPN desactivada'})
         else:
-            # Iniciar VPN
+            # Activar VPN
             subprocess.run(['systemctl', 'start', 'openvpn'], check=True)
             time.sleep(2)  # Esperar a que se inicie
             vpn_utils.configure_vpn_routing()
-            msg = 'VPN iniciada correctamente'
-
-        return jsonify({'success': True, 'message': msg})
+            return jsonify({'success': True, 'message': 'VPN activada'})
 
     except Exception as e:
-        logger.error(f'Error al cambiar estado VPN: {str(e)}')
+        logger.error(f'Error en toggle_vpn: {str(e)}')
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @vpn_bp.route('/api/vpn/killswitch', methods=['POST'])
@@ -275,25 +261,19 @@ def toggle_killswitch():
                 'error': 'Se requieren permisos de administrador'
             }), 403
 
-        killswitch_file = '/etc/openvpn/killswitch_enabled'
-        is_enabled = os.path.exists(killswitch_file)
-
-        if is_enabled:
+        killswitch_enabled = os.path.exists('/etc/openvpn/killswitch_enabled')
+        
+        if killswitch_enabled:
             # Desactivar kill switch
-            os.remove(killswitch_file)
             vpn_utils.restore_original_routing()
-            msg = 'Kill switch desactivado'
+            return jsonify({'success': True, 'message': 'Kill switch desactivado'})
         else:
             # Activar kill switch
-            with open(killswitch_file, 'w') as f:
-                f.write('1\n')
             vpn_utils.configure_vpn_routing()
-            msg = 'Kill switch activado'
-
-        return jsonify({'success': True, 'message': msg})
+            return jsonify({'success': True, 'message': 'Kill switch activado'})
 
     except Exception as e:
-        logger.error(f'Error al cambiar estado del kill switch: {str(e)}')
+        logger.error(f'Error en toggle_killswitch: {str(e)}')
         return jsonify({'success': False, 'error': str(e)}), 500
 
 def setup_initial_iptables_rules():

@@ -3,6 +3,7 @@ import os
 import time
 import logging
 import hashlib
+import requests
 from flask import current_app as app
 from cryptography.fernet import Fernet
 
@@ -13,6 +14,9 @@ class VPNUtils:
         self._key = None
         self._credentials_path = os.path.join(os.path.dirname(__file__), 'vpn_credentials.json')
         self._key_file = os.path.join(os.path.dirname(__file__), '.vpn_key')
+        self._vpn_dir = '/etc/openvpn'
+        self._config_file = os.path.join(self._vpn_dir, 'client.conf')
+        self._auth_file = os.path.join(self._vpn_dir, 'auth.txt')
         
     def get_encryption_key(self):
         """Obtener o generar la clave de encriptación"""
@@ -74,6 +78,48 @@ class VPNUtils:
             
         except Exception as e:
             return False, f"Error verificando archivo de configuración: {str(e)}"
+
+    def save_credentials(self, username, password):
+        """Guarda las credenciales de forma segura"""
+        try:
+            if not username or not password:
+                return False, "Usuario y contraseña son requeridos"
+
+            # Asegurar que el directorio existe
+            os.makedirs(self._vpn_dir, mode=0o755, exist_ok=True)
+
+            # Guardar credenciales
+            with open(self._auth_file, 'w') as f:
+                f.write(f"{username}\n{password}\n")
+            os.chmod(self._auth_file, 0o600)
+
+            return True, "Credenciales guardadas correctamente"
+        except Exception as e:
+            logger.error(f"Error guardando credenciales: {str(e)}")
+            return False, str(e)
+
+    def get_public_ip(self):
+        """Obtiene la IP pública actual"""
+        try:
+            # Intentar varios servicios en caso de fallo
+            services = [
+                'https://api.ipify.org',
+                'https://ifconfig.me/ip',
+                'https://icanhazip.com'
+            ]
+            
+            for service in services:
+                try:
+                    response = requests.get(service, timeout=5)
+                    if response.status_code == 200:
+                        return response.text.strip()
+                except:
+                    continue
+                    
+            return "No se pudo obtener la IP pública"
+        except Exception as e:
+            logger.error(f"Error obteniendo IP pública: {str(e)}")
+            return "Error"
 
     def configure_vpn_routing(self):
         """Configura el enrutamiento para que todo el tráfico pase por la VPN"""
@@ -137,6 +183,7 @@ class VPNUtils:
             # Limpiar reglas existentes
             subprocess.run(['iptables', '-F'], check=True)
             subprocess.run(['iptables', '-X'], check=True)
+            subprocess.run(['iptables', '-t', 'nat', '-F'], check=True)
             
             # Reglas básicas
             rules = [
