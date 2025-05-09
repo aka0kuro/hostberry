@@ -6,12 +6,27 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/opt/hostberry
-ExecStart=/opt/hostberry/venv/bin/gunicorn --workers 1 --bind 0.0.0.0:80 --access-logfile /opt/hostberry/logs/access.log --error-logfile /opt/hostberry/logs/error.log app:app
+ExecStart=/opt/hostberry/venv/bin/gunicorn \
+    --workers 1 \
+    --bind 0.0.0.0:80 \
+    --access-logfile /opt/hostberry/logs/access.log \
+    --error-logfile /opt/hostberry/logs/error.log \
+    --log-level info \
+    --timeout 120 \
+    --keep-alive 5 \
+    --max-requests 1000 \
+    --max-requests-jitter 50 \
+    --worker-class sync \
+    --worker-connections 1000 \
+    --backlog 2048 \
+    --graceful-timeout 30 \
+    app:app
 Restart=always
 RestartSec=10
 Environment="FLASK_APP=app.py"
 Environment="FLASK_ENV=production"
 Environment="PYTHONUNBUFFERED=1"
+Environment="GUNICORN_CMD_ARGS=--config /opt/hostberry/gunicorn.conf.py"
 
 [Install]
 WantedBy=multi-user.target
