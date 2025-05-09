@@ -276,29 +276,29 @@ function formatDate(date) {
 // Core logic: Fetch status, then trigger scan
 async function loadStatusAndScan() {
     try {
-        const response = await fetch('/api/wifi/status'); // Replace with your actual API endpoint
+        const response = await fetch('/api/wifi/status');
         const data = await response.json();
-        window.currentSSID = data.current_connection ? data.current_connection.trim() : null;
+        const statusData = data.status || data; // Soporta ambos formatos
+        window.currentSSID = statusData.ssid ? statusData.ssid.trim() : (statusData.current_connection ? statusData.current_connection.trim() : null);
         // Update status display based on this initial fetch
-        updateStatusDisplay(data); 
+        updateStatusDisplay(statusData);
     } catch (e) {
         console.error("Error fetching initial status:", e);
         window.currentSSID = null;
-        updateStatusDisplay({ enabled: false, current_connection: null, soft_blocked: false, hard_blocked: false }); // Assume disabled on error
+        updateStatusDisplay({ enabled: false, connected: false, current_connection: null, soft_blocked: false, hard_blocked: false }); // Assume disabled on error
     }
     // Now trigger the scan, which will use the updated window.currentSSID
-    $('#rescanBtn').trigger('click'); 
+    $('#rescanBtn').trigger('click');
 }
 
 // Only refresh visual status and buttons in list, NO full scan
 async function refreshWifiStatusAndButtons() {
     try {
-        const response = await fetch('/api/wifi/status'); 
-        const statusData = await response.json();
+        const response = await fetch('/api/wifi/status');
+        const data = await response.json();
+        const statusData = data.status || data; // Soporta ambos formatos
         
-        const newCurrentSSID = statusData.current_connection ? statusData.current_connection.trim() : null;
-        // Solo actualiza window.currentSSID si realmente ha cambiado, para evitar redibujados innecesarios si no hay cambio.
-        // Sin embargo, para la lógica de botones, siempre usaremos newCurrentSSID que es el más fresco.
+        const newCurrentSSID = statusData.ssid ? statusData.ssid.trim() : (statusData.current_connection ? statusData.current_connection.trim() : null);
         if (window.currentSSID !== newCurrentSSID) {
             window.currentSSID = newCurrentSSID;
         }
@@ -308,34 +308,18 @@ async function refreshWifiStatusAndButtons() {
         console.log(`refreshWifiStatusAndButtons: Current SSID from API is "${newCurrentSSID}"`);
 
         $('.list-group-item').each(function() {
-            const listItem = $(this);
-            const itemSsidFromDataAttr = (listItem.data('ssid-name') || '').trim();
-            const originalSecurityType = listItem.data('original-security') || 'Open';
-            const currentDomButton = listItem.find('button');
+            const itemSsidFromDataAttr = $(this).attr('data-ssid-name');
+            const originalSecurityType = $(this).attr('data-original-security');
+            const currentDomButton = $(this).find('.connect-btn, .disconnect-btn');
 
-            if (!currentDomButton.length) {
-                console.warn('List item found without a button:', listItem);
-                return; // Skip if no button found
-            }
-            
-            // console.log(`  Item SSID: "${itemSsidFromDataAttr}", Security: ${originalSecurityType}`);
-
-            const isConnectedToThisNetwork = newCurrentSSID && itemSsidFromDataAttr && (newCurrentSSID === itemSsidFromDataAttr);
-            // console.log(`    Is connected to this network (${itemSsidFromDataAttr})? ${isConnectedToThisNetwork}`);
-
-            if (!statusData.enabled) { // WiFi completely disabled
-                if (!currentDomButton.hasClass('btn-secondary') || !currentDomButton.prop('disabled')) {
-                    // console.log(`    WiFi disabled. Setting disabled button for ${itemSsidFromDataAttr}`);
-                    const disabledButton = $('<button class="btn btn-sm btn-secondary" disabled><i class="fas fa-wifi-slash me-1"></i> {% trans %}WiFi Disabled{% endtrans %}</button>');
-                    currentDomButton.replaceWith(disabledButton);
-                }
-            } else if (isConnectedToThisNetwork) { // Connected to this specific network
+            if (window.currentSSID && itemSsidFromDataAttr && window.currentSSID === itemSsidFromDataAttr) {
+                // Si está conectado a esta red, muestra botón de desconexión
                 if (!currentDomButton.hasClass('disconnect-btn')) {
-                    // console.log(`    SHOULD BE DISCONNECT BUTTON for ${itemSsidFromDataAttr}. Current button has classes: ${currentDomButton.attr('class')}`);
                     const disconnectButton = $(`<button class="btn btn-sm btn-danger disconnect-btn" data-ssid="${itemSsidFromDataAttr}"><i class="fas fa-power-off me-1"></i>{% trans %}Disconnect{% endtrans %}</button>`);
                     currentDomButton.replaceWith(disconnectButton);
                 }
-            } else { // WiFi enabled, but not connected to this network (or not connected to any network)
+            } else {
+                // Si no está conectado, muestra botón de conexión
                 if (!currentDomButton.hasClass('connect-btn')) {
                      // console.log(`    SHOULD BE CONNECT BUTTON for ${itemSsidFromDataAttr}. Current button has classes: ${currentDomButton.attr('class')}`);
                     const connectButton = $(`<button class="btn btn-sm btn-outline-primary connect-btn" data-ssid="${itemSsidFromDataAttr}" data-security="${originalSecurityType}"><i class="fas fa-plug me-1"></i>{% trans %}Connect{% endtrans %}</button>`);
@@ -346,7 +330,7 @@ async function refreshWifiStatusAndButtons() {
 
     } catch (error) {
         console.error('Error in refreshWifiStatusAndButtons:', error);
-        updateStatusDisplay({ enabled: false, current_connection: null, soft_blocked: false, hard_blocked: false, error: true });
+        updateStatusDisplay({ enabled: false, connected: false, current_connection: null, soft_blocked: false, hard_blocked: false, error: true });
     }
 }
 
@@ -509,42 +493,46 @@ $('#wifiConnectForm').submit(async function(e) {
 // Helper to update general status display elements
 function updateStatusDisplay(statusData) {
     let wifiStatusText, wifiStatusClass = 'text-gray-800';
-    const isActuallyConnected = statusData.current_connection !== null;
+    const isConnected = statusData.connected || statusData.current_connection;
+    const isEnabled = statusData.enabled;
+    const isBlocked = statusData.hard_blocked || statusData.soft_blocked;
 
-    if (statusData.hard_blocked || statusData.soft_blocked) {
+    if (isBlocked) {
         wifiStatusText = '{% trans %}Blocked{% endtrans %}'; wifiStatusClass = 'text-danger';
         $('#wifiStatusAlert').removeClass('d-none alert-success alert-warning').addClass('alert-danger').find('#wifiStatusTextInline').text('{% trans %}WiFi is blocked.{% endtrans %}');
         $('#enableWifiBtnInline, #enableWifiBtnTop').removeClass('d-none');
-    } else if (!statusData.enabled) {
+    } else if (!isEnabled) {
         wifiStatusText = '{% trans %}Disabled{% endtrans %}'; wifiStatusClass = 'text-warning';
         $('#wifiStatusAlert').removeClass('d-none alert-success alert-danger').addClass('alert-warning').find('#wifiStatusTextInline').text('{% trans %}WiFi is disabled.{% endtrans %}');
         $('#enableWifiBtnInline, #enableWifiBtnTop').removeClass('d-none');
-    } else if (isActuallyConnected) {
+    } else if (isConnected) {
         wifiStatusText = '{% trans %}Connected{% endtrans %}'; wifiStatusClass = 'text-success';
         $('#wifiStatusAlert').addClass('d-none');
         $('#enableWifiBtnInline, #enableWifiBtnTop').addClass('d-none');
-    } else { // Enabled but not connected
-        wifiStatusText = '{% trans %}Enabled{% endtrans %}'; wifiStatusClass = 'text-info'; // Or warning, depending on preference
+    } else {
+        wifiStatusText = '{% trans %}Enabled{% endtrans %}'; wifiStatusClass = 'text-info';
         $('#wifiStatusAlert').removeClass('d-none alert-danger alert-success').addClass('alert-info').find('#wifiStatusTextInline').text('{% trans %}WiFi is enabled but not connected.{% endtrans %}');
         $('#enableWifiBtnInline, #enableWifiBtnTop').addClass('d-none');
     }
-    
-    if(statusData.error) {
-      wifiStatusText = '{% trans %}Error{% endtrans %}'; wifiStatusClass = 'text-danger';
-       $('#wifiStatusAlert').removeClass('d-none alert-success alert-warning').addClass('alert-danger').find('#wifiStatusTextInline').text('{% trans %}Error fetching WiFi status.{% endtrans %}');
+
+    if (statusData.error) {
+        wifiStatusText = '{% trans %}Error{% endtrans %}'; wifiStatusClass = 'text-danger';
+        $('#wifiStatusAlert').removeClass('d-none alert-success alert-warning').addClass('alert-danger').find('#wifiStatusTextInline').text('{% trans %}Error fetching WiFi status.{% endtrans %}');
     }
 
     $('#wifiStatusText').text(wifiStatusText).removeClass('text-success text-danger text-warning text-info').addClass(wifiStatusClass);
     $('#wifiStatusTextCard').text(wifiStatusText).removeClass('text-success text-danger text-warning text-info').addClass(wifiStatusClass);
 
-    if (isActuallyConnected && statusData.current_connection) {
-        let connectionText = statusData.current_connection;
+    if (isConnected && (statusData.current_connection || statusData.ssid)) {
+        let connectionText = statusData.current_connection || statusData.ssid;
         if (statusData.connection_info && statusData.connection_info.signal) {
             connectionText += ` (${statusData.connection_info.signal}%)`;
+        } else if (statusData.signal) {
+            connectionText += ` (${statusData.signal})`;
         }
         $('#currentConnection').text(connectionText);
     } else if (statusData.error) {
-         $('#currentConnection').text('{% trans %}Error{% endtrans %}');
+        $('#currentConnection').text('{% trans %}Error{% endtrans %}');
     } else {
         $('#currentConnection').text('{% trans %}Not connected{% endtrans %}');
     }
@@ -594,8 +582,11 @@ function updateNetworkList(networks) {
                             ${isSavedNetwork ? '<i class="fas fa-bookmark text-info ms-1" title="{% trans %}Saved network{% endtrans %}"></i>' : ''}
                             ${isLastNetwork ? '<i class="fas fa-history text-success ms-1" title="{% trans %}Last connected network{% endtrans %}"></i>' : ''}
                         </h6>
-                        <small class="ms-2"><i class="fas ${securityIcon} me-1"></i>${securityType}</small>
-                        <small class="${signalClass} ms-2"><i class="fas fa-signal me-1"></i>${signalStrength}%</small>
+                        <div class="d-flex align-items-center mt-1">
+                            <small class="ms-2"><i class="fas ${securityIcon} me-1"></i>${securityType}</small>
+                            <small class="${signalClass} ms-2"><i class="fas fa-signal me-1"></i>${signalStrength}%</small>
+                            ${isSavedNetwork ? '<small class="text-info ms-2"><i class="fas fa-key me-1"></i>{% trans %}Password saved{% endtrans %}</small>' : ''}
+                        </div>
                     </div>
                     ${isConnectedToThisNetwork ? 
                         `<button class="btn btn-sm btn-danger disconnect-btn" data-ssid="${networkSSID}"><i class="fas fa-power-off me-1"></i>{% trans %}Disconnect{% endtrans %}</button>` :
@@ -682,8 +673,9 @@ $(document).ready(function() {
         $('#connectPassword').val('').prop('disabled', security === 'Open');
         $('#passwordField').toggle(security !== 'Open');
         
-        // Si está en la lista de redes guardadas y no es Open, autocompletar contraseña
-        if (window.savedNetworks.includes(ssid) && security !== 'Open') {
+        // Robust check for saved network (object with .ssid property)
+        const isSavedNetwork = Array.isArray(window.savedNetworks) && window.savedNetworks.some(n => n.ssid === ssid);
+        if (isSavedNetwork && security !== 'Open') {
             try {
                 $('#connectPassword').val('').attr('placeholder', '{% trans %}Loading password...{% endtrans %}');
                 const response = await fetch('/api/wifi/get_password', {
@@ -695,7 +687,6 @@ $(document).ready(function() {
                     },
                     body: JSON.stringify({ ssid: ssid })
                 });
-                
                 const data = await response.json();
                 if (data.success && data.password) {
                     $('#connectPassword').val(data.password);
@@ -706,6 +697,9 @@ $(document).ready(function() {
                 console.error('Error recuperando contraseña guardada:', e);
                 $('#connectPassword').attr('placeholder', '{% trans %}Enter password{% endtrans %}');
             }
+        } else {
+            // Not a saved network or open network: always clear password
+            $('#connectPassword').val('').attr('placeholder', '{% trans %}Enter password{% endtrans %}');
         }
         
         $('#connectModal').modal('show');
@@ -797,7 +791,9 @@ function showToast(message, type = 'info') {
         <div id="${toastId}" class="toast align-items-center text-white ${bgColorClass} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000" style="min-width:250px;">
             <div class="d-flex">
                 <div class="toast-body">${message}</div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" style="color: white; opacity: 1; font-size: 1.2em; padding: 0 8px; border-radius: 50%; background: rgba(255,255,255,0.1); transition: all 0.3s ease;">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
         </div>`;
     toastContainer.append(toastHtml);

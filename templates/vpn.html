@@ -1,237 +1,173 @@
 {% extends "base.html" %}
 
-{% block title %}{% trans %}VPN Configuration{% endtrans %}{% endblock %}
+{% block title %}Configuración VPN{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">{{ _('VPN Configuration') }}</h1>
+    <h2>Configuración VPN</h2>
     
-    <div class="row">
-        <!-- VPN Status -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">{{ _('VPN Status') }}</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <p><strong>{{ _('Status') }}:</strong> <span id="vpn-status">-</span></p>
-                            <p><strong>{{ _('Public IP') }}:</strong> <span id="vpn-public-ip">-</span></p>
-                            <p><strong>{{ _('VPN IP') }}:</strong> <span id="vpn-ip">-</span></p>
-                            <p><strong>{{ _('Config File') }}:</strong> <span id="vpn-config-file">-</span></p>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <button id="toggle-vpn" class="btn btn-primary w-100">
-                            {{ _('Toggle VPN') }}
-                        </button>
-                    </div>
-                    <div class="mt-3">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="kill-switch">
-                            <label class="form-check-label" for="kill-switch">{{ _('Kill Switch') }}</label>
-                        </div>
-                        <small class="text-muted">{{ _('Block all internet traffic if VPN disconnects') }}</small>
-                    </div>
-                </div>
-            </div>
+    {% if not openvpn_installed %}
+    <div class="alert alert-warning">
+        <h4 class="alert-heading">OpenVPN no está instalado</h4>
+        <p>Para usar la VPN, necesitas instalar OpenVPN primero. Ejecuta:</p>
+        <pre class="mb-0">sudo apt-get install openvpn</pre>
+    </div>
+    {% else %}
+    
+    <!-- Estado actual -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Estado actual</h5>
         </div>
-
-        <!-- VPN Configuration -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">{{ _('VPN Configuration') }}</h5>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Estado:</strong> <span id="vpn-status">Cargando...</span></p>
+                    <p><strong>IP Pública:</strong> <span id="public-ip">-</span></p>
+                    <p><strong>IP VPN:</strong> <span id="vpn-ip">-</span></p>
                 </div>
-                <div class="card-body">
-                    <form id="vpn-config-form" enctype="multipart/form-data">
-    <div id="vpn-config-error" class="alert alert-danger d-none" role="alert"></div>
-                        <div class="mb-3">
-                            <label for="vpn-file" class="form-label">{{ _('OpenVPN Configuration File') }}</label>
-                            <input type="file" class="form-control" id="vpn-file" name="vpn_file" accept=".ovpn,.conf">
-                            <div class="form-text">{{ _('Upload your OpenVPN configuration file (.ovpn or .conf)') }}</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="vpn-username" class="form-label">{{ _('Username') }}</label>
-                            <input type="text" class="form-control" id="vpn-username" name="username">
-                        </div>
-                        <div class="mb-3 position-relative">
-                            <label for="vpn-password" class="form-label">{{ _('Password') }}</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control" id="vpn-password" name="password">
-                                <button type="button" class="btn btn-outline-secondary" id="toggle-password" tabindex="-1">
-                                    <i class="bi bi-eye" id="eye-icon"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">{{ _('Save Configuration') }}</button>
-                    </form>
+                <div class="col-md-6">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="killswitch-toggle">
+                        <label class="form-check-label" for="killswitch-toggle">Kill Switch</label>
+                    </div>
+                    <p class="text-muted small mt-2">
+                        El Kill Switch bloquea todo el tráfico de internet cuando la VPN se desconecta.
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- VPN Logs -->
-    <div class="card mt-4">
+    <!-- Configuración -->
+    <div class="card">
         <div class="card-header">
-            <h5 class="card-title mb-0">{{ _('VPN Logs') }}</h5>
+            <h5 class="mb-0">Configuración VPN</h5>
         </div>
         <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>{{ _('Time') }}</th>
-                            <th>{{ _('Status') }}</th>
-                            <th>{{ _('Message') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody id="vpn-logs">
-                    </tbody>
-                </table>
+            <form id="vpn-config-form" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="vpn-file" class="form-label">Archivo de configuración (.ovpn)</label>
+                    <input type="file" class="form-control" id="vpn-file" name="vpn_file" accept=".ovpn,.conf" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="username" class="form-label">Usuario</label>
+                    <input type="text" class="form-control" id="username" name="username">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="password" name="password">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Guardar configuración</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de error -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Error</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="error-message"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
-// Mostrar/ocultar contraseña
-const togglePasswordBtn = document.getElementById('toggle-password');
-const passwordInput = document.getElementById('vpn-password');
-const eyeIcon = document.getElementById('eye-icon');
-if (togglePasswordBtn && passwordInput && eyeIcon) {
-    togglePasswordBtn.addEventListener('click', function() {
-        const isPassword = passwordInput.type === 'password';
-        passwordInput.type = isPassword ? 'text' : 'password';
-        eyeIcon.classList.toggle('bi-eye');
-        eyeIcon.classList.toggle('bi-eye-slash');
-    });
-}
+document.addEventListener('DOMContentLoaded', function() {
+    const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+    const vpnStatus = document.getElementById('vpn-status');
+    const publicIp = document.getElementById('public-ip');
+    const vpnIp = document.getElementById('vpn-ip');
+    const killswitchToggle = document.getElementById('killswitch-toggle');
+    const vpnConfigForm = document.getElementById('vpn-config-form');
 
-// Función para obtener el token CSRF
-function getCSRFToken() {
-    const metaTag = document.querySelector('meta[name="csrf-token"]');
-    return metaTag ? metaTag.getAttribute('content') : null;
-}
+    // Función para actualizar el estado
+    function updateStatus() {
+        fetch('/api/vpn/status')
+            .then(response => response.json())
+            .then(data => {
+                vpnStatus.textContent = data.status;
+                publicIp.textContent = data.public_ip;
+                vpnIp.textContent = data.vpn_ip;
+                killswitchToggle.checked = data.killswitch_enabled;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('Error al obtener el estado de la VPN');
+            });
+    }
 
-function updateVPNStatus() {
-    fetch('/api/vpn/status')
+    // Actualizar estado cada 5 segundos
+    updateStatus();
+    setInterval(updateStatus, 5000);
+
+    // Manejar Kill Switch
+    killswitchToggle.addEventListener('change', function() {
+        fetch('/api/vpn/killswitch', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
         .then(response => response.json())
         .then(data => {
-            document.getElementById('vpn-status').textContent = data.status;
-            document.getElementById('vpn-public-ip').textContent = data.public_ip;
-            document.getElementById('vpn-ip').textContent = data.vpn_ip;
-            document.getElementById('vpn-config-file').textContent = data.config_file;
-            
-            // Update toggle button text
-            const toggleBtn = document.getElementById('toggle-vpn');
-            toggleBtn.textContent = data.status === 'Conectado' ? '{{ _("Disconnect VPN") }}' : '{{ _("Connect VPN") }}';
-            toggleBtn.className = `btn w-100 ${data.status === 'Conectado' ? 'btn-danger' : 'btn-primary'}`;
-            
-            // Update kill switch state
-            document.getElementById('kill-switch').checked = data.killswitch_enabled;
+            if (!data.success) {
+                showError(data.error);
+                killswitchToggle.checked = !killswitchToggle.checked;
+            }
         })
         .catch(error => {
-            console.error('Error updating VPN status:', error);
+            console.error('Error:', error);
+            showError('Error al cambiar el estado del Kill Switch');
+            killswitchToggle.checked = !killswitchToggle.checked;
         });
-}
-
-// Handle VPN toggle
-document.getElementById('toggle-vpn').addEventListener('click', function() {
-    const btn = this;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> {{ _("Processing...") }}';
-
-    fetch('/api/vpn/toggle', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCSRFToken()
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            updateVPNStatus();
-        } else {
-            alert(data.error || '{{ _("Error toggling VPN") }}');
-        }
-    })
-    .catch(error => {
-        console.error('Error toggling VPN:', error);
-        alert('{{ _("Error toggling VPN") }}');
-    })
-    .finally(() => {
-        btn.disabled = false;
-        updateVPNStatus();
     });
-});
 
-// Handle Kill Switch toggle
-document.getElementById('kill-switch').addEventListener('change', function() {
-    const isEnabled = this.checked;
-    fetch('/api/vpn/killswitch', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCSRFToken()
-        },
-        body: JSON.stringify({ enabled: isEnabled })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.success) {
-            alert(data.error || '{{ _("Error toggling Kill Switch") }}');
-            this.checked = !isEnabled; // Revert the switch
-        }
-    })
-    .catch(error => {
-        console.error('Error toggling Kill Switch:', error);
-        alert('{{ _("Error toggling Kill Switch") }}');
-        this.checked = !isEnabled; // Revert the switch
+    // Manejar formulario de configuración
+    vpnConfigForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch('/api/vpn/config', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateStatus();
+            } else {
+                showError(data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('Error al guardar la configuración');
+        });
     });
-});
 
-// Handle form submission
-document.getElementById('vpn-config-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const form = this;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> {{ _("Saving...") }}';
-    
-    const formData = new FormData(form);
-    
-    fetch("{{ url_for('vpn.vpn_config_api') }}", {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': getCSRFToken()
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('{{ _("VPN configuration saved successfully") }}');
-            updateVPNStatus();
-        } else {
-            alert(data.error || '{{ _("Error saving VPN configuration") }}');
-        }
-    })
-    .catch(error => {
-        console.error('Error saving VPN configuration:', error);
-        alert('{{ _("Error saving VPN configuration") }}');
-    })
-    .finally(() => {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '{{ _("Save Configuration") }}';
-    });
+    // Función para mostrar errores
+    function showError(message) {
+        document.getElementById('error-message').textContent = message;
+        errorModal.show();
+    }
 });
-
-// Update status every 5 seconds
-setInterval(updateVPNStatus, 5000);
-updateVPNStatus();
 </script>
 {% endblock %}

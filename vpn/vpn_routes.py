@@ -3,17 +3,35 @@ import os
 import subprocess
 import time
 import re
-from . import vpn_bp  # Importar el blueprint desde el módulo actual
-from .vpn_utils import configure_vpn_routing, restore_original_routing
+import logging
+from . import vpn_bp
+from .vpn_utils import vpn_utils
+
+logger = logging.getLogger(__name__)
 
 @vpn_bp.route('/vpn', methods=['GET'])
 def vpn_page():
     """Renderiza la página de configuración de VPN"""
-    return render_template('vpn.html')
+    try:
+        # Verificar si OpenVPN está instalado
+        subprocess.run(['which', 'openvpn'], check=True, capture_output=True)
+        openvpn_installed = True
+    except subprocess.CalledProcessError:
+        openvpn_installed = False
+        
+    return render_template('vpn.html', openvpn_installed=openvpn_installed)
 
 @vpn_bp.route('/api/vpn/config', methods=['POST'])
 def vpn_config_api():
+    """API para configurar la VPN"""
     try:
+        # Verificar permisos sudo
+        if not vpn_utils.verify_sudo():
+            return jsonify({
+                'success': False,
+                'error': 'Se requieren permisos de administrador para configurar la VPN'
+            }), 403
+
         # Verificar si se proporcionó un archivo
         if 'vpn_file' not in request.files:
             return jsonify({'success': False, 'error': 'No se proporcionó archivo de configuración'}), 400
@@ -31,7 +49,7 @@ def vpn_config_api():
         if not os.path.exists(vpn_dir):
             os.makedirs(vpn_dir, mode=0o755)
 
-        # Guardar credenciales
+        # Guardar credenciales de forma segura
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
         
@@ -49,26 +67,12 @@ def vpn_config_api():
                 with open(auth_file, 'w') as f:
                     f.write(f"{username}\n{password}\n")
                 
-                # Verificar que se guardaron correctamente
-                if not os.path.exists(auth_file):
-                    return jsonify({
-                        'success': False, 
-                        'error': f'Error al guardar credenciales en {auth_file}'
-                    }), 500
-                
-                # Establecer permisos
+                # Establecer permisos seguros
                 os.chmod(auth_file, 0o600)
                 
-                # Verificar permisos
-                if oct(os.stat(auth_file).st_mode)[-3:] != '600':
-                    return jsonify({
-                        'success': False, 
-                        'error': f'No se pudieron establecer los permisos correctos en {auth_file}'
-                    }), 500
-                
-                app.logger.info(f"Credenciales guardadas correctamente en {auth_file}")
+                logger.info(f"Credenciales guardadas correctamente en {auth_file}")
             except Exception as e:
-                app.logger.error(f"Error al guardar credenciales: {str(e)}")
+                logger.error(f"Error al guardar credenciales: {str(e)}")
                 return jsonify({
                     'success': False, 
                     'error': f'Error al guardar credenciales: {str(e)}'
@@ -86,26 +90,20 @@ def vpn_config_api():
 
             file.save(config_path)
             
-            # Verificar que se guardó correctamente
-            if not os.path.exists(config_path):
+            # Verificar integridad del archivo
+            is_valid, message = vpn_utils.verify_config_file(config_path)
+            if not is_valid:
                 return jsonify({
-                    'success': False, 
-                    'error': f'Error al guardar el archivo de configuración en {config_path}'
-                }), 500
+                    'success': False,
+                    'error': f'Archivo de configuración inválido: {message}'
+                }), 400
             
-            # Establecer permisos
+            # Establecer permisos seguros
             os.chmod(config_path, 0o644)
             
-            # Verificar permisos
-            if oct(os.stat(config_path).st_mode)[-3:] != '644':
-                return jsonify({
-                    'success': False, 
-                    'error': f'No se pudieron establecer los permisos correctos en {config_path}'
-                }), 500
-            
-            app.logger.info(f"Archivo de configuración guardado correctamente en {config_path}")
+            logger.info(f"Archivo de configuración guardado correctamente en {config_path}")
         except Exception as e:
-            app.logger.error(f"Error al guardar archivo de configuración: {str(e)}")
+            logger.error(f"Error al guardar archivo de configuración: {str(e)}")
             return jsonify({
                 'success': False, 
                 'error': f'Error al guardar archivo de configuración: {str(e)}'
@@ -116,11 +114,11 @@ def vpn_config_api():
             with open(config_path, 'r') as f:
                 config_content = f.read()
 
-            # Eliminar todas las líneas auth-user-pass existentes (para evitar duplicados o errores)
+            # Eliminar todas las líneas auth-user-pass existentes
             config_lines = config_content.splitlines()
-            original_lines = list(config_lines) # Copia para comparar si hay cambios
+            original_lines = list(config_lines)
             
-            # Asegurar que auth-user-pass apunte a /etc/openvpn/auth.txt si existe
+            # Asegurar que auth-user-pass apunte al archivo correcto
             auth_file_path = '/etc/openvpn/auth.txt'
             auth_line_found = False
             new_config_lines = []
@@ -134,97 +132,98 @@ def vpn_config_api():
 
             if not auth_line_found and os.path.exists(auth_file_path):
                 new_config_lines.append(f'auth-user-pass {auth_file_path}')
-            elif not os.path.exists(auth_file_path):
-                app.logger.warning(f"El archivo de credenciales {auth_file_path} no existe. " 
-                                   f"La directiva 'auth-user-pass' no se añadirá o se eliminará si existía.")
 
             config_content = '\n'.join(new_config_lines) + '\n'
 
-            # Añadir directivas comunes si no existen
-            common_directives = {
-                'dhcp-option DNS 8.8.8.8': "Añadida configuración de DNS 8.8.8.8.",
-                'dhcp-option DNS 8.8.4.4': "Añadida configuración de DNS 8.8.4.4.",
-                'script-security 2': "Añadida configuración script-security 2.",
-                'up /etc/openvpn/update-resolv-conf': "Añadida configuración up script para DNS.",
-                'down /etc/openvpn/update-resolv-conf': "Añadida configuración down script para DNS."
+            # Añadir directivas de seguridad
+            security_directives = {
+                'dhcp-option DNS 8.8.8.8': "Configuración DNS primario",
+                'dhcp-option DNS 8.8.4.4': "Configuración DNS secundario",
+                'script-security 2': "Seguridad de scripts",
+                'up /etc/openvpn/update-resolv-conf': "Script de actualización DNS",
+                'down /etc/openvpn/update-resolv-conf': "Script de limpieza DNS",
+                'auth-nocache': "No cachear credenciales",
+                'verify-x509-name': "Verificación de certificados",
+                'remote-cert-tls': "Verificación TLS",
+                'cipher AES-256-GCM': "Cifrado fuerte",
+                'auth SHA256': "Hash seguro"
             }
 
-            # Eliminar route-nopull si está presente
+            # Eliminar directivas inseguras
             if 'route-nopull' in config_content:
                 config_content = config_content.replace('route-nopull', '')
-                app.logger.info("Eliminada opción route-nopull del archivo de configuración.")
+                logger.info("Eliminada opción route-nopull")
 
-            # Añadir directivas necesarias si no están presentes
-            for directive, log_message in common_directives.items():
+            # Añadir directivas de seguridad si no están presentes
+            for directive, description in security_directives.items():
                 if directive.split()[0] not in config_content:
                     config_content += f'{directive}\n'
-                    app.logger.info(log_message)
+                    logger.info(f"Añadida {description}")
 
-            # Guardar los cambios en el archivo de configuración
+            # Guardar configuración actualizada
             if config_content.strip() != '\n'.join(original_lines).strip():
                 with open(config_path, 'w') as f:
                     f.write(config_content)
-                app.logger.info(f"Archivo de configuración OpenVPN '{config_path}' actualizado.")
+                logger.info("Configuración OpenVPN actualizada")
+
         except Exception as e:
-            app.logger.error(f"Error al guardar archivo de configuración: {str(e)}")
+            logger.error(f"Error actualizando configuración: {str(e)}")
             return jsonify({
                 'success': False, 
-                'error': f'Error al guardar archivo de configuración: {str(e)}'
+                'error': f'Error actualizando configuración: {str(e)}'
             }), 500
 
+        # Verificar estado actual y reiniciar servicio
         try:
-            # Verificar si el servicio OpenVPN está instalado
-            subprocess.run(['which', 'openvpn'], check=True, capture_output=True)
-        except subprocess.CalledProcessError:
-            return jsonify({'success': False, 'error': 'OpenVPN no está instalado'}), 500
-
-        # Verificar estado actual
-        try:
-            result = subprocess.run(['systemctl', 'is-active', 'openvpn'], capture_output=True, text=True)
-            is_active = result.returncode == 0
-        except subprocess.CalledProcessError:
-            is_active = False
-
-        if is_active:
-            # Detener VPN y restaurar configuración original
+            # Detener VPN si está activa
             subprocess.run(['systemctl', 'stop', 'openvpn'], check=True)
-            # Esperar a que tun0 desaparezca (máx 10s)
-            for _ in range(20):
-                tun_status = subprocess.run(['ip', 'link', 'show', 'tun0'], capture_output=True, text=True)
-                if tun_status.returncode != 0:
-                    break  # tun0 ya no existe
-                time.sleep(0.5)
+            time.sleep(2)  # Esperar a que se detenga completamente
 
-            # Restaurar rutas aunque tun0 no exista
-            if restore_original_routing():
-                app.logger.info("Rutas originales restauradas correctamente")
-            else:
-                app.logger.warning("No se pudieron restaurar las rutas originales")
+            # Restaurar rutas originales
+            vpn_utils.restore_original_routing()
 
-        # Iniciar VPN con nueva configuración
-        try:
+            # Iniciar VPN con nueva configuración
             subprocess.run(['systemctl', 'start', 'openvpn'], check=True)
-            app.logger.info("Servicio OpenVPN iniciado correctamente")
-            return jsonify({'success': True, 'message': 'Configuración VPN actualizada y servicio iniciado'})
+            logger.info("Servicio OpenVPN reiniciado correctamente")
+
+            return jsonify({
+                'success': True,
+                'message': 'Configuración VPN actualizada y servicio reiniciado'
+            })
+
         except subprocess.CalledProcessError as e:
-            app.logger.error(f"Error al iniciar OpenVPN: {str(e)}")
-            return jsonify({'success': False, 'error': 'Error al iniciar el servicio OpenVPN'}), 500
+            logger.error(f"Error reiniciando OpenVPN: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': 'Error reiniciando el servicio OpenVPN'
+            }), 500
 
     except Exception as e:
-        app.logger.error(f"Error general en vpn_config_api: {str(e)}")
+        logger.error(f"Error general en vpn_config_api: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @vpn_bp.route('/api/vpn/status', methods=['GET'])
 def vpn_status_api():
+    """API para obtener el estado de la VPN"""
     try:
-        # Verifica si el servicio openvpn está activo
+        # Verificar estado del servicio
         status = subprocess.run(['systemctl', 'is-active', 'openvpn'], capture_output=True, text=True)
         is_active = status.returncode == 0
-        # Obtener IP pública y VPN (puedes mejorar esto según tu lógica)
-        public_ip = subprocess.getoutput("curl -s ifconfig.me") if is_active else '-'
-        vpn_ip = subprocess.getoutput("ip addr show tun0 | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1") if is_active else '-'
+
+        # Obtener información de conexión
+        public_ip = '-'
+        vpn_ip = '-'
+        if is_active:
+            try:
+                public_ip = subprocess.getoutput("curl -s ifconfig.me")
+                vpn_ip = subprocess.getoutput("ip addr show tun0 | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1")
+            except Exception as e:
+                logger.warning(f"Error obteniendo IPs: {str(e)}")
+
+        # Verificar configuración
         config_file = '/etc/openvpn/client.conf' if os.path.exists('/etc/openvpn/client.conf') else None
         killswitch_enabled = os.path.exists('/etc/openvpn/killswitch_enabled')
+
         return jsonify({
             'status': 'Conectado' if is_active else 'Desconectado',
             'public_ip': public_ip,
@@ -232,53 +231,69 @@ def vpn_status_api():
             'config_file': config_file,
             'killswitch_enabled': killswitch_enabled
         })
+
     except Exception as e:
-        app.logger.error(f'Error al obtener estado VPN: {str(e)}')
+        logger.error(f'Error obteniendo estado VPN: {str(e)}')
         return jsonify({'error': str(e)}), 500
 
 @vpn_bp.route('/api/vpn/toggle', methods=['POST'])
 def toggle_vpn():
+    """API para activar/desactivar la VPN"""
     try:
+        if not vpn_utils.verify_sudo():
+            return jsonify({
+                'success': False,
+                'error': 'Se requieren permisos de administrador'
+            }), 403
+
         status = subprocess.run(['systemctl', 'is-active', 'openvpn'], capture_output=True, text=True)
         if status.returncode == 0:
-            # Está activo, detener
+            # Detener VPN
             subprocess.run(['systemctl', 'stop', 'openvpn'], check=True)
+            vpn_utils.restore_original_routing()
             msg = 'VPN detenida correctamente'
         else:
-            # No está activo, iniciar
+            # Iniciar VPN
             subprocess.run(['systemctl', 'start', 'openvpn'], check=True)
+            time.sleep(2)  # Esperar a que se inicie
+            vpn_utils.configure_vpn_routing()
             msg = 'VPN iniciada correctamente'
+
         return jsonify({'success': True, 'message': msg})
+
     except Exception as e:
-        app.logger.error(f'Error al alternar VPN: {str(e)}')
+        logger.error(f'Error al cambiar estado VPN: {str(e)}')
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @vpn_bp.route('/api/vpn/killswitch', methods=['POST'])
 def toggle_killswitch():
+    """API para activar/desactivar el kill switch"""
     try:
-        data = request.get_json()
-        enabled = data.get('enabled', False)
-        vpn_status = subprocess.run(['systemctl', 'is-active', 'openvpn'], capture_output=True, text=True)
-        is_vpn_active = vpn_status.returncode == 0
-        killswitch_flag = '/etc/openvpn/killswitch_enabled'
-        if enabled:
-            if not is_vpn_active:
-                return jsonify({'success': False, 'error': 'No se puede activar el Kill Switch: la VPN no está conectada'}), 400
-            # Habilitar reglas de firewall para bloquear tráfico fuera de tun0
-            subprocess.run(['iptables', '-I', 'OUTPUT', '!', '-o', 'tun0', '-m', 'conntrack', '!', '--ctstate', 'RELATED,ESTABLISHED', '-j', 'DROP'], check=True)
-            with open(killswitch_flag, 'w') as f:
-                f.write('1')
-            app.logger.info("Kill Switch activado correctamente")
-            return jsonify({'success': True, 'message': 'Kill Switch activado'})
+        if not vpn_utils.verify_sudo():
+            return jsonify({
+                'success': False,
+                'error': 'Se requieren permisos de administrador'
+            }), 403
+
+        killswitch_file = '/etc/openvpn/killswitch_enabled'
+        is_enabled = os.path.exists(killswitch_file)
+
+        if is_enabled:
+            # Desactivar kill switch
+            os.remove(killswitch_file)
+            vpn_utils.restore_original_routing()
+            msg = 'Kill switch desactivado'
         else:
-            # Eliminar reglas de firewall
-            subprocess.run(['iptables', '-D', 'OUTPUT', '!', '-o', 'tun0', '-m', 'conntrack', '!', '--ctstate', 'RELATED,ESTABLISHED', '-j', 'DROP'], check=False)
-            if os.path.exists(killswitch_flag):
-                os.remove(killswitch_flag)
-            app.logger.info("Kill Switch desactivado correctamente")
-            return jsonify({'success': True, 'message': 'Kill Switch desactivado'})
+            # Activar kill switch
+            with open(killswitch_file, 'w') as f:
+                f.write('1\n')
+            vpn_utils.configure_vpn_routing()
+            msg = 'Kill switch activado'
+
+        return jsonify({'success': True, 'message': msg})
+
     except Exception as e:
-        app.logger.error(f'Error en Kill Switch: {str(e)}')
+        logger.error(f'Error al cambiar estado del kill switch: {str(e)}')
         return jsonify({'success': False, 'error': str(e)}), 500
 
 def setup_initial_iptables_rules():

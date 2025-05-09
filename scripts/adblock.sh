@@ -3,7 +3,7 @@
 # Configuración
 ADBLOCK_DIR="/etc/hostberry/adblock"
 HOSTS_FILE="/etc/hosts"
-TEMP_DIR="/tmp/adblock"
+TEMP_DIR="/opt/hostberry/logs"
 STATS_FILE="$ADBLOCK_DIR/stats.json"
 LOG_FILE="$ADBLOCK_DIR/blocked.log"
 REALTIME_LOG="$ADBLOCK_DIR/realtime.log"
@@ -22,17 +22,16 @@ FIRSTPARTY_TRACKERS_URL="https://hostfiles.frogeye.fr/firstparty-trackers-hosts.
 STEVENBLACK_URL="https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
 WINDOWS_SPY_URL="https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt"
 
-# Crear directorios si no existen
-sudo mkdir -p "$ADBLOCK_DIR"
-sudo mkdir -p "$TEMP_DIR"
+# Crear solo directorio temporal, el de configuración debe existir
+mkdir -p "$TEMP_DIR"
 
 # Función para registrar un dominio bloqueado en tiempo real
 log_realtime() {
     local domain=$1
     local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
-    echo "[$timestamp] Blocked: $domain" | sudo tee -a "$REALTIME_LOG" > /dev/null
+    echo "[$timestamp] Blocked: $domain" | tee -a "$REALTIME_LOG" > /dev/null
     # Mantener solo las últimas 1000 entradas
-    sudo tail -n 1000 "$REALTIME_LOG" | sudo tee "$REALTIME_LOG.tmp" > /dev/null && sudo mv "$REALTIME_LOG.tmp" "$REALTIME_LOG"
+    tail -n 1000 "$REALTIME_LOG" | tee "$REALTIME_LOG.tmp" > /dev/null && mv "$REALTIME_LOG.tmp" "$REALTIME_LOG"
 }
 
 # Función para mostrar estadísticas en tiempo real
@@ -188,7 +187,7 @@ process_lists() {
         
         # Añadir nuevos bloqueos
         echo "# AdBlock Start" | sudo tee -a "$HOSTS_FILE" > /dev/null
-        sudo cat "$TEMP_DIR/combined.txt" | sudo tee -a "$HOSTS_FILE" > /dev/null
+        cat "$TEMP_DIR/combined.txt" | sudo tee -a "$HOSTS_FILE" > /dev/null
         echo "# AdBlock End" | sudo tee -a "$HOSTS_FILE" > /dev/null
         
         # Limpiar caché DNS

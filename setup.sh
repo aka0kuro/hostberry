@@ -1,169 +1,158 @@
 #!/bin/bash
 
-# Update system packages
-echo "Updating system packages..."
-sudo apt-get update
-
-# Install Python and pip if not already installed
-if ! command -v python3 &> /dev/null; then
-    echo "Installing Python3..."
-    sudo apt-get install -y python3 python3-pip
-fi
-
-# Verificar e instalar NetworkManager
-if ! command -v nmcli &> /dev/null; then
-    echo "Instalando NetworkManager..."
-    sudo apt-get update
-    sudo apt-get install -y network-manager
-    
-    # Reiniciar servicio
-    sudo systemctl restart NetworkManager
-    
-    # Verificar instalación
-    if ! command -v nmcli &> /dev/null; then
-        echo "ERROR: No se pudo instalar NetworkManager"
-        exit 1
-    fi
-else
-    echo "NetworkManager ya está instalado"
-fi
-
-# Añadir usuario al grupo netdev
-if ! groups $USER | grep -q "netdev"; then
-    echo "Añadiendo usuario $USER al grupo netdev..."
-    sudo usermod -aG netdev newgrp $USER
-    echo "Usuario añadido. Debes reiniciar la sesión para aplicar los cambios."
-else
-    echo "El usuario ya está en el grupo netdev"
-fi
-
-echo "Instalando nmcli (NetworkManager) si no está presente"
-sudo apt-get install -y network-manager
-
-# Move project to /opt/hostberry
-echo "Moving project to /opt/hostberry..."
-sudo mkdir -p /opt/hostberry
-sudo chown -R $USER:$USER /opt/hostberry
-sudo cp -r . /opt/hostberry/
-# Ensure service file is in the right location
-if [ -f "hostberry-web.service" ]; then
-    sudo cp hostberry-web.service /opt/hostberry/
-fi
-cd /opt/hostberry
-
-# Crear directorios para recursos estáticos
-echo "Creando directorios para recursos estáticos..."
-mkdir -p static/css static/js static/webfonts static/fonts
-
-# Descargar recursos estáticos
-echo "Descargando recursos estáticos..."
-# Bootstrap
-curl -o static/css/bootstrap.min.css https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css
-curl -o static/js/bootstrap.bundle.min.js https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js
-
-# Bootstrap Icons
-curl -o static/css/bootstrap-icons.css https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css
-curl -o static/fonts/bootstrap-icons.woff https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/fonts/bootstrap-icons.woff
-curl -o static/fonts/bootstrap-icons.woff2 https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/fonts/bootstrap-icons.woff2
-
-# jQuery
-curl -o static/js/jquery.min.js https://code.jquery.com/jquery-3.6.0.min.js
-
-# Font Awesome
-curl -o static/css/fontawesome.min.css https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css
-curl -o static/webfonts/fa-solid-900.woff2 https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-solid-900.woff2
-curl -o static/webfonts/fa-solid-900.woff https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-solid-900.woff
-
-# Crear archivo custom.css
-echo "Creando archivo custom.css y connection-status.js para soporte sin conexión..."
-
-# Install project dependencies
-echo "Installing Python dependencies..."
-python3 -m venv venv
-source venv/bin/activate
-if ! pip3 install -r requirements.txt; then
-    echo "Error instalando dependencias Python. Abortando instalación."
+# Verificar si se está ejecutando como root
+if [ "$EUID" -ne 0 ]; then 
+    echo "Por favor, ejecuta este script como root (sudo)"
     exit 1
 fi
 
-# Set up configuration
-if [ ! -f ".env" ]; then
-    echo "Creating .env file with generated FLASK_SECRET_KEY..."
-    SECRET_KEY=$(openssl rand -hex 32)
-    echo "FLASK_SECRET_KEY=$SECRET_KEY" > .env
-    echo "DB_USER=hostberry" >> .env
-    echo "DB_PASS=$(openssl rand -hex 16)" >> .env
-    echo "Please review and add other required configurations to the .env file"
-fi
+# Función para manejar errores
+handle_error() {
+    echo "Error: $1"
+    exit 1
+}
 
-# Set permissions for log files
-echo "Setting up log directory..."
-mkdir -p logs
-touch logs/hostberry.log
-chmod 666 logs/hostberry.log
+# Actualizar repositorios e instalar dependencias
+echo "Actualizando repositorios e instalando dependencias..."
+apt-get update || handle_error "Error al actualizar repositorios"
+apt-get install -y python3-pip python3-venv openvpn resolvconf || handle_error "Error al instalar dependencias"
 
-# Install as systemd service (optional)
-read -p "Would you like to install as a systemd service? [y/N] " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-    echo "Installing systemd service..."
-    sudo cp hostberry-web.service /etc/systemd/system/
-    sudo systemctl daemon-reload
-    sudo systemctl enable hostberry-web
-    echo "Service installed. Start with: sudo systemctl start hostberry-web"
-fi
+# Crear directorio de la aplicación si no existe
+echo "Configurando directorio de la aplicación..."
+mkdir -p /opt/hostberry || handle_error "Error al crear directorio de la aplicación"
 
-# --- Permitir ejecutar adblock.sh con sudo sin contraseña ---
-ADBLOCK_SCRIPT="/opt/hostberry/scripts/adblock.sh"
-SUDOERS_LINE="$(whoami) ALL=(ALL) NOPASSWD: $ADBLOCK_SCRIPT"
+# Crear entorno virtual en la ubicación correcta
+echo "Creando entorno virtual..."
+python3 -m venv /opt/hostberry/venv || handle_error "Error al crear entorno virtual"
+source /opt/hostberry/venv/bin/activate
 
-# Solo añadir si no existe ya
-if ! sudo grep -Fxq "$SUDOERS_LINE" /etc/sudoers; then
-    echo "$SUDOERS_LINE" | sudo EDITOR='tee -a' visudo
-    echo "Permiso sudoers añadido para $ADBLOCK_SCRIPT"
+# Actualizar pip
+echo "Actualizando pip..."
+pip install --upgrade pip || handle_error "Error al actualizar pip"
+
+# Instalar dependencias de Python desde requirements.txt
+echo "Instalando dependencias de Python..."
+if [ -f "requirements.txt" ]; then
+    pip install -r requirements.txt || handle_error "Error al instalar dependencias Python"
 else
-    echo "Permiso sudoers ya presente para $ADBLOCK_SCRIPT"
+    handle_error "No se encontró el archivo requirements.txt"
 fi
 
-echo "Installation complete!"
-echo "Run the application with: python3 app.py"
+# Verificar instalación de dependencias
+echo "Verificando instalación de dependencias..."
+python3 -c "import flask; import dotenv" || handle_error "Error: Algunas dependencias no se instalaron correctamente"
 
-# --- Instalar flask_babel en el entorno virtual ---
-if [ -d "/opt/hostberry/venv" ]; then
-    source /opt/hostberry/venv/bin/activate
-    pip install flask_babel
-    deactivate
-else
-    echo "No se encontró el entorno virtual en /opt/hostberry/venv"
-fi
+# Configurar OpenVPN
+echo "Configurando OpenVPN..."
 
-# --- Añadir flask_babel a requirements.txt si no está ---
-if ! grep -q "^flask_babel" /opt/hostberry/requirements.txt; then
-    echo "flask_babel" >> /opt/hostberry/requirements.txt
-fi
+# Detener el servicio OpenVPN si está corriendo
+systemctl stop openvpn@client 2>/dev/null
+systemctl stop openvpn 2>/dev/null
 
-# --- Crear/actualizar el archivo de servicio systemd ---
-SERVICE_FILE="/etc/systemd/system/hostberry.service"
-cat << EOF | sudo tee $SERVICE_FILE > /dev/null
-[Unit]
-Description=HostBerry Web
-After=network.target
+# Crear grupo openvpn y añadir www-data
+echo "Configurando grupo y permisos para OpenVPN..."
+groupadd -f openvpn || handle_error "Error al crear grupo openvpn"
+usermod -aG openvpn www-data || handle_error "Error al añadir www-data al grupo openvpn"
 
-[Service]
-User=$(whoami)
-WorkingDirectory=/opt/hostberry
-ExecStart=/opt/hostberry/venv/bin/python3 /opt/hostberry/app.py
-Restart=always
-Environment=FLASK_ENV=production
+# Crear directorios necesarios
+mkdir -p /etc/openvpn/client || handle_error "Error al crear directorio client"
+mkdir -p /etc/openvpn/auth || handle_error "Error al crear directorio auth"
 
-[Install]
-WantedBy=multi-user.target
+# Establecer permisos de directorios
+chown -R root:openvpn /etc/openvpn || handle_error "Error al establecer propietario de /etc/openvpn"
+chmod -R 775 /etc/openvpn || handle_error "Error al establecer permisos de /etc/openvpn"
+chmod 700 /etc/openvpn/auth || handle_error "Error al establecer permisos de auth"
+
+# Crear script de actualización de DNS
+echo "Configurando script de actualización de DNS..."
+cat > /etc/openvpn/update-resolv-conf << 'EOF'
+#!/bin/bash
+# Script para actualizar resolv.conf cuando OpenVPN cambia el estado de la conexión
+
+[ "$script_type" ] || exit 0
+
+split_into_parts() {
+    part1="$1"
+    part2="$2"
+    part3="$3"
+}
+
+case "$script_type" in
+  up|down)
+    split_into_parts $*
+    ;;
+  *)
+    exit 0
+    ;;
+esac
+
+[ -x /sbin/resolvconf ] || exit 0
+
+case "$script_type" in
+    up)
+        for optionname in ${!foreign_option_*} ; do
+            option="${!optionname}"
+            split_into_parts $option
+            if [ "$part1" = "dhcp-option" ] ; then
+                if [ "$part2" = "DNS" ] ; then
+                    echo "nameserver $part3" | /sbin/resolvconf -a "${dev}.openvpn"
+                fi
+            fi
+        done
+        ;;
+    down)
+        /sbin/resolvconf -d "${dev}.openvpn"
+        ;;
+esac
 EOF
 
-# --- Recargar systemd y reiniciar el servicio ---
-sudo systemctl daemon-reload
-sudo systemctl restart hostberry
-sudo systemctl enable hostberry
+# Establecer permisos del script
+chmod +x /etc/openvpn/update-resolv-conf || handle_error "Error al establecer permisos del script update-resolv-conf"
 
-echo "¡Configuración de systemd y flask_babel completada!"
+# Crear archivo de configuración base
+echo "Creando archivo de configuración base..."
+cat > /etc/openvpn/client.conf << 'EOF'
+client
+dev tun
+proto udp
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+remote-cert-tls server
+cipher AES-256-GCM
+auth SHA256
+key-direction 1
+verb 3
+script-security 2
+up /etc/openvpn/update-resolv-conf
+down /etc/openvpn/update-resolv-conf
+EOF
+
+# Establecer permisos del archivo de configuración
+chmod 644 /etc/openvpn/client.conf || handle_error "Error al establecer permisos del archivo de configuración"
+
+# Habilitar y configurar el servicio OpenVPN
+echo "Configurando servicio OpenVPN..."
+systemctl daemon-reload || handle_error "Error al recargar systemd"
+systemctl enable openvpn@client || handle_error "Error al habilitar servicio OpenVPN"
+
+# Crear directorio para logs
+mkdir -p /var/log/hostberry
+chown -R www-data:www-data /var/log/hostberry
+
+# Establecer permisos del directorio de la aplicación
+chown -R www-data:www-data /opt/hostberry || handle_error "Error al establecer permisos de la aplicación"
+
+# Reiniciar servicio
+echo "Reiniciando servicio..."
+systemctl restart hostberry || handle_error "Error al reiniciar HostBerry"
+
+# Verificar estado de OpenVPN
+echo "Verificando estado de OpenVPN..."
+if ! systemctl is-active --quiet openvpn@client; then
+    echo "Advertencia: El servicio OpenVPN no está activo. Esto es normal si no hay configuración de cliente."
+fi
+
+echo "Instalación completada. Por favor, reinicia el sistema para aplicar todos los cambios."
+echo "Después de reiniciar, podrás configurar tu VPN desde la interfaz web."

@@ -6,120 +6,150 @@ import os
 import json
 from cryptography.fernet import Fernet
 from flask import current_app as app
+import time
+import logging
 
-def get_wifi_ssid():
-    """Obtener el SSID de la red WiFi usando wpa_cli"""
-    try:
-        result = subprocess.run(['wpa_cli', '-i', 'wlan0', 'status'], capture_output=True, text=True)
-        if result.returncode == 0:
-            for line in result.stdout.splitlines():
-                if line.startswith('ssid='):
-                    return line.split('=', 1)[1]
-        return None
-    except Exception as e:
-        app.logger.error(f'Error al obtener SSID: {str(e)}')
-        return None
+logger = logging.getLogger(__name__)
 
-def is_wifi_connected():
-    """Verificar si está conectado a WiFi usando wpa_cli"""
-    try:
-        result = subprocess.run(['wpa_cli', '-i', 'wlan0', 'status'], capture_output=True, text=True)
-        if result.returncode == 0:
-            for line in result.stdout.splitlines():
-                if line.startswith('wpa_state=') and 'COMPLETED' in line:
-                    return True
-        return False
-    except Exception:
-        return False
-
-def connect_wifi_wpasupplicant(ssid, password=None):
-    """Conectar a una red WiFi usando wpa_supplicant"""
-    WPA_SUPPLICANT_CONF = '/etc/wpa_supplicant/wpa_supplicant.conf'
-    network_block = f'\nnetwork={{\n    ssid="{ssid}"\n'
-    if password:
-        network_block += f'    psk="{password}"\n'
-    else:
-        network_block += '    key_mgmt=NONE\n'
-    network_block += '}\n'
-    try:
-        shutil.copy(WPA_SUPPLICANT_CONF, WPA_SUPPLICANT_CONF + '.bak')
-        with open(WPA_SUPPLICANT_CONF, 'r') as f:
-            conf = f.read()
-        conf = re.sub(r'network=\{[^}]*ssid="'+re.escape(ssid)+r'"[^}]*\}', '', conf, flags=re.DOTALL)
-        conf += network_block
-        with tempfile.NamedTemporaryFile('w', delete=False) as tf:
-            tf.write(conf)
-            temp_path = tf.name
-        shutil.move(temp_path, WPA_SUPPLICANT_CONF)
-        subprocess.run(['wpa_cli', '-i', 'wlan0', 'reconfigure'], check=True)
-        subprocess.run(['dhclient', 'wlan0'], check=True)
-        return True
-    except Exception as e:
-        app.logger.error(f'Error conectando a WiFi con wpa_supplicant: {e}')
-        return False
-
-def get_wifi_credentials_path():
-    """Obtener la ruta del archivo de credenciales WiFi"""
-    return os.path.join(os.path.dirname(__file__), 'wifi_credentials.json')
-
-def get_encryption_key():
-    """Obtener o generar la clave de encriptación para las credenciales WiFi"""
-    key_file = os.path.join(os.path.dirname(__file__), '.wifi_key')
-    if os.path.exists(key_file):
-        with open(key_file, 'rb') as f:
-            return f.read()
-    key = Fernet.generate_key()
-    with open(key_file, 'wb') as f:
-        f.write(key)
-    return key
-
-def save_wifi_credentials(ssid, password):
-    """Guardar credenciales WiFi de forma segura"""
-    try:
-        credentials_path = get_wifi_credentials_path()
-        key = get_encryption_key()
-        f = Fernet(key)
+class WiFiUtils:
+    def __init__(self):
+        self._key = None
+        self._credentials_path = os.path.join(os.path.dirname(__file__), 'wifi_credentials.json')
+        self._key_file = os.path.join(os.path.dirname(__file__), '.wifi_key')
         
-        # Cargar credenciales existentes
-        credentials = {}
-        if os.path.exists(credentials_path):
-            with open(credentials_path, 'r') as file:
-                encrypted_data = file.read()
-                if encrypted_data:
-                    decrypted_data = f.decrypt(encrypted_data.encode())
-                    credentials = json.loads(decrypted_data)
-        
-        # Actualizar credenciales
-        credentials[ssid] = password
-        
-        # Guardar credenciales encriptadas
-        encrypted_data = f.encrypt(json.dumps(credentials).encode())
-        with open(credentials_path, 'w') as file:
-            file.write(encrypted_data.decode())
-        
-        return True
-    except Exception as e:
-        app.logger.error(f'Error guardando credenciales WiFi: {str(e)}')
-        return False
-
-def get_wifi_credentials(ssid):
-    """Obtener credenciales WiFi guardadas"""
-    try:
-        credentials_path = get_wifi_credentials_path()
-        if not os.path.exists(credentials_path):
-            return None
-        
-        key = get_encryption_key()
-        f = Fernet(key)
-        
-        with open(credentials_path, 'r') as file:
-            encrypted_data = file.read()
-            if not encrypted_data:
-                return None
+    def get_encryption_key(self):
+        """Obtener o generar la clave de encriptación"""
+        if self._key:
+            return self._key
             
-            decrypted_data = f.decrypt(encrypted_data.encode())
-            credentials = json.loads(decrypted_data)
-            return credentials.get(ssid)
-    except Exception as e:
-        app.logger.error(f'Error obteniendo credenciales WiFi: {str(e)}')
-        return None 
+        if os.path.exists(self._key_file):
+            try:
+                with open(self._key_file, 'rb') as f:
+                    key = f.read()
+                    if key:
+                        self._key = key
+                        return key
+            except Exception as e:
+                logger.warning(f"Error al cargar clave existente: {e}")
+                
+        # Generar nueva clave
+        key = Fernet.generate_key()
+        try:
+            with open(self._key_file, 'wb') as f:
+                f.write(key)
+        except Exception as e:
+            logger.error(f"Error al guardar nueva clave: {e}")
+        
+        self._key = key
+        return key
+        
+    def get_credentials_path(self):
+        """Obtener la ruta del archivo de credenciales"""
+        return self._credentials_path
+        
+    def save_credentials(self, ssid, password, security=None):
+        """Guardar credenciales WiFi de forma segura, incluyendo el tipo de seguridad"""
+        try:
+            key = self.get_encryption_key()
+            cipher_suite = Fernet(key)
+            
+            # Cargar credenciales existentes
+            credentials = {}
+            if os.path.exists(self._credentials_path):
+                try:
+                    with open(self._credentials_path, 'r') as f:
+                        encrypted_data = f.read()
+                        if encrypted_data:
+                            decrypted_data = cipher_suite.decrypt(encrypted_data.encode())
+                            credentials = json.loads(decrypted_data)
+                except Exception as e:
+                    logger.warning(f"Error al cargar credenciales existentes: {e}")
+                    
+            # Actualizar credenciales (incluyendo tipo de seguridad)
+            cred_entry = {
+                'password': cipher_suite.encrypt(password.encode()).decode(),
+                'last_used': time.time(),
+                'encrypted': True
+            }
+            if security:
+                cred_entry['security'] = security
+            credentials[ssid] = cred_entry
+            
+            # Actualizar historial de últimas conexiones
+            last_connected = credentials.get('last_connected', [])
+            if ssid in last_connected:
+                last_connected.remove(ssid)
+            last_connected.insert(0, ssid)
+            last_connected = last_connected[:5]  # Mantener solo las últimas 5 conexiones
+            credentials['last_connected'] = last_connected
+            
+            # Guardar credenciales encriptadas
+            encrypted_data = cipher_suite.encrypt(json.dumps(credentials).encode())
+            with open(self._credentials_path, 'w') as f:
+                f.write(encrypted_data.decode())
+            
+            logger.info(f"Credenciales para {ssid} guardadas exitosamente")
+            return True
+            
+        except Exception as e:
+            logger.error(f'Error guardando credenciales WiFi: {str(e)}')
+            return False
+            
+    def get_credentials(self, ssid=None):
+        """Obtener credenciales WiFi guardadas (incluyendo tipo de seguridad si existe)"""
+        try:
+            if not os.path.exists(self._credentials_path):
+                return None if ssid else {}
+                
+            key = self.get_encryption_key()
+            cipher_suite = Fernet(key)
+            
+            with open(self._credentials_path, 'r') as f:
+                encrypted_data = f.read()
+                if not encrypted_data:
+                    return None if ssid else {}
+                    
+                decrypted_data = cipher_suite.decrypt(encrypted_data.encode())
+                credentials = json.loads(decrypted_data)
+                
+                if ssid:
+                    cred = credentials.get(ssid)
+                    if not cred:
+                        return None
+                    result = {}
+                    # Devuelve password y security si existe
+                    if cred.get('encrypted', False):
+                        try:
+                            result['password'] = cipher_suite.decrypt(cred['password'].encode()).decode()
+                        except:
+                            logger.warning(f"Error al desencriptar contraseña para {ssid}")
+                            return None
+                    else:
+                        result['password'] = cred.get('password')
+                    if 'security' in cred:
+                        result['security'] = cred['security']
+                    return result
+                
+                # Devolver todas las credenciales (password y security)
+                result = {}
+                for ssid, cred in credentials.items():
+                    entry = {}
+                    if cred.get('encrypted', False):
+                        try:
+                            entry['password'] = cipher_suite.decrypt(cred['password'].encode()).decode()
+                        except:
+                            logger.warning(f"Error al desencriptar contraseña para {ssid}")
+                            continue
+                    else:
+                        entry['password'] = cred.get('password', '')
+                    if 'security' in cred:
+                        entry['security'] = cred['security']
+                    result[ssid] = entry
+                
+                return result
+                
+        except Exception as e:
+            logger.error(f'Error obteniendo credenciales WiFi: {str(e)}')
+            return None if ssid else {}
+
+wifi_utils = WiFiUtils() 

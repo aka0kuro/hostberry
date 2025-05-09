@@ -52,18 +52,18 @@
                     <h5 class="card-title text-center"><i class="bi bi-speedometer2"></i> {% trans %}Estado del Sistema{% endtrans %}</h5>
                     <div class="row text-center">
                         <div class="col">
-                            <div><i class="bi bi-cpu"></i></div>
-                            <div>{{ stats.cpu_usage }}%</div>
+                            <div><i class="bi bi-cpu fs-2"></i></div>
+                            <div id="cpuUsage" class="fw-bold fs-4">{{ stats.cpu_usage }}%</div>
                             <small>CPU</small>
                         </div>
                         <div class="col">
-                            <div><i class="bi bi-thermometer-half"></i></div>
-                            <div>{{ stats.cpu_temp }}°C</div>
+                            <div><i class="bi bi-thermometer-half fs-2"></i></div>
+                            <div id="cpuTemp" class="fw-bold fs-4">{{ stats.cpu_temp }}°C</div>
                             <small>{% trans %}Temp{% endtrans %}</small>
                         </div>
                         <div class="col">
-                            <div><i class="bi bi-memory"></i></div>
-                            <div>{{ stats.memory_usage }}%</div>
+                            <div><i class="bi bi-memory fs-2"></i></div>
+                            <div id="memoryUsage" class="fw-bold fs-4">{{ stats.memory_usage }}%</div>
                             <small>{% trans %}Memoria{% endtrans %}</small>
                         </div>
                     </div>
@@ -75,10 +75,10 @@
                 <div class="card-body">
                     <h5 class="card-title text-center"><i class="bi bi-diagram-3"></i> {% trans %}Red Conectada{% endtrans %}</h5>
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item"><strong>Interfaz:</strong> {{ network_interface }}</li>
-                        <li class="list-group-item"><strong>IP local:</strong> {{ local_ip }}</li>
-                        <li class="list-group-item"><strong>SSID WiFi:</strong> {{ wifi_ssid if wifi_ssid else 'N/A' }}</li>
-                        <li class="list-group-item"><strong>hostapd:</strong> {{ hostapd_status }}</li>
+                        <li class="list-group-item"><strong>Interfaz:</strong> <span id="networkInterface">{{ network_interface }}</span></li>
+                        <li class="list-group-item"><strong>IP local:</strong> <span id="localIp">{{ local_ip }}</span></li>
+                        <li class="list-group-item"><strong>SSID WiFi:</strong> <span id="wifiSsid">{{ wifi_ssid if wifi_ssid else 'N/A' }}</span></li>
+                        <li class="list-group-item"><strong>hostapd:</strong> <span id="hostapdStatus">{{ hostapd_status }}</span></li>
                     </ul>
                 </div>
             </div>
@@ -127,4 +127,27 @@
 </div>
 
 {% include 'network_chart_script.html' %}
+<script>
+function updateSystemStatus() {
+    fetch('/status')
+        .then(res => res.json())
+        .then(data => {
+            if (data.stats) {
+                document.getElementById('cpuUsage').textContent = data.stats.cpu_usage + '%';
+                document.getElementById('cpuTemp').textContent = data.stats.cpu_temp + '°C';
+                document.getElementById('memoryUsage').textContent = data.stats.memory_usage + '%';
+            }
+            if (data.network_interface !== undefined)
+                document.getElementById('networkInterface').textContent = data.network_interface;
+            if (data.local_ip !== undefined)
+                document.getElementById('localIp').textContent = data.local_ip;
+            if (data.wifi_ssid !== undefined)
+                document.getElementById('wifiSsid').textContent = data.wifi_ssid || 'N/A';
+            if (data.hostapd_status !== undefined)
+                document.getElementById('hostapdStatus').textContent = data.hostapd_status;
+        });
+}
+setInterval(updateSystemStatus, 5000);
+document.addEventListener('DOMContentLoaded', updateSystemStatus);
+</script>
 {% endblock %}

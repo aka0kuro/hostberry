@@ -3,6 +3,12 @@
 {% block content %}
 <div class="container mt-4">
     <h2>AdBlock</h2>
+    <div class="mb-3">
+        <button id="adblock-update-btn" class="btn btn-warning btn-sm">
+            <i class="bi bi-arrow-repeat me-1"></i>Actualizar listas AdBlock
+        </button>
+        <span id="adblock-update-feedback" class="ms-2 text-success" style="display:none;">Actualización iniciada…</span>
+    </div>
     
     <!-- Status Row estilo dashboard -->
     <div class="row mb-4">
@@ -185,7 +191,8 @@
     {% endfor %}
 </div>
                 <div class="mt-3">
-                    <button type="submit" class="btn btn-primary btn-sm">Actualizar listas seleccionadas</button>
+                    <button id="adblock-update-selected-btn" type="button" class="btn btn-primary btn-sm">Actualizar listas seleccionadas</button>
+<span id="adblock-update-selected-feedback" class="ms-2 text-success" style="display:none;"></span>
                 </div>
             </form>
         </div>
@@ -301,5 +308,68 @@ function fetchRealtimeBlocked() {
 
 setInterval(fetchRealtimeBlocked, 5000);
 document.addEventListener('DOMContentLoaded', fetchRealtimeBlocked);
+
+// --- AdBlock update selected lists logic ---
+document.addEventListener('DOMContentLoaded', function() {
+    const updateSelectedBtn = document.getElementById('adblock-update-selected-btn');
+    const feedbackSelected = document.getElementById('adblock-update-selected-feedback');
+    if (updateSelectedBtn) {
+        updateSelectedBtn.addEventListener('click', function() {
+            feedbackSelected.style.display = 'none';
+            // Obtener listas seleccionadas
+            const checked = Array.from(document.querySelectorAll('.block-list-checkbox:checked'));
+            const lists = checked.map(cb => cb.value).join(' ');
+            if (!lists) {
+                feedbackSelected.textContent = 'Selecciona al menos una lista.';
+                feedbackSelected.className = 'ms-2 text-danger';
+                feedbackSelected.style.display = 'inline';
+                return;
+            }
+            fetch('/api/adblock/update', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ lists })
+            })
+            .then(res => res.json())
+            .then(data => {
+                feedbackSelected.textContent = data.success ? 'Actualización iniciada…' : ('Error: ' + (data.error || ''));
+                feedbackSelected.className = 'ms-2 ' + (data.success ? 'text-success' : 'text-danger');
+                feedbackSelected.style.display = 'inline';
+            })
+            .catch(err => {
+                feedbackSelected.textContent = 'Error: ' + err;
+                feedbackSelected.className = 'ms-2 text-danger';
+                feedbackSelected.style.display = 'inline';
+            });
+        });
+    }
+
+// --- AdBlock update button logic ---
+    const updateBtn = document.getElementById('adblock-update-btn');
+    const feedback = document.getElementById('adblock-update-feedback');
+    if (updateBtn) {
+        updateBtn.addEventListener('click', function() {
+            feedback.style.display = 'none';
+            fetch('/api/adblock/update', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ lists: 'easylist easyprivacy fanboy malware social kadhosts adobe_trackers firstparty_trackers stevenblack windows_spy' })
+            })
+            .then(res => res.json())
+            .then(data => {
+                feedback.textContent = data.success ? 'Actualización iniciada…' : ('Error: ' + (data.error || '')); 
+                feedback.classList.toggle('text-success', data.success);
+                feedback.classList.toggle('text-danger', !data.success);
+                feedback.style.display = 'inline';
+            })
+            .catch(err => {
+                feedback.textContent = 'Error: ' + err;
+                feedback.classList.remove('text-success');
+                feedback.classList.add('text-danger');
+                feedback.style.display = 'inline';
+            });
+        });
+    }
+});
 </script>
 {% endblock %}

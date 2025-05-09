@@ -755,6 +755,32 @@ def network_stats():
         app.logger.error(f"Error in /network-stats: {str(e)}")
         return jsonify({'upload': 0, 'download': 0, 'error': str(e)}), 500
 
+@app.route('/status')
+def status():
+    # Obtener estadísticas del sistema
+    stats = get_system_stats(force_refresh=True)
+    network_interface = get_network_interface()
+    local_ip = get_ip_address()
+    # Intentar obtener el SSID del WiFi
+    try:
+        ssid = subprocess.run(['iwgetid', '-r'], capture_output=True, text=True)
+        wifi_ssid = ssid.stdout.strip() if ssid.returncode == 0 else ''
+    except Exception:
+        wifi_ssid = ''
+    # Intentar obtener el estado de hostapd
+    try:
+        hostapd_status = subprocess.run(['systemctl', 'is-active', 'hostapd'], capture_output=True, text=True)
+        hostapd_status_str = hostapd_status.stdout.strip() if hostapd_status.returncode == 0 else 'unknown'
+    except Exception:
+        hostapd_status_str = 'unknown'
+    return jsonify({
+        'stats': stats,
+        'network_interface': network_interface,
+        'local_ip': local_ip,
+        'wifi_ssid': wifi_ssid,
+        'hostapd_status': hostapd_status_str
+    })
+
 if __name__ == '__main__':
     # Mostrar IP local al iniciar
     import socket
