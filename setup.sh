@@ -49,14 +49,28 @@ generate_ssl_cert() {
     apt-get install -y wget libnss3-tools || handle_error "No se pudieron instalar dependencias"
     
     # Instalar mkcert si no está instalado
+    echo "  - Verificando instalación de mkcert..."
+    
+    # Instalar dependencias necesarias para mkcert
+    apt-get install -y libnss3-tools wget || handle_error "No se pudieron instalar dependencias para mkcert"
+    
+    # Descargar mkcert para Raspberry Pi 64-bit
+    echo "  - Descargando mkcert..."
+    wget -q https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-arm64 -O /usr/local/bin/mkcert || handle_error "Descarga de mkcert fallida"
+    
+    # Dar permisos de ejecución
+    chmod +x /usr/local/bin/mkcert || handle_error "No se pudo dar permiso de ejecución a mkcert"
+    
+    # Verificar instalación de mkcert
     if ! command -v mkcert &> /dev/null; then
-        echo "Instalando mkcert..."
-        wget -q https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-amd64 -O /usr/local/bin/mkcert || handle_error "Descarga de mkcert fallida"
-        chmod +x /usr/local/bin/mkcert || handle_error "No se pudo dar permiso de ejecución a mkcert"
-        
-        # Instalar mkcert para el usuario actual y root
-        mkcert -install || handle_error "Instalación de mkcert fallida"
+        handle_error "mkcert no se pudo instalar correctamente"
     fi
+    
+    # Instalar mkcert para el usuario actual y root
+    echo "  - Configurando mkcert..."
+    mkcert -install || handle_error "Instalación de mkcert fallida"
+    
+    echo "  - mkcert instalado correctamente"
     
     # Generar certificado
     cd "$SSL_DIR" || handle_error "No se pudo cambiar al directorio $SSL_DIR"
@@ -150,39 +164,59 @@ NETWORK_CONFIG=false
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
         --help) show_help ;;
-        --update) UPDATE_MODE=true ;;
-        --cert) GENERATE_CERT=true ;;
-        --network) NETWORK_CONFIG=true ;;
+        --update) 
+            UPDATE_MODE=true
+            echo "[INFO] Modo de actualización activado" ;;
+        --cert) 
+            GENERATE_CERT=true
+            echo "[INFO] Generación de certificados SSL activada" ;;
+        --network) 
+            NETWORK_CONFIG=true
+            echo "[INFO] Configuración de red activada" ;;
         *) echo "Opción no reconocida: $1"; show_help ;;
     esac
     shift
 done
+
+# Mostrar resumen de acciones
+echo "[RESUMEN] Acciones solicitadas:"
+[ "$UPDATE_MODE" = true ] && echo "  - Actualización de HostBerry"
+[ "$GENERATE_CERT" = true ] && echo "  - Generación de certificados SSL"
+[ "$NETWORK_CONFIG" = true ] && echo "  - Configuración de red y firewall"
 
 # Mostrar ayuda si no se proporcionan argumentos
 if [ $# -eq 0 ]; then
     show_help
 fi
 
+# Proceso de actualización y generación de certificados
+
 # Generar certificados SSL si se solicita
 if [ "$GENERATE_CERT" = true ]; then
+    echo "[INICIO] Generación de certificados SSL"
     generate_ssl_cert
+    echo "[FIN] Generación de certificados SSL completada"
 fi
 
 # Configurar red si se solicita
 if [ "$NETWORK_CONFIG" = true ]; then
+    echo "[INICIO] Configuración de red y firewall"
     configure_network_and_firewall
+    echo "[FIN] Configuración de red y firewall completada"
 fi
 
 # Modo de actualización
 if [ "$UPDATE_MODE" = true ]; then
-    echo "Actualizando dependencias y configuración..."
+    echo "[INICIO] Actualización de HostBerry"
     
     # Actualizar dependencias del sistema
-    apt-get update
-    apt-get upgrade -y
-    apt-get install -y "${DEPS[@]}"
+    echo "  - Actualizando dependencias del sistema..."
+    apt-get update || handle_error "No se pudo actualizar apt-get"
+    apt-get upgrade -y || handle_error "Fallo en la actualización del sistema"
+    apt-get install -y "${DEPS[@]}" || handle_error "No se pudieron instalar las dependencias"
     
     # Recrear entorno virtual
+    echo "  - Recreando entorno virtual..."
     if [ -d venv ]; then
         rm -rf venv
     fi
@@ -192,18 +226,25 @@ if [ "$UPDATE_MODE" = true ]; then
     
     # Activar entorno virtual e instalar dependencias
     source venv/bin/activate
-    pip install --upgrade pip
+    pip install --upgrade pip || handle_error "No se pudo actualizar pip"
     pip install --upgrade -r requirements.txt || handle_error "No se pudieron actualizar las dependencias de Python"
     
     # Actualizar permisos de scripts
+    echo "  - Actualizando permisos de scripts..."
     chmod +x scripts/*.sh
     
     # Actualizar servicio systemd
+    echo "  - Actualizando servicio systemd..."
     cp hostberry-web.service /etc/systemd/system/ || handle_error "No se pudo actualizar el archivo de servicio"
     systemctl daemon-reload
     systemctl enable hostberry-web.service
     
-    echo "Actualización completada."
+    echo "[FIN] Actualización de HostBerry completada."
+fi
+
+# Verificar si se realizó alguna acción
+if [ "$GENERATE_CERT" = false ] && [ "$UPDATE_MODE" = false ] && [ "$NETWORK_CONFIG" = false ]; then
+    echo "[ADVERTENCIA] No se realizó ninguna acción. Use --help para ver las opciones disponibles."
 fi
 
 # Modo de instalación: eliminar instalación previa
