@@ -436,6 +436,27 @@ EOF
     log "$ANSI_GREEN" "INFO" "Actualización de HostBerry completada."
 }
 
+# Función para configurar DNS local
+configure_dns() {
+    log "$ANSI_YELLOW" "INFO" "Configurando DNS local..."
+    
+    # Crear configuración de dnsmasq
+    cat > /etc/dnsmasq.d/hostberry.conf << 'EOF'
+# Configuración de DNS local para HostBerry
+address=/hostberry.local/127.0.0.1
+listen-address=127.0.0.1
+bind-interfaces
+EOF
+    
+    # Reiniciar dnsmasq
+    systemctl restart dnsmasq || handle_error "No se pudo reiniciar dnsmasq"
+    
+    # Configurar resolv.conf para usar dnsmasq local
+    echo "nameserver 127.0.0.1" > /etc/resolv.conf
+    
+    log "$ANSI_GREEN" "INFO" "DNS local configurado correctamente"
+}
+
 # Procesar argumentos y ejecutar acciones
 main() {
     UPDATE_MODE=false
@@ -490,6 +511,7 @@ main() {
 
     if [ "$UPDATE_MODE" = true ]; then
         update_hostberry
+        configure_dns
     fi
     
     if [ "$GENERATE_CERT" = true ]; then
@@ -505,6 +527,7 @@ main() {
         log "$ANSI_YELLOW" "INFO" "Iniciando instalación inicial..."
         check_and_install_deps
         setup_venv
+        configure_dns
         
         # Crear archivo de configuración de Gunicorn
         log "$ANSI_YELLOW" "INFO" "Creando configuración de Gunicorn..."
