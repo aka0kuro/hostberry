@@ -11,15 +11,28 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Modo de actualización
+# Modo de actualización y certificados
 UPDATE_MODE=false
+GENERATE_CERT=false
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
         --update) UPDATE_MODE=true ;;
-        *) echo "Uso: $0 [--update]"; exit 1 ;;
+        --cert) GENERATE_CERT=true ;;
+        --network) NETWORK_CONFIG=true ;;
+        *) echo "Uso: $0 [--update] [--cert] [--network]"; exit 1 ;;
     esac
     shift
 done
+
+# Generar certificados si se solicita
+if [ "$GENERATE_CERT" = true ]; then
+    generate_ssl_cert
+fi
+
+# Configurar red y firewall si se solicita
+if [ "$NETWORK_CONFIG" = true ]; then
+    configure_network_and_firewall
+fi
 
 handle_error() {
     echo "Error: $1"
@@ -27,7 +40,79 @@ handle_error() {
 }
 
 # Dependencias de sistema
-DEPS=(python3 python3-pip python3-venv openvpn resolvconf git curl dnsmasq hostapd iptables nftables)
+DEPS=(python3 python3-pip python3-venv openvpn resolvconf git curl dnsmasq hostapd iptables nftables libnss3-tools ufw)
+
+# Función para configurar firewall y red
+configure_network_and_firewall() {
+    echo "Configurando firewall y red para Raspberry Pi..."
+    
+    # Habilitar IPv4 forwarding
+    echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
+    sudo sysctl -p
+    
+    # Configurar UFW (Uncomplicated Firewall)
+    sudo ufw reset
+    sudo ufw default deny incoming
+    sudo ufw default allow outgoing
+    
+    # Abrir puertos necesarios
+    sudo ufw allow ssh
+    sudo ufw allow 8443/tcp  # Puerto HTTPS para Hostberry
+    sudo ufw allow 53/udp    # DNS
+    sudo ufw allow 67/udp    # DHCP
+    sudo ufw allow 68/udp    # DHCP
+    
+    # Habilitar firewall
+    sudo ufw enable
+    
+    # Configurar interfaces de red
+    # Ejemplo de configuración de punto de acceso WiFi
+    echo "Configurando interfaces de red..."
+    
+    # Crear archivo de configuración para punto de acceso WiFi
+    cat << EOF | sudo tee /etc/netplan/50-hostberry-wifi-ap.yaml
+network:
+  version: 2
+  wifis:
+    wlan_ap0:
+      access-points:
+        "HostBerry":
+          password: "hostberry123"
+      dhcp4: true
+      optional: true
+EOF
+    
+    # Aplicar configuración de red
+    sudo netplan apply
+    
+    echo "Configuración de red y firewall completada."
+}
+
+# Variables para certificados SSL
+SSL_DIR="/etc/hostberry/ssl"
+SSL_HOSTNAME="hostberry.local"
+
+# Función para generar certificados con mkcert
+generate_ssl_cert() {
+    # Crear directorio SSL si no existe
+    mkdir -p "$SSL_DIR"
+    
+    # Instalar mkcert si no está instalado
+    if ! command -v mkcert &> /dev/null; then
+        echo "Instalando mkcert..."
+        wget https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-amd64 -O /usr/local/bin/mkcert
+        chmod +x /usr/local/bin/mkcert
+        mkcert -install
+    fi
+    
+    # Generar certificado
+    cd "$SSL_DIR"
+    mkcert "$SSL_HOSTNAME" "*.$(hostname -d)" localhost 127.0.0.1 ::1
+    
+    # Mostrar información del certificado
+    echo "Certificados generados en $SSL_DIR:"
+    ls -l
+}
 
 # Instalar dependencias
 apt-get update || handle_error "No se pudo actualizar apt-get"

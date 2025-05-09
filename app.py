@@ -84,7 +84,19 @@ try:
             f.write(f"FLASK_SECRET_KEY={secret_key}\n")
 
     app_logger.debug('Inicializando aplicación Flask')
+    
+    # Configuración de seguridad SSL
+    ssl_dir = '/etc/hostberry/ssl'
+
     app = Flask(__name__)
+    app.config['SSL_CERT'] = os.path.join(ssl_dir, 'hostberry.local+4.pem')
+    app.config['SSL_KEY'] = os.path.join(ssl_dir, 'hostberry.local+4-key.pem')
+
+    # Configuraciones de seguridad
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['REMEMBER_COOKIE_SECURE'] = True
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['REMEMBER_COOKIE_HTTPONLY'] = True
     app.config['SECRET_KEY'] = secret_key
     csrf = CSRFProtect(app)
 
@@ -771,6 +783,8 @@ def monitoring_stats_api():
 @app.route('/apply', methods=['POST'])
 def apply_config():
     try:
+        # Logging adicional para diagnóstico
+        app.logger.info(f'Iniciando apply_config con datos: {request.get_json()}')
         config_data = request.get_json()
         results = {}
         
@@ -784,9 +798,11 @@ def apply_config():
         }
         
         for feature, script_path in scripts.items():
+            app.logger.info(f'Procesando feature: {feature}, script_path: {script_path}')
             if config_data.get(f'apply_{feature}', False):
                 if os.path.exists(script_path):
                     try:
+                        app.logger.info(f'Ejecutando script: {script_path}')
                         result = subprocess.run(
                             [script_path],
                             check=True,
@@ -798,12 +814,15 @@ def apply_config():
                             'success': True,
                             'output': result.stdout
                         }
+                        app.logger.info(f'Script {script_path} ejecutado con éxito')
                     except subprocess.CalledProcessError as e:
+                        app.logger.error(f'Error ejecutando script {script_path}: {e.stderr}')
                         results[feature] = {
                             'success': False,
                             'error': e.stderr
                         }
                 else:
+                    app.logger.error(f'Script no encontrado: {script_path}')
                     results[feature] = {
                         'success': False,
                         'error': f'Script not found at {script_path}'
