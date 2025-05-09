@@ -52,17 +52,51 @@ from cryptography.fernet import Fernet
 from base64 import b64encode, b64decode
 import time
 
-# Configuración de logging detallado
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('/var/log/hostberry/app_startup.log'),
-        logging.StreamHandler()
-    ]
-)
+# Configuración de logging para toda la app y Flask
+import os
+LOG_PATH = '/opt/hostberry/logs/hostberry.log'
+os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
 
-app_logger = logging.getLogger('HostBerry.Startup')
+logging_config = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'detailed': {
+            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        },
+    },
+    'handlers': {
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOG_PATH,
+            'maxBytes': 10*1024*1024,  # 10MB
+            'backupCount': 5,
+            'formatter': 'detailed',
+            'encoding': 'utf8',
+        },
+    },
+    'root': {
+        'handlers': ['file'],
+        'level': 'DEBUG',
+    },
+    'loggers': {
+        'werkzeug': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': False
+        },
+        'flask.app': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+    }
+}
+logging.config.dictConfig(logging_config)
+logger = logging.getLogger(__name__)
+app_logger = logger
+app_logger.info('Sistema de logging configurado correctamente')
 
 # Initialize environment and logging
 app_logger.info('Iniciando proceso de inicialización de la aplicación')
