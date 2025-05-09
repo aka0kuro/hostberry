@@ -289,6 +289,7 @@ update_hostberry() {
     mkdir -p "$HOSTBERRY_DIR/logs"
     chmod 755 "$HOSTBERRY_DIR/logs"
     touch "$HOSTBERRY_DIR/logs/access.log" "$HOSTBERRY_DIR/logs/error.log"
+    
     chmod 644 "$HOSTBERRY_DIR/logs/access.log" "$HOSTBERRY_DIR/logs/error.log"
     chown -R root:root "$HOSTBERRY_DIR/logs"
     log "$ANSI_GREEN" "INFO" "Directorio de logs creado y configurado"
