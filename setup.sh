@@ -33,92 +33,69 @@ show_help() {
 SSL_DIR="/etc/hostberry/ssl"
 SSL_HOSTNAME="hostberry.local"
 
-# Función para generar certificados con mkcert
+# Función para generar certificados SSL
 generate_ssl_cert() {
-    # Verificar permisos de root
-    if [ "$EUID" -ne 0 ]; then
-        echo "Error: Este comando debe ejecutarse como root (sudo)"
-        exit 1
+    local ANSI_GREEN='\033[0;32m'
+    local ANSI_YELLOW='\033[0;33m'
+    local ANSI_RESET='\033[0m'
+
+    # Verificar si ya está instalado mkcert
+    if ! command -v mkcert &> /dev/null; then
+        echo -e "${ANSI_YELLOW}Instalando mkcert...${ANSI_RESET}"
+        
+        # Instalar dependencias
+        apt-get update
+        apt-get install -y wget libnss3-tools
+
+        # Descargar mkcert para Raspberry Pi 64-bit
+        wget https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-arm64 -O /usr/local/bin/mkcert
+        chmod +x /usr/local/bin/mkcert
     fi
 
-    # Crear directorio SSL si no existe
-    mkdir -p "$SSL_DIR" || handle_error "No se pudo crear el directorio $SSL_DIR"
-    
-    # Instalar dependencias necesarias
-    apt-get update || handle_error "No se pudo actualizar apt-get"
-    apt-get install -y wget libnss3-tools || handle_error "No se pudieron instalar dependencias"
-    
-    # Instalar mkcert si no está instalado
-    echo "  - Verificando instalación de mkcert..."
-    
-    # Instalar dependencias necesarias para mkcert
-    apt-get install -y libnss3-tools wget || handle_error "No se pudieron instalar dependencias para mkcert"
-    
-    # Descargar mkcert para Raspberry Pi 64-bit
-    echo "  - Descargando mkcert..."
-    wget -q https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-arm64 -O /usr/local/bin/mkcert || handle_error "Descarga de mkcert fallida"
-    
-    # Dar permisos de ejecución
-    chmod +x /usr/local/bin/mkcert || handle_error "No se pudo dar permiso de ejecución a mkcert"
-    
-    # Verificar instalación de mkcert
-    if ! command -v mkcert &> /dev/null; then
-        handle_error "mkcert no se pudo instalar correctamente"
-    fi
-    
-    # Instalar mkcert para el usuario actual y root
-    echo "  - Configurando mkcert..."
-    mkcert -install || handle_error "Instalación de mkcert fallida"
-    
-    echo "  - mkcert instalado correctamente"
-    
-    # Generar certificado
-    cd "$SSL_DIR" || handle_error "No se pudo cambiar al directorio $SSL_DIR"
+    # Directorio para certificados
+    local SSL_DIR="/etc/hostberry/ssl"
+    mkdir -p "$SSL_DIR"
+
+    # Instalar mkcert para el sistema
+    mkcert -install
+
+    # Generar certificados
+    cd "$SSL_DIR"
     
     # Obtener nombres de host
-    HOSTNAME=$(hostname)
-    DOMAIN=$(hostname -d || echo "local")
-    
-    echo "  - Generando certificados para:"
-    echo "    * $SSL_HOSTNAME"
-    echo "    * $HOSTNAME"
-    echo "    * localhost"
-    echo "    * 127.0.0.1"
-    echo "    * ::1"
-    
-    # Generar certificados con múltiples nombres de host
+    local HOSTNAME=$(hostname)
+    local DOMAIN=$(hostname -d || echo "local")
+
+    echo -e "${ANSI_GREEN}Generando certificados para:${ANSI_RESET}"
+    echo "  * hostberry.local"
+    echo "  * $HOSTNAME"
+    echo "  * localhost"
+    echo "  * 127.0.0.1"
+
+    # Generar certificados
     mkcert -cert-file hostberry.crt -key-file hostberry.key \
-        "$SSL_HOSTNAME" \
+        hostberry.local \
         "$HOSTNAME" \
         "*.$(hostname -d)" \
         localhost \
-        127.0.0.1 \
-        ::1 \
-        || handle_error "Generación de certificados fallida"
-    
-    # Verificar existencia de certificados
+        127.0.0.1
+
+    # Verificar certificados
     if [ ! -f hostberry.crt ] || [ ! -f hostberry.key ]; then
-        handle_error "Los archivos de certificado no se generaron correctamente"
+        echo -e "${ANSI_YELLOW}Error: No se generaron los certificados${ANSI_RESET}"
+        return 1
     fi
-    
-    # Mostrar información del certificado
-    echo "  - Detalles de los certificados:"
-    ls -l hostberry.{crt,key}
-    
-    # Establecer permisos seguros
-    chmod 600 hostberry.key || handle_error "No se pudieron establecer permisos seguros"
-    chmod 644 hostberry.crt || handle_error "No se pudieron establecer permisos para el certificado"
-    
-    # Mostrar información del certificado
-    echo "  - Información del certificado:"
-    
-    # Verificar que el certificado es válido
-    if ! openssl x509 -in hostberry.crt -text -noout > /dev/null 2>&1; then
-        handle_error "El certificado generado no es válido"
-    fi
-    
-    # Extraer y mostrar detalles del certificado
-    echo "    * Detalles del certificado:"
+
+    # Establecer permisos
+    chmod 600 hostberry.key
+    chmod 644 hostberry.crt
+
+    # Mostrar detalles del certificado
+    echo -e "${ANSI_GREEN}Detalles del certificado:${ANSI_RESET}"
+    openssl x509 -in hostberry.crt -text -noout | grep -E 'Subject:|Not Before:|Not After :'
+
+    echo -e "${ANSI_GREEN}Certificados SSL generados exitosamente en $SSL_DIR${ANSI_RESET}"
+    return 0
     openssl x509 -in hostberry.crt -text -noout | grep -E 'Subject:|Not Before:|Not After :' | sed 's/^/      /'
     
     # Verificar la clave privada
