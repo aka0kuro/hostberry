@@ -222,7 +222,7 @@ update_from_github() {
     rm -rf "$HOSTBERRY_DIR"
     
     log "$ANSI_YELLOW" "INFO" "Clonando repositorio..."
-    git clone https://github.com/blag0rag/hostberry.git "$HOSTBERRY_DIR" || handle_error "No se pudo clonar el repositorio"
+    git clone https://github.com/aka0kuro/hostberry.git "$HOSTBERRY_DIR" || handle_error "No se pudo clonar el repositorio"
     
     # Actualizar permisos
     chmod -R 755 "$HOSTBERRY_DIR"
