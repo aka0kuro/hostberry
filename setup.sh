@@ -318,67 +318,6 @@ update_hostberry() {
         log "$ANSI_YELLOW" "WARN" "Archivo de servicio no encontrado en $HOSTBERRY_DIR/$SYSTEMD_SERVICE"
         log "$ANSI_YELLOW" "INFO" "Creando archivo de servicio systemd..."
         
-        # Crear archivo de configuración de Gunicorn
-        log "$ANSI_YELLOW" "INFO" "Creando configuración de Gunicorn..."
-        cat > "$HOSTBERRY_DIR/gunicorn.conf.py" << 'EOF'
-import multiprocessing
-import os
-
-# Configuración básica
-bind = "0.0.0.0:80"
-workers = 1
-worker_class = "sync"
-worker_connections = 1000
-timeout = 120
-keepalive = 5
-max_requests = 1000
-max_requests_jitter = 50
-backlog = 2048
-graceful_timeout = 30
-
-# Configuración de logs
-accesslog = "/opt/hostberry/logs/access.log"
-errorlog = "/opt/hostberry/logs/error.log"
-loglevel = "debug"
-access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(L)s'
-capture_output = True
-enable_stdio_inheritance = True
-
-# Configuración de seguridad
-limit_request_line = 4094
-limit_request_fields = 100
-limit_request_field_size = 8190
-
-# Configuración de procesos
-preload_app = True
-daemon = False
-pidfile = "/opt/hostberry/gunicorn.pid"
-umask = 0o022
-user = "root"
-group = "root"
-
-def post_fork(server, worker):
-    server.log.info("Worker spawned (pid: %s)", worker.pid)
-
-def pre_fork(server, worker):
-    server.log.info("Pre-fork worker (pid: %s)", worker.pid)
-
-def pre_exec(server):
-    server.log.info("Forked child, re-executing.")
-
-def when_ready(server):
-    server.log.info("Server is ready. Spawning workers")
-
-def worker_int(worker):
-    worker.log.info("worker received INT or QUIT signal")
-
-def worker_abort(worker):
-    worker.log.info("worker received SIGABRT signal")
-
-def worker_exit(server, worker):
-    server.log.info("Worker exited (pid: %s)", worker.pid)
-EOF
-        
         # Crear archivo de servicio systemd
         log "$ANSI_YELLOW" "INFO" "Creando archivo de servicio systemd..."
         cat > /etc/systemd/system/hostberry-web.service << 'EOF'
@@ -390,30 +329,12 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/opt/hostberry
-ExecStart=/opt/hostberry/venv/bin/gunicorn \
-    --workers 1 \
-    --bind 0.0.0.0:80 \
-    --access-logfile /opt/hostberry/logs/access.log \
-    --error-logfile /opt/hostberry/logs/error.log \
-    --log-level debug \
-    --access-logformat '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(L)s' \
-    --capture-output \
-    --enable-stdio-inheritance \
-    --timeout 120 \
-    --keep-alive 5 \
-    --max-requests 1000 \
-    --max-requests-jitter 50 \
-    --worker-class sync \
-    --worker-connections 1000 \
-    --backlog 2048 \
-    --graceful-timeout 30 \
-    app:app
+ExecStart=/opt/hostberry/venv/bin/python3 test_app.py
 Restart=always
 RestartSec=10
-Environment="FLASK_APP=app.py"
+Environment="FLASK_APP=test_app.py"
 Environment="FLASK_ENV=production"
 Environment="PYTHONUNBUFFERED=1"
-Environment="GUNICORN_CMD_ARGS=--config /opt/hostberry/gunicorn.conf.py"
 
 [Install]
 WantedBy=multi-user.target
@@ -509,6 +430,45 @@ verify_service() {
     log "$ANSI_GREEN" "INFO" "Servicio web verificado y funcionando correctamente"
 }
 
+# Función para verificar la aplicación Flask
+verify_flask_app() {
+    log "$ANSI_YELLOW" "INFO" "Verificando aplicación Flask..."
+    
+    # Verificar que app.py existe
+    if [ ! -f "$HOSTBERRY_DIR/app.py" ]; then
+        handle_error "No se encontró app.py en $HOSTBERRY_DIR"
+    fi
+    
+    # Verificar que el entorno virtual está activo
+    if [ ! -f "$VENV_DIR/bin/activate" ]; then
+        handle_error "No se encontró el entorno virtual en $VENV_DIR"
+    fi
+    
+    # Verificar que Flask está instalado
+    if ! "$VENV_DIR/bin/pip" show flask > /dev/null 2>&1; then
+        log "$ANSI_YELLOW" "INFO" "Instalando Flask..."
+        "$VENV_DIR/bin/pip" install flask || handle_error "No se pudo instalar Flask"
+    fi
+    
+    # Crear un script de prueba
+    cat > "$HOSTBERRY_DIR/test_app.py" << 'EOF'
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return 'HostBerry está funcionando correctamente!'
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=80)
+EOF
+    
+    # Dar permisos
+    chmod 755 "$HOSTBERRY_DIR/test_app.py"
+    
+    log "$ANSI_GREEN" "INFO" "Aplicación Flask verificada"
+}
+
 # Procesar argumentos y ejecutar acciones
 main() {
     UPDATE_MODE=false
@@ -564,6 +524,7 @@ main() {
     if [ "$UPDATE_MODE" = true ]; then
         update_hostberry
         configure_firewall
+        verify_flask_app
         verify_service
         show_access_info
     fi
@@ -582,70 +543,10 @@ main() {
         check_and_install_deps
         setup_venv
         configure_firewall
+        verify_flask_app
         verify_service
         show_access_info
         
-        # Crear archivo de configuración de Gunicorn
-        log "$ANSI_YELLOW" "INFO" "Creando configuración de Gunicorn..."
-        cat > "$HOSTBERRY_DIR/gunicorn.conf.py" << 'EOF'
-import multiprocessing
-import os
-
-# Configuración básica
-bind = "0.0.0.0:80"
-workers = 1
-worker_class = "sync"
-worker_connections = 1000
-timeout = 120
-keepalive = 5
-max_requests = 1000
-max_requests_jitter = 50
-backlog = 2048
-graceful_timeout = 30
-
-# Configuración de logs
-accesslog = "/opt/hostberry/logs/access.log"
-errorlog = "/opt/hostberry/logs/error.log"
-loglevel = "debug"
-access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(L)s'
-capture_output = True
-enable_stdio_inheritance = True
-
-# Configuración de seguridad
-limit_request_line = 4094
-limit_request_fields = 100
-limit_request_field_size = 8190
-
-# Configuración de procesos
-preload_app = True
-daemon = False
-pidfile = "/opt/hostberry/gunicorn.pid"
-umask = 0o022
-user = "root"
-group = "root"
-
-def post_fork(server, worker):
-    server.log.info("Worker spawned (pid: %s)", worker.pid)
-
-def pre_fork(server, worker):
-    server.log.info("Pre-fork worker (pid: %s)", worker.pid)
-
-def pre_exec(server):
-    server.log.info("Forked child, re-executing.")
-
-def when_ready(server):
-    server.log.info("Server is ready. Spawning workers")
-
-def worker_int(worker):
-    worker.log.info("worker received INT or QUIT signal")
-
-def worker_abort(worker):
-    worker.log.info("worker received SIGABRT signal")
-
-def worker_exit(server, worker):
-    server.log.info("Worker exited (pid: %s)", worker.pid)
-EOF
-
         # Crear archivo de servicio systemd
         log "$ANSI_YELLOW" "INFO" "Creando archivo de servicio systemd..."
         cat > /etc/systemd/system/hostberry-web.service << 'EOF'
@@ -657,30 +558,12 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/opt/hostberry
-ExecStart=/opt/hostberry/venv/bin/gunicorn \
-    --workers 1 \
-    --bind 0.0.0.0:80 \
-    --access-logfile /opt/hostberry/logs/access.log \
-    --error-logfile /opt/hostberry/logs/error.log \
-    --log-level debug \
-    --access-logformat '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(L)s' \
-    --capture-output \
-    --enable-stdio-inheritance \
-    --timeout 120 \
-    --keep-alive 5 \
-    --max-requests 1000 \
-    --max-requests-jitter 50 \
-    --worker-class sync \
-    --worker-connections 1000 \
-    --backlog 2048 \
-    --graceful-timeout 30 \
-    app:app
+ExecStart=/opt/hostberry/venv/bin/python3 test_app.py
 Restart=always
 RestartSec=10
-Environment="FLASK_APP=app.py"
+Environment="FLASK_APP=test_app.py"
 Environment="FLASK_ENV=production"
 Environment="PYTHONUNBUFFERED=1"
-Environment="GUNICORN_CMD_ARGS=--config /opt/hostberry/gunicorn.conf.py"
 
 [Install]
 WantedBy=multi-user.target
