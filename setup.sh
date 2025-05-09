@@ -125,17 +125,17 @@ generate_ssl_cert() {
     mkdir -p "$SSL_DIR"
     cd "$SSL_DIR" || handle_error "No se pudo acceder al directorio SSL"
     
-    # Obtener nombres de host
+    # Obtener nombres de host y IP local
     local HOSTNAME=$(hostname)
     local DOMAIN=$(hostname -d || echo "local")
-    local WILDCARD_DOMAIN="*.${DOMAIN}"
+    local LOCAL_IP=$(hostname -I | awk '{print $1}')
 
     log "$ANSI_GREEN" "INFO" "Generando certificados para:"
     echo "  * hostberry.local"
     echo "  * $HOSTNAME"
     echo "  * localhost"
     echo "  * 127.0.0.1"
-    echo "  * $WILDCARD_DOMAIN"
+    echo "  * $LOCAL_IP"
 
     # Instalar mkcert para el sistema
     mkcert -install || handle_error "No se pudo instalar mkcert en el sistema"
@@ -144,9 +144,9 @@ generate_ssl_cert() {
     mkcert -cert-file hostberry.crt -key-file hostberry.key \
         "hostberry.local" \
         "$HOSTNAME" \
-        "$WILDCARD_DOMAIN" \
         "localhost" \
-        "127.0.0.1" || handle_error "No se pudieron generar los certificados"
+        "127.0.0.1" \
+        "$LOCAL_IP" || handle_error "No se pudieron generar los certificados"
 
     # Verificar certificados
     if [ ! -f hostberry.crt ] || [ ! -f hostberry.key ]; then
