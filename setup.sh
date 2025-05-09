@@ -459,7 +459,13 @@ EOF
     
     log "$ANSI_GREEN" "INFO" "DNS local configurado correctamente"
     log "$ANSI_GREEN" "INFO" "hostberry.local ahora resuelve a ${LOCAL_IP}"
-    log "$ANSI_YELLOW" "INFO" "Para acceder desde otros dispositivos en la red, configura sus DNS a ${LOCAL_IP}"
+    log "$ANSI_YELLOW" "INFO" "Para acceder desde otros dispositivos, agrega esta línea a su archivo /etc/hosts:"
+    log "$ANSI_YELLOW" "INFO" "${LOCAL_IP} hostberry.local"
+    log "$ANSI_YELLOW" "INFO" ""
+    log "$ANSI_YELLOW" "INFO" "En Windows: C:\\Windows\\System32\\drivers\\etc\\hosts"
+    log "$ANSI_YELLOW" "INFO" "En Linux/Mac: /etc/hosts"
+    log "$ANSI_YELLOW" "INFO" "En Android: Requiere root o usar una app como 'Hosts Editor'"
+    log "$ANSI_YELLOW" "INFO" "En iOS: Requiere jailbreak"
 }
 
 # Procesar argumentos y ejecutar acciones
