@@ -436,39 +436,18 @@ EOF
     log "$ANSI_GREEN" "INFO" "Actualización de HostBerry completada."
 }
 
-# Función para configurar DNS local
-configure_dns() {
-    log "$ANSI_YELLOW" "INFO" "Configurando DNS local..."
+# Función para mostrar información de acceso
+show_access_info() {
+    log "$ANSI_YELLOW" "INFO" "Obteniendo información de acceso..."
     
     # Obtener la IP local
     local LOCAL_IP=$(hostname -I | awk '{print $1}')
     
-    # Crear configuración de dnsmasq
-    cat > /etc/dnsmasq.d/hostberry.conf << EOF
-# Configuración de DNS local para HostBerry
-address=/hostberry.local/${LOCAL_IP}
-listen-address=0.0.0.0
-bind-interfaces
-EOF
-    
-    # Reiniciar dnsmasq
-    systemctl restart dnsmasq || handle_error "No se pudo reiniciar dnsmasq"
-    
-    # Configurar resolv.conf para usar dnsmasq local
-    echo "nameserver 127.0.0.1" > /etc/resolv.conf
-    
-    log "$ANSI_GREEN" "INFO" "DNS local configurado correctamente"
-    log "$ANSI_GREEN" "INFO" "Puedes acceder a HostBerry de las siguientes formas:"
-    log "$ANSI_YELLOW" "INFO" "1. Directamente por IP: http://${LOCAL_IP}"
-    log "$ANSI_YELLOW" "INFO" "2. Por nombre local: http://hostberry.local"
+    log "$ANSI_GREEN" "INFO" "HostBerry está listo para usar"
+    log "$ANSI_YELLOW" "INFO" "Puedes acceder a HostBerry desde cualquier dispositivo en la red usando:"
+    log "$ANSI_YELLOW" "INFO" "http://${LOCAL_IP}"
     log "$ANSI_YELLOW" "INFO" ""
-    log "$ANSI_YELLOW" "INFO" "Para acceder desde otros dispositivos, agrega esta línea a su archivo /etc/hosts:"
-    log "$ANSI_YELLOW" "INFO" "${LOCAL_IP} hostberry.local"
-    log "$ANSI_YELLOW" "INFO" ""
-    log "$ANSI_YELLOW" "INFO" "En Windows: C:\\Windows\\System32\\drivers\\etc\\hosts"
-    log "$ANSI_YELLOW" "INFO" "En Linux/Mac: /etc/hosts"
-    log "$ANSI_YELLOW" "INFO" "En Android: Requiere root o usar una app como 'Hosts Editor'"
-    log "$ANSI_YELLOW" "INFO" "En iOS: Requiere jailbreak"
+    log "$ANSI_YELLOW" "INFO" "Asegúrate de que el dispositivo esté en la misma red que este servidor"
 }
 
 # Procesar argumentos y ejecutar acciones
@@ -525,7 +504,7 @@ main() {
 
     if [ "$UPDATE_MODE" = true ]; then
         update_hostberry
-        configure_dns
+        show_access_info
     fi
     
     if [ "$GENERATE_CERT" = true ]; then
@@ -541,7 +520,7 @@ main() {
         log "$ANSI_YELLOW" "INFO" "Iniciando instalación inicial..."
         check_and_install_deps
         setup_venv
-        configure_dns
+        show_access_info
         
         # Crear archivo de configuración de Gunicorn
         log "$ANSI_YELLOW" "INFO" "Creando configuración de Gunicorn..."
