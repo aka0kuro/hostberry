@@ -8,6 +8,27 @@ handle_error() {
     exit 1
 }
 
+# Función de ayuda para mostrar información de uso
+show_help() {
+    echo "Uso: $0 [OPCIONES]"
+    echo ""
+    echo "Opciones:"
+    echo "  --help         Mostrar esta ayuda y salir"
+    echo "  --update       Actualizar la instalación de HostBerry"
+    echo "  --cert         Generar certificados SSL con mkcert"
+    echo "  --network      Configurar firewall y red para Raspberry Pi"
+    echo ""
+    echo "Ejemplos:"
+    echo "  sudo ./setup.sh                   Instalación inicial"
+    echo "  sudo ./setup.sh --update          Actualizar HostBerry"
+    echo "  sudo ./setup.sh --cert            Generar certificados SSL"
+    echo "  sudo ./setup.sh --network         Configurar red y firewall"
+    echo "  sudo ./setup.sh --update --cert   Actualizar e instalar certificados"
+    echo ""
+    echo "Para más información, consulta la documentación de HostBerry."
+    exit 0
+}
+
 # Variables para certificados SSL
 SSL_DIR="/etc/hostberry/ssl"
 SSL_HOSTNAME="hostberry.local"
@@ -101,13 +122,19 @@ NETWORK_CONFIG=false
 # Parsear argumentos
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
+        --help) show_help ;;
         --update) UPDATE_MODE=true ;;
         --cert) GENERATE_CERT=true ;;
         --network) NETWORK_CONFIG=true ;;
-        *) echo "Uso: $0 [--update] [--cert] [--network]"; exit 1 ;;
+        *) echo "Opción no reconocida: $1"; show_help ;;
     esac
     shift
 done
+
+# Mostrar ayuda si no se proporcionan argumentos
+if [ $# -eq 0 ]; then
+    show_help
+fi
 
 # Modo de instalación o actualización
 if [ "$UPDATE_MODE" = false ]; then
