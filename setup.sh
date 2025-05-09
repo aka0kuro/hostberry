@@ -55,12 +55,14 @@ show_help() {
     echo
     echo "Opciones:"
     echo "  --help         Mostrar esta ayuda y salir"
+    echo "  --install      Instalación limpia completa (recomendado)"
     echo "  --update       Actualizar la instalación de HostBerry"
     echo "  --cert         Generar certificados SSL con mkcert"
     echo "  --network      Configurar firewall y red para Raspberry Pi"
     echo
     echo "Ejemplos:"
-    echo "  sudo ./setup.sh                   Instalación inicial"
+    echo "  sudo ./setup.sh --install         Instalación limpia recomendada"
+    echo "  sudo ./setup.sh                   Instalación inicial (equivalente a --install)"
     echo "  sudo ./setup.sh --update          Actualizar HostBerry"
     echo "  sudo ./setup.sh --cert            Generar certificados SSL"
     echo "  sudo ./setup.sh --network         Configurar red y firewall"
@@ -512,9 +514,13 @@ main() {
     GENERATE_CERT=false
     CONFIGURE_NETWORK=false
     SHOW_HELP=false
+    INSTALL_MODE=false
 
     for arg in "$@"; do
         case $arg in
+            --help)
+                SHOW_HELP=true
+                ;;
             --update)
                 UPDATE_MODE=true
                 ;;
@@ -524,13 +530,27 @@ main() {
             --network)
                 CONFIGURE_NETWORK=true
                 ;;
-            -h|--help)
-                SHOW_HELP=true
+            --install)
+                INSTALL_MODE=true
                 ;;
             *)
+                log "$ANSI_RED" "ERROR" "Opción desconocida: $arg"
+                SHOW_HELP=true
                 ;;
         esac
     done
+
+    if [ "$SHOW_HELP" = true ]; then
+        show_help
+    fi
+
+    if [ "$INSTALL_MODE" = true ]; then
+        update_hostberry
+        configure_network
+        generate_ssl_cert
+        show_access_info
+        exit 0
+    fi
 
     if [ "$SHOW_HELP" = true ] || [ $# -eq 0 ]; then
         show_help
