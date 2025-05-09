@@ -154,11 +154,7 @@ generate_ssl_cert() {
     local LOCAL_IP=$(hostname -I | awk '{print $1}')
 
     log "$ANSI_GREEN" "INFO" "Generando certificados para:"
-    echo "  * hostberry.local"
-    echo "  * $HOSTNAME"
-    echo "  * localhost"
-    echo "  * 127.0.0.1"
-    echo "  * $LOCAL_IP"
+    echo "  * $LOCAL_IP:5000"
 
     # Instalar mkcert para el sistema
     mkcert -install || handle_error "No se pudo instalar mkcert en el sistema"
