@@ -261,6 +261,15 @@ update_hostberry() {
     # Actualizar desde GitHub
     update_from_github
     
+    # Crear directorio de logs y archivos necesarios
+    log "$ANSI_YELLOW" "INFO" "Creando directorio de logs..."
+    mkdir -p "$HOSTBERRY_DIR/logs"
+    chmod 755 "$HOSTBERRY_DIR/logs"
+    touch "$HOSTBERRY_DIR/logs/access.log" "$HOSTBERRY_DIR/logs/error.log"
+    chmod 644 "$HOSTBERRY_DIR/logs/access.log" "$HOSTBERRY_DIR/logs/error.log"
+    chown -R root:root "$HOSTBERRY_DIR/logs"
+    log "$ANSI_GREEN" "INFO" "Directorio de logs creado y configurado"
+    
     # Actualizar dependencias y configuración
     check_and_install_deps
     setup_venv
@@ -284,12 +293,6 @@ update_hostberry() {
     else
         log "$ANSI_YELLOW" "WARN" "Archivo de servicio no encontrado en $HOSTBERRY_DIR/$SYSTEMD_SERVICE"
         log "$ANSI_YELLOW" "INFO" "Creando archivo de servicio systemd..."
-        
-        # Crear directorio de logs
-        mkdir -p "$HOSTBERRY_DIR/logs"
-        chmod 755 "$HOSTBERRY_DIR/logs"
-        touch "$HOSTBERRY_DIR/logs/access.log" "$HOSTBERRY_DIR/logs/error.log"
-        chmod 644 "$HOSTBERRY_DIR/logs/access.log" "$HOSTBERRY_DIR/logs/error.log"
         
         # Crear archivo de configuración de Gunicorn
         log "$ANSI_YELLOW" "INFO" "Creando configuración de Gunicorn..."
