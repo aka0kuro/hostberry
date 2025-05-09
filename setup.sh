@@ -74,16 +74,46 @@ generate_ssl_cert() {
     
     # Generar certificado
     cd "$SSL_DIR" || handle_error "No se pudo cambiar al directorio $SSL_DIR"
-    mkcert -cert-file hostberry.crt -key-file hostberry.key "$SSL_HOSTNAME" "*.$(hostname -d)" localhost 127.0.0.1 ::1 || handle_error "Generación de certificados fallida"
+    
+    # Obtener nombres de host
+    HOSTNAME=$(hostname)
+    DOMAIN=$(hostname -d || echo "local")
+    
+    echo "  - Generando certificados para:"
+    echo "    * $SSL_HOSTNAME"
+    echo "    * $HOSTNAME"
+    echo "    * localhost"
+    echo "    * 127.0.0.1"
+    echo "    * ::1"
+    
+    # Generar certificados con múltiples nombres de host
+    mkcert -cert-file hostberry.crt -key-file hostberry.key \
+        "$SSL_HOSTNAME" \
+        "$HOSTNAME" \
+        "*.$(hostname -d)" \
+        localhost \
+        127.0.0.1 \
+        ::1 \
+        || handle_error "Generación de certificados fallida"
+    
+    # Verificar existencia de certificados
+    if [ ! -f hostberry.crt ] || [ ! -f hostberry.key ]; then
+        handle_error "Los archivos de certificado no se generaron correctamente"
+    fi
     
     # Mostrar información del certificado
-    echo "Certificados generados en $SSL_DIR:"
+    echo "  - Detalles de los certificados:"
     ls -l hostberry.{crt,key}
     
     # Establecer permisos seguros
     chmod 600 hostberry.key || handle_error "No se pudieron establecer permisos seguros"
+    chmod 644 hostberry.crt || handle_error "No se pudieron establecer permisos para el certificado"
     
-    echo "Generación de certificados SSL completada."
+    # Mostrar información del certificado
+    echo "  - Información del certificado:"
+    openssl x509 -in hostberry.crt -text -noout | grep -E 'Subject:|Not Before:|Not After :'
+    
+    echo "[ÉXITO] Generación de certificados SSL completada."
 }
 
 # Función para configurar firewall y red
@@ -149,7 +179,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Dependencias de sistema
-DEPS=(python3 python3-pip python3-venv openvpn resolvconf git curl dnsmasq hostapd iptables nftables libnss3-tools ufw)
+DEPS=(python3 python3-pip python3-venv openvpn resolvconf git curl dnsmasq hostapd iptables nftables libnss3-tools ufw openssl)
 
 # Instalar dependencias
 apt-get update || handle_error "No se pudo actualizar apt-get"
