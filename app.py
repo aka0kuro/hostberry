@@ -30,7 +30,6 @@ import time
 from werkzeug.utils import secure_filename
 import re
 from flask_babel import Babel, gettext as _
-from flask_talisman import Talisman
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -221,14 +220,6 @@ except Exception as e:
     app_logger.error(f'Error al registrar blueprints: {e}', exc_info=True)
     raise
 
-# Configuración avanzada de seguridad HTTP (Flask-Talisman)
-# Puedes personalizar más políticas CSP según tus necesidades
-Talisman(app, content_security_policy={
-    'default-src': ["'self'", '*', 'data:', 'blob:'],
-    'img-src': ["'self'", '*', 'data:', 'blob:'],
-    'script-src': ["'self'", '*', "'unsafe-inline'", "'unsafe-eval'", 'data:'],
-    'style-src': ["'self'", '*', "'unsafe-inline'", 'data:'],
-})
 
 # Configuración avanzada de logging
 log_dir = 'logs'
