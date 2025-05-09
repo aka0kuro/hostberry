@@ -46,24 +46,57 @@ import secrets
 import json
 from cryptography.fernet import Fernet
 from base64 import b64encode, b64decode
+import time
+
+# Configuración de logging detallado
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('/var/log/hostberry/app_startup.log'),
+        logging.StreamHandler()
+    ]
+)
+
+app_logger = logging.getLogger('HostBerry.Startup')
 
 # Initialize environment and logging
-if not os.path.exists('.env'):
-    with open('.env', 'w') as f:
+app_logger.info('Iniciando proceso de inicialización de la aplicación')
+
+start_time = time.time()
+
+try:
+    app_logger.debug('Verificando archivo .env')
+    if not os.path.exists('.env'):
+        app_logger.info('Creando archivo .env con nueva clave secreta')
+        with open('.env', 'w') as f:
+            secret_key = secrets.token_hex(32)
+            f.write(f"FLASK_SECRET_KEY={secret_key}\n")
+
+    app_logger.debug('Cargando variables de entorno')
+    load_dotenv()
+
+    secret_key = os.getenv('FLASK_SECRET_KEY')
+    if not secret_key or len(secret_key) < 32:
+        app_logger.info('Generando nueva clave secreta')
         secret_key = secrets.token_hex(32)
-        f.write(f"FLASK_SECRET_KEY={secret_key}\n")
+        with open('.env', 'a') as f:
+            f.write(f"FLASK_SECRET_KEY={secret_key}\n")
 
-load_dotenv()
+    app_logger.debug('Inicializando aplicación Flask')
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = secret_key
+    csrf = CSRFProtect(app)
 
-secret_key = os.getenv('FLASK_SECRET_KEY')
-if not secret_key or len(secret_key) < 32:
-    secret_key = secrets.token_hex(32)
-    with open('.env', 'a') as f:
-        f.write(f"FLASK_SECRET_KEY={secret_key}\n")
+    app_logger.debug('Configuración inicial completada')
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = secret_key
-csrf = CSRFProtect(app)
+except Exception as e:
+    app_logger.error(f'Error durante la inicialización: {e}', exc_info=True)
+    raise
+
+finally:
+    end_time = time.time()
+    app_logger.info(f'Tiempo de inicialización: {end_time - start_time:.2f} segundos')
 
 # --- Autenticación básica ---
 from functools import wraps
@@ -106,12 +139,20 @@ def logout():
     return redirect(url_for('login'))
 
 # Registrar blueprints WiFi, VPN, AdBlock, hostapd, WireGuard y Security
-app.register_blueprint(wifi_bp)
-app.register_blueprint(vpn_bp)
-app.register_blueprint(adblock_bp)
-app.register_blueprint(hostapd_bp)
-app.register_blueprint(wireguard_bp)
-app.register_blueprint(security_bp)
+app_logger.info('Registrando blueprints de la aplicación')
+try:
+    start_blueprint_time = time.time()
+    app.register_blueprint(wifi_bp)
+    app.register_blueprint(vpn_bp)
+    app.register_blueprint(adblock_bp)
+    app.register_blueprint(hostapd_bp)
+    app.register_blueprint(wireguard_bp)
+    app.register_blueprint(security_bp)
+    end_blueprint_time = time.time()
+    app_logger.info(f'Tiempo de registro de blueprints: {end_blueprint_time - start_blueprint_time:.2f} segundos')
+except Exception as e:
+    app_logger.error(f'Error al registrar blueprints: {e}', exc_info=True)
+    raise
 
 # Configure secure session settings
 app.config.update(
@@ -321,7 +362,15 @@ def blocked():
     return render_template('blocked.html', reason=reason), 403
 
 # Inicialización al inicio del archivo
-config = HostBerryConfig()
+app_logger.info('Inicializando configuración de HostBerry')
+try:
+    start_config_time = time.time()
+    config = HostBerryConfig()
+    end_config_time = time.time()
+    app_logger.info(f'Tiempo de inicialización de configuración: {end_config_time - start_config_time:.2f} segundos')
+except Exception as e:
+    app_logger.error(f'Error al inicializar configuración: {e}', exc_info=True)
+    raise
 
 def get_config():
     global config
