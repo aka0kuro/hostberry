@@ -217,33 +217,12 @@ update_from_github() {
         apt-get install -y git || handle_error "No se pudo instalar git"
     fi
     
-    # Configurar git para permitir el directorio
-    git config --global --add safe.directory "$HOSTBERRY_DIR" || handle_error "No se pudo configurar git"
+    # Eliminar el directorio existente y clonar de nuevo
+    log "$ANSI_YELLOW" "INFO" "Eliminando directorio existente..."
+    rm -rf "$HOSTBERRY_DIR"
     
-    # Verificar si el directorio es un repositorio git
-    if [ ! -d "$HOSTBERRY_DIR/.git" ]; then
-        log "$ANSI_YELLOW" "INFO" "Clonando repositorio..."
-        rm -rf "$HOSTBERRY_DIR"
-        git clone https://github.com/blag0rag/hostberry.git "$HOSTBERRY_DIR" || handle_error "No se pudo clonar el repositorio"
-    else
-        # Guardar cambios locales si existen
-        cd "$HOSTBERRY_DIR" || handle_error "No se pudo acceder al directorio de HostBerry"
-        if git status --porcelain | grep -q '^'; then
-            log "$ANSI_YELLOW" "INFO" "Guardando cambios locales..."
-            git stash || handle_error "No se pudieron guardar los cambios locales"
-        fi
-        
-        # Actualizar desde el repositorio remoto
-        log "$ANSI_YELLOW" "INFO" "Actualizando desde el repositorio remoto..."
-        git fetch origin || handle_error "No se pudo obtener las actualizaciones"
-        git reset --hard origin/main || handle_error "No se pudo actualizar el código"
-        
-        # Restaurar cambios locales si existían
-        if git stash list | grep -q '^'; then
-            log "$ANSI_YELLOW" "INFO" "Restaurando cambios locales..."
-            git stash pop || log "$ANSI_YELLOW" "WARN" "No se pudieron restaurar los cambios locales"
-        fi
-    fi
+    log "$ANSI_YELLOW" "INFO" "Clonando repositorio..."
+    git clone https://github.com/blag0rag/hostberry.git "$HOSTBERRY_DIR" || handle_error "No se pudo clonar el repositorio"
     
     # Actualizar permisos
     chmod -R 755 "$HOSTBERRY_DIR"
@@ -251,9 +230,7 @@ update_from_github() {
     find "$HOSTBERRY_DIR/scripts" -type f -name "*.sh" -exec chmod +x {} \;
     
     # Asegurar que el directorio pertenece al usuario correcto
-    if [ -d "$HOSTBERRY_DIR" ]; then
-        chown -R root:root "$HOSTBERRY_DIR" || log "$ANSI_YELLOW" "WARN" "No se pudieron cambiar los permisos del directorio"
-    fi
+    chown -R root:root "$HOSTBERRY_DIR" || log "$ANSI_YELLOW" "WARN" "No se pudieron cambiar los permisos del directorio"
     
     log "$ANSI_GREEN" "INFO" "Actualización desde GitHub completada"
 }
