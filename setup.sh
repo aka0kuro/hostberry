@@ -60,12 +60,22 @@ fi
 # Manejar clonación del repositorio
 cd /opt
 
+# Configurar directorio seguro de Git
+git config --global --add safe.directory /opt/hostberry
+
 if [ "$UPDATE_MODE" = true ]; then
     # En modo de actualización, hacer pull en lugar de clonar
     cd /opt/hostberry
+    
+    # Cambiar permisos temporalmente si es necesario
+    sudo chown -R $(whoami):$(whoami) /opt/hostberry
+    
     git fetch origin
     git reset --hard origin/main
     git clean -fdx
+    
+    # Restaurar permisos originales
+    sudo chown -R www-data:www-data /opt/hostberry
 else
     # En modo de instalación, clonar normalmente
     git clone https://github.com/aka0kuro/hostberry.git hostberry || handle_error "No se pudo clonar el repositorio"
