@@ -460,6 +460,55 @@ show_access_info() {
     log "$ANSI_YELLOW" "INFO" "Asegúrate de que el dispositivo esté en la misma red que este servidor"
 }
 
+# Función para verificar y configurar el firewall
+configure_firewall() {
+    log "$ANSI_YELLOW" "INFO" "Configurando firewall..."
+    
+    # Asegurarse de que UFW está instalado
+    if ! command -v ufw &> /dev/null; then
+        apt-get install -y ufw || handle_error "No se pudo instalar UFW"
+    fi
+    
+    # Permitir puertos esenciales
+    ufw allow 22/tcp   # SSH
+    ufw allow 80/tcp   # HTTP
+    ufw allow 443/tcp  # HTTPS
+    
+    # Habilitar UFW si no está activo
+    if ! ufw status | grep -q "Status: active"; then
+        ufw --force enable || handle_error "No se pudo habilitar UFW"
+    fi
+    
+    log "$ANSI_GREEN" "INFO" "Firewall configurado correctamente"
+}
+
+# Función para verificar y reiniciar el servicio
+verify_service() {
+    log "$ANSI_YELLOW" "INFO" "Verificando servicio web..."
+    
+    # Reiniciar el servicio
+    systemctl daemon-reload
+    systemctl restart hostberry-web.service || handle_error "No se pudo reiniciar el servicio"
+    
+    # Esperar a que el servicio esté activo
+    sleep 5
+    
+    # Verificar estado
+    if ! systemctl is-active --quiet hostberry-web.service; then
+        log "$ANSI_RED" "ERROR" "El servicio no está activo. Revisando logs..."
+        journalctl -u hostberry-web.service -n 50 --no-pager
+        handle_error "El servicio no se pudo iniciar correctamente"
+    fi
+    
+    # Verificar que el puerto está escuchando
+    if ! netstat -tulpn | grep -q ":80.*LISTEN"; then
+        log "$ANSI_RED" "ERROR" "El puerto 80 no está escuchando"
+        handle_error "El servicio no está escuchando en el puerto 80"
+    fi
+    
+    log "$ANSI_GREEN" "INFO" "Servicio web verificado y funcionando correctamente"
+}
+
 # Procesar argumentos y ejecutar acciones
 main() {
     UPDATE_MODE=false
@@ -514,6 +563,8 @@ main() {
 
     if [ "$UPDATE_MODE" = true ]; then
         update_hostberry
+        configure_firewall
+        verify_service
         show_access_info
     fi
     
@@ -530,6 +581,8 @@ main() {
         log "$ANSI_YELLOW" "INFO" "Iniciando instalación inicial..."
         check_and_install_deps
         setup_venv
+        configure_firewall
+        verify_service
         show_access_info
         
         # Crear archivo de configuración de Gunicorn
