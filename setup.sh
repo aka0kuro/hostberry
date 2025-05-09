@@ -250,6 +250,12 @@ update_hostberry() {
         local BACKUP_PATH="$BACKUP_DIR/hostberry_backup_$(date +%Y%m%d_%H%M%S)"
         cp -r "$HOSTBERRY_DIR" "$BACKUP_PATH" || handle_error "No se pudo crear el backup"
         log "$ANSI_GREEN" "INFO" "Backup creado en: $BACKUP_PATH"
+        
+        # Mantener solo los 2 backups más recientes
+        log "$ANSI_YELLOW" "INFO" "Limpiando backups antiguos..."
+        cd "$BACKUP_DIR" || handle_error "No se pudo acceder al directorio de backups"
+        ls -t | tail -n +3 | xargs -r rm -rf
+        log "$ANSI_GREEN" "INFO" "Se mantienen solo los 2 backups más recientes"
     fi
     
     # Actualizar desde GitHub
@@ -398,12 +404,6 @@ EOF
         log "$ANSI_GREEN" "INFO" "Servicio hostberry-web reiniciado"
     else
         log "$ANSI_YELLOW" "WARN" "Servicio hostberry-web no está activo, omitiendo reinicio"
-    fi
-    
-    # Limpiar backups antiguos
-    if [ -d "$BACKUP_DIR" ]; then
-        find "$BACKUP_DIR" -type d -mtime +30 -exec rm -rf {} + 2>/dev/null
-        log "$ANSI_GREEN" "INFO" "Backups antiguos limpiados"
     fi
     
     log "$ANSI_GREEN" "INFO" "Actualización de HostBerry completada."
