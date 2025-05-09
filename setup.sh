@@ -128,23 +128,25 @@ generate_ssl_cert() {
     # Obtener nombres de host
     local HOSTNAME=$(hostname)
     local DOMAIN=$(hostname -d || echo "local")
+    local WILDCARD_DOMAIN="*.${DOMAIN}"
 
     log "$ANSI_GREEN" "INFO" "Generando certificados para:"
     echo "  * hostberry.local"
     echo "  * $HOSTNAME"
     echo "  * localhost"
     echo "  * 127.0.0.1"
+    echo "  * $WILDCARD_DOMAIN"
 
     # Instalar mkcert para el sistema
     mkcert -install || handle_error "No se pudo instalar mkcert en el sistema"
 
     # Generar certificados
     mkcert -cert-file hostberry.crt -key-file hostberry.key \
-        hostberry.local \
+        "hostberry.local" \
         "$HOSTNAME" \
-        "*.$DOMAIN" \
-        localhost \
-        127.0.0.1 || handle_error "No se pudieron generar los certificados"
+        "$WILDCARD_DOMAIN" \
+        "localhost" \
+        "127.0.0.1" || handle_error "No se pudieron generar los certificados"
 
     # Verificar certificados
     if [ ! -f hostberry.crt ] || [ ! -f hostberry.key ]; then
@@ -154,7 +156,7 @@ generate_ssl_cert() {
     # Establecer permisos
     chmod 600 hostberry.key
     chmod 644 hostberry.crt
-
+    
     # Verificar la clave privada
     if ! openssl rsa -check -in hostberry.key > /dev/null 2>&1; then
         handle_error "La clave privada no es válida"
@@ -167,7 +169,7 @@ generate_ssl_cert() {
     if [ "$CERT_HASH" != "$KEY_HASH" ]; then
         handle_error "La clave privada no coincide con el certificado"
     fi
-
+    
     log "$ANSI_GREEN" "INFO" "Certificados SSL generados exitosamente en $SSL_DIR"
     log "$ANSI_GREEN" "INFO" "Detalles del certificado:"
     openssl x509 -in hostberry.crt -text -noout | grep -E 'Subject:|Not Before:|Not After :' | sed 's/^/      /'
