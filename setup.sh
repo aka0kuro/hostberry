@@ -339,7 +339,10 @@ graceful_timeout = 30
 # Configuración de logs
 accesslog = "/opt/hostberry/logs/access.log"
 errorlog = "/opt/hostberry/logs/error.log"
-loglevel = "info"
+loglevel = "debug"
+access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(L)s'
+capture_output = True
+enable_stdio_inheritance = True
 
 # Configuración de seguridad
 limit_request_line = 4094
@@ -358,7 +361,7 @@ def post_fork(server, worker):
     server.log.info("Worker spawned (pid: %s)", worker.pid)
 
 def pre_fork(server, worker):
-    pass
+    server.log.info("Pre-fork worker (pid: %s)", worker.pid)
 
 def pre_exec(server):
     server.log.info("Forked child, re-executing.")
@@ -371,9 +374,13 @@ def worker_int(worker):
 
 def worker_abort(worker):
     worker.log.info("worker received SIGABRT signal")
+
+def worker_exit(server, worker):
+    server.log.info("Worker exited (pid: %s)", worker.pid)
 EOF
         
         # Crear archivo de servicio systemd
+        log "$ANSI_YELLOW" "INFO" "Creando archivo de servicio systemd..."
         cat > /etc/systemd/system/hostberry-web.service << 'EOF'
 [Unit]
 Description=HostBerry Web Service
@@ -388,7 +395,10 @@ ExecStart=/opt/hostberry/venv/bin/gunicorn \
     --bind 0.0.0.0:80 \
     --access-logfile /opt/hostberry/logs/access.log \
     --error-logfile /opt/hostberry/logs/error.log \
-    --log-level info \
+    --log-level debug \
+    --access-logformat '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(L)s' \
+    --capture-output \
+    --enable-stdio-inheritance \
     --timeout 120 \
     --keep-alive 5 \
     --max-requests 1000 \
@@ -543,7 +553,10 @@ graceful_timeout = 30
 # Configuración de logs
 accesslog = "/opt/hostberry/logs/access.log"
 errorlog = "/opt/hostberry/logs/error.log"
-loglevel = "info"
+loglevel = "debug"
+access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(L)s'
+capture_output = True
+enable_stdio_inheritance = True
 
 # Configuración de seguridad
 limit_request_line = 4094
@@ -562,7 +575,7 @@ def post_fork(server, worker):
     server.log.info("Worker spawned (pid: %s)", worker.pid)
 
 def pre_fork(server, worker):
-    pass
+    server.log.info("Pre-fork worker (pid: %s)", worker.pid)
 
 def pre_exec(server):
     server.log.info("Forked child, re-executing.")
@@ -575,6 +588,9 @@ def worker_int(worker):
 
 def worker_abort(worker):
     worker.log.info("worker received SIGABRT signal")
+
+def worker_exit(server, worker):
+    server.log.info("Worker exited (pid: %s)", worker.pid)
 EOF
 
         # Crear archivo de servicio systemd
@@ -593,7 +609,10 @@ ExecStart=/opt/hostberry/venv/bin/gunicorn \
     --bind 0.0.0.0:80 \
     --access-logfile /opt/hostberry/logs/access.log \
     --error-logfile /opt/hostberry/logs/error.log \
-    --log-level info \
+    --log-level debug \
+    --access-logformat '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(L)s' \
+    --capture-output \
+    --enable-stdio-inheritance \
     --timeout 120 \
     --keep-alive 5 \
     --max-requests 1000 \
