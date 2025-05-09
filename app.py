@@ -489,6 +489,8 @@ def index():
     """
     Página principal con estadísticas del sistema
     """
+    import time
+    start_time = time.time()
     try:
         # Debug logging
         app.logger.debug(f"Index route called. Session: {dict(session)}, Args: {dict(request.args)}")
@@ -559,6 +561,7 @@ def index():
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '0'
+        app.logger.info(f"[PERF] index route duration: {time.time() - start_time:.3f}s")
         return response
     except Exception as e:
         app.logger.error(f"Error in index route: {str(e)}")
@@ -919,6 +922,8 @@ def network_stats():
 
 @app.route('/status')
 def status():
+    import time
+    start_time = time.time()
     # Obtener estadísticas del sistema
     stats = get_system_stats(force_refresh=True)
     network_interface = get_network_interface()
@@ -935,6 +940,7 @@ def status():
         hostapd_status_str = hostapd_status.stdout.strip() if hostapd_status.returncode == 0 else 'unknown'
     except Exception:
         hostapd_status_str = 'unknown'
+    app.logger.info(f"[PERF] status route duration: {time.time() - start_time:.3f}s")
     return jsonify({
         'stats': stats,
         'network_interface': network_interface,
