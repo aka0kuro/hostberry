@@ -85,6 +85,20 @@ setup_venv() {
     python3 -m venv "$VENV_DIR" || handle_error "No se pudo crear el entorno virtual"
     source "$VENV_DIR/bin/activate"
     pip install --upgrade pip || handle_error "No se pudo actualizar pip"
+    
+    # Verificar si estamos en el directorio correcto
+    if [ ! -f "$REQUIREMENTS" ]; then
+        # Intentar encontrar requirements.txt en el directorio actual o en el directorio padre
+        if [ -f "/opt/hostberry/$REQUIREMENTS" ]; then
+            REQUIREMENTS="/opt/hostberry/$REQUIREMENTS"
+        elif [ -f "$(dirname "$0")/$REQUIREMENTS" ]; then
+            REQUIREMENTS="$(dirname "$0")/$REQUIREMENTS"
+        else
+            handle_error "No se pudo encontrar el archivo $REQUIREMENTS"
+        fi
+    fi
+    
+    log "$ANSI_YELLOW" "INFO" "Instalando dependencias desde $REQUIREMENTS..."
     pip install --upgrade -r "$REQUIREMENTS" || handle_error "No se pudieron instalar las dependencias de Python"
 }
 
