@@ -52,31 +52,31 @@ def vpn_config_api():
         # Guardar credenciales de forma segura
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
+        auth_file = os.path.join(vpn_dir, 'auth.txt')
         
-        if username and password:
-            auth_file = os.path.join(vpn_dir, 'auth.txt')
-            try:
-                # Verificar permisos del directorio
-                if not os.access(vpn_dir, os.W_OK):
-                    return jsonify({
-                        'success': False, 
-                        'error': f'No se tienen permisos de escritura en {vpn_dir}'
-                    }), 500
-
-                # Guardar credenciales
-                with open(auth_file, 'w') as f:
-                    f.write(f"{username}\n{password}\n")
-                
-                # Establecer permisos seguros
-                os.chmod(auth_file, 0o600)
-                
-                logger.info(f"Credenciales guardadas correctamente en {auth_file}")
-            except Exception as e:
-                logger.error(f"Error al guardar credenciales: {str(e)}")
+        # Si falta username o password, devolver error claro y no continuar
+        if not username or not password:
+            logger.error(f"Faltan credenciales: username='{username}', password={'sí' if password else 'no'}")
+            return jsonify({'success': False, 'error': 'Debes ingresar usuario y contraseña para la VPN.'}), 400
+        try:
+            # Verificar permisos del directorio
+            if not os.access(vpn_dir, os.W_OK):
+                logger.error(f"Sin permisos de escritura en {vpn_dir}")
                 return jsonify({
                     'success': False, 
-                    'error': f'Error al guardar credenciales: {str(e)}'
+                    'error': f'No se tienen permisos de escritura en {vpn_dir}'
                 }), 500
+            # Guardar credenciales (aunque estén vacíos, para forzar consistencia)
+            with open(auth_file, 'w') as f:
+                f.write(f"{username}\n{password}\n")
+            os.chmod(auth_file, 0o600)
+            logger.info(f"Credenciales guardadas correctamente en {auth_file} (usuario='{username}', password={'sí' if password else 'no'})")
+        except Exception as e:
+            logger.error(f"Error al guardar credenciales: {str(e)}")
+            return jsonify({
+                'success': False, 
+                'error': f'Error al guardar credenciales: {str(e)}'
+            }), 500
 
         # Guardar archivo de configuración
         config_path = os.path.join(vpn_dir, 'client.conf')
