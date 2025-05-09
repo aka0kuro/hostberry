@@ -245,6 +245,11 @@ update_hostberry() {
     else
         log "$ANSI_YELLOW" "WARN" "Archivo de servicio no encontrado en $HOSTBERRY_DIR/$SYSTEMD_SERVICE"
         log "$ANSI_YELLOW" "INFO" "Creando archivo de servicio systemd..."
+        
+        # Crear directorio de logs
+        mkdir -p /var/log/hostberry
+        chmod 755 /var/log/hostberry
+        
         cat > /etc/systemd/system/hostberry-web.service << 'EOF'
 [Unit]
 Description=HostBerry Web Service
@@ -254,7 +259,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/opt/hostberry
-ExecStart=/opt/hostberry/venv/bin/python3 -m flask run --host=0.0.0.0 --port=80
+ExecStart=/opt/hostberry/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:80 --access-logfile /var/log/hostberry/access.log --error-logfile /var/log/hostberry/error.log app:app
 Restart=always
 RestartSec=10
 Environment="FLASK_APP=app.py"
