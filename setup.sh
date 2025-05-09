@@ -247,8 +247,10 @@ update_hostberry() {
         log "$ANSI_YELLOW" "INFO" "Creando archivo de servicio systemd..."
         
         # Crear directorio de logs
-        mkdir -p /var/log/hostberry
-        chmod 755 /var/log/hostberry
+        mkdir -p "$HOSTBERRY_DIR/logs"
+        chmod 755 "$HOSTBERRY_DIR/logs"
+        touch "$HOSTBERRY_DIR/logs/access.log" "$HOSTBERRY_DIR/logs/error.log"
+        chmod 644 "$HOSTBERRY_DIR/logs/access.log" "$HOSTBERRY_DIR/logs/error.log"
         
         cat > /etc/systemd/system/hostberry-web.service << 'EOF'
 [Unit]
@@ -259,7 +261,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/opt/hostberry
-ExecStart=/opt/hostberry/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:80 --access-logfile /var/log/hostberry/access.log --error-logfile /var/log/hostberry/error.log app:app
+ExecStart=/opt/hostberry/venv/bin/gunicorn --workers 1 --bind 0.0.0.0:80 --access-logfile /opt/hostberry/logs/access.log --error-logfile /opt/hostberry/logs/error.log app:app
 Restart=always
 RestartSec=10
 Environment="FLASK_APP=app.py"
