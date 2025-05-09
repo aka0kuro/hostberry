@@ -445,6 +445,25 @@ main() {
     check_root
     show_summary
 
+    # Crear directorio principal si no existe
+    mkdir -p "$HOSTBERRY_DIR"
+    chmod 755 "$HOSTBERRY_DIR"
+    chown root:root "$HOSTBERRY_DIR"
+
+    # Crear directorio de logs y archivos necesarios
+    log "$ANSI_YELLOW" "INFO" "Creando directorio de logs..."
+    mkdir -p "$HOSTBERRY_DIR/logs"
+    chmod 755 "$HOSTBERRY_DIR/logs"
+    touch "$HOSTBERRY_DIR/logs/access.log" "$HOSTBERRY_DIR/logs/error.log"
+    chmod 644 "$HOSTBERRY_DIR/logs/access.log" "$HOSTBERRY_DIR/logs/error.log"
+    chown -R root:root "$HOSTBERRY_DIR/logs"
+    log "$ANSI_GREEN" "INFO" "Directorio de logs creado y configurado"
+
+    # Crear directorio de scripts si no existe
+    mkdir -p "$SCRIPTS_DIR"
+    chmod 755 "$SCRIPTS_DIR"
+    chown root:root "$SCRIPTS_DIR"
+
     if [ "$UPDATE_MODE" = true ]; then
         update_hostberry
     fi
@@ -457,9 +476,113 @@ main() {
         configure_network
     fi
     
-    # Si no se pasó ningún argumento relevante, mostrar ayuda
+    # Si no se pasó ningún argumento relevante, realizar instalación inicial
     if [ "$UPDATE_MODE" = false ] && [ "$GENERATE_CERT" = false ] && [ "$CONFIGURE_NETWORK" = false ]; then
-        show_help
+        log "$ANSI_YELLOW" "INFO" "Iniciando instalación inicial..."
+        check_and_install_deps
+        setup_venv
+        
+        # Crear archivo de configuración de Gunicorn
+        log "$ANSI_YELLOW" "INFO" "Creando configuración de Gunicorn..."
+        cat > "$HOSTBERRY_DIR/gunicorn.conf.py" << 'EOF'
+import multiprocessing
+import os
+
+# Configuración básica
+bind = "0.0.0.0:80"
+workers = 1
+worker_class = "sync"
+worker_connections = 1000
+timeout = 120
+keepalive = 5
+max_requests = 1000
+max_requests_jitter = 50
+backlog = 2048
+graceful_timeout = 30
+
+# Configuración de logs
+accesslog = "/opt/hostberry/logs/access.log"
+errorlog = "/opt/hostberry/logs/error.log"
+loglevel = "info"
+
+# Configuración de seguridad
+limit_request_line = 4094
+limit_request_fields = 100
+limit_request_field_size = 8190
+
+# Configuración de procesos
+preload_app = True
+daemon = False
+pidfile = "/opt/hostberry/gunicorn.pid"
+umask = 0o022
+user = "root"
+group = "root"
+
+def post_fork(server, worker):
+    server.log.info("Worker spawned (pid: %s)", worker.pid)
+
+def pre_fork(server, worker):
+    pass
+
+def pre_exec(server):
+    server.log.info("Forked child, re-executing.")
+
+def when_ready(server):
+    server.log.info("Server is ready. Spawning workers")
+
+def worker_int(worker):
+    worker.log.info("worker received INT or QUIT signal")
+
+def worker_abort(worker):
+    worker.log.info("worker received SIGABRT signal")
+EOF
+
+        # Crear archivo de servicio systemd
+        log "$ANSI_YELLOW" "INFO" "Creando archivo de servicio systemd..."
+        cat > /etc/systemd/system/hostberry-web.service << 'EOF'
+[Unit]
+Description=HostBerry Web Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/hostberry
+ExecStart=/opt/hostberry/venv/bin/gunicorn \
+    --workers 1 \
+    --bind 0.0.0.0:80 \
+    --access-logfile /opt/hostberry/logs/access.log \
+    --error-logfile /opt/hostberry/logs/error.log \
+    --log-level info \
+    --timeout 120 \
+    --keep-alive 5 \
+    --max-requests 1000 \
+    --max-requests-jitter 50 \
+    --worker-class sync \
+    --worker-connections 1000 \
+    --backlog 2048 \
+    --graceful-timeout 30 \
+    app:app
+Restart=always
+RestartSec=10
+Environment="FLASK_APP=app.py"
+Environment="FLASK_ENV=production"
+Environment="PYTHONUNBUFFERED=1"
+Environment="GUNICORN_CMD_ARGS=--config /opt/hostberry/gunicorn.conf.py"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+        # Asegurar que gunicorn esté instalado
+        if ! "$VENV_DIR/bin/pip" show gunicorn > /dev/null 2>&1; then
+            log "$ANSI_YELLOW" "INFO" "Instalando Gunicorn..."
+            "$VENV_DIR/bin/pip" install gunicorn || handle_error "No se pudo instalar Gunicorn"
+        fi
+
+        systemctl daemon-reload
+        systemctl enable hostberry-web.service
+        log "$ANSI_GREEN" "INFO" "Servicio systemd creado y habilitado"
     fi
 }
 
