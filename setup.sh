@@ -440,11 +440,14 @@ EOF
 configure_dns() {
     log "$ANSI_YELLOW" "INFO" "Configurando DNS local..."
     
+    # Obtener la IP local
+    local LOCAL_IP=$(hostname -I | awk '{print $1}')
+    
     # Crear configuración de dnsmasq
-    cat > /etc/dnsmasq.d/hostberry.conf << 'EOF'
+    cat > /etc/dnsmasq.d/hostberry.conf << EOF
 # Configuración de DNS local para HostBerry
-address=/hostberry.local/127.0.0.1
-listen-address=127.0.0.1
+address=/hostberry.local/${LOCAL_IP}
+listen-address=0.0.0.0
 bind-interfaces
 EOF
     
@@ -455,6 +458,8 @@ EOF
     echo "nameserver 127.0.0.1" > /etc/resolv.conf
     
     log "$ANSI_GREEN" "INFO" "DNS local configurado correctamente"
+    log "$ANSI_GREEN" "INFO" "hostberry.local ahora resuelve a ${LOCAL_IP}"
+    log "$ANSI_YELLOW" "INFO" "Para acceder desde otros dispositivos en la red, configura sus DNS a ${LOCAL_IP}"
 }
 
 # Procesar argumentos y ejecutar acciones
