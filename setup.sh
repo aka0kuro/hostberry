@@ -161,18 +161,57 @@ fi
 # Dar permisos de ejecución al script de adblock
 chmod +x scripts/adblock.sh || handle_error "No se pudo dar permisos de ejecución a scripts/adblock.sh"
 
-# Crear entorno virtual
-python3 -m venv venv || handle_error "No se pudo crear el entorno virtual"
+# Proceso de actualización o instalación
+if [ "$UPDATE_MODE" = true ]; then
+    echo "Actualizando dependencias y configuración..."
+    
+    # Actualizar dependencias del sistema
+    apt-get update
+    apt-get upgrade -y
+    apt-get install -y "${DEPS[@]}"
+    
+    # Recrear entorno virtual
+    if [ -d venv ]; then
+        rm -rf venv
+    fi
+    
+    # Crear nuevo entorno virtual
+    python3 -m venv venv || handle_error "No se pudo crear el entorno virtual"
+    
+    # Activar entorno virtual e instalar dependencias
+    source venv/bin/activate
+    pip install --upgrade pip
+    pip install --upgrade -r requirements.txt || handle_error "No se pudieron actualizar las dependencias de Python"
+    
+    # Actualizar permisos de scripts
+    chmod +x scripts/*.sh
+    
+    # Actualizar servicio systemd
+    cp hostberry-web.service /etc/systemd/system/ || handle_error "No se pudo actualizar el archivo de servicio"
+    systemctl daemon-reload
+    systemctl enable hostberry-web.service
+    
+    # Reiniciar servicio
+    systemctl restart hostberry-web.service || handle_error "No se pudo reiniciar el servicio"
+    
+    echo "Actualización de HostBerry completada."
+else
+    # Proceso de instalación inicial
+    python3 -m venv venv || handle_error "No se pudo crear el entorno virtual"
+    
+    # Activar entorno virtual e instalar dependencias
+    source venv/bin/activate
+    pip install --upgrade pip
+    pip install -r requirements.txt || handle_error "No se pudieron instalar las dependencias de Python"
+    
+    # Configurar servicio systemd
+    cp hostberry-web.service /etc/systemd/system/ || handle_error "No se pudo copiar el archivo de servicio"
+    systemctl daemon-reload
+    systemctl enable hostberry-web.service
+    systemctl start hostberry-web.service || handle_error "No se pudo iniciar el servicio"
+    
+    echo "Instalación de HostBerry completada."
+fi
 
-# Activar entorno virtual e instalar dependencias
-source venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt || handle_error "No se pudieron instalar las dependencias de Python"
-
-# Configurar servicio systemd
-cp hostberry-web.service /etc/systemd/system/ || handle_error "No se pudo copiar el archivo de servicio"
-systemctl daemon-reload
-systemctl enable hostberry-web.service
-systemctl start hostberry-web.service || handle_error "No se pudo iniciar el servicio"
-
-echo "Instalación de HostBerry completada."
+# Limpiar archivos temporales y backups antiguos
+find /opt/hostberry_backups/ -type d -mtime +30 -exec rm -rf {} + 2>/dev/null
