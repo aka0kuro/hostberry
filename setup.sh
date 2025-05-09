@@ -13,6 +13,8 @@ VENV_DIR="venv"
 REQUIREMENTS="requirements.txt"
 SYSTEMD_SERVICE="hostberry-web.service"
 BACKUP_DIR="/opt/hostberry_backups"
+HOSTBERRY_DIR="/opt/hostberry"
+SCRIPTS_DIR="$HOSTBERRY_DIR/scripts"
 
 # Dependencias del sistema
 DEPS=(python3 python3-pip python3-venv openvpn resolvconf git curl dnsmasq hostapd iptables nftables libnss3-tools ufw openssl wget)
@@ -208,7 +210,7 @@ update_hostberry() {
     log "$ANSI_GREEN" "INFO" "Iniciando actualización de HostBerry..."
     
     # Crear backup si existe instalación previa
-    if [ -d /opt/hostberry ]; then
+    if [ -d "$HOSTBERRY_DIR" ]; then
         systemctl stop hostberry-web.service 2>/dev/null || true
         
         # Crear directorio de backup si no existe
@@ -216,7 +218,7 @@ update_hostberry() {
         
         # Crear backup con marca de tiempo
         local BACKUP_PATH="$BACKUP_DIR/hostberry_backup_$(date +%Y%m%d_%H%M%S)"
-        cp -r /opt/hostberry "$BACKUP_PATH" || handle_error "No se pudo crear el backup"
+        cp -r "$HOSTBERRY_DIR" "$BACKUP_PATH" || handle_error "No se pudo crear el backup"
         log "$ANSI_GREEN" "INFO" "Backup creado en: $BACKUP_PATH"
     fi
     
@@ -225,20 +227,22 @@ update_hostberry() {
     setup_venv
     
     # Actualizar permisos de scripts
-    if [ -d "scripts" ]; then
+    if [ -d "$SCRIPTS_DIR" ]; then
         log "$ANSI_YELLOW" "INFO" "Actualizando permisos de scripts..."
-        find scripts -name "*.sh" -type f -exec chmod +x {} \; || handle_error "No se pudieron actualizar los permisos de los scripts"
+        find "$SCRIPTS_DIR" -name "*.sh" -type f -exec chmod +x {} \; || handle_error "No se pudieron actualizar los permisos de los scripts"
+        log "$ANSI_GREEN" "INFO" "Permisos de scripts actualizados en $SCRIPTS_DIR"
     else
-        log "$ANSI_YELLOW" "WARN" "Directorio 'scripts' no encontrado, omitiendo actualización de permisos"
+        log "$ANSI_YELLOW" "WARN" "Directorio de scripts no encontrado en $SCRIPTS_DIR"
     fi
     
     # Actualizar servicio systemd
-    if [ -f "$SYSTEMD_SERVICE" ]; then
-        cp "$SYSTEMD_SERVICE" /etc/systemd/system/ || handle_error "No se pudo actualizar el archivo de servicio"
+    if [ -f "$HOSTBERRY_DIR/$SYSTEMD_SERVICE" ]; then
+        cp "$HOSTBERRY_DIR/$SYSTEMD_SERVICE" /etc/systemd/system/ || handle_error "No se pudo actualizar el archivo de servicio"
         systemctl daemon-reload
         systemctl enable hostberry-web.service
+        log "$ANSI_GREEN" "INFO" "Servicio systemd actualizado"
     else
-        log "$ANSI_YELLOW" "WARN" "Archivo de servicio '$SYSTEMD_SERVICE' no encontrado, omitiendo actualización de servicio"
+        log "$ANSI_YELLOW" "WARN" "Archivo de servicio no encontrado en $HOSTBERRY_DIR/$SYSTEMD_SERVICE"
     fi
     
     # Generar certificados si se solicita
@@ -249,6 +253,7 @@ update_hostberry() {
     # Reiniciar servicio
     if systemctl is-active --quiet hostberry-web.service; then
         systemctl restart hostberry-web.service || handle_error "No se pudo reiniciar el servicio"
+        log "$ANSI_GREEN" "INFO" "Servicio hostberry-web reiniciado"
     else
         log "$ANSI_YELLOW" "WARN" "Servicio hostberry-web no está activo, omitiendo reinicio"
     fi
@@ -256,6 +261,7 @@ update_hostberry() {
     # Limpiar backups antiguos
     if [ -d "$BACKUP_DIR" ]; then
         find "$BACKUP_DIR" -type d -mtime +30 -exec rm -rf {} + 2>/dev/null
+        log "$ANSI_GREEN" "INFO" "Backups antiguos limpiados"
     fi
     
     log "$ANSI_GREEN" "INFO" "Actualización de HostBerry completada."
