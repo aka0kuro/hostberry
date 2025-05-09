@@ -775,10 +775,12 @@ def apply_config():
         results = {}
         
         # Define script paths
+        # Usar rutas relativas desde el directorio de la aplicación
+        base_scripts_path = os.path.join(os.path.dirname(__file__), 'scripts')
         scripts = {
-            'network': '/home/blag0rag/Desktop/hostberry/scripts/network.sh',
-            'security': '/home/blag0rag/Desktop/hostberry/scripts/security.sh',
-            'monitoring': '/home/blag0rag/Desktop/hostberry/scripts/monitoring.sh'
+            'network': os.path.join(base_scripts_path, 'network.sh'),
+            'security': os.path.join(base_scripts_path, 'security.sh'),
+            'monitoring': os.path.join(base_scripts_path, 'monitoring.sh')
         }
         
         for feature, script_path in scripts.items():
