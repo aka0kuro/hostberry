@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response, jsonify, abort, send_from_directory
 import subprocess
 import os
@@ -12,6 +15,7 @@ from hostapd.hostapd_routes import hostapd_bp
 from wireguard.wireguard_routes import wireguard_bp
 from security.security_routes import security_bp
 from adblock.adblock_routes import adblock_bp
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Estado global para saber si hay una actualización en curso
 global_adblock_update_status = {'updating': False, 'last_result': None, 'last_error': None}
@@ -89,15 +93,32 @@ try:
     ssl_dir = '/etc/hostberry/ssl'
 
     app = Flask(__name__)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+    
     app.config['SSL_CERT'] = os.path.join(ssl_dir, 'hostberry.local+4.pem')
     app.config['SSL_KEY'] = os.path.join(ssl_dir, 'hostberry.local+4-key.pem')
 
     # Configuraciones de seguridad
-    app.config['SESSION_COOKIE_SECURE'] = True
-    app.config['REMEMBER_COOKIE_SECURE'] = True
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['REMEMBER_COOKIE_HTTPONLY'] = True
-    app.config['SECRET_KEY'] = secret_key
+    app.config.update(
+        SESSION_COOKIE_SECURE=True,
+        REMEMBER_COOKIE_SECURE=True,
+        SESSION_COOKIE_HTTPONLY=True,
+        REMEMBER_COOKIE_HTTPONLY=True,
+        SECRET_KEY=secret_key,
+        SESSION_COOKIE_SAMESITE='Lax',
+        PERMANENT_SESSION_LIFETIME=86400,
+        BABEL_DEFAULT_LOCALE='es',
+        BABEL_TRANSLATION_DIRECTORIES='translations',
+        BABEL_SUPPORTED_LOCALES=['en', 'es'],
+        SESSION_COOKIE_DOMAIN=None,
+        SESSION_COOKIE_PATH=None,
+        WTF_CSRF_ENABLED=True,
+        WTF_CSRF_CHECK_DEFAULT=True,
+        WTF_CSRF_HEADERS=['X-CSRFToken'],
+        WTF_CSRF_TIME_LIMIT=3600,
+        MAX_CONTENT_LENGTH=16 * 1024 * 1024  # 16MB max-limit
+    )
+
     csrf = CSRFProtect(app)
 
     app_logger.debug('Configuración inicial completada')
@@ -165,23 +186,6 @@ try:
 except Exception as e:
     app_logger.error(f'Error al registrar blueprints: {e}', exc_info=True)
     raise
-
-# Configure secure session settings
-app.config.update(
-    SESSION_COOKIE_SECURE=True,  # Ahora seguro por defecto (HTTPS)
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE='Lax',
-    PERMANENT_SESSION_LIFETIME=86400,
-    BABEL_DEFAULT_LOCALE='es',
-    BABEL_TRANSLATION_DIRECTORIES='translations',
-    BABEL_SUPPORTED_LOCALES=['en', 'es'],
-    SESSION_COOKIE_DOMAIN=None,
-    SESSION_COOKIE_PATH=None,
-    WTF_CSRF_ENABLED=True,
-    WTF_CSRF_CHECK_DEFAULT=True,
-    WTF_CSRF_HEADERS=['X-CSRFToken'],
-    WTF_CSRF_TIME_LIMIT=3600
-)
 
 # Configuración avanzada de seguridad HTTP (Flask-Talisman)
 # Puedes personalizar más políticas CSP según tus necesidades
