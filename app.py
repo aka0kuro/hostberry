@@ -224,10 +224,10 @@ except Exception as e:
 # Configuración avanzada de seguridad HTTP (Flask-Talisman)
 # Puedes personalizar más políticas CSP según tus necesidades
 Talisman(app, content_security_policy={
-    'default-src': ["'self'"],
-    'img-src': ["'self'", 'data:'],
-    'script-src': ["'self'", 'https:'],
-    'style-src': ["'self'", 'https:'],
+    'default-src': ["'self'", '*', 'data:', 'blob:'],
+    'img-src': ["'self'", '*', 'data:', 'blob:'],
+    'script-src': ["'self'", '*', "'unsafe-inline'", "'unsafe-eval'", 'data:'],
+    'style-src': ["'self'", '*', "'unsafe-inline'", 'data:'],
 })
 
 # Configuración avanzada de logging
