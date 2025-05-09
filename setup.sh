@@ -149,11 +149,6 @@ generate_ssl_cert() {
     mkdir -p "$SSL_DIR"
     cd "$SSL_DIR" || handle_error "No se pudo acceder al directorio SSL"
     
-    # Obtener nombres de host y IP local
-    local HOSTNAME=$(hostname)
-    local DOMAIN=$(hostname -d || echo "local")
-    local LOCAL_IP=$(hostname -I | awk '{print $1}')
-
     log "$ANSI_GREEN" "INFO" "Generando certificados para:"
     echo "  * $LOCAL_IP:5000"
 
@@ -163,7 +158,6 @@ generate_ssl_cert() {
     # Generar certificados
     mkcert -cert-file hostberry.crt -key-file hostberry.key \
         "hostberry.local" \
-        "$HOSTNAME" \
         "localhost" \
         "127.0.0.1" \
         "$LOCAL_IP" || handle_error "No se pudieron generar los certificados"
@@ -207,9 +201,7 @@ configure_network() {
     ufw allow 80/tcp   # HTTP
     ufw allow 443/tcp  # HTTPS
     ufw allow 5000/tcp # HostBerry Flask/Gunicorn
-    ufw allow 53/udp   # DNS
-    ufw allow 67/udp   # DHCP
-    ufw allow 68/udp   # DHCP
+
     
     # Habilitar reenvío de IP
     sed -i 's/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
