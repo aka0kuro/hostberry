@@ -88,6 +88,10 @@ setup_venv() {
     source "$VENV_DIR/bin/activate"
     pip install --upgrade pip || handle_error "No se pudo actualizar pip"
     
+    # Instalar pytz primero para evitar problemas de normalización
+    log "$ANSI_YELLOW" "INFO" "Instalando pytz..."
+    pip install --no-cache-dir pytz==2024.1 || handle_error "No se pudo instalar pytz"
+    
     # Verificar si estamos en el directorio correcto
     if [ ! -f "$REQUIREMENTS" ]; then
         # Intentar encontrar requirements.txt en el directorio actual o en el directorio padre
@@ -101,7 +105,8 @@ setup_venv() {
     fi
     
     log "$ANSI_YELLOW" "INFO" "Instalando dependencias desde $REQUIREMENTS..."
-    pip install --upgrade -r "$REQUIREMENTS" || handle_error "No se pudieron instalar las dependencias de Python"
+    # Excluir pytz del requirements.txt ya que lo instalamos por separado
+    grep -v "pytz" "$REQUIREMENTS" | pip install --upgrade -r /dev/stdin || handle_error "No se pudieron instalar las dependencias de Python"
 }
 
 # Función para generar certificados SSL
