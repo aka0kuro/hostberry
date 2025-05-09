@@ -205,6 +205,49 @@ configure_network() {
     log "$ANSI_GREEN" "INFO" "Red y firewall configurados correctamente."
 }
 
+# Función para actualizar desde GitHub
+update_from_github() {
+    log "$ANSI_YELLOW" "INFO" "Actualizando desde GitHub..."
+    
+    # Verificar si git está instalado
+    if ! command -v git &> /dev/null; then
+        log "$ANSI_YELLOW" "INFO" "Instalando git..."
+        apt-get install -y git || handle_error "No se pudo instalar git"
+    fi
+    
+    # Verificar si el directorio es un repositorio git
+    if [ ! -d "$HOSTBERRY_DIR/.git" ]; then
+        log "$ANSI_YELLOW" "INFO" "Clonando repositorio..."
+        rm -rf "$HOSTBERRY_DIR"
+        git clone https://github.com/blag0rag/hostberry.git "$HOSTBERRY_DIR" || handle_error "No se pudo clonar el repositorio"
+    else
+        # Guardar cambios locales si existen
+        cd "$HOSTBERRY_DIR" || handle_error "No se pudo acceder al directorio de HostBerry"
+        if git status --porcelain | grep -q '^'; then
+            log "$ANSI_YELLOW" "INFO" "Guardando cambios locales..."
+            git stash || handle_error "No se pudieron guardar los cambios locales"
+        fi
+        
+        # Actualizar desde el repositorio remoto
+        log "$ANSI_YELLOW" "INFO" "Actualizando desde el repositorio remoto..."
+        git fetch origin || handle_error "No se pudo obtener las actualizaciones"
+        git reset --hard origin/main || handle_error "No se pudo actualizar el código"
+        
+        # Restaurar cambios locales si existían
+        if git stash list | grep -q '^'; then
+            log "$ANSI_YELLOW" "INFO" "Restaurando cambios locales..."
+            git stash pop || log "$ANSI_YELLOW" "WARN" "No se pudieron restaurar los cambios locales"
+        fi
+    fi
+    
+    # Actualizar permisos
+    chmod -R 755 "$HOSTBERRY_DIR"
+    find "$HOSTBERRY_DIR" -type f -exec chmod 644 {} \;
+    find "$HOSTBERRY_DIR/scripts" -type f -name "*.sh" -exec chmod +x {} \;
+    
+    log "$ANSI_GREEN" "INFO" "Actualización desde GitHub completada"
+}
+
 # Actualizar HostBerry
 update_hostberry() {
     log "$ANSI_GREEN" "INFO" "Iniciando actualización de HostBerry..."
@@ -221,6 +264,9 @@ update_hostberry() {
         cp -r "$HOSTBERRY_DIR" "$BACKUP_PATH" || handle_error "No se pudo crear el backup"
         log "$ANSI_GREEN" "INFO" "Backup creado en: $BACKUP_PATH"
     fi
+    
+    # Actualizar desde GitHub
+    update_from_github
     
     # Actualizar dependencias y configuración
     check_and_install_deps
