@@ -151,9 +151,46 @@ if [ "$GENERATE_CERT" = true ]; then
     generate_ssl_cert
 fi
 
-# Modo de instalación o actualización
+# Configurar red si se solicita
+if [ "$NETWORK_CONFIG" = true ]; then
+    configure_network_and_firewall
+fi
+
+# Modo de actualización
+if [ "$UPDATE_MODE" = true ]; then
+    echo "Actualizando dependencias y configuración..."
+    
+    # Actualizar dependencias del sistema
+    apt-get update
+    apt-get upgrade -y
+    apt-get install -y "${DEPS[@]}"
+    
+    # Recrear entorno virtual
+    if [ -d venv ]; then
+        rm -rf venv
+    fi
+    
+    # Crear nuevo entorno virtual
+    python3 -m venv venv || handle_error "No se pudo crear el entorno virtual"
+    
+    # Activar entorno virtual e instalar dependencias
+    source venv/bin/activate
+    pip install --upgrade pip
+    pip install --upgrade -r requirements.txt || handle_error "No se pudieron actualizar las dependencias de Python"
+    
+    # Actualizar permisos de scripts
+    chmod +x scripts/*.sh
+    
+    # Actualizar servicio systemd
+    cp hostberry-web.service /etc/systemd/system/ || handle_error "No se pudo actualizar el archivo de servicio"
+    systemctl daemon-reload
+    systemctl enable hostberry-web.service
+    
+    echo "Actualización completada."
+fi
+
+# Modo de instalación: eliminar instalación previa
 if [ "$UPDATE_MODE" = false ]; then
-    # Modo de instalación: eliminar instalación previa
     if [ -d /opt/hostberry ]; then
         echo "Eliminando instalación previa en /opt/hostberry..."
         systemctl stop hostberry-web.service 2>/dev/null || true
