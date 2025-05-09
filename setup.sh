@@ -11,6 +11,16 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# Modo de actualización
+UPDATE_MODE=false
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        --update) UPDATE_MODE=true ;;
+        *) echo "Uso: $0 [--update]"; exit 1 ;;
+    esac
+    shift
+done
+
 handle_error() {
     echo "Error: $1"
     exit 1
@@ -23,11 +33,28 @@ DEPS=(python3 python3-pip python3-venv openvpn resolvconf git curl dnsmasq hosta
 apt-get update || handle_error "No se pudo actualizar apt-get"
 apt-get install -y "${DEPS[@]}" || handle_error "No se pudieron instalar las dependencias del sistema"
 
-# Eliminar instalación previa si existe
-if [ -d /opt/hostberry ]; then
-    echo "Eliminando instalación previa en /opt/hostberry..."
-    systemctl stop hostberry-web.service 2>/dev/null || true
-    rm -rf /opt/hostberry
+# Modo de instalación o actualización
+if [ "$UPDATE_MODE" = false ]; then
+    # Modo de instalación: eliminar instalación previa
+    if [ -d /opt/hostberry ]; then
+        echo "Eliminando instalación previa en /opt/hostberry..."
+        systemctl stop hostberry-web.service 2>/dev/null || true
+        rm -rf /opt/hostberry
+    fi
+else
+    # Modo de actualización: detener servicio y hacer un backup
+    echo "Modo de actualización activado"
+    if [ -d /opt/hostberry ]; then
+        systemctl stop hostberry-web.service 2>/dev/null || true
+        
+        # Crear directorio de backup si no existe
+        mkdir -p /opt/hostberry_backups
+        
+        # Crear backup con marca de tiempo
+        BACKUP_DIR="/opt/hostberry_backups/hostberry_backup_$(date +%Y%m%d_%H%M%S)"
+        cp -r /opt/hostberry "$BACKUP_DIR"
+        echo "Backup creado en: $BACKUP_DIR"
+    fi
 fi
 
 # Clonar el repositorio
@@ -35,6 +62,19 @@ cd /opt
 
 git clone https://github.com/aka0kuro/hostberry.git hostberry || handle_error "No se pudo clonar el repositorio"
 cd /opt/hostberry
+
+# Si es modo de actualización, restaurar configuraciones personalizadas
+if [ "$UPDATE_MODE" = true ]; then
+    echo "Restaurando configuraciones personalizadas..."
+    
+    # Ejemplos de restauración (ajusta según tus necesidades específicas):
+    if [ -f "$BACKUP_DIR/config.json" ]; then
+        cp "$BACKUP_DIR/config.json" /etc/hostberry/config.json 2>/dev/null || true
+    fi
+    
+    # Restaurar archivos de configuración personalizados
+    # Añade aquí más restauraciones según tus necesidades
+fi
 
 # Dar permisos de ejecución al script de adblock
 chmod +x scripts/adblock.sh || handle_error "No se pudo dar permisos de ejecución a scripts/adblock.sh"
