@@ -111,9 +111,37 @@ generate_ssl_cert() {
     
     # Mostrar información del certificado
     echo "  - Información del certificado:"
-    openssl x509 -in hostberry.crt -text -noout | grep -E 'Subject:|Not Before:|Not After :'
     
-    echo "[ÉXITO] Generación de certificados SSL completada."
+    # Verificar que el certificado es válido
+    if ! openssl x509 -in hostberry.crt -text -noout > /dev/null 2>&1; then
+        handle_error "El certificado generado no es válido"
+    fi
+    
+    # Extraer y mostrar detalles del certificado
+    echo "    * Detalles del certificado:"
+    openssl x509 -in hostberry.crt -text -noout | grep -E 'Subject:|Not Before:|Not After :' | sed 's/^/      /'
+    
+    # Verificar la clave privada
+    if ! openssl rsa -check -in hostberry.key > /dev/null 2>&1; then
+        handle_error "La clave privada no es válida"
+    fi
+    
+    # Verificar que la clave coincide con el certificado
+    CERT_HASH=$(openssl x509 -noout -modulus -in hostberry.crt | openssl md5)
+    KEY_HASH=$(openssl rsa -noout -modulus -in hostberry.key | openssl md5)
+    
+    if [ "$CERT_HASH" != "$KEY_HASH" ]; then
+        handle_error "La clave privada no coincide con el certificado"
+    fi
+    
+    echo "    * Clave privada: Verificada"
+    echo "    * Certificado: Válido"
+    
+    # Copiar certificados a un directorio de configuración si es necesario
+    mkdir -p /etc/hostberry/ssl
+    cp hostberry.{crt,key} /etc/hostberry/ssl/ || handle_error "No se pudieron copiar los certificados"
+    
+    echo "[ÉXITO] Generación y verificación de certificados SSL completada."
 }
 
 # Función para configurar firewall y red
@@ -357,6 +385,12 @@ if [ "$UPDATE_MODE" = true ]; then
     cp hostberry-web.service /etc/systemd/system/ || handle_error "No se pudo actualizar el archivo de servicio"
     systemctl daemon-reload
     systemctl enable hostberry-web.service
+    
+    # Generar certificados SSL si está habilitado
+    if [ "$GENERATE_CERT" = true ]; then
+        echo "Generando nuevos certificados SSL..."
+        generate_ssl_cert
+    fi
     
     # Reiniciar servicio
     systemctl restart hostberry-web.service || handle_error "No se pudo reiniciar el servicio"
