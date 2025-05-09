@@ -101,6 +101,16 @@ EOF
     echo "Configuración de red y firewall completada."
 }
 
+# Verificar argumentos
+for arg in "$@"; do
+    case "$arg" in
+        --help)
+            show_help
+            exit 0
+            ;;
+    esac
+done
+
 # Verificar si se está ejecutando como root
 if [ "$EUID" -ne 0 ]; then
     echo "Por favor, ejecuta este script como root (sudo)"
