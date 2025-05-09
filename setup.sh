@@ -217,6 +217,9 @@ update_from_github() {
         apt-get install -y git || handle_error "No se pudo instalar git"
     fi
     
+    # Configurar git para permitir el directorio
+    git config --global --add safe.directory "$HOSTBERRY_DIR" || handle_error "No se pudo configurar git"
+    
     # Verificar si el directorio es un repositorio git
     if [ ! -d "$HOSTBERRY_DIR/.git" ]; then
         log "$ANSI_YELLOW" "INFO" "Clonando repositorio..."
@@ -246,6 +249,11 @@ update_from_github() {
     chmod -R 755 "$HOSTBERRY_DIR"
     find "$HOSTBERRY_DIR" -type f -exec chmod 644 {} \;
     find "$HOSTBERRY_DIR/scripts" -type f -name "*.sh" -exec chmod +x {} \;
+    
+    # Asegurar que el directorio pertenece al usuario correcto
+    if [ -d "$HOSTBERRY_DIR" ]; then
+        chown -R root:root "$HOSTBERRY_DIR" || log "$ANSI_YELLOW" "WARN" "No se pudieron cambiar los permisos del directorio"
+    fi
     
     log "$ANSI_GREEN" "INFO" "Actualización desde GitHub completada"
 }
