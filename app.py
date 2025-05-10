@@ -775,15 +775,53 @@ def security_config():
 @login_required
 def security_logs():
     try:
-        # Sample log data - replace with actual log retrieval
-        logs = [
-            {"timestamp": "2025-05-03 10:30", "ip": "192.168.1.100", "action": "Blocked", "reason": "Port scan detected"},
-            {"timestamp": "2025-05-03 09:15", "ip": "10.0.0.5", "action": "Allowed", "reason": "Normal traffic"}
-        ]
-        return render_template('security_logs.html', logs=logs)
+        # Obtener IPs bloqueadas
+        blocked_ips = list(BLOCKED_IPS)
+        
+        # Obtener intentos fallidos
+        failed_attempts = []
+        for ip, attempts in FAILED_ATTEMPTS.items():
+            if attempts > 0:
+                failed_attempts.append({
+                    'ip': ip,
+                    'attempts': attempts,
+                    'blocked': ip in BLOCKED_IPS
+                })
+        
+        # Obtener logs de seguridad del sistema
+        security_logs = []
+        try:
+            with open('/var/log/auth.log', 'r') as f:
+                for line in f.readlines()[-100:]:  # Últimas 100 líneas
+                    if 'Failed password' in line or 'Invalid user' in line or 'Connection closed' in line:
+                        security_logs.append({
+                            'timestamp': line.split(' ')[0:3],
+                            'message': line.strip()
+                        })
+        except Exception as e:
+            app.logger.error(f"Error reading auth.log: {e}")
+        
+        # Obtener estadísticas de iptables
+        try:
+            iptables_rules = subprocess.check_output(['iptables', '-L', '-n', '-v'], text=True)
+            blocked_count = iptables_rules.count('DROP')
+        except Exception as e:
+            app.logger.error(f"Error getting iptables stats: {e}")
+            blocked_count = 0
+        
+        return render_template('security_logs.html', 
+                             blocked_ips=blocked_ips,
+                             failed_attempts=failed_attempts,
+                             security_logs=security_logs,
+                             blocked_count=blocked_count)
     except Exception as e:
         app.logger.error(f"Error retrieving security logs: {str(e)}")
-        return render_template('security_logs.html', logs=[])
+        flash(_('Error al obtener los logs de seguridad'), 'danger')
+        return render_template('security_logs.html', 
+                             blocked_ips=[],
+                             failed_attempts=[],
+                             security_logs=[],
+                             blocked_count=0)
 
 @app.route('/security/save', methods=['POST'])
 @login_required
