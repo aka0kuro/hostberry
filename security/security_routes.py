@@ -114,10 +114,33 @@ def security_config():
     
     # Obtener estado actual de seguridad
     try:
-        rules_count = int(subprocess.check_output(['iptables', '-L', '-n', '--line-numbers'])
-                         .decode().count('\n')) - 2
-        blocked_ips = int(subprocess.check_output(['iptables', '-L', 'INPUT', '-n', '-v'])
-                         .decode().count('DROP'))
+        # Obtener IPs bloqueadas de iptables-save (igual que en security_logs)
+        blocked_ips_list = []
+        try:
+            iptables_output = subprocess.check_output(['iptables-save'], text=True)
+            for line in iptables_output.split('\n'):
+                if 'DROP' in line and '-s' in line:
+                    parts = line.split()
+                    for i, part in enumerate(parts):
+                        if part == '-s':
+                            if i + 1 < len(parts):
+                                ip = parts[i + 1]
+                                if ip not in blocked_ips_list and ip != '0.0.0.0/0' and ip != 'anywhere':
+                                    blocked_ips_list.append(ip)
+            # Si no encontramos IPs específicas, intentar con iptables -L
+            if not blocked_ips_list:
+                iptables_list = subprocess.check_output(['iptables', '-L', 'INPUT', '-n', '-v'], text=True)
+                for line in iptables_list.split('\n'):
+                    if 'DROP' in line:
+                        parts = line.split()
+                        if len(parts) > 7:
+                            ip = parts[7]
+                            if ip not in blocked_ips_list and ip != '0.0.0.0/0' and ip != 'anywhere':
+                                blocked_ips_list.append(ip)
+        except Exception as e:
+            app.logger.error(f"Error getting blocked IPs from iptables: {e}")
+        rules_count = int(subprocess.check_output(['iptables', '-L', '-n', '--line-numbers']).decode().count('\n')) - 2
+        blocked_ips = len(blocked_ips_list)
         last_attack = None  # Esto vendría del análisis de logs en una implementación real
     except Exception as e:
         app.logger.error(f"Error obteniendo estado de seguridad: {str(e)}")
