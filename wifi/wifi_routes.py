@@ -4,7 +4,7 @@ from hostberry_config import HostBerryConfig
 from .wifi_security import wifi_security
 from .wifi_connection import wifi_connection
 from .wifi_utils import wifi_utils
-from app import login_required
+from auth import login_required
 
 wifi_bp = Blueprint('wifi', __name__)
 
