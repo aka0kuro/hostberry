@@ -954,6 +954,14 @@ def status():
         'hostapd_status': hostapd_status_str
     })
 
+# --- Manejador global de errores para respuestas JSON ---
+from flask import jsonify
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    app.logger.error(f"Excepción no controlada: {e}")
+    return jsonify({'success': False, 'error': str(e)}), 500
+
 if __name__ == '__main__':
     # Solo para desarrollo local. En producción usar Gunicorn.
     import socket
