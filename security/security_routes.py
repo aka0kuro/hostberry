@@ -144,8 +144,21 @@ def security_config():
 def security_logs():
     """Página de logs de seguridad"""
     try:
-        # Obtener logs de seguridad
-        logs = []
+        # Obtener IPs bloqueadas
+        blocked_ips = list(BLOCKED_IPS)
+        
+        # Obtener intentos fallidos
+        failed_attempts = []
+        for ip, attempts in FAILED_ATTEMPTS.items():
+            if attempts > 0:
+                failed_attempts.append({
+                    'ip': ip,
+                    'attempts': attempts,
+                    'blocked': ip in BLOCKED_IPS
+                })
+        
+        # Obtener logs de seguridad del sistema
+        security_logs = []
         log_files = [
             '/var/log/auth.log',
             '/var/log/syslog',
@@ -154,19 +167,39 @@ def security_logs():
         
         for log_file in log_files:
             if os.path.exists(log_file):
-                with open(log_file, 'r') as f:
-                    for line in f.readlines()[-100:]:  # Últimas 100 líneas
-                        if any(keyword in line.lower() for keyword in 
-                              ['failed', 'error', 'warning', 'blocked', 'attack']):
-                            logs.append({
-                                'timestamp': line[:19],
-                                'message': line[20:].strip()
-                            })
+                try:
+                    with open(log_file, 'r') as f:
+                        for line in f.readlines()[-100:]:  # Últimas 100 líneas
+                            if any(keyword in line.lower() for keyword in 
+                                  ['failed', 'error', 'warning', 'blocked', 'attack']):
+                                security_logs.append({
+                                    'timestamp': line[:19],
+                                    'message': line[20:].strip()
+                                })
+                except Exception as e:
+                    app.logger.error(f"Error reading {log_file}: {e}")
         
-        return render_template('security_logs.html', logs=logs)
+        # Obtener estadísticas de iptables
+        try:
+            iptables_rules = subprocess.check_output(['iptables', '-L', '-n', '-v'], text=True)
+            blocked_count = iptables_rules.count('DROP')
+        except Exception as e:
+            app.logger.error(f"Error getting iptables stats: {e}")
+            blocked_count = 0
+        
+        return render_template('security_logs.html', 
+                             blocked_ips=blocked_ips,
+                             failed_attempts=failed_attempts,
+                             security_logs=security_logs,
+                             blocked_count=blocked_count)
     except Exception as e:
-        app.logger.error(f"Error obteniendo logs de seguridad: {str(e)}")
-        return render_template('security_logs.html', logs=[])
+        app.logger.error(f"Error retrieving security logs: {str(e)}")
+        flash('Error al obtener los logs de seguridad', 'danger')
+        return render_template('security_logs.html', 
+                             blocked_ips=[],
+                             failed_attempts=[],
+                             security_logs=[],
+                             blocked_count=0)
 
 @security_bp.route('/security/save', methods=['POST'])
 def save_security_settings():

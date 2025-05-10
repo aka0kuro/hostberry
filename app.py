@@ -557,8 +557,12 @@ VPN_CONF_PATH = '/etc/openvpn/client.conf'
 from functools import wraps
 from collections import defaultdict
 
+# Variables globales de seguridad
 FAILED_ATTEMPTS = defaultdict(int)
 BLOCKED_IPS = set()
+
+# Importar y compartir las variables con el módulo security
+from security.security_routes import FAILED_ATTEMPTS, BLOCKED_IPS
 
 @app.before_request
 def restrict_ip_whitelist():
