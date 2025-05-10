@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify, render_template, current_app as app
+from app import csrf
 import os
 from hostberry_config import HostBerryConfig
 from .wifi_security import wifi_security
