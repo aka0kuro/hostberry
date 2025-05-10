@@ -262,8 +262,8 @@ def login():
             FAILED_LOGIN_ATTEMPTS[username] = 0
             FAILED_LOGIN_ATTEMPTS_IP[client_ip] = 0
             flash('Inicio de sesión exitoso.', 'success')
-            next_url = request.args.get('next') or url_for('index')
-            return redirect(next_url)
+            # Redirigir directamente a index sin usar el parámetro next
+            return redirect(url_for('index'))
         else:
             FAILED_LOGIN_ATTEMPTS[username] = FAILED_LOGIN_ATTEMPTS.get(username, 0) + 1
             FAILED_LOGIN_ATTEMPTS_IP[client_ip] = FAILED_LOGIN_ATTEMPTS_IP.get(client_ip, 0) + 1
