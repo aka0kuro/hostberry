@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify, render_template, current_app as app
-from flask_wtf import CSRFProtect
 from app import csrf
 import os
 from hostberry_config import HostBerryConfig
