@@ -113,10 +113,17 @@ start_time = time.time()
 try:
     app_logger.debug('Verificando archivo .env')
     if not os.path.exists('.env'):
-        app_logger.info('Creando archivo .env con nueva clave secreta')
-        with open('.env', 'w') as f:
-            secret_key = secrets.token_hex(32)
-            f.write(f"FLASK_SECRET_KEY={secret_key}\n")
+        app_logger.info('Intentando crear archivo .env con nueva clave secreta')
+        try:
+            with open('.env', 'w') as f:
+                secret_key = secrets.token_hex(32)
+                f.write(f"FLASK_SECRET_KEY={secret_key}\n")
+            app_logger.info('Archivo .env creado correctamente.')
+        except Exception as e:
+            error_msg = f"No se pudo crear el archivo .env en {os.getcwd()}: {e}"
+            print(error_msg)
+            app_logger.error(error_msg)
+            raise RuntimeError(error_msg)
 
     app_logger.debug('Cargando variables de entorno')
     load_dotenv()
@@ -125,8 +132,15 @@ try:
     if not secret_key or len(secret_key) < 32:
         app_logger.info('Generando nueva clave secreta')
         secret_key = secrets.token_hex(32)
-        with open('.env', 'a') as f:
-            f.write(f"FLASK_SECRET_KEY={secret_key}\n")
+        try:
+            with open('.env', 'a') as f:
+                f.write(f"FLASK_SECRET_KEY={secret_key}\n")
+            app_logger.info('Clave secreta añadida a .env correctamente.')
+        except Exception as e:
+            error_msg = f"No se pudo escribir en el archivo .env en {os.getcwd()}: {e}"
+            print(error_msg)
+            app_logger.error(error_msg)
+            raise RuntimeError(error_msg)
 
     app_logger.debug('Inicializando aplicación Flask')
     
