@@ -175,12 +175,19 @@ try:
         WTF_CSRF_HEADERS=['X-CSRFToken'],
         WTF_CSRF_TIME_LIMIT=3600,
         WTF_CSRF_SSL_STRICT=False,  # Desactivar verificación SSL estricta para desarrollo
+        WTF_CSRF_METHODS=['POST', 'PUT', 'PATCH', 'DELETE'],
         MAX_CONTENT_LENGTH=16 * 1024 * 1024  # 16MB max-limit
     )
 
     # Inicializar CSRF después de configurar la app
     csrf = CSRFProtect()
     csrf.init_app(app)
+
+    # Asegurarse de que la sesión esté inicializada
+    @app.before_request
+    def before_request():
+        if 'csrf_token' not in session:
+            session['csrf_token'] = csrf._get_csrf_token()
 
     app_logger.debug('Configuración inicial completada')
 
