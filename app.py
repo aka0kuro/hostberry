@@ -223,15 +223,31 @@ try:
         if request.method == 'POST':
             username = request.form.get('username')
             password = request.form.get('password')
+            ip = request.remote_addr
+            
+            # Verificar si la IP está bloqueada
+            if ip in LOGIN_BLOCKED:
+                if time.time() < LOGIN_BLOCKED[ip]:
+                    remaining_time = int((LOGIN_BLOCKED[ip] - time.time()) / 60)
+                    error = f'IP bloqueada. Intente nuevamente en {remaining_time} minutos.'
+                    app.logger.warning(f"Intento de login desde IP bloqueada: {ip}")
+                    return render_template('login.html', error=error)
+                else:
+                    del LOGIN_BLOCKED[ip]
+                    FAILED_LOGIN_ATTEMPTS[ip] = 0
+                    app.logger.info(f"Bloqueo de IP {ip} expirado")
             
             # Verificar si el usuario está bloqueado
             if username in LOGIN_BLOCKED:
                 if time.time() < LOGIN_BLOCKED[username]:
                     remaining_time = int((LOGIN_BLOCKED[username] - time.time()) / 60)
                     error = f'Usuario bloqueado. Intente nuevamente en {remaining_time} minutos.'
+                    app.logger.warning(f"Intento de login de usuario bloqueado: {username}")
+                    return render_template('login.html', error=error)
                 else:
                     del LOGIN_BLOCKED[username]
                     FAILED_LOGIN_ATTEMPTS[username] = 0
+                    app.logger.info(f"Bloqueo de usuario {username} expirado")
             
             if not error and username in USERS and check_password_hash(USERS[username], password):
                 session['logged_in'] = True
@@ -243,19 +259,32 @@ try:
                     flash('¡Debes cambiar la contraseña por defecto!', 'warning')
                     return redirect(url_for('change_password'))
                 
+                # Resetear intentos fallidos
+                FAILED_LOGIN_ATTEMPTS[ip] = 0
                 FAILED_LOGIN_ATTEMPTS[username] = 0
+                app.logger.info(f"Login exitoso para usuario {username} desde IP {ip}")
                 flash('Inicio de sesión exitoso.', 'success')
                 return redirect(url_for('index'))
             else:
-                if username in USERS:
-                    FAILED_LOGIN_ATTEMPTS[username] = FAILED_LOGIN_ATTEMPTS.get(username, 0) + 1
-                    if FAILED_LOGIN_ATTEMPTS[username] >= LOGIN_BLOCK_LIMIT:
-                        LOGIN_BLOCKED[username] = time.time() + BLOCK_TIME_SECONDS
-                        error = 'Demasiados intentos fallidos. Usuario bloqueado temporalmente.'
-                    else:
-                        error = 'Usuario o contraseña incorrectos.'
+                # Incrementar contador de intentos fallidos
+                FAILED_LOGIN_ATTEMPTS[ip] = FAILED_LOGIN_ATTEMPTS.get(ip, 0) + 1
+                FAILED_LOGIN_ATTEMPTS[username] = FAILED_LOGIN_ATTEMPTS.get(username, 0) + 1
+                
+                # Verificar si se debe bloquear por IP
+                if FAILED_LOGIN_ATTEMPTS[ip] >= LOGIN_BLOCK_LIMIT:
+                    LOGIN_BLOCKED[ip] = time.time() + BLOCK_TIME_SECONDS
+                    error = f'Demasiados intentos fallidos. IP bloqueada por {BLOCK_TIME_SECONDS/60} minutos.'
+                    app.logger.warning(f"IP {ip} bloqueada por {LOGIN_BLOCK_LIMIT} intentos fallidos")
+                
+                # Verificar si se debe bloquear por usuario
+                elif FAILED_LOGIN_ATTEMPTS[username] >= LOGIN_BLOCK_LIMIT:
+                    LOGIN_BLOCKED[username] = time.time() + BLOCK_TIME_SECONDS
+                    error = f'Demasiados intentos fallidos. Usuario bloqueado por {BLOCK_TIME_SECONDS/60} minutos.'
+                    app.logger.warning(f"Usuario {username} bloqueado por {LOGIN_BLOCK_LIMIT} intentos fallidos")
+                
                 else:
                     error = 'Usuario o contraseña incorrectos.'
+                    app.logger.warning(f"Intento fallido de login para usuario {username} desde IP {ip}")
         
         # Advertencia si la contraseña por defecto sigue activa
         default_pwd_active = check_password_hash(USERS.get('admin',''), 'admin123')
