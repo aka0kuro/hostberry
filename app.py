@@ -16,6 +16,8 @@ from wireguard.wireguard_routes import wireguard_bp
 from security.security_routes import security_bp
 from adblock.adblock_routes import adblock_bp
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 
 # Estado global para saber si hay una actualización en curso
 global_adblock_update_status = {'updating': False, 'last_result': None, 'last_error': None}
