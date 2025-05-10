@@ -179,7 +179,7 @@ try:
         REMEMBER_COOKIE_SECURE=False,
         SESSION_COOKIE_HTTPONLY=True,
         REMEMBER_COOKIE_HTTPONLY=True,
-        SECRET_KEY=secret_key,
+        SECRET_KEY='dev_key_temporal',  # Clave temporal para desarrollo
         SESSION_COOKIE_SAMESITE='Lax',
         PERMANENT_SESSION_LIFETIME=86400,
         BABEL_DEFAULT_LOCALE='es',
@@ -187,7 +187,7 @@ try:
         BABEL_SUPPORTED_LOCALES=['en', 'es'],
         SESSION_COOKIE_DOMAIN=None,
         SESSION_COOKIE_PATH=None,
-        WTF_CSRF_ENABLED=False,  # Desactivamos CSRF temporalmente para simplificar
+        WTF_CSRF_ENABLED=False,  # Desactivamos CSRF temporalmente
         MAX_CONTENT_LENGTH=16 * 1024 * 1024  # 16MB max-limit
     )
 
@@ -231,81 +231,89 @@ BLOCK_TIME_SECONDS = 900  # 15 minutos
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get('logged_in'):
-            return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    error = None
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+@app.route('/')
+def index():
+    """
+    Página principal con estadísticas del sistema
+    """
+    import time
+    start_time = time.time()
+    try:
+        # Debug logging
+        app.logger.debug(f"Index route called")
         
-        # Verificar si el usuario está bloqueado
-        if username in LOGIN_BLOCKED:
-            if time.time() < LOGIN_BLOCKED[username]:
-                remaining_time = int((LOGIN_BLOCKED[username] - time.time()) / 60)
-                error = f'Usuario bloqueado. Intente nuevamente en {remaining_time} minutos.'
-            else:
-                del LOGIN_BLOCKED[username]
-                FAILED_LOGIN_ATTEMPTS[username] = 0
+        stats = get_system_stats()
         
-        if not error and username in USERS and check_password_hash(USERS[username], password):
-            session['logged_in'] = True
-            session['username'] = username
-            
-            # Forzar cambio de contraseña por defecto
-            if is_default_password(username, password):
-                session['force_change_password'] = True
-                flash('¡Debes cambiar la contraseña por defecto!', 'warning')
-                return redirect(url_for('change_password'))
-            
-            FAILED_LOGIN_ATTEMPTS[username] = 0
-            flash('Inicio de sesión exitoso.', 'success')
-            return redirect(url_for('index'))
-        else:
-            if username in USERS:
-                FAILED_LOGIN_ATTEMPTS[username] = FAILED_LOGIN_ATTEMPTS.get(username, 0) + 1
-                if FAILED_LOGIN_ATTEMPTS[username] >= LOGIN_BLOCK_LIMIT:
-                    LOGIN_BLOCKED[username] = time.time() + BLOCK_TIME_SECONDS
-                    error = 'Demasiados intentos fallidos. Usuario bloqueado temporalmente.'
-                else:
-                    error = 'Usuario o contraseña incorrectos.'
-            else:
-                error = 'Usuario o contraseña incorrectos.'
-    
-    # Advertencia si la contraseña por defecto sigue activa
-    default_pwd_active = check_password_hash(USERS.get('admin',''), 'admin123')
-    return render_template('login.html', error=error, default_pwd_active=default_pwd_active)
+        log_file = 'logs/hostberry.log'
+        log_lines = []
+        logs_available = False
+        
+        try:
+            if os.path.isfile(log_file):
+                with open(log_file, 'r') as f:
+                    raw_lines = f.readlines()[-100:]
+                    logs = []
+                    for line in reversed(raw_lines):
+                        line = line.strip()
+                        if line:
+                            # Parse timestamp and message
+                            parts = line.split(' ', 2)
+                            if len(parts) >= 3:
+                                logs.append({'timestamp': ' '.join(parts[:2]), 'message': parts[2]})
+                            else:
+                                logs.append({'timestamp': '', 'message': line})
+                logs_available = True
+        except IOError:
+            pass
+        
+        current_config = config.get_current_config()
+        # Obtener información de red
+        try:
+            interface = subprocess.check_output(['hostname', '-I'], text=True).strip().split()[0]
+        except Exception:
+            interface = 'Desconocido'
+        try:
+            ip_addr = subprocess.check_output(['hostname', '-I'], text=True).strip().split()[0]
+        except Exception:
+            ip_addr = 'Desconocida'
+        try:
+            ssid = subprocess.check_output(['iwgetid', '-r'], text=True).strip()
+        except Exception:
+            ssid = ''
+        try:
+            hostapd_status = subprocess.check_output(['systemctl', 'is-active', 'hostapd'], text=True).strip()
+        except Exception:
+            hostapd_status = 'unknown'
 
-@app.route('/logout')
-def logout():
-    session.clear()
-    flash('Sesión cerrada.', 'info')
-    return redirect(url_for('login'))
-
-@app.route('/change_password', methods=['GET', 'POST'])
-@login_required
-def change_password():
-    if request.method == 'POST':
-        new_password = request.form.get('new_password')
-        confirm_password = request.form.get('confirm_password')
+        response = make_response(render_template(
+            'index.html',
+            title=_('Index'),
+            stats=stats,
+            logs=logs,
+            current_lang=get_locale(),
+            logs_available=logs_available,
+            adblock_enabled=current_config.get('ADBLOCK_ENABLED', False),
+            vpn_enabled=current_config.get('VPN_ENABLED', False),
+            firewall_enabled=current_config.get('FIREWALL_ENABLED', False),
+            network_interface=interface,
+            local_ip=ip_addr,
+            wifi_ssid=ssid,
+            hostapd_status=hostapd_status
+        ))
         
-        if not new_password or len(new_password) < 8:
-            flash('La nueva contraseña debe tener al menos 8 caracteres.', 'danger')
-        elif new_password != confirm_password:
-            flash('Las contraseñas no coinciden.', 'danger')
-        elif is_default_password(session['username'], new_password):
-            flash('No puedes usar la contraseña por defecto.', 'danger')
-        else:
-            USERS[session['username']] = generate_password_hash(new_password)
-            session.pop('force_change_password', None)
-            flash('Contraseña cambiada con éxito.', 'success')
-            return redirect(url_for('index'))
-    
-    return render_template('change_password.html', force_change=True)
+        # Add cache control headers to prevent caching
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        app.logger.info(f"[PERF] index route duration: {time.time() - start_time:.3f}s")
+        return response
+    except Exception as e:
+        app.logger.error(f"Error in index route: {str(e)}")
+        flash(_('Error loading system information'), 'danger')
+        return render_template('error.html', error=str(e)), 500
 
 # Registrar blueprints WiFi, VPN, AdBlock, hostapd, WireGuard y Security
 app_logger.info('Registrando blueprints de la aplicación')
@@ -596,93 +604,6 @@ def get_cpu_temp():
             return round(float(f.read()) / 1000, 1)
     except Exception:
         return None
-
-@app.route('/')
-@login_required
-def index():
-    """
-    Página principal con estadísticas del sistema
-    """
-    import time
-    start_time = time.time()
-    try:
-        # Debug logging
-        app.logger.debug(f"Index route called. Session: {dict(session)}, Args: {dict(request.args)}")
-        
-        # Check if language was just changed
-        lang_changed = request.args.get('lang_changed', False)
-        
-        stats = get_system_stats()
-        
-        log_file = 'logs/hostberry.log'
-        log_lines = []
-        logs_available = False
-        
-        try:
-            if os.path.isfile(log_file):
-                with open(log_file, 'r') as f:
-                    raw_lines = f.readlines()[-100:]
-                    logs = []
-                    for line in reversed(raw_lines):
-                        line = line.strip()
-                        if line:
-                            # Parse timestamp and message
-                            parts = line.split(' ', 2)
-                            if len(parts) >= 3:
-                                logs.append({'timestamp': ' '.join(parts[:2]), 'message': parts[2]})
-                            else:
-                                logs.append({'timestamp': '', 'message': line})
-                logs_available = True
-        except IOError:
-            pass
-        
-        current_config = config.get_current_config()
-        # Obtener información de red
-        try:
-            interface = subprocess.check_output(['hostname', '-I'], text=True).strip().split()[0]
-        except Exception:
-            interface = 'Desconocido'
-        try:
-            ip_addr = subprocess.check_output(['hostname', '-I'], text=True).strip().split()[0]
-        except Exception:
-            ip_addr = 'Desconocida'
-        try:
-            ssid = subprocess.check_output(['iwgetid', '-r'], text=True).strip()
-        except Exception:
-            ssid = ''
-        try:
-            hostapd_status = subprocess.check_output(['systemctl', 'is-active', 'hostapd'], text=True).strip()
-        except Exception:
-            hostapd_status = 'unknown'
-
-        response = make_response(render_template(
-            'index.html',
-            title=_('Index'),
-            stats=stats,
-            logs=logs,
-            current_lang=get_locale(),
-            logs_available=logs_available,
-            adblock_enabled=current_config.get('ADBLOCK_ENABLED', False),
-            vpn_enabled=current_config.get('VPN_ENABLED', False),
-            firewall_enabled=current_config.get('FIREWALL_ENABLED', False),
-            network_interface=interface,
-            local_ip=ip_addr,
-            wifi_ssid=ssid,
-            hostapd_status=hostapd_status
-        ))
-        
-        # Add cache control headers to prevent caching
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
-        app.logger.info(f"[PERF] index route duration: {time.time() - start_time:.3f}s")
-        return response
-    except Exception as e:
-        app.logger.error(f"Error in index route: {str(e)}")
-        flash(_('Error loading system information'), 'danger')
-        
-        # For now, just return the error page without redirect
-        return render_template('error.html', error=str(e)), 500
 
 @app.route('/network', methods=['GET', 'POST'])
 def network_config():
@@ -1098,4 +1019,4 @@ if __name__ == '__main__':
         pass  # Ignora si no se puede cambiar el propietario
 
     # IMPORTANTE: Para producción usa Gunicorn y configura debug=False
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=5000, debug=True)  # Activamos debug para desarrollo
