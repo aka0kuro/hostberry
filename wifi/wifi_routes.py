@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify, render_template, current_app as app
-from app import csrf
 import os
 from hostberry_config import HostBerryConfig
 from .wifi_security import wifi_security
@@ -9,7 +8,6 @@ from .wifi_utils import wifi_utils
 wifi_bp = Blueprint('wifi', __name__)
 
 @wifi_bp.route('/api/wifi/connect', methods=['GET', 'POST'])
-@csrf.exempt
 def wifi_connect():
     """Conecta a una red WiFi y SIEMPRE genera el archivo wpa_supplicant.conf aunque la conexión falle."""
     try:
@@ -449,5 +447,8 @@ def wifi_autoconnect():
         
     except Exception as e:
         app.logger.error(f'Error en wifi_autoconnect: {str(e)}')
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
         return jsonify({'success': False, 'error': str(e)}), 500
 
