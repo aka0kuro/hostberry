@@ -180,10 +180,9 @@ class HostBerryConfig:
             
             with open('/usr/local/bin/new_script.sh', 'w') as f:
                 f.writelines(content)
-        
-        # Set executable permissions
-        os.chmod('/usr/local/bin/new_script.sh', 0o755)
-        logger.debug('Script new_script.sh actualizado correctamente')
+            # Set executable permissions
+            os.chmod('/usr/local/bin/new_script.sh', 0o755)
+            logger.debug('Script new_script.sh actualizado correctamente')
         except Exception as e:
             logger.error(f'Error al actualizar script new_script.sh: {e}', exc_info=True)
             raise
