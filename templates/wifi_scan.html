@@ -437,7 +437,8 @@ $('#wifiConnectForm').submit(async function(e) {
                 security: security, 
                 save_credentials: saveCredentials 
             }),
-            signal: controller.signal
+            signal: controller.signal,
+            credentials: 'same-origin'
         }).finally(() => clearTimeout(timeoutId));
         
         const responseData = await response.json();
