@@ -147,25 +147,36 @@ def security_logs():
         # Obtener IPs bloqueadas de iptables
         blocked_ips = []
         try:
-            # Obtener reglas de iptables con números de línea y detalles
-            iptables_output = subprocess.check_output(['iptables', '-L', 'INPUT', '-n', '-v', '--line-numbers'], text=True)
+            # Usar iptables-save para obtener las reglas exactas
+            iptables_output = subprocess.check_output(['iptables-save'], text=True)
             
             # Procesar la salida línea por línea
             for line in iptables_output.split('\n'):
-                if 'DROP' in line:
-                    # Extraer IP de la línea
+                if 'DROP' in line and '-s' in line:
+                    # Extraer la IP de la línea
                     parts = line.split()
-                    # Buscar la IP en la línea (está después de 'DROP')
-                    drop_index = line.find('DROP')
-                    if drop_index != -1:
-                        # Obtener la parte después de DROP
-                        after_drop = line[drop_index:].split()
-                        if len(after_drop) > 1:
-                            # La IP suele estar después de 'DROP'
-                            ip = after_drop[1]
+                    for i, part in enumerate(parts):
+                        if part == '-s':
+                            if i + 1 < len(parts):
+                                ip = parts[i + 1]
+                                if ip not in blocked_ips and ip != '0.0.0.0/0' and ip != 'anywhere':
+                                    blocked_ips.append(ip)
+                                    app.logger.debug(f"Found blocked IP: {ip} in line: {line}")
+            
+            # Si no encontramos IPs específicas, intentar con iptables -L
+            if not blocked_ips:
+                iptables_list = subprocess.check_output(['iptables', '-L', 'INPUT', '-n', '-v'], text=True)
+                for line in iptables_list.split('\n'):
+                    if 'DROP' in line:
+                        parts = line.split()
+                        if len(parts) > 7:
+                            ip = parts[7]
                             if ip not in blocked_ips and ip != '0.0.0.0/0' and ip != 'anywhere':
                                 blocked_ips.append(ip)
-                                app.logger.debug(f"Found blocked IP: {ip} in line: {line}")
+                                app.logger.debug(f"Found blocked IP from list: {ip}")
+            
+            app.logger.info(f"Found {len(blocked_ips)} blocked IPs: {blocked_ips}")
+            
         except Exception as e:
             app.logger.error(f"Error getting blocked IPs from iptables: {e}")
         
@@ -203,7 +214,6 @@ def security_logs():
         
         # Obtener estadísticas de iptables
         try:
-            iptables_rules = subprocess.check_output(['iptables', '-L', 'INPUT', '-n', '-v'], text=True)
             blocked_count = len(blocked_ips)  # Usar el número real de IPs bloqueadas
         except Exception as e:
             app.logger.error(f"Error getting iptables stats: {e}")
