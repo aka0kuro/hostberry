@@ -220,7 +220,46 @@ configure_network() {
     
     # Habilitar UFW
     ufw --force enable || handle_error "No se pudo habilitar UFW"
-    
+}
+
+# Función para restaurar backup de HostBerry
+restore_hostberry_backup() {
+    local BACKUP_DIR="/opt/hosteberry_backup"
+    local HOSTBERRY_DIR="/opt/hostberry"
+    local HOME_HOSTBERRY_DIR="/home/blag0rag/hostberry"
+
+    # Validar existencia del directorio de backup
+    if [ ! -d "$BACKUP_DIR" ]; then
+        handle_error "El directorio de backup $BACKUP_DIR no existe"
+    fi
+
+    log "$ANSI_YELLOW" "INFO" "Iniciando restauración de backup de HostBerry"
+
+    # Detener servicios antes de restaurar
+    systemctl stop hostberry-web.service || log "$ANSI_RED" "WARN" "No se pudo detener el servicio web"
+
+    # Restaurar archivos de la aplicación
+    if [ -d "$BACKUP_DIR/hostberry" ]; then
+        cp -r "$BACKUP_DIR/hostberry/"* "$HOSTBERRY_DIR/" || handle_error "Error al restaurar archivos de /opt/hostberry"
+        log "$ANSI_GREEN" "INFO" "Archivos de /opt/hostberry restaurados"
+    fi
+
+    # Restaurar archivos de configuración del usuario
+    if [ -d "$BACKUP_DIR/home/hostberry" ]; then
+        cp -r "$BACKUP_DIR/home/hostberry/"* "$HOME_HOSTBERRY_DIR/" || handle_error "Error al restaurar archivos de home"
+        log "$ANSI_GREEN" "INFO" "Archivos de home restaurados"
+    fi
+
+    # Restaurar permisos
+    chown -R hostberry:hostberry "$HOSTBERRY_DIR" || log "$ANSI_RED" "WARN" "No se pudieron restaurar permisos en $HOSTBERRY_DIR"
+    chown -R blag0rag:blag0rag "$HOME_HOSTBERRY_DIR" || log "$ANSI_RED" "WARN" "No se pudieron restaurar permisos en $HOME_HOSTBERRY_DIR"
+
+    # Reiniciar servicios
+    systemctl daemon-reload
+    systemctl restart hostberry-web.service || handle_error "No se pudo reiniciar el servicio web"
+
+    log "$ANSI_GREEN" "SUCCESS" "Backup de HostBerry restaurado exitosamente"
+}
     log "$ANSI_GREEN" "INFO" "Red y firewall configurados correctamente."
 }
 
