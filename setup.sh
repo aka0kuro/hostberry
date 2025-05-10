@@ -295,7 +295,60 @@ update_hostberry() {
     log "$ANSI_GREEN" "INFO" "Iniciando actualización de HostBerry..."
     
     # Crear backup si existe instalación previa
-    if [ -d "$HOSTBERRY_DIR" ]; then
+    backup_hostberry
+}
+
+# Función para crear backup de HostBerry
+backup_hostberry() {
+    local BACKUP_BASE_DIR="/opt/hosteberry_backup"
+    local TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+    local BACKUP_DIR="$BACKUP_BASE_DIR/$TIMESTAMP"
+    
+    # Crear directorio base de backups si no existe
+    mkdir -p "$BACKUP_BASE_DIR" || handle_error "No se pudo crear directorio de backups"
+    
+    log "$ANSI_YELLOW" "INFO" "Iniciando backup de HostBerry..."
+    
+    # Crear directorios para el backup
+    mkdir -p "$BACKUP_DIR/hostberry" "$BACKUP_DIR/home/hostberry" || handle_error "Error al crear directorios de backup"
+    
+    # Backup de /opt/hostberry
+    if [ -d "/opt/hostberry" ]; then
+        cp -r /opt/hostberry/* "$BACKUP_DIR/hostberry/" || log "$ANSI_RED" "WARN" "Backup parcial de /opt/hostberry"
+        log "$ANSI_GREEN" "INFO" "Backup de /opt/hostberry completado"
+    else
+        log "$ANSI_RED" "WARN" "Directorio /opt/hostberry no encontrado"
+    fi
+    
+    # Backup de /home/blag0rag/hostberry
+    if [ -d "/home/blag0rag/hostberry" ]; then
+        cp -r /home/blag0rag/hostberry/* "$BACKUP_DIR/home/hostberry/" || log "$ANSI_RED" "WARN" "Backup parcial de home/hostberry"
+        log "$ANSI_GREEN" "INFO" "Backup de home/hostberry completado"
+    else
+        log "$ANSI_RED" "WARN" "Directorio home/hostberry no encontrado"
+    fi
+    
+    # Comprimir backup
+    tar -czvf "$BACKUP_BASE_DIR/hostberry_backup_$TIMESTAMP.tar.gz" -C "$BACKUP_BASE_DIR" "$TIMESTAMP" || handle_error "Error al comprimir backup"
+    
+    # Eliminar directorio temporal
+    rm -rf "$BACKUP_DIR"
+    
+    # Rotar backups (mantener los últimos 5)
+    local BACKUP_COUNT=$(find "$BACKUP_BASE_DIR" -maxdepth 1 -name "hostberry_backup_*.tar.gz" | wc -l)
+    if [ "$BACKUP_COUNT" -gt 5 ]; then
+        find "$BACKUP_BASE_DIR" -maxdepth 1 -name "hostberry_backup_*.tar.gz" | sort | head -n $((BACKUP_COUNT - 5)) | xargs rm -f
+    fi
+    
+    log "$ANSI_GREEN" "SUCCESS" "Backup de HostBerry completado: $BACKUP_BASE_DIR/hostberry_backup_$TIMESTAMP.tar.gz"
+}
+
+# Actualizar HostBerry
+update_hostberry() {
+    log "$ANSI_GREEN" "INFO" "Iniciando actualización de HostBerry..."
+    
+    # Crear backup si existe instalación previa
+        if [ -d "$HOSTBERRY_DIR" ]; then
         systemctl stop hostberry-web.service 2>/dev/null || true
         
         # Crear directorio de backup si no existe
