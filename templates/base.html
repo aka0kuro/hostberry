@@ -10,11 +10,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
+        :root {
+            --primary: #6f42c1;
+            --secondary: #6610f2;
+            --light: #f8f9fa;
+            --dark: #212529;
+        }
+
         body {
             background-color: var(--bg-color);
             transition: background-color 0.3s ease;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         
+        /* Tema claro */
         body.light {
             --primary: #9199a7;
             --secondary: #e0eaf8;
@@ -28,6 +39,7 @@
             --table-hover: #f1f8ff;
         }
         
+        /* Tema azul */
         body.blue {
             --primary: #001a66;
             --secondary: #0b5ed7;
@@ -41,6 +53,7 @@
             --table-hover: #002080;
         }
         
+        /* Tema rojo */
         body.red {
             --primary: #400000;
             --secondary: #bb2d3b;
@@ -54,6 +67,7 @@
             --table-hover: #4d0000;
         }
         
+        /* Tema oscuro */
         body.dark {
             --primary: #2b2c2c;
             --secondary: #121416;
@@ -67,224 +81,190 @@
             --table-hover: #343a40;
         }
 
-        /* Global Styles */
+        /* Estilos globales */
         .sidebar {
             background: var(--sidebar-bg);
-        }
-        
-        .card, .modal-content {
-            background-color: var(--card-bg);
-            border-color: var(--border-color);
-        }
-        
-        .form-control, .form-select, .form-check-input {
-            background-color: var(--input-bg);
-            border-color: var(--border-color);
-        }
-        
-        .table {
-            background-color: var(--table-bg);
-        }
-        
-        .table-hover tbody tr:hover {
-            background-color: var(--table-hover);
-        }
-        
-        .alert {
-            background-color: var(--card-bg);
-            border-color: var(--border-color);
-        }
-        
-        .nav-tabs .nav-link.active {
-            background-color: var(--card-bg);
-            border-color: var(--border-color) var(--border-color) var(--card-bg);
-        }
-        
-        .dropdown-menu {
-            background-color: color-mix(in srgb, var(--card-bg) 90%, var(--primary)) !important;
-            border: 1px solid color-mix(in srgb, var(--primary) 40%, var(--border-color)) !important;
-            backdrop-filter: blur(5px);
-        }
-        
-        .dropdown-item {
-            color: color-mix(in srgb, var(--text-color) 90%, white) !important;
-        }
-        
-        .dropdown-item:hover {
-            background-color: color-mix(in srgb, var(--primary) 30%, var(--card-bg)) !important;
-            color: white !important;
-        }
-        
-        .dropdown-toggle::after {
-            border-top-color: rgba(255,255,255,0.9) !important;
-        }
-        
-        .text-muted {
-            opacity: 0.7;
-        }
-        
-        :root {
-            --primary: #6f42c1;
-            --secondary: #6610f2;
-            --light: #f8f9fa;
-            --dark: #212529;
-        }
-        .sidebar {
             height: 100vh;
             position: fixed;
             width: 220px;
+            z-index: 1000;
+            transition: all 0.3s ease;
         }
+
         .main-content {
             margin-left: 220px;
             padding: 20px;
+            flex: 1;
+            transition: all 0.3s ease;
         }
+
+        /* Estilos para móvil */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                overflow: hidden;
+            }
+            
+            .sidebar.show {
+                width: 220px;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 15px;
+            }
+
+            .navbar-toggler {
+                display: block;
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                z-index: 1001;
+            }
+        }
+
         .card {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             transition: transform 0.3s;
         }
+
         .card:hover {
             transform: translateY(-5px);
         }
-        .nav-link {
-            color: rgba(255,255,255,0.8);
-            margin-bottom: 5px;
-            border-radius: 5px;
-        }
-        .nav-link:hover, .nav-link.active {
-            background-color: rgba(255,255,255,0.1);
-        }
-        
-        .network-info {
-            margin-top: 0.5rem;
-            font-size: 0.9rem;
-            color: #6c757d;
-        }
-        .network-info i {
-            margin-right: 0.3rem;
-        }
-        .card-link {
-            text-decoration: none;
-            color: inherit;
-        }
-        .card-link:hover {
-            transform: translateY(-2px);
-            transition: transform 0.2s;
-        }
-        .text-start p {
-            margin-bottom: 0.5rem;
-        }
-        
-        .log-container {
-            height: 200px;
-            overflow-y: auto;
-            font-size: 0.8rem;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-            padding: 10px;
-        }
-        .log-entry {
-            border-bottom: 1px solid #dee2e6;
-            padding: 5px 0;
-        }
-        .log-entry:last-child {
-            border-bottom: none;
-        }
-        .log-entry small {
-            color: #6c757d;
-        }
-        
-        /* Estilos para la fila de estado del sistema */
-        .status-card {
-            padding: 15px 0;
-        }
-        .status-card i {
-            font-size: 1.5rem;
-            margin-bottom: 5px;
-        }
-        .status-card p {
-            font-size: 1.2rem;
-            font-weight: 500;
-            margin-bottom: 0;
-        }
-        .status-card small {
-            font-size: 0.8rem;
-            color: #6c757d;
-        }
-        
-        /* Colores para métricas */
-        .cpu-color { color: #0d6efd; }
-        .temp-color { color: #fd7e14; }
-        .mem-color { color: #20c997; }
-        
-        /* Debug Styles */
-        * {
-            color: #ffffff !important;
-            background-color: var(--bg-color) !important;
-        }
-        
-        /* Force all text white for debugging */
-        body, body *, 
-        .card, .card *, 
-        .table, .table *, 
+
         .form-control, .form-select, .form-check-input {
-            color: #ffffff !important;
+            background-color: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-color);
         }
-        
-        /* Sidebar specific styles */
-        .sidebar {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+
+        .table {
+            background-color: var(--table-bg);
+            color: var(--text-color);
         }
-        
-        .sidebar h4 {
-            color: white !important;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+
+        .table-hover tbody tr:hover {
+            background-color: var(--table-hover);
         }
-        
-        .nav-link {
-            color: rgba(255,255,255,0.85) !important;
-            transition: all 0.2s;
+
+        .alert {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-color);
         }
-        
-        .nav-link:hover, .nav-link.active {
-            color: white !important;
-            background-color: rgba(255,255,255,0.2) !important;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+
+        .nav-tabs .nav-link.active {
+            background-color: var(--card-bg);
+            border-color: var(--border-color) var(--border-color) var(--card-bg);
+            color: var(--text-color);
         }
-        
-        .nav-link i {
-            color: inherit !important;
+
+        .dropdown-menu {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
         }
-        
-        /* Remove debug styles for sidebar */
-        .sidebar * {
-            color: inherit !important;
-            background-color: transparent !important;
+
+        .dropdown-item {
+            color: var(--text-color);
         }
-        
-        body {
-            color: var(--text-color) !important;
+
+        .dropdown-item:hover {
+            background-color: var(--table-hover);
+            color: var(--text-color);
         }
-        
-        /* Force light theme text color */
-        body.light, body.light * {
-            color: var(--text-color) !important;
+
+        /* Estilos específicos para el login */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--sidebar-bg);
         }
-        
-        /* Force text color for blue and red themes */
-        body.blue, body.blue * {
-            color: #000000 !important;
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem;
+            margin: 1rem;
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        
-        body.red, body.red * {
-            color: #000000 !important;
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-logo img {
+            max-width: 150px;
+            height: auto;
+        }
+
+        .login-form .form-control {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+        }
+
+        .login-form .btn-primary {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        /* Estilos para el navbar móvil */
+        .navbar {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .navbar-toggler {
+            border-color: var(--border-color);
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.7)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        /* Estilos para el footer */
+        .footer {
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 1rem 0;
+            margin-top: auto;
+        }
+
+        /* Estilos para los botones */
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary);
+            border-color: var(--secondary);
+        }
+
+        /* Estilos para los inputs */
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class="{{ 'dark' if not request.cookies.get('theme') else request.cookies.get('theme') }}">
     {% if logged_in %}
-    <div class="sidebar p-3">
+    <nav class="navbar navbar-expand-lg d-lg-none">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
+
+    <div class="sidebar p-3" id="sidebar">
         <div class="text-center mb-4">
             <h4>HostBerry</h4>
         </div>
@@ -352,18 +332,14 @@
                     <li><a class="dropdown-item" href="{{ url_for('set_language', lang='es') }}?lang_changed=1">Español</a></li>
                 </ul>
             </div>
-            <!-- HostBerry Logo -->
-            <div class="text-center mt-auto mb-3" style="position: absolute; bottom: 0; width: calc(100% - 1.5rem);">
-                <img src="{{ url_for('static', filename='hostberry.png') }}" alt="HostBerry Logo" style="max-width: 80%; height: auto;">
-            </div>
+        </div>
+        <div class="text-center mt-auto mb-3" style="position: absolute; bottom: 0; width: calc(100% - 1.5rem);">
+            <img src="{{ url_for('static', filename='hostberry.png') }}" alt="HostBerry Logo" style="max-width: 80%; height: auto;">
         </div>
     </div>
     {% endif %}
+
     <div class="main-content">
-        <header>
-            <div class="container-fluid">
-            </div>
-        </header>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -392,30 +368,40 @@
         }
         return originalFetch(input, init);
     };
-    </script>
-    <script>
-        // Initialize tooltips
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl)
-        })
 
-        // Theme switcher
-        document.querySelectorAll('.theme-option').forEach(option => {
-            option.addEventListener('click', function(e) {
-                e.preventDefault();
-                const theme = this.dataset.theme;
-                document.body.className = theme;
-                localStorage.setItem('theme', theme);
-            });
+    // Theme switcher
+    document.querySelectorAll('.theme-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            const theme = this.dataset.theme;
+            document.body.className = theme;
+            localStorage.setItem('theme', theme);
         });
+    });
 
-        // Initialize theme
-        if (!localStorage.getItem('theme')) {
-            localStorage.setItem('theme', 'dark');
+    // Initialize theme
+    if (!localStorage.getItem('theme')) {
+        localStorage.setItem('theme', 'dark');
+    }
+    const savedTheme = localStorage.getItem('theme');
+    document.body.className = savedTheme;
+
+    // Mobile sidebar toggle
+    document.querySelector('.navbar-toggler').addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.toggle('show');
+    });
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', function(e) {
+        const sidebar = document.querySelector('.sidebar');
+        const navbarToggler = document.querySelector('.navbar-toggler');
+        if (window.innerWidth <= 768 && 
+            !sidebar.contains(e.target) && 
+            !navbarToggler.contains(e.target) && 
+            sidebar.classList.contains('show')) {
+            sidebar.classList.remove('show');
         }
-        const savedTheme = localStorage.getItem('theme');
-        document.body.className = savedTheme;
+    });
     </script>
-
+</body>
 </html>
