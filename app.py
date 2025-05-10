@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory, flash, abort, make_response
-from flask_wtf import CSRFProtect
+from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response, jsonify, abort, send_from_directory
 import subprocess
 import os
 from dotenv import load_dotenv
@@ -31,6 +30,7 @@ import time
 from werkzeug.utils import secure_filename
 import re
 from flask_babel import Babel, gettext as _
+from flask_talisman import Talisman
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -123,7 +123,12 @@ try:
 
     app_logger.debug('Inicializando aplicación Flask')
     
+    # Configuración de seguridad SSL
     ssl_dir = '/etc/hostberry/ssl'
+
+    app = Flask(__name__)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+    
     app.config['SSL_CERT'] = os.path.join(ssl_dir, 'hostberry.local+4.pem')
     app.config['SSL_KEY'] = os.path.join(ssl_dir, 'hostberry.local+4-key.pem')
 
@@ -216,6 +221,14 @@ except Exception as e:
     app_logger.error(f'Error al registrar blueprints: {e}', exc_info=True)
     raise
 
+# Configuración avanzada de seguridad HTTP (Flask-Talisman)
+# Puedes personalizar más políticas CSP según tus necesidades
+Talisman(app, content_security_policy={
+    'default-src': ["'self'", '*', 'data:', 'blob:'],
+    'img-src': ["'self'", '*', 'data:', 'blob:'],
+    'script-src': ["'self'", '*', "'unsafe-inline'", "'unsafe-eval'", 'data:'],
+    'style-src': ["'self'", '*', "'unsafe-inline'", 'data:'],
+})
 
 # Configuración avanzada de logging
 log_dir = 'logs'
