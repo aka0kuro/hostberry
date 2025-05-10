@@ -123,13 +123,7 @@ try:
 
     app_logger.debug('Inicializando aplicación Flask')
     
-    # Configuración de seguridad SSL
     ssl_dir = '/etc/hostberry/ssl'
-
-    app = Flask(__name__)
-csrf = CSRFProtect(app)
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-    
     app.config['SSL_CERT'] = os.path.join(ssl_dir, 'hostberry.local+4.pem')
     app.config['SSL_KEY'] = os.path.join(ssl_dir, 'hostberry.local+4-key.pem')
 
