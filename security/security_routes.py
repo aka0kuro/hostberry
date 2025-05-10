@@ -144,8 +144,20 @@ def security_config():
 def security_logs():
     """Página de logs de seguridad"""
     try:
-        # Obtener IPs bloqueadas
-        blocked_ips = list(BLOCKED_IPS)
+        # Obtener IPs bloqueadas de iptables
+        blocked_ips = []
+        try:
+            iptables_output = subprocess.check_output(['iptables', '-L', 'INPUT', '-n', '-v'], text=True)
+            for line in iptables_output.split('\n'):
+                if 'DROP' in line:
+                    # Extraer IP de la línea
+                    parts = line.split()
+                    if len(parts) > 7:  # La IP suele estar en la posición 7 o 8
+                        ip = parts[7]
+                        if ip not in blocked_ips and ip != '0.0.0.0/0':
+                            blocked_ips.append(ip)
+        except Exception as e:
+            app.logger.error(f"Error getting blocked IPs from iptables: {e}")
         
         # Obtener intentos fallidos
         failed_attempts = []
@@ -154,7 +166,7 @@ def security_logs():
                 failed_attempts.append({
                     'ip': ip,
                     'attempts': attempts,
-                    'blocked': ip in BLOCKED_IPS
+                    'blocked': ip in blocked_ips
                 })
         
         # Obtener logs de seguridad del sistema
@@ -186,6 +198,9 @@ def security_logs():
         except Exception as e:
             app.logger.error(f"Error getting iptables stats: {e}")
             blocked_count = 0
+        
+        app.logger.info(f"Blocked IPs: {blocked_ips}")  # Log para debugging
+        app.logger.info(f"Blocked count: {blocked_count}")  # Log para debugging
         
         return render_template('security_logs.html', 
                              blocked_ips=blocked_ips,
