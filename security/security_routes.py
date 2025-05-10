@@ -147,15 +147,25 @@ def security_logs():
         # Obtener IPs bloqueadas de iptables
         blocked_ips = []
         try:
-            iptables_output = subprocess.check_output(['iptables', '-L', 'INPUT', '-n', '-v'], text=True)
+            # Obtener reglas de iptables con números de línea y detalles
+            iptables_output = subprocess.check_output(['iptables', '-L', 'INPUT', '-n', '-v', '--line-numbers'], text=True)
+            
+            # Procesar la salida línea por línea
             for line in iptables_output.split('\n'):
                 if 'DROP' in line:
                     # Extraer IP de la línea
                     parts = line.split()
-                    if len(parts) > 7:  # La IP suele estar en la posición 7 o 8
-                        ip = parts[7]
-                        if ip not in blocked_ips and ip != '0.0.0.0/0':
-                            blocked_ips.append(ip)
+                    # Buscar la IP en la línea (está después de 'DROP')
+                    drop_index = line.find('DROP')
+                    if drop_index != -1:
+                        # Obtener la parte después de DROP
+                        after_drop = line[drop_index:].split()
+                        if len(after_drop) > 1:
+                            # La IP suele estar después de 'DROP'
+                            ip = after_drop[1]
+                            if ip not in blocked_ips and ip != '0.0.0.0/0' and ip != 'anywhere':
+                                blocked_ips.append(ip)
+                                app.logger.debug(f"Found blocked IP: {ip} in line: {line}")
         except Exception as e:
             app.logger.error(f"Error getting blocked IPs from iptables: {e}")
         
@@ -193,8 +203,8 @@ def security_logs():
         
         # Obtener estadísticas de iptables
         try:
-            iptables_rules = subprocess.check_output(['iptables', '-L', '-n', '-v'], text=True)
-            blocked_count = iptables_rules.count('DROP')
+            iptables_rules = subprocess.check_output(['iptables', '-L', 'INPUT', '-n', '-v'], text=True)
+            blocked_count = len(blocked_ips)  # Usar el número real de IPs bloqueadas
         except Exception as e:
             app.logger.error(f"Error getting iptables stats: {e}")
             blocked_count = 0
