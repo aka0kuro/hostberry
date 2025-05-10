@@ -113,32 +113,49 @@ start_time = time.time()
 
 try:
     app_logger.debug('Verificando archivo .env')
-    if not os.path.exists('.env'):
-        app_logger.info('Intentando crear archivo .env con nueva clave secreta')
+    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+    
+    if not os.path.exists(env_path):
+        app_logger.info('Creando archivo .env con nueva clave secreta')
         try:
-            with open('.env', 'w') as f:
-                secret_key = secrets.token_hex(32)
+            secret_key = secrets.token_hex(32)
+            with open(env_path, 'w') as f:
                 f.write(f"FLASK_SECRET_KEY={secret_key}\n")
             app_logger.info('Archivo .env creado correctamente.')
         except Exception as e:
-            error_msg = f"No se pudo crear el archivo .env en {os.getcwd()}: {e}"
+            error_msg = f"No se pudo crear el archivo .env en {env_path}: {e}"
+            print(error_msg)
+            app_logger.error(error_msg)
+            raise RuntimeError(error_msg)
+    else:
+        app_logger.info('Archivo .env encontrado, verificando contenido')
+        try:
+            with open(env_path, 'r') as f:
+                content = f.read()
+                if 'FLASK_SECRET_KEY' not in content:
+                    secret_key = secrets.token_hex(32)
+                    with open(env_path, 'a') as f:
+                        f.write(f"\nFLASK_SECRET_KEY={secret_key}\n")
+                    app_logger.info('Clave secreta añadida a .env existente.')
+        except Exception as e:
+            error_msg = f"Error al verificar/actualizar .env: {e}"
             print(error_msg)
             app_logger.error(error_msg)
             raise RuntimeError(error_msg)
 
     app_logger.debug('Cargando variables de entorno')
-    load_dotenv()
+    load_dotenv(env_path)
 
     secret_key = os.getenv('FLASK_SECRET_KEY')
     if not secret_key or len(secret_key) < 32:
         app_logger.info('Generando nueva clave secreta')
         secret_key = secrets.token_hex(32)
         try:
-            with open('.env', 'a') as f:
+            with open(env_path, 'a') as f:
                 f.write(f"FLASK_SECRET_KEY={secret_key}\n")
             app_logger.info('Clave secreta añadida a .env correctamente.')
         except Exception as e:
-            error_msg = f"No se pudo escribir en el archivo .env en {os.getcwd()}: {e}"
+            error_msg = f"No se pudo escribir en el archivo .env en {env_path}: {e}"
             print(error_msg)
             app_logger.error(error_msg)
             raise RuntimeError(error_msg)
@@ -170,12 +187,7 @@ try:
         BABEL_SUPPORTED_LOCALES=['en', 'es'],
         SESSION_COOKIE_DOMAIN=None,
         SESSION_COOKIE_PATH=None,
-        WTF_CSRF_ENABLED=True,
-        WTF_CSRF_CHECK_DEFAULT=True,
-        WTF_CSRF_HEADERS=['X-CSRFToken'],
-        WTF_CSRF_TIME_LIMIT=3600,
-        WTF_CSRF_SSL_STRICT=False,  # Desactivar verificación SSL estricta para desarrollo
-        WTF_CSRF_METHODS=['POST', 'PUT', 'PATCH', 'DELETE'],
+        WTF_CSRF_ENABLED=False,  # Desactivamos CSRF temporalmente para simplificar
         MAX_CONTENT_LENGTH=16 * 1024 * 1024  # 16MB max-limit
     )
 
@@ -204,11 +216,9 @@ from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 
 USERS = {
-    # Usuario/contraseña por defecto: admin/admin123 (cámbiala tras instalar)
     'admin': generate_password_hash('admin123')
 }
 
-# Control de cambio de contraseña por defecto
 def is_default_password(username, password):
     return username == 'admin' and password == 'admin123'
 
@@ -218,79 +228,57 @@ LOGIN_BLOCKED = {}
 LOGIN_BLOCK_LIMIT = 5
 BLOCK_TIME_SECONDS = 900  # 15 minutos
 
-from auth import login_required
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    import time
-    form = LoginForm()
-    blocked = False
-    block_time_left = 0
-    username = form.username.data if form.username.data else ''
-    client_ip = request.remote_addr
-
-    # --- Bloqueo por IP ---
-    BLOCK_TIME_IP_SECONDS = 600  # 10 minutos
-    LOGIN_BLOCK_LIMIT_IP = 10    # Intentos permitidos por IP
-    global FAILED_LOGIN_ATTEMPTS_IP, BLOCKED_IPS
-    if 'FAILED_LOGIN_ATTEMPTS_IP' not in globals():
-        FAILED_LOGIN_ATTEMPTS_IP = {}
-    if 'BLOCKED_IPS' not in globals():
-        BLOCKED_IPS = {}
-
-    # Revisar si la IP está bloqueada
-    if client_ip in BLOCKED_IPS:
-        block_until = BLOCKED_IPS[client_ip]
-        if time.time() < block_until:
-            blocked = True
-            block_time_left = int(block_until - time.time())
-            return render_template('blocked.html', reason='Too many failed attempts from your IP. Try again in {} minutes.'.format(block_time_left // 60)), 403
-        else:
-            del BLOCKED_IPS[client_ip]
-            FAILED_LOGIN_ATTEMPTS_IP[client_ip] = 0
-
-    # Bloqueo por intentos fallidos de usuario (lógica existente)
-    if username in LOGIN_BLOCKED:
-        block_until = LOGIN_BLOCKED[username]
-        if time.time() < block_until:
-            blocked = True
-            block_time_left = int(block_until - time.time())
-        else:
-            del LOGIN_BLOCKED[username]
-            FAILED_LOGIN_ATTEMPTS[username] = 0
-
-    if form.validate_on_submit() and not blocked:
-        password = form.password.data
-        if username in USERS and check_password_hash(USERS[username], password):
+    error = None
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        # Verificar si el usuario está bloqueado
+        if username in LOGIN_BLOCKED:
+            if time.time() < LOGIN_BLOCKED[username]:
+                remaining_time = int((LOGIN_BLOCKED[username] - time.time()) / 60)
+                error = f'Usuario bloqueado. Intente nuevamente en {remaining_time} minutos.'
+            else:
+                del LOGIN_BLOCKED[username]
+                FAILED_LOGIN_ATTEMPTS[username] = 0
+        
+        if not error and username in USERS and check_password_hash(USERS[username], password):
             session['logged_in'] = True
             session['username'] = username
+            
             # Forzar cambio de contraseña por defecto
             if is_default_password(username, password):
                 session['force_change_password'] = True
                 flash('¡Debes cambiar la contraseña por defecto!', 'warning')
                 return redirect(url_for('change_password'))
-            session.pop('force_change_password', None)
+            
             FAILED_LOGIN_ATTEMPTS[username] = 0
-            FAILED_LOGIN_ATTEMPTS_IP[client_ip] = 0
             flash('Inicio de sesión exitoso.', 'success')
-            # Redirigir directamente a index sin usar el parámetro next
             return redirect(url_for('index'))
         else:
-            FAILED_LOGIN_ATTEMPTS[username] = FAILED_LOGIN_ATTEMPTS.get(username, 0) + 1
-            FAILED_LOGIN_ATTEMPTS_IP[client_ip] = FAILED_LOGIN_ATTEMPTS_IP.get(client_ip, 0) + 1
-            if FAILED_LOGIN_ATTEMPTS[username] >= LOGIN_BLOCK_LIMIT:
-                LOGIN_BLOCKED[username] = time.time() + BLOCK_TIME_SECONDS
-                flash('Demasiados intentos fallidos. Tu usuario ha sido bloqueado temporalmente.', 'danger')
-            elif FAILED_LOGIN_ATTEMPTS_IP[client_ip] >= LOGIN_BLOCK_LIMIT_IP:
-                BLOCKED_IPS[client_ip] = time.time() + BLOCK_TIME_IP_SECONDS
-                return render_template('blocked.html', reason='Too many failed attempts from your IP. Try again in 10 minutes.'), 403
+            if username in USERS:
+                FAILED_LOGIN_ATTEMPTS[username] = FAILED_LOGIN_ATTEMPTS.get(username, 0) + 1
+                if FAILED_LOGIN_ATTEMPTS[username] >= LOGIN_BLOCK_LIMIT:
+                    LOGIN_BLOCKED[username] = time.time() + BLOCK_TIME_SECONDS
+                    error = 'Demasiados intentos fallidos. Usuario bloqueado temporalmente.'
+                else:
+                    error = 'Usuario o contraseña incorrectos.'
             else:
-                flash('Usuario o contraseña incorrectos.', 'danger')
-
+                error = 'Usuario o contraseña incorrectos.'
+    
     # Advertencia si la contraseña por defecto sigue activa
     default_pwd_active = check_password_hash(USERS.get('admin',''), 'admin123')
-    return render_template('login.html', form=form, default_pwd_active=default_pwd_active, force_change=session.get('force_change_password', False), blocked=blocked, block_time_left=block_time_left)
-
+    return render_template('login.html', error=error, default_pwd_active=default_pwd_active)
 
 @app.route('/logout')
 def logout():
@@ -301,10 +289,10 @@ def logout():
 @app.route('/change_password', methods=['GET', 'POST'])
 @login_required
 def change_password():
-    import time
     if request.method == 'POST':
         new_password = request.form.get('new_password')
         confirm_password = request.form.get('confirm_password')
+        
         if not new_password or len(new_password) < 8:
             flash('La nueva contraseña debe tener al menos 8 caracteres.', 'danger')
         elif new_password != confirm_password:
@@ -316,8 +304,8 @@ def change_password():
             session.pop('force_change_password', None)
             flash('Contraseña cambiada con éxito.', 'success')
             return redirect(url_for('index'))
+    
     return render_template('change_password.html', force_change=True)
-
 
 # Registrar blueprints WiFi, VPN, AdBlock, hostapd, WireGuard y Security
 app_logger.info('Registrando blueprints de la aplicación')
@@ -1005,8 +993,6 @@ def apply_config():
             'status': 'error',
             'message': str(e)
         }), 500
-
-
 
 @app.route('/network-stats')
 def network_stats():

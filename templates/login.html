@@ -9,15 +9,17 @@
                     <h4>Iniciar sesión</h4>
                 </div>
                 <div class="card-body">
+                    {% if error %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %}
                     <form method="POST" action="{{ url_for('login') }}">
-                        {{ form.hidden_tag() }}
                         <div class="mb-3">
                             <label for="username" class="form-label">Usuario</label>
-                            {{ form.username(class="form-control", id="username", required=true, autofocus=true) }}
+                            <input type="text" class="form-control" id="username" name="username" required autofocus>
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">Contraseña</label>
-                            {{ form.password(class="form-control", id="password", required=true) }}
+                            <input type="password" class="form-control" id="password" name="password" required>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Entrar</button>
                     </form>
