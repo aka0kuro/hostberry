@@ -174,10 +174,13 @@ try:
         WTF_CSRF_CHECK_DEFAULT=True,
         WTF_CSRF_HEADERS=['X-CSRFToken'],
         WTF_CSRF_TIME_LIMIT=3600,
+        WTF_CSRF_SSL_STRICT=False,  # Desactivar verificación SSL estricta para desarrollo
         MAX_CONTENT_LENGTH=16 * 1024 * 1024  # 16MB max-limit
     )
 
-    csrf = CSRFProtect(app)
+    # Inicializar CSRF después de configurar la app
+    csrf = CSRFProtect()
+    csrf.init_app(app)
 
     app_logger.debug('Configuración inicial completada')
 
