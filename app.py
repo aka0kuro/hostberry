@@ -353,6 +353,11 @@ except AttributeError:
 from apsta_routes import apsta_bp
 app.register_blueprint(apsta_bp)
 
+@app.context_processor
+def inject_logged_in():
+    from flask import session
+    return {'logged_in': session.get('logged_in', False)}
+
 def get_locale():
     try:
         # First check session (set by /set_language route)
