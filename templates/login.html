@@ -9,11 +9,11 @@
         <form method="POST" class="login-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="mb-3">
-                <label for="username" class="form-label">{% trans %}Usuario{% endtrans %}</label>
+                <label for="username" class="form-label text-dark">{% trans %}Usuario{% endtrans %}</label>
                 <input type="text" class="form-control" id="username" name="username" placeholder="admin" required>
             </div>
             <div class="mb-3">
-                <label for="password" class="form-label">{% trans %}Contraseña{% endtrans %}</label>
+                <label for="password" class="form-label text-dark">{% trans %}Contraseña{% endtrans %}</label>
                 <div class="input-group">
                     <input type="password" class="form-control" id="password" name="password" placeholder="admin123" required>
                     <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()" style="width: auto; padding: 0.375rem 0.75rem;">
@@ -40,6 +40,98 @@
         </form>
     </div>
 </div>
+
+<style>
+/* Estilos específicos para el login */
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--sidebar-bg);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem;
+    margin: 1rem;
+    background: var(--card-bg);
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.login-logo {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-logo img {
+    max-width: 150px;
+    height: auto;
+}
+
+.login-form .form-control {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    color: var(--text-color);
+    background-color: var(--input-bg);
+    border-color: var(--border-color);
+}
+
+.login-form .form-label {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.login-form .btn-primary {
+    width: 100%;
+    padding: 0.75rem;
+    margin-top: 1rem;
+}
+
+.login-form .alert {
+    color: var(--text-color);
+}
+
+/* Asegurar que los placeholders sean visibles */
+.login-form .form-control::placeholder {
+    color: rgba(var(--text-color-rgb), 0.6);
+}
+
+/* Ajustar el color del texto en los inputs */
+.login-form input {
+    color: var(--text-color) !important;
+}
+
+/* Ajustar el color del texto en las etiquetas */
+.login-form label {
+    color: var(--text-color) !important;
+}
+
+/* Ajustar el color del texto en los botones */
+.login-form .btn {
+    color: var(--text-color);
+}
+
+/* Ajustar el color del texto en las alertas */
+.login-form .alert {
+    color: var(--text-color);
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+/* Ajustar el color del texto en el botón de mostrar/ocultar contraseña */
+.login-form .btn-outline-secondary {
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+.login-form .btn-outline-secondary:hover {
+    background-color: var(--table-hover);
+    color: var(--text-color);
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
