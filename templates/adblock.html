@@ -92,7 +92,7 @@
         <i class="bi bi-sliders fa-2x text-primary"></i>
                     </div>
                     <form id="adblock-config-form" method="post" action="/adblock" class="mt-3 mx-auto" style="max-width: 350px;">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <div class="form-check form-switch d-flex justify-content-center mb-3">
                             <input class="form-check-input" type="checkbox" id="adblockEnabledSwitch" name="adblock_enabled" {% if config.ADBLOCK_ENABLED %}checked{% endif %}>
                             <label class="form-check-label ms-2" for="adblockEnabledSwitch">Enable AdBlock Protection</label>
@@ -146,7 +146,7 @@
         <div class="card-body">
             <h5 class="card-title">Block Lists</h5>
             <form id="blockListsForm" method="POST" action="{{ url_for('adblock.adblock_config_page') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <input type="hidden" name="action" value="update_lists">
                 <div class="row g-2">
     {% for list in config.ADBLOCK_LISTS %}
