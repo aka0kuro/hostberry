@@ -7,10 +7,8 @@ from .wifi_utils import wifi_utils
 
 wifi_bp = Blueprint('wifi', __name__)
 
-from flask_wtf.csrf import csrf_exempt
-
 @wifi_bp.route('/api/wifi/connect', methods=['GET', 'POST'])
-@csrf_exempt
+@csrf.exempt
 def wifi_connect():
     """Conecta a una red WiFi y SIEMPRE genera el archivo wpa_supplicant.conf aunque la conexión falle."""
     try:

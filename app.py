@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response, jsonify, abort, send_from_directory
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory, flash, abort, make_response
+from flask_wtf import CSRFProtect
 import subprocess
 import os
 from dotenv import load_dotenv
@@ -126,6 +127,7 @@ try:
     ssl_dir = '/etc/hostberry/ssl'
 
     app = Flask(__name__)
+csrf = CSRFProtect(app)
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     
     app.config['SSL_CERT'] = os.path.join(ssl_dir, 'hostberry.local+4.pem')
