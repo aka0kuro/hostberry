@@ -220,6 +220,7 @@ configure_network() {
     
     # Habilitar UFW
     ufw --force enable || handle_error "No se pudo habilitar UFW"
+    log "$ANSI_GREEN" "INFO" "Red y firewall configurados correctamente."
 }
 
 # Función para restaurar backup de HostBerry
@@ -259,8 +260,6 @@ restore_hostberry_backup() {
     systemctl restart hostberry-web.service || handle_error "No se pudo reiniciar el servicio web"
 
     log "$ANSI_GREEN" "SUCCESS" "Backup de HostBerry restaurado exitosamente"
-}
-    log "$ANSI_GREEN" "INFO" "Red y firewall configurados correctamente."
 }
 
 # Función para actualizar desde GitHub
