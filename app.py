@@ -43,6 +43,7 @@ from collections import deque
 from flask_wtf.csrf import CSRFProtect
 from flask_wtf import FlaskForm
 from wtforms import BooleanField, SelectField
+from flask_wtf.csrf import generate_csrf
 import logging
 import logging.config
 import os
