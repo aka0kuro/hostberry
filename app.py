@@ -42,8 +42,14 @@ import socket
 from collections import deque
 from flask_wtf.csrf import CSRFProtect
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, SelectField
-from flask_wtf.csrf import generate_csrf
+from wtforms import BooleanField, SelectField, StringField, PasswordField
+from wtforms.validators import DataRequired
+
+# --- Formulario de Login ---
+class LoginForm(FlaskForm):
+    username = StringField('Usuario', validators=[DataRequired()])
+    password = PasswordField('Contraseña', validators=[DataRequired()])
+
 import logging
 import logging.config
 import os
@@ -192,12 +198,33 @@ from auth import login_required
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     import time
-    username = request.form.get('username') if request.method == 'POST' else ''
-    password = request.form.get('password') if request.method == 'POST' else ''
+    form = LoginForm()
     blocked = False
     block_time_left = 0
-    
-    # Bloqueo por intentos fallidos
+    username = form.username.data if form.username.data else ''
+    client_ip = request.remote_addr
+
+    # --- Bloqueo por IP ---
+    BLOCK_TIME_IP_SECONDS = 600  # 10 minutos
+    LOGIN_BLOCK_LIMIT_IP = 10    # Intentos permitidos por IP
+    global FAILED_LOGIN_ATTEMPTS_IP, BLOCKED_IPS
+    if 'FAILED_LOGIN_ATTEMPTS_IP' not in globals():
+        FAILED_LOGIN_ATTEMPTS_IP = {}
+    if 'BLOCKED_IPS' not in globals():
+        BLOCKED_IPS = {}
+
+    # Revisar si la IP está bloqueada
+    if client_ip in BLOCKED_IPS:
+        block_until = BLOCKED_IPS[client_ip]
+        if time.time() < block_until:
+            blocked = True
+            block_time_left = int(block_until - time.time())
+            return render_template('blocked.html', reason='Too many failed attempts from your IP. Try again in {} minutes.'.format(block_time_left // 60)), 403
+        else:
+            del BLOCKED_IPS[client_ip]
+            FAILED_LOGIN_ATTEMPTS_IP[client_ip] = 0
+
+    # Bloqueo por intentos fallidos de usuario (lógica existente)
     if username in LOGIN_BLOCKED:
         block_until = LOGIN_BLOCKED[username]
         if time.time() < block_until:
@@ -206,8 +233,9 @@ def login():
         else:
             del LOGIN_BLOCKED[username]
             FAILED_LOGIN_ATTEMPTS[username] = 0
-    
-    if request.method == 'POST' and not blocked:
+
+    if form.validate_on_submit() and not blocked:
+        password = form.password.data
         if username in USERS and check_password_hash(USERS[username], password):
             session['logged_in'] = True
             session['username'] = username
@@ -218,23 +246,25 @@ def login():
                 return redirect(url_for('change_password'))
             session.pop('force_change_password', None)
             FAILED_LOGIN_ATTEMPTS[username] = 0
+            FAILED_LOGIN_ATTEMPTS_IP[client_ip] = 0
             flash('Inicio de sesión exitoso.', 'success')
             next_url = request.args.get('next') or url_for('index')
             return redirect(next_url)
         else:
             FAILED_LOGIN_ATTEMPTS[username] = FAILED_LOGIN_ATTEMPTS.get(username, 0) + 1
+            FAILED_LOGIN_ATTEMPTS_IP[client_ip] = FAILED_LOGIN_ATTEMPTS_IP.get(client_ip, 0) + 1
             if FAILED_LOGIN_ATTEMPTS[username] >= LOGIN_BLOCK_LIMIT:
                 LOGIN_BLOCKED[username] = time.time() + BLOCK_TIME_SECONDS
                 flash('Demasiados intentos fallidos. Tu usuario ha sido bloqueado temporalmente.', 'danger')
+            elif FAILED_LOGIN_ATTEMPTS_IP[client_ip] >= LOGIN_BLOCK_LIMIT_IP:
+                BLOCKED_IPS[client_ip] = time.time() + BLOCK_TIME_IP_SECONDS
+                return render_template('blocked.html', reason='Too many failed attempts from your IP. Try again in 10 minutes.'), 403
             else:
                 flash('Usuario o contraseña incorrectos.', 'danger')
-    
+
     # Advertencia si la contraseña por defecto sigue activa
     default_pwd_active = check_password_hash(USERS.get('admin',''), 'admin123')
-    session.modified = True
-    app.logger.debug(f"[LOGIN] Session before rendering login: {dict(session)}")
-    csrf_token = generate_csrf()
-    return render_template('login.html', default_pwd_active=default_pwd_active, force_change=session.get('force_change_password', False), blocked=blocked, block_time_left=block_time_left, csrf_token=csrf_token)
+    return render_template('login.html', form=form, default_pwd_active=default_pwd_active, force_change=session.get('force_change_password', False), blocked=blocked, block_time_left=block_time_left)
 
 
 @app.route('/logout')
