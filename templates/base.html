@@ -283,6 +283,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    {% if session['username'] %}
     <div class="sidebar p-3">
         <div class="text-center mb-4">
             <h4>HostBerry</h4>
@@ -357,7 +358,7 @@
             </div>
         </div>
     </div>
-
+    {% endif %}
     <div class="main-content">
         <header>
             <div class="container-fluid">
