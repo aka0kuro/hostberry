@@ -9,7 +9,6 @@ from .wifi_utils import wifi_utils
 wifi_bp = Blueprint('wifi', __name__)
 
 @wifi_bp.route('/api/wifi/connect', methods=['GET', 'POST'])
-@csrf_exempt
 def wifi_connect():
     """Conecta a una red WiFi y SIEMPRE genera el archivo wpa_supplicant.conf aunque la conexión falle."""
     try:
