@@ -112,13 +112,14 @@ app_logger.info('Iniciando proceso de inicialización de la aplicación')
 start_time = time.time()
 
 try:
-    app_logger.debug('Verificando archivo .env')
+    # Asegurar que el archivo .env existe y tiene la clave secreta
     env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
-    
+    secret_key = None
+
     if not os.path.exists(env_path):
         app_logger.info('Creando archivo .env con nueva clave secreta')
+        secret_key = secrets.token_hex(32)
         try:
-            secret_key = secrets.token_hex(32)
             with open(env_path, 'w') as f:
                 f.write(f"FLASK_SECRET_KEY={secret_key}\n")
             app_logger.info('Archivo .env creado correctamente.')
@@ -128,25 +129,18 @@ try:
             app_logger.error(error_msg)
             raise RuntimeError(error_msg)
     else:
-        app_logger.info('Archivo .env encontrado, verificando contenido')
+        # Leer la clave existente
         try:
             with open(env_path, 'r') as f:
-                content = f.read()
-                if 'FLASK_SECRET_KEY' not in content:
-                    secret_key = secrets.token_hex(32)
-                    with open(env_path, 'a') as f:
-                        f.write(f"\nFLASK_SECRET_KEY={secret_key}\n")
-                    app_logger.info('Clave secreta añadida a .env existente.')
+                for line in f:
+                    if line.startswith('FLASK_SECRET_KEY='):
+                        secret_key = line.strip().split('=')[1]
+                        break
         except Exception as e:
-            error_msg = f"Error al verificar/actualizar .env: {e}"
-            print(error_msg)
-            app_logger.error(error_msg)
-            raise RuntimeError(error_msg)
+            app_logger.error(f"Error al leer .env: {e}")
+            secret_key = None
 
-    app_logger.debug('Cargando variables de entorno')
-    load_dotenv(env_path)
-
-    secret_key = os.getenv('FLASK_SECRET_KEY')
+    # Si no hay clave válida, generar una nueva
     if not secret_key or len(secret_key) < 32:
         app_logger.info('Generando nueva clave secreta')
         secret_key = secrets.token_hex(32)
@@ -155,31 +149,25 @@ try:
                 f.write(f"FLASK_SECRET_KEY={secret_key}\n")
             app_logger.info('Clave secreta añadida a .env correctamente.')
         except Exception as e:
-            error_msg = f"No se pudo escribir en el archivo .env en {env_path}: {e}"
+            error_msg = f"No se pudo escribir en el archivo .env: {e}"
             print(error_msg)
             app_logger.error(error_msg)
             raise RuntimeError(error_msg)
 
-    app_logger.debug('Inicializando aplicación Flask')
-    
-    # Configuración de seguridad SSL
-    ssl_dir = '/etc/hostberry/ssl'
+    app_logger.debug('Cargando variables de entorno')
+    load_dotenv(env_path)
 
     # Crear instancia de Flask
     app = Flask(__name__)
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     
-    # Configuraciones de SSL
-    app.config['SSL_CERT'] = os.path.join(ssl_dir, 'hostberry.local+4.pem')
-    app.config['SSL_KEY'] = os.path.join(ssl_dir, 'hostberry.local+4-key.pem')
-
     # Configuraciones de seguridad
     app.config.update(
         SESSION_COOKIE_SECURE=False,
         REMEMBER_COOKIE_SECURE=False,
         SESSION_COOKIE_HTTPONLY=True,
         REMEMBER_COOKIE_HTTPONLY=True,
-        SECRET_KEY='dev_key_temporal',  # Clave temporal para desarrollo
+        SECRET_KEY=secret_key,
         SESSION_COOKIE_SAMESITE='Lax',
         PERMANENT_SESSION_LIFETIME=86400,
         BABEL_DEFAULT_LOCALE='es',
@@ -187,21 +175,191 @@ try:
         BABEL_SUPPORTED_LOCALES=['en', 'es'],
         SESSION_COOKIE_DOMAIN=None,
         SESSION_COOKIE_PATH=None,
-        WTF_CSRF_ENABLED=False,  # Desactivamos CSRF temporalmente
+        WTF_CSRF_ENABLED=True,
+        WTF_CSRF_CHECK_DEFAULT=True,
+        WTF_CSRF_HEADERS=['X-CSRFToken'],
+        WTF_CSRF_TIME_LIMIT=3600,
         MAX_CONTENT_LENGTH=16 * 1024 * 1024  # 16MB max-limit
     )
 
-    # Inicializar CSRF después de configurar la app
+    # Inicializar CSRF
     csrf = CSRFProtect()
     csrf.init_app(app)
 
-    # Asegurarse de que la sesión esté inicializada
-    @app.before_request
-    def before_request():
-        if 'csrf_token' not in session:
-            session['csrf_token'] = csrf._get_csrf_token()
+    # --- Autenticación básica ---
+    USERS = {
+        'admin': generate_password_hash('admin123')
+    }
 
-    app_logger.debug('Configuración inicial completada')
+    def is_default_password(username, password):
+        return username == 'admin' and password == 'admin123'
+
+    # Control de intentos fallidos de login
+    FAILED_LOGIN_ATTEMPTS = {}
+    LOGIN_BLOCKED = {}
+    LOGIN_BLOCK_LIMIT = 5
+    BLOCK_TIME_SECONDS = 900  # 15 minutos
+
+    def login_required(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not session.get('logged_in'):
+                return redirect(url_for('login'))
+            return f(*args, **kwargs)
+        return decorated_function
+
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        error = None
+        if request.method == 'POST':
+            username = request.form.get('username')
+            password = request.form.get('password')
+            
+            # Verificar si el usuario está bloqueado
+            if username in LOGIN_BLOCKED:
+                if time.time() < LOGIN_BLOCKED[username]:
+                    remaining_time = int((LOGIN_BLOCKED[username] - time.time()) / 60)
+                    error = f'Usuario bloqueado. Intente nuevamente en {remaining_time} minutos.'
+                else:
+                    del LOGIN_BLOCKED[username]
+                    FAILED_LOGIN_ATTEMPTS[username] = 0
+            
+            if not error and username in USERS and check_password_hash(USERS[username], password):
+                session['logged_in'] = True
+                session['username'] = username
+                
+                # Forzar cambio de contraseña por defecto
+                if is_default_password(username, password):
+                    session['force_change_password'] = True
+                    flash('¡Debes cambiar la contraseña por defecto!', 'warning')
+                    return redirect(url_for('change_password'))
+                
+                FAILED_LOGIN_ATTEMPTS[username] = 0
+                flash('Inicio de sesión exitoso.', 'success')
+                return redirect(url_for('index'))
+            else:
+                if username in USERS:
+                    FAILED_LOGIN_ATTEMPTS[username] = FAILED_LOGIN_ATTEMPTS.get(username, 0) + 1
+                    if FAILED_LOGIN_ATTEMPTS[username] >= LOGIN_BLOCK_LIMIT:
+                        LOGIN_BLOCKED[username] = time.time() + BLOCK_TIME_SECONDS
+                        error = 'Demasiados intentos fallidos. Usuario bloqueado temporalmente.'
+                    else:
+                        error = 'Usuario o contraseña incorrectos.'
+                else:
+                    error = 'Usuario o contraseña incorrectos.'
+        
+        # Advertencia si la contraseña por defecto sigue activa
+        default_pwd_active = check_password_hash(USERS.get('admin',''), 'admin123')
+        return render_template('login.html', error=error, default_pwd_active=default_pwd_active)
+
+    @app.route('/logout')
+    def logout():
+        session.clear()
+        flash('Sesión cerrada.', 'info')
+        return redirect(url_for('login'))
+
+    @app.route('/change_password', methods=['GET', 'POST'])
+    @login_required
+    def change_password():
+        if request.method == 'POST':
+            new_password = request.form.get('new_password')
+            confirm_password = request.form.get('confirm_password')
+            
+            if not new_password or len(new_password) < 8:
+                flash('La nueva contraseña debe tener al menos 8 caracteres.', 'danger')
+            elif new_password != confirm_password:
+                flash('Las contraseñas no coinciden.', 'danger')
+            elif is_default_password(session['username'], new_password):
+                flash('No puedes usar la contraseña por defecto.', 'danger')
+            else:
+                USERS[session['username']] = generate_password_hash(new_password)
+                session.pop('force_change_password', None)
+                flash('Contraseña cambiada con éxito.', 'success')
+                return redirect(url_for('index'))
+        
+        return render_template('change_password.html', force_change=True)
+
+    @app.route('/')
+    @login_required
+    def index():
+        """
+        Página principal con estadísticas del sistema
+        """
+        import time
+        start_time = time.time()
+        try:
+            # Debug logging
+            app.logger.debug(f"Index route called")
+            
+            stats = get_system_stats()
+            
+            log_file = 'logs/hostberry.log'
+            log_lines = []
+            logs_available = False
+            
+            try:
+                if os.path.isfile(log_file):
+                    with open(log_file, 'r') as f:
+                        raw_lines = f.readlines()[-100:]
+                        logs = []
+                        for line in reversed(raw_lines):
+                            line = line.strip()
+                            if line:
+                                # Parse timestamp and message
+                                parts = line.split(' ', 2)
+                                if len(parts) >= 3:
+                                    logs.append({'timestamp': ' '.join(parts[:2]), 'message': parts[2]})
+                                else:
+                                    logs.append({'timestamp': '', 'message': line})
+                    logs_available = True
+            except IOError:
+                pass
+            
+            current_config = config.get_current_config()
+            # Obtener información de red
+            try:
+                interface = subprocess.check_output(['hostname', '-I'], text=True).strip().split()[0]
+            except Exception:
+                interface = 'Desconocido'
+            try:
+                ip_addr = subprocess.check_output(['hostname', '-I'], text=True).strip().split()[0]
+            except Exception:
+                ip_addr = 'Desconocida'
+            try:
+                ssid = subprocess.check_output(['iwgetid', '-r'], text=True).strip()
+            except Exception:
+                ssid = ''
+            try:
+                hostapd_status = subprocess.check_output(['systemctl', 'is-active', 'hostapd'], text=True).strip()
+            except Exception:
+                hostapd_status = 'unknown'
+
+            response = make_response(render_template(
+                'index.html',
+                title=_('Index'),
+                stats=stats,
+                logs=logs,
+                current_lang=get_locale(),
+                logs_available=logs_available,
+                adblock_enabled=current_config.get('ADBLOCK_ENABLED', False),
+                vpn_enabled=current_config.get('VPN_ENABLED', False),
+                firewall_enabled=current_config.get('FIREWALL_ENABLED', False),
+                network_interface=interface,
+                local_ip=ip_addr,
+                wifi_ssid=ssid,
+                hostapd_status=hostapd_status
+            ))
+            
+            # Add cache control headers to prevent caching
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+            app.logger.info(f"[PERF] index route duration: {time.time() - start_time:.3f}s")
+            return response
+        except Exception as e:
+            app.logger.error(f"Error in index route: {str(e)}")
+            flash(_('Error loading system information'), 'danger')
+            return render_template('error.html', error=str(e)), 500
 
 except Exception as e:
     app_logger.error(f'Error durante la inicialización: {e}', exc_info=True)
@@ -210,110 +368,6 @@ except Exception as e:
 finally:
     end_time = time.time()
     app_logger.info(f'Tiempo de inicialización: {end_time - start_time:.2f} segundos')
-
-# --- Autenticación básica ---
-from functools import wraps
-from werkzeug.security import generate_password_hash, check_password_hash
-
-USERS = {
-    'admin': generate_password_hash('admin123')
-}
-
-def is_default_password(username, password):
-    return username == 'admin' and password == 'admin123'
-
-# Control de intentos fallidos de login
-FAILED_LOGIN_ATTEMPTS = {}
-LOGIN_BLOCKED = {}
-LOGIN_BLOCK_LIMIT = 5
-BLOCK_TIME_SECONDS = 900  # 15 minutos
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        return f(*args, **kwargs)
-    return decorated_function
-
-@app.route('/')
-def index():
-    """
-    Página principal con estadísticas del sistema
-    """
-    import time
-    start_time = time.time()
-    try:
-        # Debug logging
-        app.logger.debug(f"Index route called")
-        
-        stats = get_system_stats()
-        
-        log_file = 'logs/hostberry.log'
-        log_lines = []
-        logs_available = False
-        
-        try:
-            if os.path.isfile(log_file):
-                with open(log_file, 'r') as f:
-                    raw_lines = f.readlines()[-100:]
-                    logs = []
-                    for line in reversed(raw_lines):
-                        line = line.strip()
-                        if line:
-                            # Parse timestamp and message
-                            parts = line.split(' ', 2)
-                            if len(parts) >= 3:
-                                logs.append({'timestamp': ' '.join(parts[:2]), 'message': parts[2]})
-                            else:
-                                logs.append({'timestamp': '', 'message': line})
-                logs_available = True
-        except IOError:
-            pass
-        
-        current_config = config.get_current_config()
-        # Obtener información de red
-        try:
-            interface = subprocess.check_output(['hostname', '-I'], text=True).strip().split()[0]
-        except Exception:
-            interface = 'Desconocido'
-        try:
-            ip_addr = subprocess.check_output(['hostname', '-I'], text=True).strip().split()[0]
-        except Exception:
-            ip_addr = 'Desconocida'
-        try:
-            ssid = subprocess.check_output(['iwgetid', '-r'], text=True).strip()
-        except Exception:
-            ssid = ''
-        try:
-            hostapd_status = subprocess.check_output(['systemctl', 'is-active', 'hostapd'], text=True).strip()
-        except Exception:
-            hostapd_status = 'unknown'
-
-        response = make_response(render_template(
-            'index.html',
-            title=_('Index'),
-            stats=stats,
-            logs=logs,
-            current_lang=get_locale(),
-            logs_available=logs_available,
-            adblock_enabled=current_config.get('ADBLOCK_ENABLED', False),
-            vpn_enabled=current_config.get('VPN_ENABLED', False),
-            firewall_enabled=current_config.get('FIREWALL_ENABLED', False),
-            network_interface=interface,
-            local_ip=ip_addr,
-            wifi_ssid=ssid,
-            hostapd_status=hostapd_status
-        ))
-        
-        # Add cache control headers to prevent caching
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
-        app.logger.info(f"[PERF] index route duration: {time.time() - start_time:.3f}s")
-        return response
-    except Exception as e:
-        app.logger.error(f"Error in index route: {str(e)}")
-        flash(_('Error loading system information'), 'danger')
-        return render_template('error.html', error=str(e)), 500
 
 # Registrar blueprints WiFi, VPN, AdBlock, hostapd, WireGuard y Security
 app_logger.info('Registrando blueprints de la aplicación')
