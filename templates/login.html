@@ -9,15 +9,15 @@
                     <h4>Iniciar sesión</h4>
                 </div>
                 <div class="card-body">
-                    <form method="POST">
-    {{ form.hidden_tag() }}
+                    <form method="POST" action="{{ url_for('login') }}">
+                        {{ form.csrf_token }}
                         <div class="mb-3">
                             <label for="username" class="form-label">Usuario</label>
-                            <input type="text" class="form-control" id="username" name="username" required autofocus>
+                            {{ form.username(class="form-control", id="username", required=true, autofocus=true) }}
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">Contraseña</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            {{ form.password(class="form-control", id="password", required=true) }}
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Entrar</button>
                     </form>

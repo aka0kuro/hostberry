@@ -42,13 +42,14 @@ import socket
 from collections import deque
 from flask_wtf.csrf import CSRFProtect
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, SelectField, StringField, PasswordField
+from wtforms import BooleanField, SelectField, StringField, PasswordField, HiddenField
 from wtforms.validators import DataRequired
 
 # --- Formulario de Login ---
 class LoginForm(FlaskForm):
     username = StringField('Usuario', validators=[DataRequired()])
     password = PasswordField('Contraseña', validators=[DataRequired()])
+    csrf_token = HiddenField()
 
 import logging
 import logging.config
