@@ -206,10 +206,8 @@ def login():
             del LOGIN_BLOCKED[username]
             FAILED_LOGIN_ATTEMPTS[username] = 0
     
-    if request.method == 'POST':
-        if blocked:
-            flash(f'Demasiados intentos fallidos. Intenta de nuevo en {block_time_left//60} min.', 'danger')
-        elif username in USERS and check_password_hash(USERS[username], password):
+    if request.method == 'POST' and not blocked:
+        if username in USERS and check_password_hash(USERS[username], password):
             session['logged_in'] = True
             session['username'] = username
             # Forzar cambio de contraseña por defecto
@@ -232,7 +230,8 @@ def login():
     
     # Advertencia si la contraseña por defecto sigue activa
     default_pwd_active = check_password_hash(USERS.get('admin',''), 'admin123')
-    return render_template('login.html', default_pwd_active=default_pwd_active, force_change=session.get('force_change_password', False), blocked=blocked, block_time_left=block_time_left)
+    csrf_token = generate_csrf()
+    return render_template('login.html', default_pwd_active=default_pwd_active, force_change=session.get('force_change_password', False), blocked=blocked, block_time_left=block_time_left, csrf_token=csrf_token)
 
 
 @app.route('/logout')
