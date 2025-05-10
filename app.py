@@ -169,12 +169,22 @@ finally:
 
 # --- Autenticación básica ---
 from functools import wraps
-import hashlib
+from werkzeug.security import generate_password_hash, check_password_hash
 
 USERS = {
     # Usuario/contraseña por defecto: admin/admin123 (cámbiala tras instalar)
-    'admin': hashlib.sha256('admin123'.encode()).hexdigest()
+    'admin': generate_password_hash('admin123')
 }
+
+# Control de cambio de contraseña por defecto
+def is_default_password(username, password):
+    return username == 'admin' and password == 'admin123'
+
+# Control de intentos fallidos de login
+FAILED_LOGIN_ATTEMPTS = {}
+LOGIN_BLOCKED = {}
+LOGIN_BLOCK_LIMIT = 5
+BLOCK_TIME_SECONDS = 900  # 15 minutos
 
 def login_required(f):
     @wraps(f)
@@ -187,25 +197,77 @@ def login_required(f):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    import time
+    username = request.form.get('username') if request.method == 'POST' else ''
+    password = request.form.get('password') if request.method == 'POST' else ''
+    blocked = False
+    block_time_left = 0
+    
+    # Bloqueo por intentos fallidos
+    if username in LOGIN_BLOCKED:
+        block_until = LOGIN_BLOCKED[username]
+        if time.time() < block_until:
+            blocked = True
+            block_time_left = int(block_until - time.time())
+        else:
+            del LOGIN_BLOCKED[username]
+            FAILED_LOGIN_ATTEMPTS[username] = 0
+    
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        hash_pwd = hashlib.sha256(password.encode()).hexdigest()
-        if username in USERS and USERS[username] == hash_pwd:
+        if blocked:
+            flash(f'Demasiados intentos fallidos. Intenta de nuevo en {block_time_left//60} min.', 'danger')
+        elif username in USERS and check_password_hash(USERS[username], password):
             session['logged_in'] = True
             session['username'] = username
+            # Forzar cambio de contraseña por defecto
+            if is_default_password(username, password):
+                session['force_change_password'] = True
+                flash('¡Debes cambiar la contraseña por defecto!', 'warning')
+                return redirect(url_for('change_password'))
+            session.pop('force_change_password', None)
+            FAILED_LOGIN_ATTEMPTS[username] = 0
             flash('Inicio de sesión exitoso.', 'success')
             next_url = request.args.get('next') or url_for('index')
             return redirect(next_url)
         else:
-            flash('Usuario o contraseña incorrectos.', 'danger')
-    return render_template('login.html')
+            FAILED_LOGIN_ATTEMPTS[username] = FAILED_LOGIN_ATTEMPTS.get(username, 0) + 1
+            if FAILED_LOGIN_ATTEMPTS[username] >= LOGIN_BLOCK_LIMIT:
+                LOGIN_BLOCKED[username] = time.time() + BLOCK_TIME_SECONDS
+                flash('Demasiados intentos fallidos. Tu usuario ha sido bloqueado temporalmente.', 'danger')
+            else:
+                flash('Usuario o contraseña incorrectos.', 'danger')
+    
+    # Advertencia si la contraseña por defecto sigue activa
+    default_pwd_active = check_password_hash(USERS.get('admin',''), 'admin123')
+    return render_template('login.html', default_pwd_active=default_pwd_active, force_change=session.get('force_change_password', False), blocked=blocked, block_time_left=block_time_left)
+
 
 @app.route('/logout')
 def logout():
     session.clear()
     flash('Sesión cerrada.', 'info')
     return redirect(url_for('login'))
+
+@app.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    import time
+    if request.method == 'POST':
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        if not new_password or len(new_password) < 8:
+            flash('La nueva contraseña debe tener al menos 8 caracteres.', 'danger')
+        elif new_password != confirm_password:
+            flash('Las contraseñas no coinciden.', 'danger')
+        elif is_default_password(session['username'], new_password):
+            flash('No puedes usar la contraseña por defecto.', 'danger')
+        else:
+            USERS[session['username']] = generate_password_hash(new_password)
+            session.pop('force_change_password', None)
+            flash('Contraseña cambiada con éxito.', 'success')
+            return redirect(url_for('index'))
+    return render_template('change_password.html', force_change=True)
+
 
 # Registrar blueprints WiFi, VPN, AdBlock, hostapd, WireGuard y Security
 app_logger.info('Registrando blueprints de la aplicación')
