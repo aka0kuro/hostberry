@@ -962,6 +962,11 @@ def handle_exception(e):
     app.logger.error(f"Excepción no controlada: {e}")
     return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/init-session')
+def init_session():
+    session['init'] = True
+    return jsonify({'ok': True})
+
 if __name__ == '__main__':
     # Solo para desarrollo local. En producción usar Gunicorn.
     import socket
