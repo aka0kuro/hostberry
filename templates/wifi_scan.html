@@ -130,6 +130,7 @@
           </div>
           <div class="modal-body">
             <form id="wifiConnectForm">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <div class="mb-3">
                 <label for="connectSSID" class="form-label fw-bold">{% trans %}Network Name (SSID){% endtrans %}</label>
                 <div class="input-group">
@@ -407,6 +408,7 @@ $('#wifiConnectForm').submit(async function(e) {
     const security = $('#connectSecurityHidden').val();
     const password = $('#connectPassword').val();
     const saveCredentials = $('#saveCredentials').is(':checked');
+    const csrfToken = $('input[name="csrf_token"]').val();
     
     if (!ssid) {
         showToast('{% trans %}Please select a WiFi network.{% endtrans %}', 'danger');
@@ -429,7 +431,7 @@ $('#wifiConnectForm').submit(async function(e) {
             headers: { 
                 'Content-Type': 'application/json', 
                 'Accept': 'application/json', 
-                'X-CSRFToken': getCSRFToken() || getCookie('csrf_token') 
+                'X-CSRFToken': csrfToken
             },
             body: JSON.stringify({ 
                 ssid: ssid, 
