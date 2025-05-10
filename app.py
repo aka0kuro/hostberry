@@ -19,6 +19,10 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 
+# Asegurar que estamos en el directorio correcto
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+os.chdir(APP_DIR)
+
 # Estado global para saber si hay una actualización en curso
 global_adblock_update_status = {'updating': False, 'last_result': None, 'last_error': None}
 
@@ -115,7 +119,7 @@ start_time = time.time()
 
 try:
     # Asegurar que el archivo .env existe y tiene la clave secreta
-    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+    env_path = os.path.join(APP_DIR, '.env')
     secret_key = None
 
     if not os.path.exists(env_path):
@@ -159,8 +163,11 @@ try:
     app_logger.debug('Cargando variables de entorno')
     load_dotenv(env_path)
 
-    # Crear instancia de Flask
-    app = Flask(__name__)
+    # Crear instancia de Flask con rutas absolutas
+    app = Flask(__name__,
+                instance_path=os.path.join(APP_DIR, 'instance'),
+                static_folder=os.path.join(APP_DIR, 'static'),
+                template_folder=os.path.join(APP_DIR, 'templates'))
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     
     # Configuraciones de seguridad
