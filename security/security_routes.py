@@ -282,4 +282,16 @@ def check_firewall_status():
         })
     except Exception as e:
         app.logger.error(f"Error checking firewall status: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 500 
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@security_bp.route('/security/unblock/<ip>', methods=['POST'])
+def unblock_ip(ip):
+    """Desbloquear una IP específica"""
+    try:
+        # Eliminar la regla de iptables para la IP
+        subprocess.run(['iptables', '-D', 'INPUT', '-s', ip, '-j', 'DROP'], check=True)
+        app.logger.info(f"IP {ip} desbloqueada exitosamente")
+        return jsonify({'success': True})
+    except Exception as e:
+        app.logger.error(f"Error al desbloquear IP {ip}: {e}")
+        return jsonify({'success': False, 'error': str(e)}) 

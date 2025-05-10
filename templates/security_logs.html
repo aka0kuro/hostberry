@@ -34,8 +34,9 @@
 
     <!-- IPs Bloqueadas -->
     <div class="card mb-4">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">IPs Bloqueadas</h5>
+            <span class="badge bg-danger">{{ blocked_count }} IPs</span>
         </div>
         <div class="card-body">
             {% if blocked_ips %}
@@ -45,6 +46,7 @@
                         <tr>
                             <th>IP</th>
                             <th>Estado</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -52,21 +54,30 @@
                         <tr>
                             <td>{{ ip }}</td>
                             <td><span class="badge bg-danger">Bloqueada</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger" onclick="unblockIP('{{ ip }}')">
+                                    <i class="bi bi-unlock"></i> Desbloquear
+                                </button>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
             {% else %}
-            <p class="text-muted">No hay IPs bloqueadas actualmente.</p>
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                No hay IPs bloqueadas actualmente.
+            </div>
             {% endif %}
         </div>
     </div>
 
     <!-- Intentos Fallidos -->
     <div class="card mb-4">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Intentos Fallidos de Acceso</h5>
+            <span class="badge bg-warning">{{ failed_attempts|length }} intentos</span>
         </div>
         <div class="card-body">
             {% if failed_attempts %}
@@ -77,6 +88,7 @@
                             <th>IP</th>
                             <th>Intentos</th>
                             <th>Estado</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -91,21 +103,32 @@
                                 <span class="badge bg-warning">En observación</span>
                                 {% endif %}
                             </td>
+                            <td>
+                                {% if attempt.blocked %}
+                                <button class="btn btn-sm btn-outline-danger" onclick="unblockIP('{{ attempt.ip }}')">
+                                    <i class="bi bi-unlock"></i> Desbloquear
+                                </button>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
             {% else %}
-            <p class="text-muted">No hay intentos fallidos registrados.</p>
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                No hay intentos fallidos registrados.
+            </div>
             {% endif %}
         </div>
     </div>
 
     <!-- Logs del Sistema -->
     <div class="card">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Logs del Sistema</h5>
+            <span class="badge bg-info">{{ security_logs|length }} eventos</span>
         </div>
         <div class="card-body">
             {% if security_logs %}
@@ -128,7 +151,10 @@
                 </table>
             </div>
             {% else %}
-            <p class="text-muted">No hay logs de seguridad disponibles.</p>
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                No hay logs de seguridad disponibles.
+            </div>
             {% endif %}
         </div>
     </div>
@@ -139,5 +165,28 @@
 setTimeout(function() {
     window.location.reload();
 }, 30000);
+
+// Función para desbloquear IPs
+function unblockIP(ip) {
+    if (confirm('¿Estás seguro de que deseas desbloquear la IP ' + ip + '?')) {
+        fetch('/security/unblock/' + ip, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Error al desbloquear la IP: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error al desbloquear la IP: ' + error);
+        });
+    }
+}
 </script>
 {% endblock %}
