@@ -136,8 +136,8 @@ try:
 
     # Configuraciones de seguridad
     app.config.update(
-        SESSION_COOKIE_SECURE=True,
-        REMEMBER_COOKIE_SECURE=True,
+        SESSION_COOKIE_SECURE=False,
+        REMEMBER_COOKIE_SECURE=False,
         SESSION_COOKIE_HTTPONLY=True,
         REMEMBER_COOKIE_HTTPONLY=True,
         SECRET_KEY=secret_key,
