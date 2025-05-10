@@ -224,13 +224,16 @@ except Exception as e:
     raise
 
 # Configuración avanzada de seguridad HTTP (Flask-Talisman)
-# Puedes personalizar más políticas CSP según tus necesidades
+# Reglas menos restrictivas para HTTPS
 Talisman(app, content_security_policy={
-    'default-src': ["'self'", '*', 'data:', 'blob:'],
-    'img-src': ["'self'", '*', 'data:', 'blob:'],
-    'script-src': ["'self'", '*', "'unsafe-inline'", "'unsafe-eval'", 'data:'],
-    'style-src': ["'self'", '*', "'unsafe-inline'", 'data:'],
-})
+    'default-src': ['*', 'data:', 'blob:', 'https:'],
+    'img-src': ['*', 'data:', 'blob:', 'https:'],
+    'script-src': ['*', 'data:', 'https:', "'unsafe-inline'", "'unsafe-eval'"],
+    'style-src': ['*', 'data:', 'https:', "'unsafe-inline'"],
+    'connect-src': ['*', 'https:'],
+    'font-src': ['*', 'data:', 'https:'],
+    'frame-src': ['*', 'https:'],
+}, force_https=False)  # Desactivar redirección HTTPS forzada
 
 # Configuración avanzada de logging
 log_dir = 'logs'
