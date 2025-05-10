@@ -527,7 +527,13 @@ function updateStatusDisplay(statusData) {
     if (isConnected && (statusData.current_connection || statusData.ssid)) {
         let connectionText = statusData.current_connection || statusData.ssid;
         if (statusData.connection_info && statusData.connection_info.signal) {
-            connectionText += ` (${statusData.connection_info.signal}%)`;
+            const signalStrength = parseInt(statusData.connection_info.signal);
+            let signalQuality = '';
+            if (signalStrength >= 80) signalQuality = 'Excelente';
+            else if (signalStrength >= 60) signalQuality = 'Buena';
+            else if (signalStrength >= 40) signalQuality = 'Regular';
+            else signalQuality = 'Débil';
+            connectionText += ` (${signalQuality} - ${signalStrength}%)`;
         } else if (statusData.signal) {
             connectionText += ` (${statusData.signal})`;
         }
