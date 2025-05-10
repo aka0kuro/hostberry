@@ -350,6 +350,9 @@ except AttributeError:
             return app.config['BABEL_DEFAULT_LOCALE']
 
 # Actual implementation
+from apsta_routes import apsta_bp
+app.register_blueprint(apsta_bp)
+
 def get_locale():
     try:
         # First check session (set by /set_language route)
