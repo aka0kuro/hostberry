@@ -490,6 +490,7 @@ def get_cpu_temp():
         return None
 
 @app.route('/')
+@login_required
 def index():
     """
     Página principal con estadísticas del sistema
