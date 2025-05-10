@@ -231,6 +231,8 @@ def login():
     
     # Advertencia si la contraseña por defecto sigue activa
     default_pwd_active = check_password_hash(USERS.get('admin',''), 'admin123')
+    session.modified = True
+    app.logger.debug(f"[LOGIN] Session before rendering login: {dict(session)}")
     csrf_token = generate_csrf()
     return render_template('login.html', default_pwd_active=default_pwd_active, force_change=session.get('force_change_password', False), blocked=blocked, block_time_left=block_time_left, csrf_token=csrf_token)
 
