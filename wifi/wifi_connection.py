@@ -107,6 +107,13 @@ class WiFiConnection:
             
     def connect(self, ssid: str, password: str = None, security: str = None) -> bool:
         """Conecta a una red WiFi con reintentos"""
+        # Validación de parámetros
+        if not ssid or len(ssid) > 32 or not all(ord(c) > 31 and ord(c) < 127 for c in ssid):
+            logger.error(f"SSID inválido: {ssid}")
+            return False
+        if password and (len(password) < 8 or len(password) > 63):
+            logger.error("Contraseña WiFi inválida")
+            return False
         try:
             for attempt in range(3):
                 try:

@@ -79,6 +79,24 @@ class VPNUtils:
         except Exception as e:
             return False, f"Error verificando archivo de configuración: {str(e)}"
 
+    def load_credentials(self):
+        """Lee y descifra las credenciales VPN almacenadas en auth.txt"""
+        try:
+            if not os.path.exists(self._auth_file):
+                return None, None
+            key = self.get_encryption_key()
+            cipher_suite = Fernet(key)
+            with open(self._auth_file, 'r') as f:
+                lines = f.readlines()
+                if len(lines) < 2:
+                    return None, None
+                username = cipher_suite.decrypt(lines[0].strip().encode()).decode()
+                password = cipher_suite.decrypt(lines[1].strip().encode()).decode()
+                return username, password
+        except Exception as e:
+            logger.error(f"Error leyendo credenciales VPN: {str(e)}")
+            return None, None
+
     def save_credentials(self, username, password):
         """Guarda las credenciales de forma segura"""
         try:

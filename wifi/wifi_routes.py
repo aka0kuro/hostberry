@@ -21,6 +21,11 @@ def wifi_connect():
         ssid = data.get('ssid', '').strip()
         password = data.get('password', '').strip()
         security = data.get('security', '').strip()
+        # Validación y sanitización extra
+        if not ssid or len(ssid) > 32 or not all(ord(c) > 31 and ord(c) < 127 for c in ssid):
+            return jsonify({'success': False, 'error': 'SSID inválido'}), 400
+        if password and (len(password) < 8 or len(password) > 63):
+            return jsonify({'success': False, 'error': 'Contraseña inválida'}), 400
 
         # Validar entrada
         if not wifi_security.validate_ssid(ssid):
@@ -147,8 +152,9 @@ def wifi_stored_networks():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @wifi_bp.route('/api/wifi/get_password', methods=['POST'])
+@login_required
 def wifi_get_password():
-    """Recupera la contraseña almacenada para un SSID específico"""
+    """Recupera la contraseña almacenada para un SSID específico (requiere autenticación)"""
     try:
         if not request.is_json:
             return jsonify({'success': False, 'error': 'Content-Type debe ser application/json'}), 400
@@ -182,8 +188,9 @@ def wifi_credentials():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @wifi_bp.route('/api/wifi/credentials/<ssid>', methods=['GET'])
+@login_required
 def wifi_get_password_by_ssid(ssid):
-    """Obtiene la contraseña para una red WiFi específica"""
+    """Obtiene la contraseña para una red WiFi específica (requiere autenticación)"""
     try:
         password = wifi_utils.get_credentials(ssid)
         if password:

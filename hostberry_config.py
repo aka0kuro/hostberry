@@ -126,7 +126,14 @@ class HostBerryConfig:
             return False
 
     def _update_new_script(self, config):
+        import re
         logger.info('Actualizando script new_script.sh')
+        def sanitize_iface(iface):
+            return iface if re.match(r'^[a-zA-Z0-9_-]{1,15}$', iface) else 'wlan0'
+        def sanitize_ssid(ssid):
+            return ssid if ssid and len(ssid) <= 32 and all(ord(c) > 31 and ord(c) < 127 for c in ssid) else 'HostBerry'
+        def sanitize_password(password):
+            return password if password and 8 <= len(password) <= 63 else 'password1234'
         try:
             with open('/usr/local/bin/new_script.sh', 'r') as f:
                 content = f.readlines()
@@ -134,15 +141,15 @@ class HostBerryConfig:
             # Find and replace configuration lines
             for i, line in enumerate(content):
                 if line.startswith('AP_IFACE='):
-                    content[i] = f'AP_IFACE="{config["AP_IFACE"]}"\n'
+                    content[i] = f'AP_IFACE="{sanitize_iface(config["AP_IFACE"])}"\n'
                 elif line.startswith('WIFI_IFACE='):
-                    content[i] = f'WIFI_IFACE="{config["WIFI_IFACE"]}"\n'
+                    content[i] = f'WIFI_IFACE="{sanitize_iface(config["WIFI_IFACE"])}"\n'
                 elif line.startswith('ETH_IFACE='):
-                    content[i] = f'ETH_IFACE="{config["ETH_IFACE"]}"\n'
+                    content[i] = f'ETH_IFACE="{sanitize_iface(config["ETH_IFACE"])}"\n'
                 elif line.startswith('AP_SSID='):
-                    content[i] = f'AP_SSID="{config["AP_SSID"]}"\n'
+                    content[i] = f'AP_SSID="{sanitize_ssid(config["AP_SSID"])}"\n'
                 elif line.startswith('AP_PASSWORD='):
-                    content[i] = f'AP_PASSWORD="{config["AP_PASSWORD"]}"\n'
+                    content[i] = f'AP_PASSWORD="{sanitize_password(config["AP_PASSWORD"])}"\n'
                 elif line.startswith('AP_IP='):
                     content[i] = f'AP_IP="{config["AP_IP"]}"\n'
                 elif line.startswith('SUBNET='):
@@ -151,17 +158,32 @@ class HostBerryConfig:
                     content[i] = f'NETMASK="{config["NETMASK"]}"\n'
                 elif line.startswith('DHCP_RANGE='):
                     content[i] = f'DHCP_RANGE="{config["DHCP_RANGE"]}"\n'
-                elif line.startswith('SSH_ENABLED='):
                     content[i] = f'SSH_ENABLED={str(config["SSH_ENABLED"]).lower()}\n'
                 elif line.startswith('SSH_PORT='):
                     content[i] = f'SSH_PORT={config["SSH_PORT"]}\n'
             
+            # Validar y sanitizar parámetros críticos
+            import re
+            valid_ifaces = ['wlan0', 'wlan1', 'eth0', 'eth1']
+            valid_ssids = re.compile(r'^[a-zA-Z0-9_-]{1,32}$')
+            valid_passwords = re.compile(r'^[a-zA-Z0-9_-]{8,63}$')
+            
+            if config["AP_IFACE"] not in valid_ifaces:
+                logger.warning(f'Interfaz AP_IFACE inválida: {config["AP_IFACE"]}. Usando wlan0 por defecto.')
+                content[i] = f'AP_IFACE="wlan0"\n'
+            if not valid_ssids.match(config["AP_SSID"]):
+                logger.warning(f'SSID inválido: {config["AP_SSID"]}. Usando HostBerry por defecto.')
+                content[i] = f'AP_SSID="HostBerry"\n'
+            if not valid_passwords.match(config["AP_PASSWORD"]):
+                logger.warning(f'Contraseña inválida: {config["AP_PASSWORD"]}. Usando password1234 por defecto.')
+                content[i] = f'AP_PASSWORD="password1234"\n'
+            
             with open('/usr/local/bin/new_script.sh', 'w') as f:
                 f.writelines(content)
-            
-            # Set executable permissions
-            os.chmod('/usr/local/bin/new_script.sh', 0o755)
-            logger.debug('Script new_script.sh actualizado correctamente')
+        
+        # Set executable permissions
+        os.chmod('/usr/local/bin/new_script.sh', 0o755)
+        logger.debug('Script new_script.sh actualizado correctamente')
         except Exception as e:
             logger.error(f'Error al actualizar script new_script.sh: {e}', exc_info=True)
             raise

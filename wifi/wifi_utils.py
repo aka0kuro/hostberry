@@ -37,6 +37,7 @@ class WiFiUtils:
         try:
             with open(self._key_file, 'wb') as f:
                 f.write(key)
+            os.chmod(self._key_file, 0o600)
         except Exception as e:
             logger.error(f"Error al guardar nueva clave: {e}")
         
@@ -87,7 +88,8 @@ class WiFiUtils:
             encrypted_data = cipher_suite.encrypt(json.dumps(credentials).encode())
             with open(self._credentials_path, 'w') as f:
                 f.write(encrypted_data.decode())
-            
+            os.chmod(self._credentials_path, 0o600)
+        
             logger.info(f"Credenciales para {ssid} guardadas exitosamente")
             return True
             
