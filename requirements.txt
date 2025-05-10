@@ -26,6 +26,6 @@ pytz==2024.1
 requests==2.31.0
 six==1.17.0
 webencodings==0.5.1
-Werkzeug==2.3.7
+Werkzeug==2.3.6
 WTForms==3.1.2
 flask-talisman==1.1.0
