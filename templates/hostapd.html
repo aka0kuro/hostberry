@@ -421,29 +421,83 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 toggleText.textContent = status === 'running' ? '{% trans %}Stop AP{% endtrans %}' : '{% trans %}Start AP{% endtrans %}';
-                clientCount.textContent = data.clients.length;
-                currentChannel.textContent = data.channel || '-';
+                
+                // Update client count and table with better error handling
+                if (data.clients && Array.isArray(data.clients)) {
+                    clientCount.textContent = data.clients.length;
+                    
+                    // Update clients table
+                    clientsTable.innerHTML = '';
+                    if (data.clients.length === 0) {
+                        const row = clientsTable.insertRow();
+                        const cell = row.insertCell(0);
+                        cell.colSpan = 4;
+                        cell.textContent = '{% trans %}No clients connected{% endtrans %}';
+                        cell.className = 'text-center text-muted';
+                    } else {
+                        data.clients.forEach(client => {
+                            const row = clientsTable.insertRow();
+                            row.insertCell(0).textContent = client.mac || '-';
+                            row.insertCell(1).textContent = client.signal ? `${client.signal} dBm` : '-';
+                            row.insertCell(2).textContent = client.tx_rate ? `${client.tx_rate} Mbps` : '-';
+                            row.insertCell(3).textContent = client.rx_rate ? `${client.rx_rate} Mbps` : '-';
+                        });
+                    }
+                } else {
+                    clientCount.textContent = '0';
+                    clientsTable.innerHTML = '<tr><td colspan="4" class="text-center text-muted">{% trans %}Error loading clients{% endtrans %}</td></tr>';
+                }
 
-                // Update clients table
-                clientsTable.innerHTML = '';
-                data.clients.forEach(client => {
-                    const row = clientsTable.insertRow();
-                    row.insertCell(0).textContent = client.mac;
-                    row.insertCell(1).textContent = client.signal;
-                    row.insertCell(2).textContent = client.tx_rate;
-                    row.insertCell(3).textContent = client.rx_rate;
-                });
+                // Update channel with better error handling
+                if (data.channel) {
+                    currentChannel.textContent = `${data.channel} (${data.band === '5' ? '5 GHz' : '2.4 GHz'})`;
+                } else {
+                    currentChannel.textContent = '-';
+                }
 
                 // Show warning if interface has issues
-                if (status === 'running' && interfaceStatus.error) {
-                    showToast('{% trans %}Warning{% endtrans %}', 
-                        `{% trans %}AP is running but interface has issues:{% endtrans %}\n${interfaceStatus.error}`, 
-                        'warning');
+                if (status === 'running') {
+                    if (interfaceStatus.error) {
+                        showToast('{% trans %}Warning{% endtrans %}', 
+                            `{% trans %}AP is running but interface has issues:{% endtrans %}\n${interfaceStatus.error}`, 
+                            'warning');
+                    }
+                    
+                    // Check network passthrough status
+                    if (data.passthrough_status) {
+                        if (!data.passthrough_status.enabled) {
+                            showToast('{% trans %}Warning{% endtrans %}', 
+                                '{% trans %}Network passthrough is disabled. Clients will not have internet access.{% endtrans %}', 
+                                'warning');
+                        } else if (!data.passthrough_status.working) {
+                            showToast('{% trans %}Warning{% endtrans %}', 
+                                '{% trans %}Network passthrough is enabled but not working. Check routing configuration.{% endtrans %}', 
+                                'warning');
+                        }
+                    }
+                }
+            } else {
+                // Handle error state
+                apStatus.textContent = '{% trans %}Error{% endtrans %}';
+                apStatus.className = 'h5 mb-0 font-weight-bold text-danger';
+                clientCount.textContent = '-';
+                currentChannel.textContent = '-';
+                clientsTable.innerHTML = '<tr><td colspan="4" class="text-center text-danger">{% trans %}Error loading status{% endtrans %}</td></tr>';
+                
+                if (data.error) {
+                    showToast('{% trans %}Error{% endtrans %}', data.error, 'danger');
                 }
             }
         } catch (error) {
             console.error('Error updating status:', error);
             showToast('{% trans %}Error{% endtrans %}', '{% trans %}Failed to update status{% endtrans %}', 'danger');
+            
+            // Update UI to show error state
+            apStatus.textContent = '{% trans %}Error{% endtrans %}';
+            apStatus.className = 'h5 mb-0 font-weight-bold text-danger';
+            clientCount.textContent = '-';
+            currentChannel.textContent = '-';
+            clientsTable.innerHTML = '<tr><td colspan="4" class="text-center text-danger">{% trans %}Error loading status{% endtrans %}</td></tr>';
         }
     }
 
@@ -612,6 +666,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.success) {
                 showToast('{% trans %}Success{% endtrans %}', result.message);
                 await updateStatus();
+                
+                // If passthrough is enabled, show additional instructions
+                if (enablePassthrough) {
+                    showToast('{% trans %}Info{% endtrans %}', 
+                        '{% trans %}Network passthrough enabled. Make sure your main network interface is properly configured for internet access.{% endtrans %}', 
+                        'info');
+                }
             } else {
                 let errorMessage = result.error || '{% trans %}Failed to save configuration{% endtrans %}';
                 
@@ -622,7 +683,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         '2. {% trans %}Check permissions:{% endtrans %} `sudo chown root:root /usr/bin/wifi-ap-sta`\n' +
                         '3. {% trans %}Check interface status:{% endtrans %} `ip link show wlan_ap0`\n' +
                         '4. {% trans %}Restart networking:{% endtrans %} `sudo systemctl restart networking`\n' +
-                        '5. {% trans %}Check hostapd status:{% endtrans %} `sudo systemctl status hostapd`';
+                        '5. {% trans %}Check hostapd status:{% endtrans %} `sudo systemctl status hostapd`\n' +
+                        '6. {% trans %}Check iptables rules:{% endtrans %} `sudo iptables -L -t nat`\n' +
+                        '7. {% trans %}Check routing:{% endtrans %} `ip route show`';
                 }
                 
                 showToast('{% trans %}Error{% endtrans %}', errorMessage, 'danger');
