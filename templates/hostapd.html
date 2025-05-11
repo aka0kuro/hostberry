@@ -601,8 +601,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch('/api/hostapd/config', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
-                    // 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') // Still commented out
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                 },
                 body: JSON.stringify(data)
             });
