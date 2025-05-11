@@ -288,15 +288,17 @@ document.addEventListener('DOMContentLoaded', function() {
         toastMessage.className = `toast-body text-${type}`;
         
         // Add error details if available
-        if (type === 'danger' && message.includes('hostapd')) {
+        if (type === 'danger') {
             toastMessage.innerHTML = `
                 <div class="mb-2">${message}</div>
                 <small class="text-muted">
                     {% trans %}Please check the following:{% endtrans %}
                     <ul class="mb-0 mt-1">
-                        <li>{% trans %}WiFi interface is available{% endtrans %}</li>
-                        <li>{% trans %}Selected channel is supported{% endtrans %}</li>
-                        <li>{% trans %}hostapd service is installed{% endtrans %}</li>
+                        <li>{% trans %}hostapd is installed:{% endtrans %} <code>sudo apt-get install hostapd</code></li>
+                        <li>{% trans %}hostapd service is unmasked:{% endtrans %} <code>sudo systemctl unmask hostapd</code></li>
+                        <li>{% trans %}hostapd service is enabled:{% endtrans %} <code>sudo systemctl enable hostapd</code></li>
+                        <li>{% trans %}hostapd service is running:{% endtrans %} <code>sudo systemctl start hostapd</code></li>
+                        <li>{% trans %}WiFi interface is available:{% endtrans %} <code>iwconfig</code></li>
                     </ul>
                 </small>
             `;
@@ -379,16 +381,31 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // Check hostapd service status first
+        try {
+            const statusResponse = await fetch('/api/hostapd/status');
+            const statusData = await statusResponse.json();
+            
+            if (!statusData.success) {
+                showToast('{% trans %}Error{% endtrans %}', '{% trans %}hostapd service is not available. Please install and enable hostapd first.{% endtrans %}', 'danger');
+                return;
+            }
+        } catch (error) {
+            console.error('Error checking hostapd status:', error);
+            showToast('{% trans %}Error{% endtrans %}', '{% trans %}Failed to check hostapd status. Please ensure hostapd is installed and running.{% endtrans %}', 'danger');
+            return;
+        }
+
         const data = {
             ssid: ssid,
             password: password,
             channel: channel,
             band: band,
             hw_mode: band === '5' ? 'a' : 'g',
-            country_code: 'US',  // Add default country code
-            interface: 'wlan0',  // Add default interface
-            auth_algs: 1,        // WPA2 authentication
-            wpa: 2,             // WPA2
+            country_code: 'US',
+            interface: 'wlan0',
+            auth_algs: 1,
+            wpa: 2,
             wpa_key_mgmt: 'WPA-PSK',
             wpa_pairwise: 'CCMP',
             rsn_pairwise: 'CCMP'
