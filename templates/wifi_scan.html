@@ -578,6 +578,10 @@ function updateStatusDisplay(statusData) {
                 errorMessage = '{% trans %}Failed to enable WiFi radio. Please check system logs.{% endtrans %}';
             } else if (statusData.error.includes('Error bringing up wlan0')) {
                 errorMessage = '{% trans %}Failed to activate WiFi interface. Please check system logs.{% endtrans %}';
+            } else if (statusData.error.includes('Error getting current connection')) {
+                errorMessage = '{% trans %}Failed to get current connection status. Please check system logs.{% endtrans %}';
+            } else {
+                errorMessage = statusData.error;
             }
         }
         

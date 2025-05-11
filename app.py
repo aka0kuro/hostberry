@@ -1559,6 +1559,7 @@ def wifi_status():
     try:
         # Ensure WiFi interface is properly configured
         if not ensure_wifi_interface():
+            app.logger.error("Failed to configure WiFi interface")
             return jsonify({
                 'success': False,
                 'error': 'Failed to configure WiFi interface'
@@ -1577,8 +1578,16 @@ def wifi_status():
                     wifi_enabled = True
                 except subprocess.CalledProcessError as e:
                     app.logger.error(f"Error enabling WiFi radio: {str(e)}")
+                    return jsonify({
+                        'success': False,
+                        'error': f'Error enabling WiFi radio: {str(e)}'
+                    })
         except Exception as e:
             app.logger.error(f"Error checking WiFi radio status: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': f'Error checking WiFi radio status: {str(e)}'
+            })
 
         # Verificar si wlan0 existe y está activa
         interface_active = False
@@ -1593,8 +1602,16 @@ def wifi_status():
                     interface_active = True
                 except subprocess.CalledProcessError as e:
                     app.logger.error(f"Error bringing up wlan0: {str(e)}")
+                    return jsonify({
+                        'success': False,
+                        'error': f'Error bringing up wlan0: {str(e)}'
+                    })
         except Exception as e:
             app.logger.error(f"Error checking wlan0 status: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': f'Error checking wlan0 status: {str(e)}'
+            })
 
         # Obtener conexión actual
         current_connection = None
@@ -1621,6 +1638,10 @@ def wifi_status():
                         break
         except Exception as e:
             app.logger.error(f"Error getting current connection: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': f'Error getting current connection: {str(e)}'
+            })
 
         # Obtener SSID actual
         current_ssid = get_wifi_ssid()
