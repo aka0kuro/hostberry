@@ -1019,7 +1019,13 @@ def vpn_config_api():
                 with open(config_path, 'w') as f:
                     f.write(config_content)
                 app.logger.info(f"Archivo de configuración OpenVPN '{config_path}' actualizado.")
-    try:
+        except Exception as e:
+            app.logger.error(f"Error al actualizar configuración OpenVPN: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': f'Error al actualizar configuración OpenVPN: {str(e)}'
+            }), 500
+
         # Verificar si el servicio OpenVPN está instalado
         try:
             subprocess.run(['which', 'openvpn'], check=True, capture_output=True)
