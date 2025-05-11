@@ -280,13 +280,52 @@ async function loadStatusAndScan() {
         const data = await response.json();
         window.currentSSID = data.current_connection ? data.current_connection.trim() : null;
         
+        // Si no hay conexión actual, intentar conectar a la última red guardada
+        if (!window.currentSSID) {
+            const lastNetwork = loadLastConnectedNetwork();
+            if (lastNetwork && lastNetwork.ssid) {
+                try {
+                    // Verificar si hay credenciales guardadas para esta red
+                    const credResponse = await fetch(`/api/wifi/check_credentials?ssid=${encodeURIComponent(lastNetwork.ssid)}`);
+                    const credData = await credResponse.json();
+                    
+                    if (credData.success && credData.has_credentials) {
+                        console.log(`Intentando reconectar a ${lastNetwork.ssid}...`);
+                        const connectResponse = await fetch('/api/wifi/connect', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRFToken': getCSRFToken() || getCookie('csrf_token')
+                            },
+                            body: JSON.stringify({
+                                ssid: lastNetwork.ssid,
+                                security: lastNetwork.security,
+                                save_credentials: true
+                            })
+                        });
+                        
+                        const connectData = await connectResponse.json();
+                        if (connectData.success) {
+                            showToast(`{% trans %}Reconectado a{% endtrans %} ${lastNetwork.ssid}`, 'success');
+                            addActivity('connect', `{% trans %}Reconectado automáticamente a{% endtrans %} ${lastNetwork.ssid}`);
+                            window.currentSSID = lastNetwork.ssid;
+                        } else {
+                            console.log('No se pudo reconectar automáticamente:', connectData.error);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error al intentar reconexión automática:', error);
+                }
+            }
+        }
+        
         // Si hay una red conectada, verificar si tiene credenciales guardadas
         if (window.currentSSID) {
             try {
                 const credResponse = await fetch(`/api/wifi/check_credentials?ssid=${encodeURIComponent(window.currentSSID)}`);
                 const credData = await credResponse.json();
                 if (credData.success && credData.has_credentials) {
-                    // Actualizar el estado de guardado de credenciales
                     $('#saveCredentials').prop('checked', true);
                 }
             } catch (error) {
@@ -762,7 +801,8 @@ $(document).ready(function() {
             const networkData = {
                 ssid: ssid,
                 security: security,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                last_connection_attempt: Date.now()
             };
             localStorage.setItem('lastConnectedNetwork', JSON.stringify(networkData));
         }
@@ -780,6 +820,19 @@ $(document).ready(function() {
             }
         }
         return null;
+    }
+
+    // Añadir función para verificar si la última conexión es reciente
+    function isLastConnectionRecent() {
+        const lastNetwork = loadLastConnectedNetwork();
+        if (!lastNetwork || !lastNetwork.last_connection_attempt) return false;
+        
+        const now = Date.now();
+        const lastAttempt = lastNetwork.last_connection_attempt;
+        const hoursSinceLastAttempt = (now - lastAttempt) / (1000 * 60 * 60);
+        
+        // Considerar reciente si fue en las últimas 24 horas
+        return hoursSinceLastAttempt < 24;
     }
 
 });
