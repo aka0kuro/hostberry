@@ -2155,8 +2155,21 @@ def hostapd_page():
         hostapd_installed = subprocess.run(['which', 'hostapd'], capture_output=True).returncode == 0
         
         # Verificar estado actual de hostapd
-        hostapd_status = subprocess.run(['systemctl', 'is-active', 'hostapd'], capture_output=True, text=True)
-        is_running = hostapd_status.returncode == 0
+        hostapd_service_active = subprocess.run(['systemctl', 'is-active', 'hostapd'], capture_output=True, text=True).returncode == 0
+        is_running = False
+        if hostapd_service_active:
+            try:
+                iw_status = subprocess.run(['iw', 'dev', 'wlan_ap0', 'info'], capture_output=True, text=True, check=True)
+                if 'type AP' in iw_status.stdout:
+                    is_running = True
+                else:
+                    app.logger.info("[Hostapd Page] wlan_ap0 found but not in AP mode.")
+            except subprocess.CalledProcessError as e:
+                app.logger.error(f"[Hostapd Page] Error checking iw dev wlan_ap0 info: {e.stderr}")
+            except FileNotFoundError:
+                app.logger.error("[Hostapd Page] 'iw' command not found. Cannot verify wlan_ap0 AP status.")
+        else:
+            app.logger.info("[Hostapd Page] hostapd service is not active.")
         
         # Obtener configuración actual si existe
         current_config = {}
