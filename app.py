@@ -1617,6 +1617,7 @@ def wifi_status():
         current_connection = None
         connection_info = None
         try:
+            # First try to get connection using nmcli
             result = subprocess.run(['nmcli', '-t', '-f', 'NAME,TYPE,DEVICE', 'connection', 'show', '--active'], 
                                   capture_output=True, text=True)
             if result.returncode == 0:
@@ -1636,15 +1637,27 @@ def wifi_status():
                         except Exception as e:
                             app.logger.error(f"Error getting signal strength: {str(e)}")
                         break
+
+            # If nmcli fails, try alternative method using iwconfig
+            if not current_connection:
+                try:
+                    iw_result = subprocess.run(['iwconfig', 'wlan0'], capture_output=True, text=True)
+                    if iw_result.returncode == 0 and 'ESSID:' in iw_result.stdout:
+                        # Extract SSID from iwconfig output
+                        ssid_match = re.search(r'ESSID:"([^"]+)"', iw_result.stdout)
+                        if ssid_match:
+                            current_connection = ssid_match.group(1)
+                except Exception as e:
+                    app.logger.error(f"Error getting connection from iwconfig: {str(e)}")
+
         except Exception as e:
             app.logger.error(f"Error getting current connection: {str(e)}")
-            return jsonify({
-                'success': False,
-                'error': f'Error getting current connection: {str(e)}'
-            })
+            # Don't return error here, continue with other checks
 
         # Obtener SSID actual
         current_ssid = get_wifi_ssid()
+        if current_ssid and not current_connection:
+            current_connection = current_ssid
 
         # Obtener dirección IP
         ip_address = None
@@ -1656,6 +1669,10 @@ def wifi_status():
                     ip_address = ip_match.group(1)
         except Exception as e:
             app.logger.error(f"Error getting IP address: {str(e)}")
+
+        # If we have an IP address but no connection name, try to get it from the SSID
+        if ip_address and not current_connection:
+            current_connection = current_ssid
 
         return jsonify({
             'success': True,
