@@ -2143,7 +2143,7 @@ def wifi_scan_page():
         wifi_blocked = False
         # Nunca retornar JSON aquí
         app.logger.debug(f'[WiFi Page] wifi_blocked (except): {wifi_blocked}')
-        return render_template('wifi_scan.html', wifi_blocked=wifi_blocked, error=str(e))
+        return render_template('wifi_scan.html', wifi_blocked=wifi_blocked, wifi_enabled=False, current_connection=None, error=str(e))
 
 @app.route('/hostapd')
 def hostapd_page():
