@@ -276,18 +276,31 @@ function formatDate(date) {
 // Core logic: Fetch status, then trigger scan
 async function loadStatusAndScan() {
     try {
-        const response = await fetch('/api/wifi/status'); // Replace with your actual API endpoint
+        const response = await fetch('/api/wifi/status');
         const data = await response.json();
         window.currentSSID = data.current_connection ? data.current_connection.trim() : null;
-        // Update status display based on this initial fetch
-        updateStatusDisplay(data); 
+        
+        // Si hay una red conectada, verificar si tiene credenciales guardadas
+        if (window.currentSSID) {
+            try {
+                const credResponse = await fetch(`/api/wifi/check_credentials?ssid=${encodeURIComponent(window.currentSSID)}`);
+                const credData = await credResponse.json();
+                if (credData.success && credData.has_credentials) {
+                    // Actualizar el estado de guardado de credenciales
+                    $('#saveCredentials').prop('checked', true);
+                }
+            } catch (error) {
+                console.error('Error checking credentials:', error);
+            }
+        }
+        
+        updateStatusDisplay(data);
     } catch (e) {
         console.error("Error fetching initial status:", e);
         window.currentSSID = null;
-        updateStatusDisplay({ enabled: false, current_connection: null, soft_blocked: false, hard_blocked: false }); // Assume disabled on error
+        updateStatusDisplay({ enabled: false, current_connection: null, soft_blocked: false, hard_blocked: false });
     }
-    // Now trigger the scan, which will use the updated window.currentSSID
-    $('#rescanBtn').trigger('click'); 
+    $('#rescanBtn').trigger('click');
 }
 
 // Only refresh visual status and buttons in list, NO full scan
@@ -436,8 +449,17 @@ $('#wifiConnectForm').submit(async function(e) {
     try {
         const response = await fetch('/api/wifi/connect', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRFToken': getCSRFToken() || getCookie('csrf_token') },
-            body: JSON.stringify({ ssid: ssid, password: password, security: security, save_credentials: saveCredentials })
+            headers: { 
+                'Content-Type': 'application/json', 
+                'Accept': 'application/json', 
+                'X-CSRFToken': getCSRFToken() || getCookie('csrf_token') 
+            },
+            body: JSON.stringify({ 
+                ssid: ssid, 
+                password: password, 
+                security: security, 
+                save_credentials: saveCredentials 
+            })
         });
         const responseData = await response.json();
         
@@ -448,8 +470,10 @@ $('#wifiConnectForm').submit(async function(e) {
                 security: security,
                 signal: responseData.connection_info?.signal || '-'
             });
-            // Save the last connected network
+            
+            // Guardar la red conectada
             saveLastConnectedNetwork(ssid, security, password);
+            
             $('#connectModal').modal('hide');
             await loadStatusAndScan();
         } else {
@@ -622,14 +646,32 @@ $(document).ready(function() {
     });
 
     // Connect Modal Setup (Delegated)
-    $(document).on('click', '.connect-btn', function() {
+    $(document).on('click', '.connect-btn', async function() {
         const ssid = $(this).data('ssid');
         const security = $(this).data('security');
         $('#connectSSID').val(ssid);
         $('#connectSSIDHidden').val(ssid);
         $('#connectSecurity').val(security);
         $('#connectSecurityHidden').val(security);
-        $('#connectPassword').val('').prop('disabled', security === 'Open');
+        
+        // Verificar si hay credenciales guardadas
+        try {
+            const response = await fetch(`/api/wifi/check_credentials?ssid=${encodeURIComponent(ssid)}`);
+            const data = await response.json();
+            
+            if (data.success && data.has_credentials) {
+                $('#connectPassword').val(data.password);
+                $('#saveCredentials').prop('checked', true);
+            } else {
+                $('#connectPassword').val('');
+                $('#saveCredentials').prop('checked', false);
+            }
+        } catch (error) {
+            console.error('Error checking saved credentials:', error);
+            $('#connectPassword').val('');
+        }
+        
+        $('#connectPassword').prop('disabled', security === 'Open');
         $('#passwordField').toggle(security !== 'Open'); // Show/hide password field
         $('#connectModal').modal('show');
     });
@@ -698,6 +740,31 @@ $(document).ready(function() {
             }
         });
     });
+
+    // Función para guardar la última red conectada
+    function saveLastConnectedNetwork(ssid, security, password) {
+        if (ssid && security && password) {
+            localStorage.setItem('lastConnectedNetwork', JSON.stringify({
+                ssid: ssid,
+                security: security,
+                timestamp: Date.now()
+            }));
+        }
+    }
+
+    // Función para cargar la última red conectada
+    function loadLastConnectedNetwork() {
+        const saved = localStorage.getItem('lastConnectedNetwork');
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch (e) {
+                console.error('Error parsing saved network:', e);
+                return null;
+            }
+        }
+        return null;
+    }
 
 });
 
