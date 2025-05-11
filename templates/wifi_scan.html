@@ -758,12 +758,13 @@ $(document).ready(function() {
 
     // Función para guardar la última red conectada
     function saveLastConnectedNetwork(ssid, security, password) {
-        if (ssid && security && password) {
-            localStorage.setItem('lastConnectedNetwork', JSON.stringify({
+        if (ssid && security) {
+            const networkData = {
                 ssid: ssid,
                 security: security,
                 timestamp: Date.now()
-            }));
+            };
+            localStorage.setItem('lastConnectedNetwork', JSON.stringify(networkData));
         }
     }
 
