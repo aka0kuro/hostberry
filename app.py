@@ -2085,10 +2085,11 @@ def enable_wifi():
 # Función utilitaria para saber si la interfaz wifi está bloqueada
 
 def is_wifi_blocked_or_disabled():
-    import subprocess
+    # subprocess is imported globally
+    # logging is imported globally and app.logger is available
     try:
         # Verifica rfkill
-        result = subprocess.run(['rfkill', 'list', 'wifi'], capture_output=True, text=True)
+        result = subprocess.run(['rfkill', 'list', 'wifi'], capture_output=True, text=True, check=True)
         output = result.stdout.lower()
         blocked = (
             'soft blocked: yes' in output or
@@ -2096,14 +2097,19 @@ def is_wifi_blocked_or_disabled():
             'blocked: yes' in output
         )
         # Verifica nmcli
-        nmcli_result = subprocess.run(['nmcli', 'radio', 'wifi'], capture_output=True, text=True)
+        nmcli_result = subprocess.run(['nmcli', 'radio', 'wifi'], capture_output=True, text=True, check=True)
         wifi_status = nmcli_result.stdout.strip().lower()
-        disabled = ('disable' in wifi_status)
+        disabled = ('disable' in wifi_status) # Note: 'disabled' in English, 'desactivado' in Spanish
         return blocked or disabled
+    except FileNotFoundError as e:
+        app.logger.error(f"[is_wifi_blocked_or_disabled] Command not found: {e}. Ensure 'rfkill' and 'nmcli' are installed and in PATH.")
+        raise # Re-raise the exception
+    except subprocess.CalledProcessError as e:
+        app.logger.error(f"[is_wifi_blocked_or_disabled] Error executing command: {e}. stderr: {e.stderr}")
+        raise # Re-raise the exception
     except Exception as e:
-        import logging
-        logging.error(f'Error checking rfkill/nmcli: {e}')
-        return False
+        app.logger.error(f'[is_wifi_blocked_or_disabled] Unexpected error checking rfkill/nmcli: {str(e)}')
+        raise # Re-raise the exception
 
 @app.route('/wifi_scan')
 def wifi_scan_page():
