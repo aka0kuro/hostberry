@@ -305,17 +305,41 @@ def get_ip_address():
 def get_wifi_ssid():
     """Obtener el SSID de la red WiFi"""
     try:
-        result = subprocess.run(['iwgetid', '-r'], capture_output=True, text=True)
-        return result.stdout.strip() if result.returncode == 0 else None
-    except:
+        # Primero verificar si wlan0 existe y está activa
+        result = subprocess.run(['ip', 'link', 'show', 'wlan0'], capture_output=True, text=True)
+        if result.returncode != 0 or 'state DOWN' in result.stdout:
+            return None
+            
+        # Obtener SSID actual
+        result = subprocess.run(['nmcli', '-t', '-f', 'NAME,TYPE,DEVICE', 'connection', 'show', '--active'], 
+                              capture_output=True, text=True)
+        if result.returncode == 0:
+            for line in result.stdout.splitlines():
+                if 'wifi' in line.lower():
+                    return line.split(':')[0]
+        return None
+    except Exception as e:
+        app.logger.error(f"Error getting WiFi SSID: {str(e)}")
         return None
 
 def is_wifi_connected():
     """Verificar si está conectado a WiFi"""
     try:
-        result = subprocess.run(['iwconfig'], capture_output=True, text=True)
-        return 'ESSID:' in result.stdout
-    except:
+        # Primero verificar si wlan0 existe y está activa
+        result = subprocess.run(['ip', 'link', 'show', 'wlan0'], capture_output=True, text=True)
+        if result.returncode != 0 or 'state DOWN' in result.stdout:
+            return False
+            
+        # Verificar conexión actual
+        result = subprocess.run(['nmcli', '-t', '-f', 'NAME,TYPE,DEVICE', 'connection', 'show', '--active'], 
+                              capture_output=True, text=True)
+        if result.returncode == 0:
+            for line in result.stdout.splitlines():
+                if 'wifi' in line.lower():
+                    return True
+        return False
+    except Exception as e:
+        app.logger.error(f"Error checking WiFi connection: {str(e)}")
         return False
 
 def get_cpu_temp():
@@ -1513,10 +1537,14 @@ def wifi_scan():
         app.logger.debug(f'Estado WiFi: {status.stdout}')
         
         if 'disabled' in status.stdout.lower():
-            return jsonify({'success': False, 'error': 'WiFi radio is disabled'}), 400
+            # Intentar habilitar WiFi
+            subprocess.run(['nmcli', 'radio', 'wifi', 'on'], capture_output=True, text=True)
+            time.sleep(2)  # Esperar a que se active
             
         # 1.5. Forzar escaneo
         subprocess.run(['nmcli', 'device', 'wifi', 'rescan'], capture_output=True, text=True)
+        time.sleep(2)  # Esperar a que termine el escaneo
+        
         # 2. Escanear redes
         result = subprocess.run(
             ['nmcli', '-t', '-f', 'SSID,SIGNAL,SECURITY,BSSID', 'device', 'wifi', 'list'],
@@ -2499,6 +2527,68 @@ def adblock_realtime_log():
     except Exception:
         pass
     return jsonify({'domains': domains[::-1]})
+
+@app.route('/api/wifi/status')
+def wifi_status():
+    """Endpoint para obtener el estado actual del WiFi"""
+    try:
+        # Verificar si la interfaz WiFi está habilitada
+        wifi_enabled = False
+        try:
+            result = subprocess.run(['nmcli', 'radio', 'wifi'], capture_output=True, text=True)
+            wifi_enabled = 'enabled' in result.stdout.lower()
+        except Exception as e:
+            app.logger.error(f"Error checking WiFi radio status: {str(e)}")
+
+        # Verificar si wlan0 existe y está activa
+        interface_active = False
+        try:
+            result = subprocess.run(['ip', 'link', 'show', 'wlan0'], capture_output=True, text=True)
+            interface_active = result.returncode == 0 and 'state UP' in result.stdout
+        except Exception as e:
+            app.logger.error(f"Error checking wlan0 status: {str(e)}")
+
+        # Obtener conexión actual
+        current_connection = None
+        try:
+            result = subprocess.run(['nmcli', '-t', '-f', 'NAME,TYPE,DEVICE', 'connection', 'show', '--active'], 
+                                  capture_output=True, text=True)
+            if result.returncode == 0:
+                for line in result.stdout.splitlines():
+                    if 'wifi' in line.lower():
+                        current_connection = line.split(':')[0]
+                        break
+        except Exception as e:
+            app.logger.error(f"Error getting current connection: {str(e)}")
+
+        # Obtener SSID actual
+        current_ssid = get_wifi_ssid()
+
+        # Obtener dirección IP
+        ip_address = None
+        try:
+            result = subprocess.run(['ip', 'addr', 'show', 'wlan0'], capture_output=True, text=True)
+            if result.returncode == 0:
+                ip_match = re.search(r'inet (\d+\.\d+\.\d+\.\d+)', result.stdout)
+                if ip_match:
+                    ip_address = ip_match.group(1)
+        except Exception as e:
+            app.logger.error(f"Error getting IP address: {str(e)}")
+
+        return jsonify({
+            'success': True,
+            'wifi_enabled': wifi_enabled,
+            'interface_active': interface_active,
+            'current_connection': current_connection,
+            'current_ssid': current_ssid,
+            'ip_address': ip_address
+        })
+    except Exception as e:
+        app.logger.error(f"Error in wifi_status: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
 
 if __name__ == '__main__':
     # Intentar reconexión automática al inicio
