@@ -281,11 +281,27 @@ document.addEventListener('DOMContentLoaded', function() {
         this.querySelector('i').classList.toggle('fa-eye-slash');
     });
 
-    // Show toast notification
+    // Show toast notification with better formatting
     function showToast(title, message, type = 'success') {
         toastTitle.textContent = title;
         toastMessage.textContent = message;
         toastMessage.className = `toast-body text-${type}`;
+        
+        // Add error details if available
+        if (type === 'danger' && message.includes('hostapd')) {
+            toastMessage.innerHTML = `
+                <div class="mb-2">${message}</div>
+                <small class="text-muted">
+                    {% trans %}Please check the following:{% endtrans %}
+                    <ul class="mb-0 mt-1">
+                        <li>{% trans %}WiFi interface is available{% endtrans %}</li>
+                        <li>{% trans %}Selected channel is supported{% endtrans %}</li>
+                        <li>{% trans %}hostapd service is installed{% endtrans %}</li>
+                    </ul>
+                </small>
+            `;
+        }
+        
         toast.show();
     }
 
@@ -346,12 +362,36 @@ document.addEventListener('DOMContentLoaded', function() {
     apConfigForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(this);
+        
+        // Validate form data
+        const ssid = formData.get('ssid');
+        const password = formData.get('password');
+        const channel = formData.get('channel');
+        const band = formData.get('band');
+
+        if (!ssid || !password || !channel || !band) {
+            showToast('{% trans %}Error{% endtrans %}', '{% trans %}All fields are required{% endtrans %}', 'danger');
+            return;
+        }
+
+        if (password.length < 8) {
+            showToast('{% trans %}Error{% endtrans %}', '{% trans %}Password must be at least 8 characters{% endtrans %}', 'danger');
+            return;
+        }
+
         const data = {
-            ssid: formData.get('ssid'),
-            password: formData.get('password'),
-            channel: formData.get('channel'),
-            band: formData.get('band'),
-            hw_mode: formData.get('band') === '5' ? 'a' : 'g'
+            ssid: ssid,
+            password: password,
+            channel: channel,
+            band: band,
+            hw_mode: band === '5' ? 'a' : 'g',
+            country_code: 'US',  // Add default country code
+            interface: 'wlan0',  // Add default interface
+            auth_algs: 1,        // WPA2 authentication
+            wpa: 2,             // WPA2
+            wpa_key_mgmt: 'WPA-PSK',
+            wpa_pairwise: 'CCMP',
+            rsn_pairwise: 'CCMP'
         };
 
         try {
@@ -363,17 +403,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify(data)
             });
+            
             const result = await response.json();
             
             if (result.success) {
                 showToast('{% trans %}Success{% endtrans %}', result.message);
                 await updateStatus();
             } else {
-                showToast('{% trans %}Error{% endtrans %}', result.error, 'danger');
+                // Show detailed error message
+                const errorMessage = result.error || '{% trans %}Failed to save configuration{% endtrans %}';
+                showToast('{% trans %}Error{% endtrans %}', errorMessage, 'danger');
+                
+                // Log the error for debugging
+                console.error('Configuration error:', {
+                    error: result.error,
+                    details: result.details,
+                    config: data
+                });
             }
         } catch (error) {
             console.error('Error saving configuration:', error);
-            showToast('{% trans %}Error{% endtrans %}', '{% trans %}Failed to save configuration{% endtrans %}', 'danger');
+            showToast('{% trans %}Error{% endtrans %}', '{% trans %}Failed to save configuration. Please check the console for details.{% endtrans %}', 'danger');
         }
     });
 
