@@ -533,7 +533,7 @@ function updateStatusDisplay(statusData) {
 }
 
 // Update Network List UI
-function updateNetworkList(networks) {
+async function updateNetworkList(networks) {
     const list = $('#network-list');
     list.empty();
     $('#networksCount').text(networks.length);
@@ -545,6 +545,19 @@ function updateNetworkList(networks) {
 
     networks.sort((a, b) => parseInt(b.signal) - parseInt(a.signal)); // Strongest signal first
     const currentConnectedSSID = (window.currentSSID || '').trim();
+
+    // Verificar credenciales guardadas para todas las redes
+    const savedCredentials = {};
+    for (const network of networks) {
+        try {
+            const response = await fetch(`/api/wifi/check_credentials?ssid=${encodeURIComponent(network.ssid)}`);
+            const data = await response.json();
+            savedCredentials[network.ssid] = data.success && data.has_credentials;
+        } catch (error) {
+            console.error('Error checking credentials for', network.ssid, ':', error);
+            savedCredentials[network.ssid] = false;
+        }
+    }
 
     networks.forEach(network => {
         const signalStrength = parseInt(network.signal);
@@ -564,6 +577,7 @@ function updateNetworkList(networks) {
         
         const networkSSID = (network.ssid || '{% trans %}Hidden Network{% endtrans %}').trim();
         const isConnectedToThisNetwork = currentConnectedSSID && networkSSID && (currentConnectedSSID === networkSSID);
+        const hasSavedCredentials = savedCredentials[networkSSID];
 
         const listItemHtml = $(`
             <div class="list-group-item list-group-item-action" data-original-security="${securityType}" data-ssid-name="${networkSSID}">
@@ -572,6 +586,7 @@ function updateNetworkList(networks) {
                         <h6 class="mb-1 d-inline-block">${networkSSID}</h6>
                         <small class="ms-2"><i class="fas ${securityIcon} me-1"></i>${securityType}</small>
                         <small class="${signalClass} ms-2"><i class="fas fa-signal me-1"></i>${signalStrength}%</small>
+                        ${hasSavedCredentials ? '<small class="ms-2 text-success" title="{% trans %}Password saved{% endtrans %}"><i class="fas fa-key me-1"></i>{% trans %}Saved{% endtrans %}</small>' : ''}
                     </div>
                     ${isConnectedToThisNetwork ? 
                         `<button class="btn btn-sm btn-danger disconnect-btn" data-ssid="${networkSSID}"><i class="fas fa-power-off me-1"></i>{% trans %}Disconnect{% endtrans %}</button>` :
