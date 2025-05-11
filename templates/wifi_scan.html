@@ -532,27 +532,41 @@ function updateStatusDisplay(statusData) {
     let wifiStatusText, wifiStatusClass = 'text-gray-800';
     const isActuallyConnected = statusData.current_connection !== null;
 
+    // First check for error state
+    if (statusData.error) {
+        wifiStatusText = '{% trans %}Error{% endtrans %}';
+        wifiStatusClass = 'text-danger';
+        $('#wifiStatusAlert').removeClass('d-none alert-success alert-warning').addClass('alert-danger')
+            .find('#wifiStatusTextInline').text('{% trans %}Error fetching WiFi status.{% endtrans %}');
+        $('#currentConnection').text('{% trans %}Error{% endtrans %}');
+        $('#wifiStatusText').text(wifiStatusText).removeClass('text-success text-danger text-warning text-info').addClass(wifiStatusClass);
+        $('#wifiStatusTextCard').text(wifiStatusText).removeClass('text-success text-danger text-warning text-info').addClass(wifiStatusClass);
+        return;
+    }
+
     if (statusData.hard_blocked || statusData.soft_blocked) {
-        wifiStatusText = '{% trans %}Blocked{% endtrans %}'; wifiStatusClass = 'text-danger';
-        $('#wifiStatusAlert').removeClass('d-none alert-success alert-warning').addClass('alert-danger').find('#wifiStatusTextInline').text('{% trans %}WiFi is blocked.{% endtrans %}');
+        wifiStatusText = '{% trans %}Blocked{% endtrans %}';
+        wifiStatusClass = 'text-danger';
+        $('#wifiStatusAlert').removeClass('d-none alert-success alert-warning').addClass('alert-danger')
+            .find('#wifiStatusTextInline').text('{% trans %}WiFi is blocked.{% endtrans %}');
         $('#enableWifiBtnInline, #enableWifiBtnTop').removeClass('d-none');
     } else if (!statusData.enabled) {
-        wifiStatusText = '{% trans %}Disabled{% endtrans %}'; wifiStatusClass = 'text-warning';
-        $('#wifiStatusAlert').removeClass('d-none alert-success alert-danger').addClass('alert-warning').find('#wifiStatusTextInline').text('{% trans %}WiFi is disabled.{% endtrans %}');
+        wifiStatusText = '{% trans %}Disabled{% endtrans %}';
+        wifiStatusClass = 'text-warning';
+        $('#wifiStatusAlert').removeClass('d-none alert-success alert-danger').addClass('alert-warning')
+            .find('#wifiStatusTextInline').text('{% trans %}WiFi is disabled.{% endtrans %}');
         $('#enableWifiBtnInline, #enableWifiBtnTop').removeClass('d-none');
     } else if (isActuallyConnected) {
-        wifiStatusText = '{% trans %}Connected{% endtrans %}'; wifiStatusClass = 'text-success';
+        wifiStatusText = '{% trans %}Connected{% endtrans %}';
+        wifiStatusClass = 'text-success';
         $('#wifiStatusAlert').addClass('d-none');
         $('#enableWifiBtnInline, #enableWifiBtnTop').addClass('d-none');
-    } else { // Enabled but not connected
-        wifiStatusText = '{% trans %}Enabled{% endtrans %}'; wifiStatusClass = 'text-info'; // Or warning, depending on preference
-        $('#wifiStatusAlert').removeClass('d-none alert-danger alert-success').addClass('alert-info').find('#wifiStatusTextInline').text('{% trans %}WiFi is enabled but not connected.{% endtrans %}');
+    } else {
+        wifiStatusText = '{% trans %}Enabled{% endtrans %}';
+        wifiStatusClass = 'text-info';
+        $('#wifiStatusAlert').removeClass('d-none alert-danger alert-success').addClass('alert-info')
+            .find('#wifiStatusTextInline').text('{% trans %}WiFi is enabled but not connected.{% endtrans %}');
         $('#enableWifiBtnInline, #enableWifiBtnTop').addClass('d-none');
-    }
-    
-    if(statusData.error) {
-      wifiStatusText = '{% trans %}Error{% endtrans %}'; wifiStatusClass = 'text-danger';
-       $('#wifiStatusAlert').removeClass('d-none alert-success alert-warning').addClass('alert-danger').find('#wifiStatusTextInline').text('{% trans %}Error fetching WiFi status.{% endtrans %}');
     }
 
     $('#wifiStatusText').text(wifiStatusText).removeClass('text-success text-danger text-warning text-info').addClass(wifiStatusClass);
@@ -564,8 +578,6 @@ function updateStatusDisplay(statusData) {
             connectionText += ` (${statusData.connection_info.signal}%)`;
         }
         $('#currentConnection').text(connectionText);
-    } else if (statusData.error) {
-         $('#currentConnection').text('{% trans %}Error{% endtrans %}');
     } else {
         $('#currentConnection').text('{% trans %}Not connected{% endtrans %}');
     }
