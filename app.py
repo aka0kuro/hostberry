@@ -2039,213 +2039,167 @@ def hostapd_page():
 
 @app.route('/api/hostapd/config', methods=['POST'])
 def hostapd_config():
-    """
-    Guarda la configuración del punto de acceso WiFi.
-    """
     try:
         data = request.get_json()
-        if not data:
-            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+        # Create configuration file
+        config = {
+            'AP_SSID': data.get('ssid'),
+            'AP_PASSWORD': data.get('password'),
+            'AP_IFACE': 'wlan_ap0',
+            'WIFI_IFACE': 'wlan0',
+            'STATIC_IP_PREFIX': '192.168.90',
+            'DHCP_RANGE_START': data.get('dhcp_start').split('.')[-1],
+            'DHCP_RANGE_END': data.get('dhcp_end').split('.')[-1],
+            'HOSTAPD_hw_mode': data.get('hw_mode'),
+            'HOSTAPD_channel': data.get('channel'),
+            'HOSTAPD_country_code': data.get('country_code')
+        }
 
-        # Validar datos requeridos
-        required_fields = ['ssid', 'password', 'channel', 'band']
-        for field in required_fields:
-            if field not in data:
-                return jsonify({'success': False, 'error': f'Missing required field: {field}'}), 400
+        # Write configuration to file
+        config_file = '/etc/default/wifi-ap-sta'
+        with open(config_file, 'w') as f:
+            for key, value in config.items():
+                f.write(f'{key}="{value}"\n')
 
-        # Crear configuración de hostapd
-        config = f"""# Basic configuration
-interface={data.get('interface', 'wlan0')}
-driver=nl80211
-ssid={data['ssid']}
-hw_mode={'a' if data['band'] == '5' else 'g'}
-channel={data['channel']}
-
-# Security configuration
-auth_algs=1
-wpa=2
-wpa_passphrase={data['password']}
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=CCMP
-rsn_pairwise=CCMP
-
-# Country code
-country_code={data.get('country_code', 'US')}
-
-# Additional settings
-beacon_int=100
-dtim_period=2
-max_num_sta=32
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-"""
-
-        # Guardar configuración
-        config_path = '/etc/hostapd/hostapd.conf'
-        try:
-            # Asegurarse de que el directorio existe
-            os.makedirs(os.path.dirname(config_path), exist_ok=True)
-            
-            # Guardar la configuración
-            with open(config_path, 'w') as f:
-                f.write(config)
-            
-            # Verificar permisos
-            subprocess.run(['chmod', '644', config_path], check=True)
-            
-            # Configurar la interfaz de red
-            interface = data.get('interface', 'wlan0')
-            
-            # Detener cualquier conexión WiFi existente
-            subprocess.run(['nmcli', 'device', 'disconnect', interface], check=False)
-            
-            # Configurar la interfaz en modo AP
-            subprocess.run(['ip', 'link', 'set', interface, 'down'], check=True)
-            subprocess.run(['ip', 'link', 'set', interface, 'up'], check=True)
-            
-            # Configurar la dirección IP estática para el AP
-            subprocess.run(['ip', 'addr', 'add', '192.168.4.1/24', 'dev', interface], check=True)
-            
-            # Configurar el servidor DHCP
-            dhcp_config = f"""interface={interface}
-dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,12h
-"""
-            with open('/etc/dnsmasq.conf', 'w') as f:
-                f.write(dhcp_config)
-            
-            # Reiniciar dnsmasq
-            subprocess.run(['systemctl', 'restart', 'dnsmasq'], check=True)
-            
-            # Habilitar el reenvío de IP
-            with open('/proc/sys/net/ipv4/ip_forward', 'w') as f:
-                f.write('1\n')
-            
-            # Configurar NAT
-            subprocess.run(['iptables', '-t', 'nat', '-A', 'POSTROUTING', '-o', 'eth0', '-j', 'MASQUERADE'], check=True)
-            subprocess.run(['iptables', '-A', 'FORWARD', '-i', interface, '-o', 'eth0', '-j', 'ACCEPT'], check=True)
-            subprocess.run(['iptables', '-A', 'FORWARD', '-i', 'eth0', '-o', interface, '-m', 'state', '--state', 'RELATED,ESTABLISHED', '-j', 'ACCEPT'], check=True)
-            
-            # Verificar la configuración de hostapd
-            check_result = subprocess.run(['hostapd', '-d', config_path], 
-                                        capture_output=True, 
-                                        text=True)
-            
-            if check_result.returncode != 0:
-                return jsonify({
-                    'success': False, 
-                    'error': 'Invalid configuration',
-                    'details': check_result.stderr
-                }), 400
-
-            # Reiniciar hostapd
-            subprocess.run(['systemctl', 'restart', 'hostapd'], check=True)
-            
-            return jsonify({
-                'success': True, 
-                'message': 'Configuration saved and access point started successfully'
-            })
-            
-        except PermissionError:
-            return jsonify({
-                'success': False, 
-                'error': 'Permission denied. Please run with sudo privileges.'
-            }), 403
-        except Exception as e:
-            return jsonify({
-                'success': False, 
-                'error': f'Error saving configuration: {str(e)}'
-            }), 500
-            
-    except Exception as e:
-        app.logger.error(f'Error in hostapd configuration: {str(e)}')
-        return jsonify({
-            'success': False, 
-            'error': str(e)
-        }), 500
-
-@app.route('/api/hostapd/toggle', methods=['POST'])
-def hostapd_toggle():
-    """
-    Inicia o detiene el punto de acceso WiFi.
-    """
-    try:
-        # Verificar estado actual
-        status = subprocess.run(['systemctl', 'is-active', 'hostapd'], capture_output=True, text=True)
-        is_running = status.returncode == 0
-
-        if is_running:
-            # Detener hostapd
-            subprocess.run(['systemctl', 'stop', 'hostapd'], check=True)
-            message = 'Access point stopped successfully'
-        else:
-            # Iniciar hostapd
-            subprocess.run(['systemctl', 'start', 'hostapd'], check=True)
-            message = 'Access point started successfully'
-
-        return jsonify({'success': True, 'message': message})
-    except Exception as e:
-        app.logger.error(f'Error toggling hostapd: {str(e)}')
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/hostapd/status')
-def hostapd_status():
-    """
-    Obtiene el estado actual del punto de acceso WiFi.
-    """
-    try:
-        # Verificar estado de hostapd
-        status = subprocess.run(['systemctl', 'is-active', 'hostapd'], capture_output=True, text=True)
-        is_running = status.returncode == 0
-
-        # Obtener clientes conectados
-        clients = []
-        if is_running:
-            try:
-                # Usar iw dev wlan0 station dump para obtener clientes conectados
-                result = subprocess.run(['iw', 'dev', 'wlan0', 'station', 'dump'], 
-                                     capture_output=True, text=True)
-                if result.returncode == 0:
-                    current_client = {}
-                    for line in result.stdout.splitlines():
-                        if 'Station' in line:
-                            if current_client:
-                                clients.append(current_client)
-                            current_client = {'mac': line.split(' ')[1]}
-                        elif 'signal:' in line:
-                            current_client['signal'] = line.split(':')[1].strip()
-                        elif 'tx bitrate:' in line:
-                            current_client['tx_rate'] = line.split(':')[1].strip()
-                        elif 'rx bitrate:' in line:
-                            current_client['rx_rate'] = line.split(':')[1].strip()
-                    if current_client:
-                        clients.append(current_client)
-            except Exception as e:
-                app.logger.error(f'Error getting connected clients: {str(e)}')
-
-        # Obtener canal actual
-        channel = None
-        if is_running:
-            try:
-                result = subprocess.run(['iw', 'dev', 'wlan0', 'info'], 
-                                     capture_output=True, text=True)
-                if result.returncode == 0:
-                    for line in result.stdout.splitlines():
-                        if 'channel' in line:
-                            channel = line.split(' ')[-1]
-                            break
-            except Exception as e:
-                app.logger.error(f'Error getting channel: {str(e)}')
+        # Stop AP if running
+        subprocess.run(['sudo', '/usr/bin/wifi-ap-sta', 'stop'], check=True)
+        
+        # Configure AP
+        subprocess.run(['sudo', '/usr/bin/wifi-ap-sta', 'configure'], check=True)
+        
+        # Start AP
+        subprocess.run(['sudo', '/usr/bin/wifi-ap-sta', 'start'], check=True)
 
         return jsonify({
             'success': True,
-            'status': 'running' if is_running else 'stopped',
+            'message': 'Access Point configured and started successfully'
+        })
+    except subprocess.CalledProcessError as e:
+        return jsonify({
+            'success': False,
+            'error': f'Command failed: {e.cmd}\nOutput: {e.output}'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+@app.route('/api/hostapd/toggle', methods=['POST'])
+def hostapd_toggle():
+    try:
+        # Check current status
+        result = subprocess.run(['sudo', '/usr/bin/wifi-ap-sta', 'status'], 
+                              capture_output=True, text=True)
+        
+        if 'State: active' in result.stdout:
+            # Stop AP
+            subprocess.run(['sudo', '/usr/bin/wifi-ap-sta', 'stop'], check=True)
+            message = 'Access Point stopped successfully'
+        else:
+            # Start AP
+            subprocess.run(['sudo', '/usr/bin/wifi-ap-sta', 'start'], check=True)
+            message = 'Access Point started successfully'
+
+        return jsonify({
+            'success': True,
+            'message': message
+        })
+    except subprocess.CalledProcessError as e:
+        return jsonify({
+            'success': False,
+            'error': f'Command failed: {e.cmd}\nOutput: {e.output}'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+@app.route('/api/hostapd/status')
+def hostapd_status():
+    try:
+        # Get AP status
+        result = subprocess.run(['sudo', '/usr/bin/wifi-ap-sta', 'status'], 
+                              capture_output=True, text=True)
+        
+        status = 'running' if 'State: active' in result.stdout else 'stopped'
+        
+        # Get connected clients
+        clients = []
+        if status == 'running':
+            # Parse hostapd_cli output for connected clients
+            client_result = subprocess.run(['sudo', 'hostapd_cli', 'all_sta'], 
+                                         capture_output=True, text=True)
+            for line in client_result.stdout.splitlines():
+                if '=' in line:
+                    key, value = line.split('=')
+                    if key == 'addr':
+                        clients.append({
+                            'mac': value,
+                            'signal': 'N/A',  # You might want to parse this from hostapd_cli
+                            'tx_rate': 'N/A',
+                            'rx_rate': 'N/A'
+                        })
+
+        # Get channel information
+        channel = None
+        if status == 'running':
+            channel_result = subprocess.run(['sudo', 'hostapd_cli', 'get_config'], 
+                                          capture_output=True, text=True)
+            for line in channel_result.stdout.splitlines():
+                if line.startswith('channel='):
+                    channel = line.split('=')[1]
+
+        return jsonify({
+            'success': True,
+            'status': status,
             'clients': clients,
             'channel': channel
         })
+    except subprocess.CalledProcessError as e:
+        return jsonify({
+            'success': False,
+            'error': f'Command failed: {e.cmd}\nOutput: {e.output}'
+        })
     except Exception as e:
-        app.logger.error(f'Error getting hostapd status: {str(e)}')
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+@app.route('/api/hostapd/interface_status')
+def hostapd_interface_status():
+    try:
+        # Check if interface exists
+        result = subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], 
+                              capture_output=True, text=True)
+        exists = result.returncode == 0
+        
+        if exists:
+            # Check if interface is up
+            is_up = 'state UP' in result.stdout
+            
+            # Check if interface has IP
+            ip_result = subprocess.run(['ip', 'addr', 'show', 'wlan_ap0'], 
+                                     capture_output=True, text=True)
+            has_ip = 'inet ' in ip_result.stdout
+        else:
+            is_up = False
+            has_ip = False
+
+        return jsonify({
+            'success': True,
+            'exists': exists,
+            'is_up': is_up,
+            'has_ip': has_ip
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
 
 def read_lines_filter(filename):
     try:
