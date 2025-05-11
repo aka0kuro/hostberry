@@ -1571,9 +1571,12 @@ def wifi_status():
             wifi_enabled = 'enabled' in result.stdout.lower()
             if not wifi_enabled:
                 # Try to enable WiFi
-                subprocess.run(['nmcli', 'radio', 'wifi', 'on'], check=True)
-                time.sleep(2)  # Wait for WiFi to enable
-                wifi_enabled = True
+                try:
+                    subprocess.run(['nmcli', 'radio', 'wifi', 'on'], check=True)
+                    time.sleep(2)  # Wait for WiFi to enable
+                    wifi_enabled = True
+                except subprocess.CalledProcessError as e:
+                    app.logger.error(f"Error enabling WiFi radio: {str(e)}")
         except Exception as e:
             app.logger.error(f"Error checking WiFi radio status: {str(e)}")
 
@@ -1584,14 +1587,18 @@ def wifi_status():
             interface_active = result.returncode == 0 and 'state UP' in result.stdout
             if not interface_active:
                 # Try to bring interface up
-                subprocess.run(['ip', 'link', 'set', 'wlan0', 'up'], check=True)
-                time.sleep(1)  # Wait for interface to come up
-                interface_active = True
+                try:
+                    subprocess.run(['ip', 'link', 'set', 'wlan0', 'up'], check=True)
+                    time.sleep(1)  # Wait for interface to come up
+                    interface_active = True
+                except subprocess.CalledProcessError as e:
+                    app.logger.error(f"Error bringing up wlan0: {str(e)}")
         except Exception as e:
             app.logger.error(f"Error checking wlan0 status: {str(e)}")
 
         # Obtener conexión actual
         current_connection = None
+        connection_info = None
         try:
             result = subprocess.run(['nmcli', '-t', '-f', 'NAME,TYPE,DEVICE', 'connection', 'show', '--active'], 
                                   capture_output=True, text=True)
@@ -1599,6 +1606,18 @@ def wifi_status():
                 for line in result.stdout.splitlines():
                     if 'wifi' in line.lower():
                         current_connection = line.split(':')[0]
+                        # Get signal strength if connected
+                        try:
+                            signal_result = subprocess.run(['nmcli', '-f', 'SIGNAL', 'device', 'wifi', 'list', 'ifname', 'wlan0'], 
+                                                         capture_output=True, text=True)
+                            if signal_result.returncode == 0:
+                                for signal_line in signal_result.stdout.splitlines():
+                                    if current_connection in signal_line:
+                                        signal = signal_line.split()[0]
+                                        connection_info = {'signal': signal}
+                                        break
+                        except Exception as e:
+                            app.logger.error(f"Error getting signal strength: {str(e)}")
                         break
         except Exception as e:
             app.logger.error(f"Error getting current connection: {str(e)}")
@@ -1619,11 +1638,12 @@ def wifi_status():
 
         return jsonify({
             'success': True,
-            'wifi_enabled': wifi_enabled,
+            'enabled': wifi_enabled,
             'interface_active': interface_active,
             'current_connection': current_connection,
             'current_ssid': current_ssid,
-            'ip_address': ip_address
+            'ip_address': ip_address,
+            'connection_info': connection_info
         })
     except Exception as e:
         app.logger.error(f"Error in wifi_status: {str(e)}")
