@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Primera fila: Iconos principales -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <a href="{{ url_for('adblock_config') }}" class="card-link">
+                    <div class="card-body text-center">
+                        <i class="bi bi-shield-shaded fs-1 {% if not adblock_enabled %}text-secondary{% endif %}"></i>
+                        <h5 class="card-title mt-3">{% trans %}AdBlock{% endtrans %}</h5>
+                        <span class="badge {% if adblock_enabled %}bg-success{% else %}bg-secondary{% endif %}">
+                            {% if adblock_enabled %}{% trans %}Activo{% endtrans %}{% else %}{% trans %}Inactivo{% endtrans %}{% endif %}
+                        </span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <a href="{{ url_for('vpn_config_api') }}" class="card-link">
+                    <div class="card-body text-center">
+                        <i class="bi bi-lock fs-1 {% if not vpn_enabled %}text-secondary{% endif %}"></i>
+                        <h5 class="card-title mt-3">{% trans %}VPN{% endtrans %}</h5>
+                        <span class="badge {% if vpn_enabled %}bg-success{% else %}bg-secondary{% endif %}">
+                            {% if vpn_enabled %}{% trans %}Activo{% endtrans %}{% else %}{% trans %}Inactivo{% endtrans %}{% endif %}
+                        </span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <a href="{{ url_for('security_config') }}" class="card-link">
+                    <div class="card-body text-center">
+                        <i class="bi bi-fire fs-1 {% if not firewall_enabled %}text-secondary{% endif %}"></i>
+                        <h5 class="card-title mt-3">{% trans %}Firewall{% endtrans %}</h5>
+                        <span class="badge {% if firewall_enabled %}bg-success{% else %}bg-secondary{% endif %}">
+                            {% if firewall_enabled %}{% trans %}Activo{% endtrans %}{% else %}{% trans %}Inactivo{% endtrans %}{% endif %}
+                        </span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-center"><i class="bi bi-speedometer2"></i> {% trans %}Estado del Sistema{% endtrans %}</h5>
+                    <div class="row text-center">
+                        <div class="col">
+                            <div><i class="bi bi-cpu"></i></div>
+                            <div>{{ stats.cpu_usage }}%</div>
+                            <small>CPU</small>
+                        </div>
+                        <div class="col">
+                            <div><i class="bi bi-thermometer-half"></i></div>
+                            <div>{{ stats.cpu_temp }}°C</div>
+                            <small>{% trans %}Temp{% endtrans %}</small>
+                        </div>
+                        <div class="col">
+                            <div><i class="bi bi-memory"></i></div>
+                            <div>{{ stats.memory_usage }}%</div>
+                            <small>{% trans %}Memoria{% endtrans %}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-center"><i class="bi bi-diagram-3"></i> {% trans %}Red Conectada{% endtrans %}</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>Interfaz:</strong> {{ network_interface }}</li>
+                        <li class="list-group-item"><strong>IP local:</strong> {{ local_ip }}</li>
+                        <li class="list-group-item"><strong>SSID WiFi:</strong> {{ wifi_ssid if wifi_ssid else 'N/A' }}</li>
+                        <li class="list-group-item"><strong>hostapd:</strong> {{ hostapd_status }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tercera fila: Logs y Network -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-journal-text"></i> {% trans %}Registros del Sistema{% endtrans %}</h5>
+                    <div class="log-container">
+                        {% if logs and logs is iterable %}
+                            {% for log in logs %}
+                                {% if log.timestamp and log.message %}
+                                    <div class="log-entry">
+                                        <small class="text-muted">{{ log.timestamp }}</small>
+                                        <p class="mb-1">{{ log.message }}</p>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">{% trans %}No hay registros disponibles{% endtrans %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-graph-up"></i> {% trans %}Tráfico de Red{% endtrans %}</h5>
+                    <div style="height: 150px">
+                        <canvas id="networkChart"></canvas>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <small class="text-primary"><i class="bi bi-upload"></i> <span id="uploadValue">0</span> KB/s</small>
+                        <small class="text-success"><i class="bi bi-download"></i> <span id="downloadValue">0</span> KB/s</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'network_chart_script.html' %}
+{% endblock %}

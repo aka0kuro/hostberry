@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5>{% trans %}WireGuard Configuration{% endtrans %}</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="wg_file" class="form-label"><i class="bi bi-file-earmark-arrow-up me-1"></i>{% trans %}Upload WireGuard Configuration (.conf){% endtrans %}</label>
+                <input class="form-control" type="file" id="wg_file" name="wg_file" accept=".conf" required>
+            </div>
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-primary btn-lg shadow"><i class="bi bi-upload me-1"></i> {% trans %}Upload & Apply{% endtrans %}</button>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary btn-lg"><i class="bi bi-x-circle"></i> {% trans %}Cancel{% endtrans %}</a>
+            </div>
+        </form>
+        <hr>
+        <p class="text-muted">{% trans %}Upload a valid WireGuard configuration file (.conf) to configure the tunnel. The system will apply the configuration automatically. Make sure wireguard-tools is installed.{% endtrans %}</p>
+        {% if status %}
+        <hr>
+        <div class="alert alert-success">
+            <strong>{% trans %}Status:{% endtrans %}</strong> Interface <code>wg0</code> is <b>{% if interface_active %}{% trans %}active{% endtrans %}{% else %}{% trans %}inactive{% endtrans %}{% endif %}</b>.<br>
+            {% if ip %}<strong>{% trans %}IP:{% endtrans %}</strong> <code>{{ ip }}</code><br>{% endif %}
+            <form method="post" class="d-inline">
+                <input type="hidden" name="action" value="down">
+                <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-x-octagon"></i> {% trans %}Deactivate{% endtrans %}</button>
+            </form>
+            {% if peers and peers|length > 0 %}
+                <strong>{% trans %}Peers:{% endtrans %}</strong>
+                <ul>
+                {% for peer in peers %}
+                    <li>
+                        <b>{% trans %}PubKey:{% endtrans %}</b> <code>{{ peer.pubkey }}</code><br>
+                        <b>{% trans %}Endpoint:{% endtrans %}</b> <code>{{ peer.endpoint }}</code><br>
+                        <b>{% trans %}Allowed IPs:{% endtrans %}</b> <code>{{ peer.allowed }}</code><br>
+                        <b>{% trans %}Latest Handshake:{% endtrans %}</b> {{ peer.handshake }}<br>
+                        <b>{% trans %}Transfer:{% endtrans %}</b> {{ peer.transfer }}
+                    </li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <em>{% trans %}No peers configured.{% endtrans %}</em>
+            {% endif %}
+        </div>
+        {% else %}
+        <hr>
+        <div class="alert alert-warning">
+            <strong>{% trans %}Status:{% endtrans %}</strong> Interface <code>wg0</code> is <b>{% trans %}inactive{% endtrans %}</b> {% trans %}or not configured.{% endtrans %}
+            <form method="post" class="d-inline">
+                <input type="hidden" name="action" value="up">
+                <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check-circle"></i> {% trans %}Activate{% endtrans %}</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,214 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-05-03 03:04+0200\n"
+"PO-Revision-Date: 2025-05-03 03:04+0200\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.10.3\n"
+
+#: app.py:35
+msgid "Index"
+msgstr "Index"
+
+#: app.py:45
+msgid "Your IP is not allowed."
+msgstr "Your IP is not allowed."
+
+#: app.py:54
+msgid "Too many failed attempts."
+msgstr "Too many failed attempts."
+
+#: app.py:67
+msgid "Invalid SSH port. Attempt counted as failed."
+msgstr "Invalid SSH port. Attempt counted as failed."
+
+#: app.py:73
+msgid "Access denied."
+msgstr "Access denied."
+
+#: app.py:88
+msgid "00:00"
+msgstr "00:00"
+
+#: app.py:88
+msgid "01:00"
+msgstr "01:00"
+
+#: app.py:88
+msgid "02:00"
+msgstr "02:00"
+
+#: app.py:88
+msgid "03:00"
+msgstr "03:00"
+
+#: app.py:88
+msgid "04:00"
+msgstr "04:00"
+
+#: app.py:88
+msgid "05:00"
+msgstr "05:00"
+
+#: app.py:88
+msgid "06:00"
+msgstr "06:00"
+
+#: app.py:88
+msgid "07:00"
+msgstr "07:00"
+
+#: app.py:88
+msgid "08:00"
+msgstr "08:00"
+
+#: app.py:88
+msgid "09:00"
+msgstr "09:00"
+
+#: app.py:88
+msgid "10:00"
+msgstr "10:00"
+
+#: app.py:116
+msgid "Network configuration updated successfully!"
+msgstr "Network configuration updated successfully!"
+
+#: app.py:135
+msgid "Security configuration updated successfully!"
+msgstr "Security configuration updated successfully!"
+
+#: app.py:150
+msgid "Monitoring configuration updated successfully!"
+msgstr "Monitoring configuration updated successfully!"
+
+#: app.py:148
+msgid "System Information"
+msgstr "System Information"
+
+#: app.py:163
+msgid "Configuration applied successfully!"
+msgstr "Configuration applied successfully!"
+
+#: app.py:165
+#, python-format
+msgid "Error applying configuration: %(error)s"
+msgstr "Error applying configuration: %(error)s"
+
+#: app.py:172
+msgid "Network"
+msgstr "Network"
+
+#: app.py:176
+msgid "No file part"
+msgstr "No file part"
+
+#: app.py:176
+msgid "No selected file"
+msgstr "No selected file"
+
+#: app.py:188
+msgid "VPN configuration uploaded and OpenVPN restarted!"
+msgstr "VPN configuration uploaded and OpenVPN restarted!"
+
+#: app.py:190
+#, python-format
+msgid "VPN uploaded but failed to restart OpenVPN: %(error)s"
+msgstr "VPN uploaded but failed to restart OpenVPN: %(error)s"
+
+#: app.py:207
+msgid "AdBlock enabled and blacklist applied!"
+msgstr "AdBlock enabled and blacklist applied!"
+
+#: app.py:209
+#, python-format
+msgid "AdBlock could not be applied: %(error)s"
+msgstr "AdBlock could not be applied: %(error)s"
+
+#: app.py:213
+msgid "AdBlock disabled."
+msgstr "AdBlock disabled."
+
+#: app.py:215
+#, python-format
+msgid "AdBlock could not be disabled: %(error)s"
+msgstr "AdBlock could not be disabled: %(error)s"
+
+#: app.py:208
+msgid "CPU Temperature"
+msgstr "CPU Temperature"
+
+#: app.py:224
+msgid "Error loading system information"
+msgstr "Error loading system information"
+
+#: app.py:242
+#, python-format
+msgid "%(rx)s received, %(tx)s sent"
+msgstr "%(rx)s received, %(tx)s sent"
+
+#: app.py:251
+msgid "WireGuard interface activated."
+msgstr "WireGuard interface activated."
+
+#: app.py:253
+#, python-format
+msgid "Failed to activate WireGuard: %(error)s"
+msgstr "Failed to activate WireGuard: %(error)s"
+
+#: app.py:257
+msgid "WireGuard interface deactivated."
+msgstr "WireGuard interface deactivated."
+
+#: app.py:259
+#, python-format
+msgid "Failed to deactivate WireGuard: %(error)s"
+msgstr "Failed to deactivate WireGuard: %(error)s"
+
+#: app.py:273
+msgid "WireGuard configuration uploaded and applied successfully."
+msgstr "WireGuard configuration uploaded and applied successfully."
+
+#: app.py:275
+#, python-format
+msgid "WireGuard configuration uploaded but failed to apply: %(error)s"
+msgstr "WireGuard configuration uploaded but failed to apply: %(error)s"
+
+#: app.py:277
+msgid "Invalid file. Please upload a .conf file."
+msgstr "Invalid file. Please upload a .conf file."
+
+#: templates/index.html:13
+msgid "Activo"
+msgstr "Active"
+
+#: templates/index.html:13
+msgid "Inactivo"
+msgstr "Inactive"
+
+#: templates/index.html:50
+msgid "Estado del Sistema"
+msgstr "System Status"
+
+#: templates/index.html:57
+msgid "Temp"
+msgstr "Temperature"
+
+#: templates/index.html:60
+msgid "Memoria"
+msgstr "Memory"
+
+#: templates/index.html:78
+msgid "Registros del Sistema"
+msgstr "System Logs"
+
+#: templates/index.html:101
+msgid "Tráfico de Red"
+msgstr "Network Traffic"

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{% trans %}Security Logs{% endtrans %}</h1>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">{% trans %}Recent Security Events{% endtrans %}</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>{% trans %}Timestamp{% endtrans %}</th>
+                            <th>{% trans %}IP Address{% endtrans %}</th>
+                            <th>{% trans %}Action{% endtrans %}</th>
+                            <th>{% trans %}Reason{% endtrans %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td>{{ log.timestamp }}</td>
+                            <td>{{ log.ip }}</td>
+                            <td>{{ log.action }}</td>
+                            <td>{{ log.reason }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4">{% trans %}No security events logged{% endtrans %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <a href="{{ url_for('security_config') }}" class="btn btn-primary mt-3">
+                <i class="bi bi-arrow-left me-1"></i> {% trans %}Back to Security{% endtrans %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
