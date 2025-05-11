@@ -367,7 +367,30 @@ document.addEventListener('DOMContentLoaded', function() {
         toast.show();
     }
 
-    // Update AP status
+    // Add interface status check with more detailed verification
+    async function checkInterfaceStatus() {
+        try {
+            const response = await fetch('/api/hostapd/interface_status');
+            const data = await response.json();
+            
+            if (!data.success) {
+                console.error('Interface status check failed:', data.error);
+                return { exists: false, error: data.error };
+            }
+            
+            return {
+                exists: data.exists,
+                isUp: data.is_up,
+                hasIp: data.has_ip,
+                error: null
+            };
+        } catch (error) {
+            console.error('Error checking interface:', error);
+            return { exists: false, error: error.message };
+        }
+    }
+
+    // Update status display with more detailed information
     async function updateStatus() {
         try {
             const response = await fetch('/api/hostapd/status');
@@ -375,7 +398,28 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (data.success) {
                 const status = data.status;
-                apStatus.textContent = status === 'running' ? '{% trans %}Running{% endtrans %}' : '{% trans %}Stopped{% endtrans %}';
+                const interfaceStatus = await checkInterfaceStatus();
+                
+                // Update AP status with more detailed information
+                if (status === 'running') {
+                    if (!interfaceStatus.exists) {
+                        apStatus.textContent = '{% trans %}Error: Interface Missing{% endtrans %}';
+                        apStatus.className = 'h5 mb-0 font-weight-bold text-danger';
+                    } else if (!interfaceStatus.isUp) {
+                        apStatus.textContent = '{% trans %}Error: Interface Down{% endtrans %}';
+                        apStatus.className = 'h5 mb-0 font-weight-bold text-danger';
+                    } else if (!interfaceStatus.hasIp) {
+                        apStatus.textContent = '{% trans %}Error: No IP Address{% endtrans %}';
+                        apStatus.className = 'h5 mb-0 font-weight-bold text-danger';
+                    } else {
+                        apStatus.textContent = '{% trans %}Running{% endtrans %}';
+                        apStatus.className = 'h5 mb-0 font-weight-bold text-success';
+                    }
+                } else {
+                    apStatus.textContent = '{% trans %}Stopped{% endtrans %}';
+                    apStatus.className = 'h5 mb-0 font-weight-bold text-gray-800';
+                }
+
                 toggleText.textContent = status === 'running' ? '{% trans %}Stop AP{% endtrans %}' : '{% trans %}Start AP{% endtrans %}';
                 clientCount.textContent = data.clients.length;
                 currentChannel.textContent = data.channel || '-';
@@ -389,6 +433,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     row.insertCell(2).textContent = client.tx_rate;
                     row.insertCell(3).textContent = client.rx_rate;
                 });
+
+                // Show warning if interface has issues
+                if (status === 'running' && interfaceStatus.error) {
+                    showToast('{% trans %}Warning{% endtrans %}', 
+                        `{% trans %}AP is running but interface has issues:{% endtrans %}\n${interfaceStatus.error}`, 
+                        'warning');
+                }
             }
         } catch (error) {
             console.error('Error updating status:', error);
@@ -491,19 +542,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Add interface status check
-    async function checkInterfaceStatus() {
-        try {
-            const response = await fetch('/api/hostapd/interface_status');
-            const data = await response.json();
-            return data.exists;
-        } catch (error) {
-            console.error('Error checking interface:', error);
-            return false;
-        }
-    }
-
-    // Update form submission to handle interface creation
+    // Update form submission with better error handling
     apConfigForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(this);
@@ -527,10 +566,15 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Check if interface exists
-        const interfaceExists = await checkInterfaceStatus();
-        if (!interfaceExists) {
+        // Check interface status with detailed verification
+        const interfaceStatus = await checkInterfaceStatus();
+        if (!interfaceStatus.exists) {
             showToast('{% trans %}Info{% endtrans %}', '{% trans %}Creating virtual interface wlan_ap0...{% endtrans %}', 'info');
+        } else if (interfaceStatus.error) {
+            showToast('{% trans %}Error{% endtrans %}', 
+                `{% trans %}Interface issues detected:{% endtrans %}\n${interfaceStatus.error}`, 
+                'danger');
+            return;
         }
 
         const data = {
@@ -549,7 +593,8 @@ document.addEventListener('DOMContentLoaded', function() {
             dhcp_start: dhcpStart,
             dhcp_end: dhcpEnd,
             enable_passthrough: enablePassthrough,
-            create_interface: !interfaceExists
+            create_interface: !interfaceStatus.exists,
+            fix_interface: interfaceStatus.exists && (!interfaceStatus.isUp || !interfaceStatus.hasIp)
         };
 
         try {
@@ -568,24 +613,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 showToast('{% trans %}Success{% endtrans %}', result.message);
                 await updateStatus();
             } else {
-                // Show detailed error message
                 let errorMessage = result.error || '{% trans %}Failed to save configuration{% endtrans %}';
                 
-                // Add specific error handling
+                // Enhanced error handling
                 if (errorMessage.includes('wlan_ap0')) {
-                    errorMessage = '{% trans %}Error managing wireless interface. Please ensure:{% endtrans %}\n' +
-                        '1. {% trans %}Wireless card is enabled{% endtrans %}\n' +
-                        '2. {% trans %}You have sufficient permissions{% endtrans %}\n' +
-                        '3. {% trans %}No other process is using the interface{% endtrans %}';
+                    errorMessage = '{% trans %}Error managing wireless interface. Please try the following:{% endtrans %}\n' +
+                        '1. {% trans %}Enable wireless card:{% endtrans %} `sudo rfkill unblock wifi`\n' +
+                        '2. {% trans %}Check permissions:{% endtrans %} `sudo chown root:root /usr/bin/wifi-ap-sta`\n' +
+                        '3. {% trans %}Check interface status:{% endtrans %} `ip link show wlan_ap0`\n' +
+                        '4. {% trans %}Restart networking:{% endtrans %} `sudo systemctl restart networking`\n' +
+                        '5. {% trans %}Check hostapd status:{% endtrans %} `sudo systemctl status hostapd`';
                 }
                 
                 showToast('{% trans %}Error{% endtrans %}', errorMessage, 'danger');
-                
-                // Log the error for debugging
                 console.error('Configuration error:', {
                     error: result.error,
                     details: result.details,
-                    config: data
+                    config: data,
+                    interfaceStatus: interfaceStatus
                 });
             }
         } catch (error) {
