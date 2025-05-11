@@ -491,7 +491,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Update form submission to include new fields
+    // Add interface status check
+    async function checkInterfaceStatus() {
+        try {
+            const response = await fetch('/api/hostapd/interface_status');
+            const data = await response.json();
+            return data.exists;
+        } catch (error) {
+            console.error('Error checking interface:', error);
+            return false;
+        }
+    }
+
+    // Update form submission to handle interface creation
     apConfigForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(this);
@@ -512,8 +524,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (!validateDhcpRange()) {
-            showToast('{% trans %}Error{% endtrans %}', '{% trans %}Invalid DHCP range. Please ensure both IPs are in the same subnet and start IP is less than end IP.{% endtrans %}', 'danger');
             return;
+        }
+
+        // Check if interface exists
+        const interfaceExists = await checkInterfaceStatus();
+        if (!interfaceExists) {
+            showToast('{% trans %}Info{% endtrans %}', '{% trans %}Creating virtual interface wlan_ap0...{% endtrans %}', 'info');
         }
 
         const data = {
@@ -531,23 +548,9 @@ document.addEventListener('DOMContentLoaded', function() {
             rsn_pairwise: 'CCMP',
             dhcp_start: dhcpStart,
             dhcp_end: dhcpEnd,
-            enable_passthrough: enablePassthrough
+            enable_passthrough: enablePassthrough,
+            create_interface: !interfaceExists
         };
-
-        // Check hostapd service status first
-        try {
-            const statusResponse = await fetch('/api/hostapd/status');
-            const statusData = await statusResponse.json();
-            
-            if (!statusData.success) {
-                showToast('{% trans %}Error{% endtrans %}', '{% trans %}hostapd service is not available. Please install and enable hostapd first.{% endtrans %}', 'danger');
-                return;
-            }
-        } catch (error) {
-            console.error('Error checking hostapd status:', error);
-            showToast('{% trans %}Error{% endtrans %}', '{% trans %}Failed to check hostapd status. Please ensure hostapd is installed and running.{% endtrans %}', 'danger');
-            return;
-        }
 
         try {
             const response = await fetch('/api/hostapd/config', {
@@ -566,7 +569,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 await updateStatus();
             } else {
                 // Show detailed error message
-                const errorMessage = result.error || '{% trans %}Failed to save configuration{% endtrans %}';
+                let errorMessage = result.error || '{% trans %}Failed to save configuration{% endtrans %}';
+                
+                // Add specific error handling
+                if (errorMessage.includes('wlan_ap0')) {
+                    errorMessage = '{% trans %}Error managing wireless interface. Please ensure:{% endtrans %}\n' +
+                        '1. {% trans %}Wireless card is enabled{% endtrans %}\n' +
+                        '2. {% trans %}You have sufficient permissions{% endtrans %}\n' +
+                        '3. {% trans %}No other process is using the interface{% endtrans %}';
+                }
+                
                 showToast('{% trans %}Error{% endtrans %}', errorMessage, 'danger');
                 
                 // Log the error for debugging
