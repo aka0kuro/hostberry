@@ -1668,155 +1668,187 @@ def check_wifi_credentials():
             'error': f'Error al verificar credenciales: {str(e)}'
         }), 500
 
+def auto_connect_last_wifi():
+    """Intenta reconectar a la última red WiFi guardada al inicio del sistema."""
+    try:
+        # Verificar si hay una conexión activa
+        if is_wifi_connected():
+            app.logger.info("Ya hay una conexión WiFi activa")
+            return
+
+        # Obtener la última red guardada
+        last_network = get_last_connected_network()
+        if not last_network:
+            app.logger.info("No hay red guardada para reconectar")
+            return
+
+        # Verificar si hay credenciales guardadas
+        credentials = get_wifi_credentials(last_network['ssid'])
+        if not credentials:
+            app.logger.info(f"No hay credenciales guardadas para {last_network['ssid']}")
+            return
+
+        # Intentar la conexión
+        app.logger.info(f"Intentando reconectar a {last_network['ssid']}")
+        if last_network['security'] == 'Open':
+            subprocess.check_call(['nmcli', 'device', 'wifi', 'connect', last_network['ssid']])
+        else:
+            subprocess.check_call(['nmcli', 'device', 'wifi', 'connect', last_network['ssid'], 'password', credentials['password']])
+        
+        app.logger.info(f"Reconexión exitosa a {last_network['ssid']}")
+    except Exception as e:
+        app.logger.error(f"Error en reconexión automática: {str(e)}")
+
+def get_last_connected_network():
+    """Obtiene la información de la última red conectada."""
+    try:
+        with open('/etc/hostberry/last_wifi.json', 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+
+def save_last_connected_network(ssid, security):
+    """Guarda la información de la última red conectada."""
+    try:
+        os.makedirs('/etc/hostberry', exist_ok=True)
+        with open('/etc/hostberry/last_wifi.json', 'w') as f:
+            json.dump({
+                'ssid': ssid,
+                'security': security,
+                'timestamp': datetime.now().isoformat()
+            }, f)
+    except Exception as e:
+        app.logger.error(f"Error guardando última red: {str(e)}")
+
+# Modificar la función wifi_connect para guardar la última red
 @app.route('/api/wifi/connect', methods=['GET', 'POST'])
 def wifi_connect():
     try:
-        app.logger.info('Recibida solicitud de conexión WiFi')
-        
         if request.method == 'POST':
-            if not request.is_json:
-                app.logger.error('Content-Type no es application/json')
+            data = request.get_json()
+            ssid = data.get('ssid')
+            password = data.get('password')
+            security = data.get('security', 'Open')
+            save_credentials = data.get('save_credentials', False)
+
+            if not ssid:
+                return jsonify({'success': False, 'error': 'No SSID provided'})
+
+            # Guardar la última red conectada
+            save_last_connected_network(ssid, security)
+
+            # Resto del código existente...
+            if not ssid:
+                app.logger.error('SSID no proporcionado')
                 return jsonify({
                     'success': False,
-                    'error': 'Content-Type debe ser application/json'
+                    'error': 'El SSID es requerido'
                 }), 400
 
+            # Normalizar tipo de seguridad
+            security = security.upper()
+            if security not in ['OPEN', 'WPA', 'WPA2', 'WPA3', 'WEP']:
+                security = 'WPA2'  # Por defecto asumimos WPA2 para redes protegidas
+
+            if security != 'OPEN' and not password:
+                # Intentar recuperar contraseña guardada
+                saved_password = get_wifi_credentials(ssid)
+                if saved_password:
+                    password = saved_password
+                else:
+                    app.logger.error('Contraseña faltante para red protegida')
+                    return jsonify({
+                        'success': False,
+                        'error': 'La contraseña es requerida para redes protegidas'
+                    }), 400
+
+            # Intentar conectar usando nmcli
             try:
-                data = request.get_json()
-                app.logger.debug(f'Datos recibidos: {data}')
-            except Exception as e:
-                app.logger.error(f'Error al parsear JSON: {str(e)}')
-                return jsonify({
-                    'success': False,
-                    'error': 'Error al procesar los datos JSON'
-                }), 400
-        else:  # GET request
-            data = request.args
-
-        if not data:
-            app.logger.error('No se recibieron datos')
-            return jsonify({
-                'success': False,
-                'error': 'No se recibieron datos'
-            }), 400
-
-        # Validar y normalizar datos
-        ssid = data.get('ssid', '').strip()
-        security = data.get('security', 'Open').strip()
-        password = data.get('password', '').strip()
-        save_credentials = data.get('save_credentials', False)
-
-        if not ssid:
-            app.logger.error('SSID no proporcionado')
-            return jsonify({
-                'success': False,
-                'error': 'El SSID es requerido'
-            }), 400
-
-        # Normalizar tipo de seguridad
-        security = security.upper()
-        if security not in ['OPEN', 'WPA', 'WPA2', 'WPA3', 'WEP']:
-            security = 'WPA2'  # Por defecto asumimos WPA2 para redes protegidas
-
-        if security != 'OPEN' and not password:
-            # Intentar recuperar contraseña guardada
-            saved_password = get_wifi_credentials(ssid)
-            if saved_password:
-                password = saved_password
-            else:
-                app.logger.error('Contraseña faltante para red protegida')
-                return jsonify({
-                    'success': False,
-                    'error': 'La contraseña es requerida para redes protegidas'
-                }), 400
-
-        # Intentar conectar usando nmcli
-        try:
-            # Primero intentamos eliminar cualquier conexión existente con el mismo SSID
-            subprocess.run(['nmcli', 'connection', 'delete', ssid], 
-                         capture_output=True, 
-                         check=False)
-            
-            # Crear nueva conexión
-            if security == 'OPEN':
-                cmd = ['nmcli', 'device', 'wifi', 'connect', ssid]
-            else:
-                # Para redes protegidas, primero eliminamos cualquier conexión existente
+                # Primero intentamos eliminar cualquier conexión existente con el mismo SSID
                 subprocess.run(['nmcli', 'connection', 'delete', ssid], 
                              capture_output=True, 
                              check=False)
                 
-                # Guardar credenciales si se solicitó
-                if save_credentials and security != 'OPEN':
-                    if save_wifi_credentials(ssid, password):
-                        app.logger.info(f'Credenciales guardadas para {ssid}')
+                # Crear nueva conexión
+                if security == 'OPEN':
+                    cmd = ['nmcli', 'device', 'wifi', 'connect', ssid]
+                else:
+                    # Para redes protegidas, primero eliminamos cualquier conexión existente
+                    subprocess.run(['nmcli', 'connection', 'delete', ssid], 
+                                 capture_output=True, 
+                                 check=False)
+                    
+                    # Guardar credenciales si se solicitó
+                    if save_credentials and security != 'OPEN':
+                        if save_wifi_credentials(ssid, password):
+                            app.logger.info(f'Credenciales guardadas para {ssid}')
+                        else:
+                            app.logger.warning(f'No se pudieron guardar las credenciales para {ssid}')
+                    
+                    # Creamos una nueva conexión con los parámetros de seguridad
+                    if security in ['WPA', 'WPA2', 'WPA3']:
+                        cmd = [
+                            'nmcli', 'connection', 'add',
+                            'type', 'wifi',
+                            'con-name', ssid,
+                            'ifname', 'wlan0',
+                            'ssid', ssid,
+                            'wifi-sec.key-mgmt', 'wpa-psk',
+                            'wifi-sec.psk', password,
+                            'connection.autoconnect', 'yes'  # Habilitar autoconexión
+                        ]
+                    elif security == 'WEP':
+                        cmd = [
+                            'nmcli', 'connection', 'add',
+                            'type', 'wifi',
+                            'con-name', ssid,
+                            'ifname', 'wlan0',
+                            'ssid', ssid,
+                            'wifi-sec.key-mgmt', 'none',
+                            'wifi-sec.auth-alg', 'open',
+                            'wifi-sec.wep-key-type', 'key',
+                            'wifi-sec.wep-key0', password,
+                            'connection.autoconnect', 'yes'  # Habilitar autoconexión
+                        ]
+                    
+                    # Ejecutamos el comando de creación
+                    app.logger.info(f'Ejecutando comando de creación: {" ".join(cmd)}')
+                    result = subprocess.run(cmd, capture_output=True, text=True)
+                    
+                    if result.returncode == 0:
+                        # Si la creación fue exitosa, activamos la conexión
+                        cmd = ['nmcli', 'connection', 'up', ssid]
                     else:
-                        app.logger.warning(f'No se pudieron guardar las credenciales para {ssid}')
+                        error_msg = result.stderr.strip() or 'Error desconocido al crear la conexión'
+                        app.logger.error(f'Error al crear conexión WiFi: {error_msg}')
+                        return jsonify({
+                            'success': False,
+                            'error': f'Error al crear conexión: {error_msg}'
+                        }), 400
                 
-                # Creamos una nueva conexión con los parámetros de seguridad
-                if security in ['WPA', 'WPA2', 'WPA3']:
-                    cmd = [
-                        'nmcli', 'connection', 'add',
-                        'type', 'wifi',
-                        'con-name', ssid,
-                        'ifname', 'wlan0',
-                        'ssid', ssid,
-                        'wifi-sec.key-mgmt', 'wpa-psk',
-                        'wifi-sec.psk', password,
-                        'connection.autoconnect', 'yes'  # Habilitar autoconexión
-                    ]
-                elif security == 'WEP':
-                    cmd = [
-                        'nmcli', 'connection', 'add',
-                        'type', 'wifi',
-                        'con-name', ssid,
-                        'ifname', 'wlan0',
-                        'ssid', ssid,
-                        'wifi-sec.key-mgmt', 'none',
-                        'wifi-sec.auth-alg', 'open',
-                        'wifi-sec.wep-key-type', 'key',
-                        'wifi-sec.wep-key0', password,
-                        'connection.autoconnect', 'yes'  # Habilitar autoconexión
-                    ]
-                
-                # Ejecutamos el comando de creación
-                app.logger.info(f'Ejecutando comando de creación: {" ".join(cmd)}')
+                app.logger.info(f'Ejecutando comando: {" ".join(cmd)}')
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 
                 if result.returncode == 0:
-                    # Si la creación fue exitosa, activamos la conexión
-                    cmd = ['nmcli', 'connection', 'up', ssid]
+                    app.logger.info(f'Conexión exitosa a {ssid}')
+                    return jsonify({
+                        'success': True,
+                        'message': f'Conectado exitosamente a {ssid}'
+                    })
                 else:
-                    error_msg = result.stderr.strip() or 'Error desconocido al crear la conexión'
-                    app.logger.error(f'Error al crear conexión WiFi: {error_msg}')
+                    error_msg = result.stderr.strip() or 'Error desconocido al conectar'
+                    app.logger.error(f'Error al conectar a WiFi: {error_msg}')
                     return jsonify({
                         'success': False,
-                        'error': f'Error al crear conexión: {error_msg}'
+                        'error': f'Error al conectar: {error_msg}'
                     }), 400
-            
-            app.logger.info(f'Ejecutando comando: {" ".join(cmd)}')
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            
-            if result.returncode == 0:
-                app.logger.info(f'Conexión exitosa a {ssid}')
-                return jsonify({
-                    'success': True,
-                    'message': f'Conectado exitosamente a {ssid}'
-                })
-            else:
-                error_msg = result.stderr.strip() or 'Error desconocido al conectar'
-                app.logger.error(f'Error al conectar a WiFi: {error_msg}')
+                    
+            except subprocess.CalledProcessError as e:
+                app.logger.error(f'Error en comando nmcli: {str(e)}')
                 return jsonify({
                     'success': False,
-                    'error': f'Error al conectar: {error_msg}'
-                }), 400
-                
-        except subprocess.CalledProcessError as e:
-            app.logger.error(f'Error en comando nmcli: {str(e)}')
-            return jsonify({
-                'success': False,
-                'error': f'Error en comando nmcli: {str(e)}'
-            }), 500
+                    'error': f'Error en comando nmcli: {str(e)}'
+                }), 500
 
     except Exception as e:
         app.logger.error(f'Error en wifi_connect: {str(e)}', exc_info=True)
@@ -2385,14 +2417,8 @@ def adblock_realtime_log():
     return jsonify({'domains': domains[::-1]})
 
 if __name__ == '__main__':
-    # Mostrar IP local al iniciar
-    import socket
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(('8.8.8.8', 80))
-        local_ip = s.getsockname()[0]
-        s.close()
-    except Exception:
-        local_ip = 'localhost'
-    print(f"\n[INFO] Accede a la app desde otros dispositivos en: http://{local_ip}:5000\n")
+    # Intentar reconexión automática al inicio
+    auto_connect_last_wifi()
+    
+    # Iniciar la aplicación
     app.run(host='0.0.0.0', port=5000, debug=True)
