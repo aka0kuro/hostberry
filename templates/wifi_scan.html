@@ -562,32 +562,47 @@ $('#wifiConnectForm').submit(async function(e) {
 // Helper to update general status display elements
 function updateStatusDisplay(statusData) {
     let wifiStatusText, wifiStatusClass = 'text-gray-800';
-    const isActuallyConnected = statusData.current_connection !== null;
+    const isActuallyConnected = statusData.current_connection !== null || statusData.current_ssid !== null || statusData.ip_address !== null;
 
     // First check for error state
     if (statusData.error) {
-        wifiStatusText = '{% trans %}Error{% endtrans %}';
-        wifiStatusClass = 'text-danger';
-        let errorMessage = '{% trans %}Error fetching WiFi status.{% endtrans %}';
-        
-        // Show more specific error message if available
-        if (typeof statusData.error === 'string') {
-            if (statusData.error.includes('Failed to configure WiFi interface')) {
-                errorMessage = '{% trans %}Failed to configure WiFi interface. Please check system logs.{% endtrans %}';
-            } else if (statusData.error.includes('Error enabling WiFi radio')) {
-                errorMessage = '{% trans %}Failed to enable WiFi radio. Please check system logs.{% endtrans %}';
-            } else if (statusData.error.includes('Error bringing up wlan0')) {
-                errorMessage = '{% trans %}Failed to activate WiFi interface. Please check system logs.{% endtrans %}';
-            } else if (statusData.error.includes('Error getting current connection')) {
-                errorMessage = '{% trans %}Failed to get current connection status. Please check system logs.{% endtrans %}';
-            } else {
-                errorMessage = statusData.error;
+        // If we have connection info despite the error, show connected state
+        if (isActuallyConnected) {
+            wifiStatusText = '{% trans %}Connected{% endtrans %}';
+            wifiStatusClass = 'text-success';
+            $('#wifiStatusAlert').addClass('d-none');
+            $('#enableWifiBtnInline, #enableWifiBtnTop').addClass('d-none');
+            
+            let connectionText = statusData.current_connection || statusData.current_ssid || '{% trans %}Connected{% endtrans %}';
+            if (statusData.connection_info && statusData.connection_info.signal) {
+                connectionText += ` (${statusData.connection_info.signal}%)`;
             }
+            $('#currentConnection').text(connectionText);
+        } else {
+            wifiStatusText = '{% trans %}Error{% endtrans %}';
+            wifiStatusClass = 'text-danger';
+            let errorMessage = '{% trans %}Error fetching WiFi status.{% endtrans %}';
+            
+            // Show more specific error message if available
+            if (typeof statusData.error === 'string') {
+                if (statusData.error.includes('Failed to configure WiFi interface')) {
+                    errorMessage = '{% trans %}Failed to configure WiFi interface. Please check system logs.{% endtrans %}';
+                } else if (statusData.error.includes('Error enabling WiFi radio')) {
+                    errorMessage = '{% trans %}Failed to enable WiFi radio. Please check system logs.{% endtrans %}';
+                } else if (statusData.error.includes('Error bringing up wlan0')) {
+                    errorMessage = '{% trans %}Failed to activate WiFi interface. Please check system logs.{% endtrans %}';
+                } else if (statusData.error.includes('Error getting current connection')) {
+                    errorMessage = '{% trans %}Failed to get current connection status. Please check system logs.{% endtrans %}';
+                } else {
+                    errorMessage = statusData.error;
+                }
+            }
+            
+            $('#wifiStatusAlert').removeClass('d-none alert-success alert-warning').addClass('alert-danger')
+                .find('#wifiStatusTextInline').text(errorMessage);
+            $('#currentConnection').text('{% trans %}Error{% endtrans %}');
         }
         
-        $('#wifiStatusAlert').removeClass('d-none alert-success alert-warning').addClass('alert-danger')
-            .find('#wifiStatusTextInline').text(errorMessage);
-        $('#currentConnection').text('{% trans %}Error{% endtrans %}');
         $('#wifiStatusText').text(wifiStatusText).removeClass('text-success text-danger text-warning text-info').addClass(wifiStatusClass);
         $('#wifiStatusTextCard').text(wifiStatusText).removeClass('text-success text-danger text-warning text-info').addClass(wifiStatusClass);
         return;
