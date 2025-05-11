@@ -162,17 +162,27 @@
                                 <div class="col-md-6">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-network-wired"></i></span>
-                                        <input type="text" class="form-control" id="dhcp_start" name="dhcp_start" placeholder="{% trans %}Start IP{% endtrans %}" required>
+                                        <input type="text" class="form-control" id="dhcp_start" name="dhcp_start" 
+                                            placeholder="{% trans %}Start IP{% endtrans %}" 
+                                            value="192.168.90.10"
+                                            pattern="^(\d{1,3}\.){3}\d{1,3}$"
+                                            title="{% trans %}Enter a valid IP address (e.g. 192.168.90.10){% endtrans %}"
+                                            required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-network-wired"></i></span>
-                                        <input type="text" class="form-control" id="dhcp_end" name="dhcp_end" placeholder="{% trans %}End IP{% endtrans %}" required>
+                                        <input type="text" class="form-control" id="dhcp_end" name="dhcp_end" 
+                                            placeholder="{% trans %}End IP{% endtrans %}" 
+                                            value="192.168.90.50"
+                                            pattern="^(\d{1,3}\.){3}\d{1,3}$"
+                                            title="{% trans %}Enter a valid IP address (e.g. 192.168.90.50){% endtrans %}"
+                                            required>
                                     </div>
                                 </div>
                             </div>
-                            <small class="text-muted">{% trans %}DHCP range for client devices{% endtrans %}</small>
+                            <small class="text-muted">{% trans %}DHCP range for client devices (default: 192.168.90.10 - 192.168.90.50){% endtrans %}</small>
                         </div>
 
                         <!-- Network Passthrough -->
@@ -410,26 +420,76 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Add DHCP range validation
+    // Add DHCP range validation with better error messages
     function validateDhcpRange() {
         const start = document.getElementById('dhcp_start').value;
         const end = document.getElementById('dhcp_end').value;
         
-        if (!start || !end) return false;
+        if (!start || !end) {
+            showToast('{% trans %}Error{% endtrans %}', '{% trans %}DHCP range start and end IPs are required{% endtrans %}', 'danger');
+            return false;
+        }
         
         const startParts = start.split('.');
         const endParts = end.split('.');
         
-        if (startParts.length !== 4 || endParts.length !== 4) return false;
+        if (startParts.length !== 4 || endParts.length !== 4) {
+            showToast('{% trans %}Error{% endtrans %}', '{% trans %}Invalid IP address format. Use format: xxx.xxx.xxx.xxx{% endtrans %}', 'danger');
+            return false;
+        }
+
+        // Validate each octet is between 0-255
+        for (let i = 0; i < 4; i++) {
+            const startOctet = parseInt(startParts[i]);
+            const endOctet = parseInt(endParts[i]);
+            if (isNaN(startOctet) || isNaN(endOctet) || startOctet < 0 || startOctet > 255 || endOctet < 0 || endOctet > 255) {
+                showToast('{% trans %}Error{% endtrans %}', '{% trans %}IP octets must be between 0 and 255{% endtrans %}', 'danger');
+                return false;
+            }
+        }
         
         // Ensure both IPs are in the same subnet
         for (let i = 0; i < 3; i++) {
-            if (startParts[i] !== endParts[i]) return false;
+            if (startParts[i] !== endParts[i]) {
+                showToast('{% trans %}Error{% endtrans %}', '{% trans %}Start and end IPs must be in the same subnet{% endtrans %}', 'danger');
+                return false;
+            }
         }
         
         // Ensure start IP is less than end IP
-        return parseInt(startParts[3]) < parseInt(endParts[3]);
+        if (parseInt(startParts[3]) >= parseInt(endParts[3])) {
+            showToast('{% trans %}Error{% endtrans %}', '{% trans %}Start IP must be less than end IP{% endtrans %}', 'danger');
+            return false;
+        }
+
+        return true;
     }
+
+    // Add input validation for DHCP fields
+    const dhcpInputs = document.querySelectorAll('#dhcp_start, #dhcp_end');
+    dhcpInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            // Remove any non-numeric characters except dots
+            this.value = this.value.replace(/[^\d.]/g, '');
+            
+            // Ensure only one dot between numbers
+            this.value = this.value.replace(/\.+/g, '.');
+            
+            // Limit to 4 octets
+            const parts = this.value.split('.');
+            if (parts.length > 4) {
+                this.value = parts.slice(0, 4).join('.');
+            }
+            
+            // Limit each octet to 3 digits
+            parts.forEach((part, index) => {
+                if (part.length > 3) {
+                    parts[index] = part.slice(0, 3);
+                }
+            });
+            this.value = parts.join('.');
+        });
+    });
 
     // Update form submission to include new fields
     apConfigForm.addEventListener('submit', async function(e) {
