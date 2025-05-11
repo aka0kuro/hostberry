@@ -2117,11 +2117,16 @@ def configure_network_passthrough():
         with open('/proc/sys/net/ipv4/ip_forward', 'w') as f:
             f.write('1\n')
         
-        # Configure NAT
+        # Configure NAT for both interfaces
         subprocess.run(['iptables', '-t', 'nat', '-A', 'POSTROUTING', 
                        '-o', 'wlan0', '-j', 'MASQUERADE'], check=True)
         subprocess.run(['iptables', '-t', 'nat', '-A', 'POSTROUTING', 
                        '-o', 'eth0', '-j', 'MASQUERADE'], check=True)
+        
+        # Allow forwarding between interfaces
+        subprocess.run(['iptables', '-A', 'FORWARD', '-i', 'wlan_ap0', '-o', 'wlan0', '-j', 'ACCEPT'], check=True)
+        subprocess.run(['iptables', '-A', 'FORWARD', '-i', 'wlan0', '-o', 'wlan_ap0', '-m', 'state', '--state', 'ESTABLISHED,RELATED', '-j', 'ACCEPT'], check=True)
+        
         return True
     except Exception as e:
         app.logger.error(f"Error configuring network passthrough: {str(e)}")
@@ -2232,13 +2237,6 @@ def restore_network_connectivity():
         # Remove virtual interface
         subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'down'], check=False)
         subprocess.run(['iw', 'dev', 'wlan_ap0', 'del'], check=False)
-        
-        # Reset wlan0
-        subprocess.run(['ip', 'link', 'set', 'wlan0', 'down'], check=False)
-        subprocess.run(['ip', 'link', 'set', 'wlan0', 'up'], check=False)
-        
-        # Restart NetworkManager
-        subprocess.run(['systemctl', 'restart', 'NetworkManager'], check=False)
         
         # Clear iptables rules
         subprocess.run(['iptables', '-F'], check=False)
