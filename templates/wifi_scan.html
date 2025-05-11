@@ -658,12 +658,25 @@ async function updateNetworkList(networks) {
         return;
     }
 
-    networks.sort((a, b) => parseInt(b.signal) - parseInt(a.signal)); // Strongest signal first
+    // Remove duplicate networks (same SSID)
+    const uniqueNetworks = networks.reduce((acc, network) => {
+        const existingNetwork = acc.find(n => n.ssid === network.ssid);
+        if (!existingNetwork) {
+            acc.push(network);
+        } else if (parseInt(network.signal) > parseInt(existingNetwork.signal)) {
+            // Replace with the one with stronger signal
+            const index = acc.indexOf(existingNetwork);
+            acc[index] = network;
+        }
+        return acc;
+    }, []);
+
+    uniqueNetworks.sort((a, b) => parseInt(b.signal) - parseInt(a.signal)); // Strongest signal first
     const currentConnectedSSID = (currentSSID || '').trim();
 
     // Verificar credenciales guardadas para todas las redes
     const savedCredentials = {};
-    for (const network of networks) {
+    for (const network of uniqueNetworks) {
         try {
             const response = await fetch(`/api/wifi/check_credentials?ssid=${encodeURIComponent(network.ssid)}`);
             const data = await response.json();
@@ -674,7 +687,7 @@ async function updateNetworkList(networks) {
         }
     }
 
-    networks.forEach(network => {
+    uniqueNetworks.forEach(network => {
         const signalStrength = parseInt(network.signal);
         let signalClass = signalStrength > 70 ? 'text-success' : (signalStrength > 40 ? 'text-warning' : 'text-danger');
         
