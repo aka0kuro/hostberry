@@ -1030,7 +1030,8 @@ def vpn_config_api():
         try:
             result = subprocess.run(['systemctl', 'is-active', 'openvpn'], capture_output=True, text=True)
             is_active = result.returncode == 0
-        except subprocess.CalledProcessError:
+        except Exception as e:
+            app.logger.warning(f"Error checking OpenVPN status with systemctl: {e}")
             is_active = False
 
         if is_active:
