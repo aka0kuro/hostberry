@@ -111,6 +111,19 @@
                             <small class="text-muted">{% trans %}Minimum 8 characters{% endtrans %}</small>
                         </div>
 
+                        <!-- Band -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans %}Frequency Band{% endtrans %}</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-broadcast-tower"></i></span>
+                                <select class="form-select" id="band" name="band">
+                                    <option value="2.4">2.4 GHz</option>
+                                    <option value="3">3 GHz</option>
+                                    <option value="5">5 GHz</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <!-- Channel -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">{% trans %}Channel{% endtrans %}</label>
@@ -121,18 +134,7 @@
                                     <!-- Channels will be populated based on band selection -->
                                 </select>
                             </div>
-                        </div>
-
-                        <!-- Band -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">{% trans %}Frequency Band{% endtrans %}</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-broadcast-tower"></i></span>
-                                <select class="form-select" id="band" name="band">
-                                    <option value="2.4">2.4 GHz</option>
-                                    <option value="5">5 GHz</option>
-                                </select>
-                            </div>
+                            <small class="text-muted" id="channelInfo"></small>
                         </div>
 
                         <!-- Submit Button -->
@@ -210,20 +212,77 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Channel options for each band
     const channels = {
-        '2.4': Array.from({length: 13}, (_, i) => i + 1),
-        '5': [36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144]
+        '2.4': [
+            { value: 1, text: '1 (2.412 GHz)' },
+            { value: 2, text: '2 (2.417 GHz)' },
+            { value: 3, text: '3 (2.422 GHz)' },
+            { value: 4, text: '4 (2.427 GHz)' },
+            { value: 5, text: '5 (2.432 GHz)' },
+            { value: 6, text: '6 (2.437 GHz)' },
+            { value: 7, text: '7 (2.442 GHz)' },
+            { value: 8, text: '8 (2.447 GHz)' },
+            { value: 9, text: '9 (2.452 GHz)' },
+            { value: 10, text: '10 (2.457 GHz)' },
+            { value: 11, text: '11 (2.462 GHz)' },
+            { value: 12, text: '12 (2.467 GHz)' },
+            { value: 13, text: '13 (2.472 GHz)' }
+        ],
+        '3': [
+            { value: 1, text: '1 (3.012 GHz)' },
+            { value: 2, text: '2 (3.017 GHz)' },
+            { value: 3, text: '3 (3.022 GHz)' },
+            { value: 4, text: '4 (3.027 GHz)' },
+            { value: 5, text: '5 (3.032 GHz)' },
+            { value: 6, text: '6 (3.037 GHz)' },
+            { value: 7, text: '7 (3.042 GHz)' },
+            { value: 8, text: '8 (3.047 GHz)' }
+        ],
+        '5': [
+            { value: 36, text: '36 (5.180 GHz)' },
+            { value: 40, text: '40 (5.200 GHz)' },
+            { value: 44, text: '44 (5.220 GHz)' },
+            { value: 48, text: '48 (5.240 GHz)' },
+            { value: 52, text: '52 (5.260 GHz)' },
+            { value: 56, text: '56 (5.280 GHz)' },
+            { value: 60, text: '60 (5.300 GHz)' },
+            { value: 64, text: '64 (5.320 GHz)' },
+            { value: 100, text: '100 (5.500 GHz)' },
+            { value: 104, text: '104 (5.520 GHz)' },
+            { value: 108, text: '108 (5.540 GHz)' },
+            { value: 112, text: '112 (5.560 GHz)' },
+            { value: 116, text: '116 (5.580 GHz)' },
+            { value: 120, text: '120 (5.600 GHz)' },
+            { value: 124, text: '124 (5.620 GHz)' },
+            { value: 128, text: '128 (5.640 GHz)' },
+            { value: 132, text: '132 (5.660 GHz)' },
+            { value: 136, text: '136 (5.680 GHz)' },
+            { value: 140, text: '140 (5.700 GHz)' },
+            { value: 144, text: '144 (5.720 GHz)' }
+        ]
+    };
+
+    // Band descriptions
+    const bandInfo = {
+        '2.4': '{% trans %}2.4 GHz band - Best for compatibility and range{% endtrans %}',
+        '3': '{% trans %}3 GHz band - Good balance between range and speed{% endtrans %}',
+        '5': '{% trans %}5 GHz band - Best for speed and less interference{% endtrans %}'
     };
 
     // Update channel options when band changes
     bandSelect.addEventListener('change', function() {
         const selectedBand = this.value;
         channelSelect.innerHTML = '<option value="">{% trans %}Select channel{% endtrans %}</option>';
+        
+        // Update channel options
         channels[selectedBand].forEach(channel => {
             const option = document.createElement('option');
-            option.value = channel;
-            option.textContent = channel;
+            option.value = channel.value;
+            option.textContent = channel.text;
             channelSelect.appendChild(option);
         });
+
+        // Update band info
+        document.getElementById('channelInfo').textContent = bandInfo[selectedBand];
     });
 
     // Toggle password visibility
@@ -304,7 +363,8 @@ document.addEventListener('DOMContentLoaded', function() {
             password: formData.get('password'),
             channel: formData.get('channel'),
             band: formData.get('band'),
-            hw_mode: formData.get('band') === '5' ? 'a' : 'g'
+            hw_mode: formData.get('band') === '5' ? 'a' : 
+                    formData.get('band') === '3' ? 'n' : 'g'
         };
 
         try {
@@ -329,6 +389,9 @@ document.addEventListener('DOMContentLoaded', function() {
             showToast('{% trans %}Error{% endtrans %}', '{% trans %}Failed to save configuration{% endtrans %}', 'danger');
         }
     });
+
+    // Trigger initial band change to populate channels
+    bandSelect.dispatchEvent(new Event('change'));
 
     // Initial status update and periodic updates
     updateStatus();
