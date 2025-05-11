@@ -254,7 +254,7 @@
 
 <script>
 // Global variable to store current SSID
-window.currentSSID = null;
+let currentSSID = null;
 
 // Helper to get CSRF token
 function getCSRFToken() {
@@ -278,10 +278,10 @@ async function loadStatusAndScan() {
     try {
         const response = await fetch('/api/wifi/status');
         const data = await response.json();
-        window.currentSSID = data.current_connection ? data.current_connection.trim() : null;
+        currentSSID = data.current_connection ? data.current_connection.trim() : null;
         
         // Si no hay conexión actual, intentar conectar a la última red guardada
-        if (!window.currentSSID) {
+        if (!currentSSID) {
             const lastNetwork = loadLastConnectedNetwork();
             if (lastNetwork && lastNetwork.ssid) {
                 try {
@@ -309,7 +309,7 @@ async function loadStatusAndScan() {
                         if (connectData.success) {
                             showToast(`{% trans %}Reconectado a{% endtrans %} ${lastNetwork.ssid}`, 'success');
                             addActivity('connect', `{% trans %}Reconectado automáticamente a{% endtrans %} ${lastNetwork.ssid}`);
-                            window.currentSSID = lastNetwork.ssid;
+                            currentSSID = lastNetwork.ssid;
                         } else {
                             console.log('No se pudo reconectar automáticamente:', connectData.error);
                         }
@@ -321,9 +321,9 @@ async function loadStatusAndScan() {
         }
         
         // Si hay una red conectada, verificar si tiene credenciales guardadas
-        if (window.currentSSID) {
+        if (currentSSID) {
             try {
-                const credResponse = await fetch(`/api/wifi/check_credentials?ssid=${encodeURIComponent(window.currentSSID)}`);
+                const credResponse = await fetch(`/api/wifi/check_credentials?ssid=${encodeURIComponent(currentSSID)}`);
                 const credData = await credResponse.json();
                 if (credData.success && credData.has_credentials) {
                     $('#saveCredentials').prop('checked', true);
@@ -336,7 +336,7 @@ async function loadStatusAndScan() {
         updateStatusDisplay(data);
     } catch (e) {
         console.error("Error fetching initial status:", e);
-        window.currentSSID = null;
+        currentSSID = null;
         updateStatusDisplay({ enabled: false, current_connection: null, soft_blocked: false, hard_blocked: false });
     }
     $('#rescanBtn').trigger('click');
@@ -349,10 +349,10 @@ async function refreshWifiStatusAndButtons() {
         const statusData = await response.json();
         
         const newCurrentSSID = statusData.current_connection ? statusData.current_connection.trim() : null;
-        // Solo actualiza window.currentSSID si realmente ha cambiado, para evitar redibujados innecesarios si no hay cambio.
+        // Solo actualiza currentSSID si realmente ha cambiado, para evitar redibujados innecesarios si no hay cambio.
         // Sin embargo, para la lógica de botones, siempre usaremos newCurrentSSID que es el más fresco.
-        if (window.currentSSID !== newCurrentSSID) {
-            window.currentSSID = newCurrentSSID;
+        if (currentSSID !== newCurrentSSID) {
+            currentSSID = newCurrentSSID;
         }
         
         updateStatusDisplay(statusData); // Update general status elements (cards, alerts)
@@ -583,7 +583,7 @@ async function updateNetworkList(networks) {
     }
 
     networks.sort((a, b) => parseInt(b.signal) - parseInt(a.signal)); // Strongest signal first
-    const currentConnectedSSID = (window.currentSSID || '').trim();
+    const currentConnectedSSID = (currentSSID || '').trim();
 
     // Verificar credenciales guardadas para todas las redes
     const savedCredentials = {};
@@ -703,6 +703,7 @@ $(document).ready(function() {
     $(document).on('click', '.connect-btn', async function() {
         const ssid = $(this).data('ssid');
         const security = $(this).data('security');
+        currentSSID = ssid;
         $('#connectSSID').val(ssid);
         $('#connectSSIDHidden').val(ssid);
         $('#connectSecurity').val(security);
