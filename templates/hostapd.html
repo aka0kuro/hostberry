@@ -136,6 +136,56 @@
                             <small class="text-muted" id="channelInfo"></small>
                         </div>
 
+                        <!-- Country Code -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans %}Country Code{% endtrans %}</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-globe"></i></span>
+                                <select class="form-select" id="country_code" name="country_code" required>
+                                    <option value="US">United States (US)</option>
+                                    <option value="GB">United Kingdom (GB)</option>
+                                    <option value="DE">Germany (DE)</option>
+                                    <option value="FR">France (FR)</option>
+                                    <option value="ES">Spain (ES)</option>
+                                    <option value="IT">Italy (IT)</option>
+                                    <option value="JP">Japan (JP)</option>
+                                    <option value="AU">Australia (AU)</option>
+                                    <option value="CA">Canada (CA)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- DHCP Configuration -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans %}DHCP Configuration{% endtrans %}</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-network-wired"></i></span>
+                                        <input type="text" class="form-control" id="dhcp_start" name="dhcp_start" placeholder="{% trans %}Start IP{% endtrans %}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-network-wired"></i></span>
+                                        <input type="text" class="form-control" id="dhcp_end" name="dhcp_end" placeholder="{% trans %}End IP{% endtrans %}" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <small class="text-muted">{% trans %}DHCP range for client devices{% endtrans %}</small>
+                        </div>
+
+                        <!-- Network Passthrough -->
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="enable_passthrough" name="enable_passthrough">
+                                <label class="form-check-label" for="enable_passthrough">
+                                    {% trans %}Enable Network Passthrough{% endtrans %}
+                                </label>
+                            </div>
+                            <small class="text-muted">{% trans %}Allow clients to access the internet through the main network interface{% endtrans %}</small>
+                        </div>
+
                         <!-- Submit Button -->
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">
@@ -360,7 +410,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Save configuration
+    // Add DHCP range validation
+    function validateDhcpRange() {
+        const start = document.getElementById('dhcp_start').value;
+        const end = document.getElementById('dhcp_end').value;
+        
+        if (!start || !end) return false;
+        
+        const startParts = start.split('.');
+        const endParts = end.split('.');
+        
+        if (startParts.length !== 4 || endParts.length !== 4) return false;
+        
+        // Ensure both IPs are in the same subnet
+        for (let i = 0; i < 3; i++) {
+            if (startParts[i] !== endParts[i]) return false;
+        }
+        
+        // Ensure start IP is less than end IP
+        return parseInt(startParts[3]) < parseInt(endParts[3]);
+    }
+
+    // Update form submission to include new fields
     apConfigForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(this);
@@ -370,16 +441,38 @@ document.addEventListener('DOMContentLoaded', function() {
         const password = formData.get('password');
         const channel = formData.get('channel');
         const band = formData.get('band');
+        const countryCode = formData.get('country_code');
+        const dhcpStart = formData.get('dhcp_start');
+        const dhcpEnd = formData.get('dhcp_end');
+        const enablePassthrough = formData.get('enable_passthrough') === 'on';
 
-        if (!ssid || !password || !channel || !band) {
+        if (!ssid || !password || !channel || !band || !countryCode || !dhcpStart || !dhcpEnd) {
             showToast('{% trans %}Error{% endtrans %}', '{% trans %}All fields are required{% endtrans %}', 'danger');
             return;
         }
 
-        if (password.length < 8) {
-            showToast('{% trans %}Error{% endtrans %}', '{% trans %}Password must be at least 8 characters{% endtrans %}', 'danger');
+        if (!validateDhcpRange()) {
+            showToast('{% trans %}Error{% endtrans %}', '{% trans %}Invalid DHCP range. Please ensure both IPs are in the same subnet and start IP is less than end IP.{% endtrans %}', 'danger');
             return;
         }
+
+        const data = {
+            ssid: ssid,
+            password: password,
+            channel: channel,
+            band: band,
+            hw_mode: band === '5' ? 'a' : 'g',
+            country_code: countryCode,
+            interface: 'wlan_ap0',
+            auth_algs: 1,
+            wpa: 2,
+            wpa_key_mgmt: 'WPA-PSK',
+            wpa_pairwise: 'CCMP',
+            rsn_pairwise: 'CCMP',
+            dhcp_start: dhcpStart,
+            dhcp_end: dhcpEnd,
+            enable_passthrough: enablePassthrough
+        };
 
         // Check hostapd service status first
         try {
@@ -395,21 +488,6 @@ document.addEventListener('DOMContentLoaded', function() {
             showToast('{% trans %}Error{% endtrans %}', '{% trans %}Failed to check hostapd status. Please ensure hostapd is installed and running.{% endtrans %}', 'danger');
             return;
         }
-
-        const data = {
-            ssid: ssid,
-            password: password,
-            channel: channel,
-            band: band,
-            hw_mode: band === '5' ? 'a' : 'g',
-            country_code: 'US',
-            interface: 'wlan0',
-            auth_algs: 1,
-            wpa: 2,
-            wpa_key_mgmt: 'WPA-PSK',
-            wpa_pairwise: 'CCMP',
-            rsn_pairwise: 'CCMP'
-        };
 
         try {
             const response = await fetch('/api/hostapd/config', {
