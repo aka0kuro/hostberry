@@ -2377,10 +2377,10 @@ def hostapd_config():
             # Using check=False here to manually inspect result and error
             ip_addr_result = subprocess.run(ip_addr_add_cmd, capture_output=True, text=True, check=False)
             if ip_addr_result.returncode == 0:
-                app.logger.info(f"[Hostapd Config] 'ip addr add' SUCCEEDED. Stdout: {ip_addr_result.stdout or '[empty]'}. Stderr: {ip_addr_result.stderr or '[empty']}.")
+                app.logger.info(f"[Hostapd Config] 'ip addr add' SUCCEEDED. Stdout: {ip_addr_result.stdout or '[empty]'}, Stderr: {ip_addr_result.stderr or '[empty]'}")
             else:
                 # This case should ideally not be reached if check=True is used later or if we raise an error
-                app.logger.error(f"[Hostapd Config] 'ip addr add' FAILED with rc={ip_addr_result.returncode}. Stdout: {ip_addr_result.stdout or '[empty]'}. Stderr: {ip_addr_result.stderr or '[empty']}.")
+                app.logger.error(f"[Hostapd Config] 'ip addr add' FAILED with rc={ip_addr_result.returncode}. Stdout: {ip_addr_result.stdout or '[empty]'}, Stderr: {ip_addr_result.stderr or '[empty]'}")
                 # We'll let the existing outer try/except handle the JSON response for failure
                 # Forcing a CalledProcessError to be caught by the main handler
                 raise subprocess.CalledProcessError(returncode=ip_addr_result.returncode, cmd=ip_addr_add_cmd, output=ip_addr_result.stdout, stderr=ip_addr_result.stderr)
