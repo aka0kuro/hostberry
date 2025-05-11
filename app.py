@@ -2364,6 +2364,12 @@ def hostapd_config():
                 })
 
         # Set static IP for AP interface
+        try:
+            link_show_result = subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], capture_output=True, text=True)
+            app.logger.info(f"[Hostapd Config] 'ip link show wlan_ap0' before add: stdout: {link_show_result.stdout}, stderr: {link_show_result.stderr}, rc: {link_show_result.returncode}")
+        except Exception as log_e:
+            app.logger.error(f"[Hostapd Config] Error logging 'ip link show wlan_ap0': {log_e}")
+
         subprocess.run(['ip', 'addr', 'add', '192.168.90.1/24', 'dev', 'wlan_ap0'], check=True)
         subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], check=True)
 
