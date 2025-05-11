@@ -276,7 +276,21 @@ function formatDate(date) {
 // Core logic: Fetch status, then trigger scan
 async function loadStatusAndScan() {
     try {
-        const response = await fetch('/api/wifi/status');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+        const response = await fetch('/api/wifi/status', { 
+            signal: controller.signal,
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRFToken': getCSRFToken() || getCookie('csrf_token')
+            }
+        }).finally(() => clearTimeout(timeoutId));
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
         currentSSID = data.current_connection ? data.current_connection.trim() : null;
         
@@ -337,7 +351,15 @@ async function loadStatusAndScan() {
     } catch (e) {
         console.error("Error fetching initial status:", e);
         currentSSID = null;
-        updateStatusDisplay({ enabled: false, current_connection: null, soft_blocked: false, hard_blocked: false });
+        updateStatusDisplay({ 
+            enabled: false, 
+            current_connection: null, 
+            soft_blocked: false, 
+            hard_blocked: false,
+            error: true,
+            error_message: e.message || '{% trans %}Error fetching WiFi status{% endtrans %}'
+        });
+        showToast('{% trans %}Error fetching WiFi status. Please try again.{% endtrans %}', 'danger');
     }
     $('#rescanBtn').trigger('click');
 }
