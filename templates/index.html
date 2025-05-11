@@ -52,19 +52,19 @@
                     <h5 class="card-title text-center"><i class="bi bi-speedometer2"></i> {% trans %}Estado del Sistema{% endtrans %}</h5>
                     <div class="row text-center">
                         <div class="col">
-                            <div><i class="bi bi-cpu"></i></div>
-                            <div>{{ stats.cpu_usage }}%</div>
-                            <small>CPU</small>
+                            <div><i class="bi bi-cpu fs-1 text-primary"></i></div>
+                            <div class="fs-4 fw-bold">{{ stats.cpu_usage }}%</div>
+                            <small class="text-muted">CPU</small>
                         </div>
                         <div class="col">
-                            <div><i class="bi bi-thermometer-half"></i></div>
-                            <div>{{ stats.cpu_temp }}°C</div>
-                            <small>{% trans %}Temp{% endtrans %}</small>
+                            <div><i class="bi bi-thermometer-half fs-1 text-danger"></i></div>
+                            <div class="fs-4 fw-bold">{{ stats.cpu_temp }}°C</div>
+                            <small class="text-muted">{% trans %}Temp{% endtrans %}</small>
                         </div>
                         <div class="col">
-                            <div><i class="bi bi-memory"></i></div>
-                            <div>{{ stats.memory_usage }}%</div>
-                            <small>{% trans %}Memoria{% endtrans %}</small>
+                            <div><i class="bi bi-memory fs-1 text-success"></i></div>
+                            <div class="fs-4 fw-bold">{{ stats.memory_usage }}%</div>
+                            <small class="text-muted">{% trans %}Memoria{% endtrans %}</small>
                         </div>
                     </div>
                 </div>
