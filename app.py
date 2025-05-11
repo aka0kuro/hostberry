@@ -2222,6 +2222,37 @@ def hostapd_config():
             'error': str(e)
         })
 
+def restore_network_connectivity():
+    """Restore network connectivity after AP mode"""
+    try:
+        # Stop hostapd and DHCP server
+        subprocess.run(['systemctl', 'stop', 'hostapd'], check=False)
+        subprocess.run(['systemctl', 'stop', 'isc-dhcp-server'], check=False)
+        
+        # Remove virtual interface
+        subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'down'], check=False)
+        subprocess.run(['iw', 'dev', 'wlan_ap0', 'del'], check=False)
+        
+        # Reset wlan0
+        subprocess.run(['ip', 'link', 'set', 'wlan0', 'down'], check=False)
+        subprocess.run(['ip', 'link', 'set', 'wlan0', 'up'], check=False)
+        
+        # Restart NetworkManager
+        subprocess.run(['systemctl', 'restart', 'NetworkManager'], check=False)
+        
+        # Clear iptables rules
+        subprocess.run(['iptables', '-F'], check=False)
+        subprocess.run(['iptables', '-t', 'nat', '-F'], check=False)
+        
+        # Disable IP forwarding
+        with open('/proc/sys/net/ipv4/ip_forward', 'w') as f:
+            f.write('0\n')
+            
+        return True
+    except Exception as e:
+        app.logger.error(f"Error restoring network: {str(e)}")
+        return False
+
 @app.route('/api/hostapd/toggle', methods=['POST'])
 def hostapd_toggle():
     try:
@@ -2231,27 +2262,64 @@ def hostapd_toggle():
         is_running = status.returncode == 0
 
         if is_running:
-            # Stop AP
-            subprocess.run(['systemctl', 'stop', 'hostapd'], check=True)
-            subprocess.run(['systemctl', 'stop', 'isc-dhcp-server'], check=True)
-            subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'down'], check=True)
-            message = 'Access Point stopped successfully'
+            # Stop AP and restore network
+            if restore_network_connectivity():
+                message = 'Access Point stopped and network restored successfully'
+            else:
+                message = 'Access Point stopped but network restoration failed'
         else:
             # Start AP
-            subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], check=True)
-            subprocess.run(['systemctl', 'start', 'isc-dhcp-server'], check=True)
-            subprocess.run(['systemctl', 'start', 'hostapd'], check=True)
-            message = 'Access Point started successfully'
+            try:
+                # Create virtual interface if it doesn't exist
+                if not create_virtual_interface():
+                    return jsonify({
+                        'success': False,
+                        'error': 'Failed to create virtual interface'
+                    })
+
+                # Set static IP for AP interface
+                subprocess.run(['ip', 'addr', 'add', '192.168.90.1/24', 'dev', 'wlan_ap0'], check=True)
+                subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], check=True)
+
+                # Start services
+                subprocess.run(['systemctl', 'start', 'isc-dhcp-server'], check=True)
+                subprocess.run(['systemctl', 'start', 'hostapd'], check=True)
+                
+                message = 'Access Point started successfully'
+            except Exception as e:
+                # If AP start fails, restore network
+                restore_network_connectivity()
+                return jsonify({
+                    'success': False,
+                    'error': f'Failed to start AP: {str(e)}'
+                })
 
         return jsonify({
             'success': True,
             'message': message
         })
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
+        # If anything fails, try to restore network
+        restore_network_connectivity()
         return jsonify({
             'success': False,
-            'error': f'Command failed: {e.cmd}\nOutput: {e.output}'
+            'error': str(e)
         })
+
+@app.route('/api/network/restore', methods=['POST'])
+def restore_network():
+    """Endpoint to restore network connectivity"""
+    try:
+        if restore_network_connectivity():
+            return jsonify({
+                'success': True,
+                'message': 'Network connectivity restored successfully'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to restore network connectivity'
+            })
     except Exception as e:
         return jsonify({
             'success': False,
