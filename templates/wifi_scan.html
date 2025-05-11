@@ -446,7 +446,7 @@ $('#wifiConnectForm').submit(async function(e) {
             showToast(`{% trans %}Connected to{% endtrans %} ${ssid}!`, 'success');
             addActivity('connect', `{% trans %}Connected to{% endtrans %} ${ssid}`, {
                 security: security,
-                signal: statusData.connection_info?.signal || '-'
+                signal: responseData.connection_info?.signal || '-'
             });
             // Save the last connected network
             saveLastConnectedNetwork(ssid, security, password);
