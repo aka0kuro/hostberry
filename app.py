@@ -2370,7 +2370,26 @@ def hostapd_config():
         except Exception as log_e:
             app.logger.error(f"[Hostapd Config] Error logging 'ip link show wlan_ap0': {log_e}")
 
-        subprocess.run(['ip', 'addr', 'add', '192.168.90.1/24', 'dev', 'wlan_ap0'], check=True)
+        # Enhanced logging for 'ip addr add'
+        ip_addr_add_cmd = ['ip', 'addr', 'add', '192.168.90.1/24', 'dev', 'wlan_ap0']
+        try:
+            app.logger.info(f"[Hostapd Config] Attempting to run: {' '.join(ip_addr_add_cmd)}")
+            # Using check=False here to manually inspect result and error
+            ip_addr_result = subprocess.run(ip_addr_add_cmd, capture_output=True, text=True, check=False)
+            if ip_addr_result.returncode == 0:
+                app.logger.info(f"[Hostapd Config] 'ip addr add' SUCCEEDED. Stdout: {ip_addr_result.stdout or '[empty]'}. Stderr: {ip_addr_result.stderr or '[empty']}.")
+            else:
+                # This case should ideally not be reached if check=True is used later or if we raise an error
+                app.logger.error(f"[Hostapd Config] 'ip addr add' FAILED with rc={ip_addr_result.returncode}. Stdout: {ip_addr_result.stdout or '[empty]'}. Stderr: {ip_addr_result.stderr or '[empty']}.")
+                # We'll let the existing outer try/except handle the JSON response for failure
+                # Forcing a CalledProcessError to be caught by the main handler
+                raise subprocess.CalledProcessError(returncode=ip_addr_result.returncode, cmd=ip_addr_add_cmd, output=ip_addr_result.stdout, stderr=ip_addr_result.stderr)
+        except subprocess.CalledProcessError as e:
+            # Log specifics here. The outer handler will form the JSON response.
+            stderr_info = e.stderr if hasattr(e, 'stderr') and e.stderr else (e.output if hasattr(e, 'output') and e.output else 'N/A')
+            app.logger.error(f"[Hostapd Config] 'ip addr add' EXCEPTION. Command: {' '.join(e.cmd)}. Stderr/Output: {stderr_info}")
+            raise # Re-raise
+
         subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], check=True)
 
         # Restart services
