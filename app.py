@@ -2054,32 +2054,83 @@ def hostapd_config():
                 return jsonify({'success': False, 'error': f'Missing required field: {field}'}), 400
 
         # Crear configuración de hostapd
-        config = f"""interface=wlan0
+        config = f"""# Basic configuration
+interface={data.get('interface', 'wlan0')}
 driver=nl80211
 ssid={data['ssid']}
 hw_mode={'a' if data['band'] == '5' else 'g'}
 channel={data['channel']}
+
+# Security configuration
 auth_algs=1
 wpa=2
 wpa_passphrase={data['password']}
 wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
+wpa_pairwise=CCMP
 rsn_pairwise=CCMP
+
+# Country code
+country_code={data.get('country_code', 'US')}
+
+# Additional settings
+beacon_int=100
+dtim_period=2
+max_num_sta=32
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
 """
 
         # Guardar configuración
         config_path = '/etc/hostapd/hostapd.conf'
-        os.makedirs(os.path.dirname(config_path), exist_ok=True)
-        with open(config_path, 'w') as f:
-            f.write(config)
+        try:
+            # Asegurarse de que el directorio existe
+            os.makedirs(os.path.dirname(config_path), exist_ok=True)
+            
+            # Guardar la configuración
+            with open(config_path, 'w') as f:
+                f.write(config)
+            
+            # Verificar permisos
+            subprocess.run(['chmod', '644', config_path], check=True)
+            
+            # Verificar la configuración
+            check_result = subprocess.run(['hostapd', '-d', config_path], 
+                                        capture_output=True, 
+                                        text=True)
+            
+            if check_result.returncode != 0:
+                return jsonify({
+                    'success': False, 
+                    'error': 'Invalid configuration',
+                    'details': check_result.stderr
+                }), 400
 
-        # Reiniciar hostapd
-        subprocess.run(['systemctl', 'restart', 'hostapd'], check=True)
-
-        return jsonify({'success': True, 'message': 'Configuration saved successfully'})
+            # Reiniciar hostapd
+            subprocess.run(['systemctl', 'restart', 'hostapd'], check=True)
+            
+            return jsonify({
+                'success': True, 
+                'message': 'Configuration saved and service restarted successfully'
+            })
+            
+        except PermissionError:
+            return jsonify({
+                'success': False, 
+                'error': 'Permission denied. Please run with sudo privileges.'
+            }), 403
+        except Exception as e:
+            return jsonify({
+                'success': False, 
+                'error': f'Error saving configuration: {str(e)}'
+            }), 500
+            
     except Exception as e:
-        app.logger.error(f'Error saving hostapd configuration: {str(e)}')
-        return jsonify({'success': False, 'error': str(e)}), 500
+        app.logger.error(f'Error in hostapd configuration: {str(e)}')
+        return jsonify({
+            'success': False, 
+            'error': str(e)
+        }), 500
 
 @app.route('/api/hostapd/toggle', methods=['POST'])
 def hostapd_toggle():
