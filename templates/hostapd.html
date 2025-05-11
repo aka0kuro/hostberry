@@ -118,7 +118,6 @@
                                 <span class="input-group-text"><i class="fas fa-broadcast-tower"></i></span>
                                 <select class="form-select" id="band" name="band">
                                     <option value="2.4">2.4 GHz</option>
-                                    <option value="3">3 GHz</option>
                                     <option value="5">5 GHz</option>
                                 </select>
                             </div>
@@ -227,16 +226,6 @@ document.addEventListener('DOMContentLoaded', function() {
             { value: 12, text: '12 (2.467 GHz)' },
             { value: 13, text: '13 (2.472 GHz)' }
         ],
-        '3': [
-            { value: 1, text: '1 (3.012 GHz)' },
-            { value: 2, text: '2 (3.017 GHz)' },
-            { value: 3, text: '3 (3.022 GHz)' },
-            { value: 4, text: '4 (3.027 GHz)' },
-            { value: 5, text: '5 (3.032 GHz)' },
-            { value: 6, text: '6 (3.037 GHz)' },
-            { value: 7, text: '7 (3.042 GHz)' },
-            { value: 8, text: '8 (3.047 GHz)' }
-        ],
         '5': [
             { value: 36, text: '36 (5.180 GHz)' },
             { value: 40, text: '40 (5.200 GHz)' },
@@ -264,7 +253,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Band descriptions
     const bandInfo = {
         '2.4': '{% trans %}2.4 GHz band - Best for compatibility and range{% endtrans %}',
-        '3': '{% trans %}3 GHz band - Good balance between range and speed{% endtrans %}',
         '5': '{% trans %}5 GHz band - Best for speed and less interference{% endtrans %}'
     };
 
@@ -363,8 +351,7 @@ document.addEventListener('DOMContentLoaded', function() {
             password: formData.get('password'),
             channel: formData.get('channel'),
             band: formData.get('band'),
-            hw_mode: formData.get('band') === '5' ? 'a' : 
-                    formData.get('band') === '3' ? 'n' : 'g'
+            hw_mode: formData.get('band') === '5' ? 'a' : 'g'
         };
 
         try {
