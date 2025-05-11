@@ -2325,6 +2325,7 @@ def hostapd_interface_status():
 
 @app.route('/api/hostapd/config', methods=['POST'])
 def hostapd_config():
+    app.logger.info(f"[Hostapd Config] Received request for /api/hostapd/config with method: {request.method}")
     try:
         data = request.get_json()
         
