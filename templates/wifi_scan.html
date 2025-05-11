@@ -510,10 +510,20 @@ $('#wifiConnectForm').submit(async function(e) {
                 signal: responseData.connection_info?.signal || '-'
             });
             
-            // Guardar la red conectada
-            saveLastConnectedNetwork(ssid, security, password);
+            // Save the connected network
+            const networkData = {
+                ssid: ssid,
+                security: security,
+                timestamp: Date.now(),
+                last_connection_attempt: Date.now()
+            };
+            localStorage.setItem('lastConnectedNetwork', JSON.stringify(networkData));
             
-            $('#connectModal').modal('hide');
+            // Close the modal and refresh status
+            const connectModal = bootstrap.Modal.getInstance(document.getElementById('connectModal'));
+            if (connectModal) {
+                connectModal.hide();
+            }
             await loadStatusAndScan();
         } else {
             throw new Error(responseData.error || '{% trans %}Error connecting to network.{% endtrans %}');
