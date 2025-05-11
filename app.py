@@ -2094,7 +2094,39 @@ ignore_broadcast_ssid=0
             # Verificar permisos
             subprocess.run(['chmod', '644', config_path], check=True)
             
-            # Verificar la configuración
+            # Configurar la interfaz de red
+            interface = data.get('interface', 'wlan0')
+            
+            # Detener cualquier conexión WiFi existente
+            subprocess.run(['nmcli', 'device', 'disconnect', interface], check=False)
+            
+            # Configurar la interfaz en modo AP
+            subprocess.run(['ip', 'link', 'set', interface, 'down'], check=True)
+            subprocess.run(['ip', 'link', 'set', interface, 'up'], check=True)
+            
+            # Configurar la dirección IP estática para el AP
+            subprocess.run(['ip', 'addr', 'add', '192.168.4.1/24', 'dev', interface], check=True)
+            
+            # Configurar el servidor DHCP
+            dhcp_config = f"""interface={interface}
+dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,12h
+"""
+            with open('/etc/dnsmasq.conf', 'w') as f:
+                f.write(dhcp_config)
+            
+            # Reiniciar dnsmasq
+            subprocess.run(['systemctl', 'restart', 'dnsmasq'], check=True)
+            
+            # Habilitar el reenvío de IP
+            with open('/proc/sys/net/ipv4/ip_forward', 'w') as f:
+                f.write('1\n')
+            
+            # Configurar NAT
+            subprocess.run(['iptables', '-t', 'nat', '-A', 'POSTROUTING', '-o', 'eth0', '-j', 'MASQUERADE'], check=True)
+            subprocess.run(['iptables', '-A', 'FORWARD', '-i', interface, '-o', 'eth0', '-j', 'ACCEPT'], check=True)
+            subprocess.run(['iptables', '-A', 'FORWARD', '-i', 'eth0', '-o', interface, '-m', 'state', '--state', 'RELATED,ESTABLISHED', '-j', 'ACCEPT'], check=True)
+            
+            # Verificar la configuración de hostapd
             check_result = subprocess.run(['hostapd', '-d', config_path], 
                                         capture_output=True, 
                                         text=True)
@@ -2111,7 +2143,7 @@ ignore_broadcast_ssid=0
             
             return jsonify({
                 'success': True, 
-                'message': 'Configuration saved and service restarted successfully'
+                'message': 'Configuration saved and access point started successfully'
             })
             
         except PermissionError:
