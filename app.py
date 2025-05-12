@@ -1918,6 +1918,17 @@ def save_last_connected_network(ssid, security):
     except Exception as e:
         app.logger.error(f"Error guardando última red: {str(e)}")
 
+# Endpoint para crear la interfaz virtual wlan_ap0
+@app.route('/api/hostapd/create_wlan_ap0', methods=['POST'])
+def create_wlan_ap0_endpoint():
+    try:
+        if create_virtual_interface():
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to create wlan_ap0'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
 # Modificar la función wifi_connect para guardar la última red
 @app.route('/api/wifi/connect', methods=['GET', 'POST'])
 def wifi_connect():

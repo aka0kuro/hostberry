@@ -13,6 +13,9 @@
             <button id="toggleAp" class="btn btn-primary btn-sm">
                 <i class="bi bi-power me-2"></i> <span id="toggleText">{% trans %}Start AP{% endtrans %}</span>
             </button>
+            <button id="createWlanAp0" class="btn btn-secondary btn-sm ms-2">
+                <i class="fas fa-plus me-1"></i> {% trans %}Create wlan_ap0{% endtrans %}
+            </button>
         </div>
     </div>
 
@@ -725,6 +728,21 @@ document.addEventListener('DOMContentLoaded', function() {
     updateStatus();
     setInterval(updateStatus, 5000);
 });
+    // Crear interfaz wlan_ap0
+    document.getElementById('createWlanAp0').addEventListener('click', async function() {
+        try {
+            const response = await fetch('/api/hostapd/create_wlan_ap0', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') } });
+            const data = await response.json();
+            if (data.success) {
+                showToast('{% trans %}Success{% endtrans %}', '{% trans %}Virtual interface wlan_ap0 created successfully{% endtrans %}');
+                await updateStatus();
+            } else {
+                showToast('{% trans %}Error{% endtrans %}', data.error || '{% trans %}Failed to create wlan_ap0{% endtrans %}', 'danger');
+            }
+        } catch (error) {
+            showToast('{% trans %}Error{% endtrans %}', '{% trans %}Failed to create wlan_ap0. Please check the console for details.{% endtrans %}', 'danger');
+        }
+    });
 </script>
 
 <style>
