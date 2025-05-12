@@ -2498,19 +2498,30 @@ def restore_network_connectivity():
         # Stop hostapd and DHCP server
         subprocess.run(['systemctl', 'stop', 'hostapd'], check=False)
         subprocess.run(['systemctl', 'stop', 'isc-dhcp-server'], check=False)
-        
-        # Remove virtual interface
-        subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'down'], check=False)
-        subprocess.run(['iw', 'dev', 'wlan_ap0', 'del'], check=False)
-        
+
+        # Detect which interface was used for AP
+        ap_interface = 'wlan_ap0'
+        if os.path.exists('/etc/hostapd/hostapd.conf'):
+            with open('/etc/hostapd/hostapd.conf') as f:
+                for line in f:
+                    if line.startswith('interface='):
+                        ap_interface = line.split('=', 1)[1].strip()
+                        break
+
+        # Only remove virtual interface if it was used
+        if ap_interface == 'wlan_ap0':
+            subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'down'], check=False)
+            subprocess.run(['iw', 'dev', 'wlan_ap0', 'del'], check=False)
+        # Do NOT bring down physical interfaces (wlan0/wlan1)
+
         # Clear iptables rules
         subprocess.run(['iptables', '-F'], check=False)
         subprocess.run(['iptables', '-t', 'nat', '-F'], check=False)
-        
+
         # Disable IP forwarding
         with open('/proc/sys/net/ipv4/ip_forward', 'w') as f:
             f.write('0\n')
-            
+
         return True
     except Exception as e:
         app.logger.error(f"Error restoring network: {str(e)}")
