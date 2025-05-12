@@ -89,12 +89,26 @@
                 </div>
                 <div class="card-body">
                     <form id="apConfigForm">
+                        <!-- Interface Selection -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans %}WiFi Interface{% endtrans %}</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-network-wifi"></i></span>
+                                <select class="form-select" id="interface" name="interface" required>
+    <option value="wlan0" {{ 'selected' if current_config.interface == 'wlan0' else '' }}>wlan0</option>
+    <option value="wlan1" {{ 'selected' if current_config.interface == 'wlan1' else '' }}>wlan1</option>
+    <option value="wlan_ap0" {{ 'selected' if current_config.interface == 'wlan_ap0' or not current_config.interface else '' }}>wlan_ap0</option>
+</select>
+                            </div>
+                            <small class="text-muted">{% trans %}Choose the wireless interface for the Access Point{% endtrans %}</small>
+                        </div>
+
                         <!-- SSID -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">{% trans %}Network Name (SSID){% endtrans %}</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-wifi"></i></span>
-                                <input type="text" class="form-control" id="ssid" name="ssid" required>
+                                <input type="text" class="form-control" id="ssid" name="ssid" required value="{{ current_config.ssid or '' }}">
                             </div>
                         </div>
 
@@ -631,6 +645,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        const interfaceSelect = document.getElementById('interface');
         const data = {
             ssid: ssid,
             password: password,
@@ -638,7 +653,7 @@ document.addEventListener('DOMContentLoaded', function() {
             band: band,
             hw_mode: band === '5' ? 'a' : 'g',
             country_code: countryCode,
-            interface: 'wlan_ap0',
+            interface: interfaceSelect.value,
             auth_algs: 1,
             wpa: 2,
             wpa_key_mgmt: 'WPA-PSK',
@@ -650,6 +665,7 @@ document.addEventListener('DOMContentLoaded', function() {
             create_interface: !interfaceStatus.exists,
             fix_interface: interfaceStatus.exists && (!interfaceStatus.isUp || !interfaceStatus.hasIp)
         };
+
 
         try {
             const response = await fetch('/api/hostapd/config', {

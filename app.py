@@ -2244,11 +2244,20 @@ def hostapd_page():
                         key, value = line.strip().split('=', 1)
                         current_config[key] = value
         
+        # Detectar interfaces WiFi disponibles (wlan0, wlan1, wlan_ap0)
+        interfaces = []
+        for iface in ['wlan0', 'wlan1', 'wlan_ap0']:
+            result = subprocess.run(['ip', 'link', 'show', iface], capture_output=True)
+            if result.returncode == 0:
+                interfaces.append(iface)
+        # Pasar la interfaz configurada actual
+        current_config['interface'] = current_config.get('interface', 'wlan_ap0')
         return render_template(
             'hostapd.html',
             hostapd_installed=hostapd_installed,
             is_running=is_running,
-            current_config=current_config
+            current_config=current_config,
+            interfaces=interfaces
         )
     except Exception as e:
         app.logger.error(f'Error cargando página hostapd: {str(e)}')
@@ -2280,10 +2289,10 @@ RUN+="/bin/ip link set wlan_ap0 address 99:88:77:66:55:44"
         app.logger.error(f"Error creating virtual interface: {str(e)}")
         return False
 
-def configure_hostapd(ssid, password, channel, hw_mode, country_code):
+def configure_hostapd(ssid, password, channel, hw_mode, country_code, interface):
     """Configure hostapd"""
     try:
-        config = f"""interface=wlan_ap0
+        config = f"""interface={interface}
 driver=nl80211
 ssid={ssid}
 hw_mode={hw_mode}
@@ -2385,21 +2394,24 @@ def hostapd_interface_status():
 def hostapd_config():
     try:
         data = request.get_json()
-        
-        # Create virtual interface if it doesn't exist
-        if not create_virtual_interface():
-            return jsonify({
-                'success': False,
-                'error': 'Failed to create virtual interface'
-            })
-
-        # Configure hostapd
+        interface = data.get('interface', 'wlan_ap0')
+        # Guardar la interfaz en la config actual (si usas un sistema de config persistente, aquí deberías actualizarlo)
+        # current_config['interface'] = interface  # Si tienes un objeto config global, actualízalo aquí
+        # Crear interfaz virtual solo si se selecciona wlan_ap0
+        if interface == 'wlan_ap0':
+            if not create_virtual_interface():
+                return jsonify({
+                    'success': False,
+                    'error': 'Failed to create virtual interface'
+                })
+        # Configurar hostapd con la interfaz seleccionada
         if not configure_hostapd(
             data.get('ssid'),
             data.get('password'),
             data.get('channel'),
             data.get('hw_mode'),
-            data.get('country_code')
+            data.get('country_code'),
+            interface
         ):
             return jsonify({
                 'success': False,
@@ -2496,6 +2508,14 @@ def restore_network_connectivity():
 @app.route('/api/hostapd/toggle', methods=['POST'])
 def hostapd_toggle():
     try:
+        # Leer la interfaz configurada actual desde el hostapd.conf
+        interface = 'wlan_ap0'
+        if os.path.exists('/etc/hostapd/hostapd.conf'):
+            with open('/etc/hostapd/hostapd.conf') as f:
+                for line in f:
+                    if line.startswith('interface='):
+                        interface = line.split('=', 1)[1].strip()
+                        break
         # Check current status
         status = subprocess.run(['systemctl', 'is-active', 'hostapd'], 
                               capture_output=True, text=True)
@@ -2510,21 +2530,19 @@ def hostapd_toggle():
         else:
             # Start AP
             try:
-                # Create virtual interface if it doesn't exist
-                if not create_virtual_interface():
-                    return jsonify({
-                        'success': False,
-                        'error': 'Failed to create virtual interface'
-                    })
-
+                # Crear interfaz virtual solo si corresponde
+                if interface == 'wlan_ap0':
+                    if not create_virtual_interface():
+                        return jsonify({
+                            'success': False,
+                            'error': 'Failed to create virtual interface'
+                        })
                 # Set static IP for AP interface
-                subprocess.run(['ip', 'addr', 'add', '192.168.90.1/24', 'dev', 'wlan_ap0'], check=True)
-                subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], check=True)
-
+                subprocess.run(['ip', 'addr', 'add', '192.168.90.1/24', 'dev', interface], check=True)
+                subprocess.run(['ip', 'link', 'set', interface, 'up'], check=True)
                 # Start services
                 subprocess.run(['systemctl', 'start', 'isc-dhcp-server'], check=True)
                 subprocess.run(['systemctl', 'start', 'hostapd'], check=True)
-                
                 message = 'Access Point started successfully'
             except Exception as e:
                 # If AP start fails, restore network
@@ -2533,7 +2551,6 @@ def hostapd_toggle():
                     'success': False,
                     'error': f'Failed to start AP: {str(e)}'
                 })
-
         return jsonify({
             'success': True,
             'message': message
