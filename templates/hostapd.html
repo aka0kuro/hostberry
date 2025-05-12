@@ -14,7 +14,7 @@
                 <i class="bi bi-power me-2"></i> <span id="toggleText">{% trans %}Start AP{% endtrans %}</span>
             </button>
             <button id="createWlanAp0" class="btn btn-secondary btn-sm ms-2">
-                <i class="fas fa-plus me-1"></i> {% trans %}Create wlan_ap0{% endtrans %}
+                <i class="fas fa-plus me-1" id="createWlanAp0Icon"></i> <span id="createWlanAp0Text">{% trans %}Create wlan_ap0{% endtrans %}</span>
             </button>
         </div>
     </div>
@@ -727,6 +727,53 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial status update and periodic updates
     updateStatus();
     setInterval(updateStatus, 5000);
+
+    // Cambiar estado del botón según wlan_ap0 esté UP o DOWN
+    function updateCreateWlanAp0Button(status) {
+        const btn = document.getElementById('createWlanAp0');
+        const text = document.getElementById('createWlanAp0Text');
+        const icon = document.getElementById('createWlanAp0Icon');
+        if (status && status.wlan_ap0) {
+            if (status.wlan_ap0.state === 'UP') {
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-success');
+                text.textContent = 'wlan_ap0 UP';
+                icon.classList.remove('fa-plus');
+                icon.classList.add('fa-check');
+                btn.disabled = true;
+            } else if (status.wlan_ap0.state === 'DOWN') {
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-warning');
+                text.textContent = 'wlan_ap0 DOWN';
+                icon.classList.remove('fa-check');
+                icon.classList.add('fa-arrow-up');
+                btn.disabled = false;
+            } else {
+                btn.classList.remove('btn-success', 'btn-warning');
+                btn.classList.add('btn-secondary');
+                text.textContent = 'Create wlan_ap0';
+                icon.classList.remove('fa-check', 'fa-arrow-up');
+                icon.classList.add('fa-plus');
+                btn.disabled = false;
+            }
+        } else {
+            btn.classList.remove('btn-success', 'btn-warning');
+            btn.classList.add('btn-secondary');
+            text.textContent = 'Create wlan_ap0';
+            icon.classList.remove('fa-check', 'fa-arrow-up');
+            icon.classList.add('fa-plus');
+            btn.disabled = false;
+        }
+    }
+
+    // Hook para updateStatus()
+    const origUpdateStatus = updateStatus;
+    updateStatus = async function() {
+        const status = await origUpdateStatus();
+        updateCreateWlanAp0Button(status);
+        return status;
+    };
+
 });
     // Crear interfaz wlan_ap0
     document.getElementById('createWlanAp0').addEventListener('click', async function() {
