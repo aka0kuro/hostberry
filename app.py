@@ -1922,8 +1922,21 @@ def save_last_connected_network(ssid, security):
 @app.route('/api/hostapd/create_wlan_ap0', methods=['POST'])
 def create_wlan_ap0_endpoint():
     try:
+        # Si ya existe, ponerla UP
+        result = subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], capture_output=True)
+        if result.returncode == 0:
+            up_result = subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], capture_output=True)
+            if up_result.returncode == 0:
+                return jsonify({'success': True, 'message': 'wlan_ap0 is already present and now UP'})
+            else:
+                return jsonify({'success': False, 'error': 'wlan_ap0 exists but could not be set UP'})
+        # Si no existe, crearla y ponerla UP
         if create_virtual_interface():
-            return jsonify({'success': True})
+            up_result = subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], capture_output=True)
+            if up_result.returncode == 0:
+                return jsonify({'success': True, 'message': 'wlan_ap0 created and set UP'})
+            else:
+                return jsonify({'success': False, 'error': 'Created wlan_ap0 but could not set UP'})
         else:
             return jsonify({'success': False, 'error': 'Failed to create wlan_ap0'})
     except Exception as e:
