@@ -1922,23 +1922,34 @@ def save_last_connected_network(ssid, security):
 @app.route('/api/hostapd/create_wlan_ap0', methods=['POST'])
 def create_wlan_ap0_endpoint():
     try:
-        # Si ya existe, ponerla UP
-        result = subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], capture_output=True)
+        # Comprobar si existe wlan_ap0 y su estado
+        result = subprocess.run(['ip', '-o', 'link', 'show', 'wlan_ap0'], capture_output=True, text=True)
         if result.returncode == 0:
-            up_result = subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], capture_output=True)
-            if up_result.returncode == 0:
-                return jsonify({'success': True, 'message': 'wlan_ap0 is already present and now UP'})
+            # Analizar si está UP o DOWN
+            if 'state DOWN' in result.stdout:
+                up_result = subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], capture_output=True)
+                if up_result.returncode == 0:
+                    return jsonify({'success': True, 'message': 'wlan_ap0 estaba DOWN y ahora está UP'})
+                else:
+                    return jsonify({'success': False, 'error': 'wlan_ap0 existe pero no se pudo poner UP'})
+            elif 'state UP' in result.stdout:
+                return jsonify({'success': True, 'message': 'wlan_ap0 ya está UP'})
             else:
-                return jsonify({'success': False, 'error': 'wlan_ap0 exists but could not be set UP'})
+                # Otro estado (UNKNOWN, etc.)
+                up_result = subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], capture_output=True)
+                if up_result.returncode == 0:
+                    return jsonify({'success': True, 'message': 'wlan_ap0 ahora está UP'})
+                else:
+                    return jsonify({'success': False, 'error': 'wlan_ap0 existe pero no se pudo poner UP'})
         # Si no existe, crearla y ponerla UP
         if create_virtual_interface():
             up_result = subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], capture_output=True)
             if up_result.returncode == 0:
-                return jsonify({'success': True, 'message': 'wlan_ap0 created and set UP'})
+                return jsonify({'success': True, 'message': 'wlan_ap0 creada y puesta UP'})
             else:
-                return jsonify({'success': False, 'error': 'Created wlan_ap0 but could not set UP'})
+                return jsonify({'success': False, 'error': 'Se creó wlan_ap0 pero no se pudo poner UP'})
         else:
-            return jsonify({'success': False, 'error': 'Failed to create wlan_ap0'})
+            return jsonify({'success': False, 'error': 'No se pudo crear wlan_ap0'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
