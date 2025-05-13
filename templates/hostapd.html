@@ -733,34 +733,28 @@ document.addEventListener('DOMContentLoaded', function() {
         const btn = document.getElementById('createWlanAp0');
         const text = document.getElementById('createWlanAp0Text');
         const icon = document.getElementById('createWlanAp0Icon');
+        
         if (status && status.wlan_ap0) {
             if (status.wlan_ap0.state === 'UP') {
-                btn.classList.remove('btn-secondary');
-                btn.classList.add('btn-success');
-                text.textContent = 'wlan_ap0 UP';
-                icon.classList.remove('fa-plus');
-                icon.classList.add('fa-check');
-                btn.disabled = true;
-            } else if (status.wlan_ap0.state === 'DOWN') {
-                btn.classList.remove('btn-success');
-                btn.classList.add('btn-warning');
-                text.textContent = 'wlan_ap0 DOWN';
-                icon.classList.remove('fa-check');
-                icon.classList.add('fa-arrow-up');
+                btn.classList.remove('btn-secondary', 'btn-warning');
+                btn.classList.add('btn-danger');
+                text.textContent = '{% trans %}Delete wlan_ap0{% endtrans %}';
+                icon.classList.remove('fa-plus', 'fa-arrow-up');
+                icon.classList.add('fa-trash');
                 btn.disabled = false;
-            } else {
-                btn.classList.remove('btn-success', 'btn-warning');
-                btn.classList.add('btn-secondary');
-                text.textContent = 'Create wlan_ap0';
-                icon.classList.remove('fa-check', 'fa-arrow-up');
-                icon.classList.add('fa-plus');
+            } else if (status.wlan_ap0.state === 'DOWN') {
+                btn.classList.remove('btn-secondary', 'btn-danger');
+                btn.classList.add('btn-warning');
+                text.textContent = '{% trans %}Up wlan_ap0{% endtrans %}';
+                icon.classList.remove('fa-plus', 'fa-trash');
+                icon.classList.add('fa-arrow-up');
                 btn.disabled = false;
             }
         } else {
-            btn.classList.remove('btn-success', 'btn-warning');
+            btn.classList.remove('btn-warning', 'btn-danger');
             btn.classList.add('btn-secondary');
-            text.textContent = 'Create wlan_ap0';
-            icon.classList.remove('fa-check', 'fa-arrow-up');
+            text.textContent = '{% trans %}Create wlan_ap0{% endtrans %}';
+            icon.classList.remove('fa-arrow-up', 'fa-trash');
             icon.classList.add('fa-plus');
             btn.disabled = false;
         }
@@ -775,19 +769,25 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
 });
-    // Crear interfaz wlan_ap0
+    // Crear/Up/Delete interfaz wlan_ap0
     document.getElementById('createWlanAp0').addEventListener('click', async function() {
         try {
-            const response = await fetch('/api/hostapd/create_wlan_ap0', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') } });
+            const response = await fetch('/api/hostapd/create_wlan_ap0', { 
+                method: 'POST', 
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
+                } 
+            });
             const data = await response.json();
             if (data.success) {
-                showToast('{% trans %}Success{% endtrans %}', '{% trans %}Virtual interface wlan_ap0 created successfully{% endtrans %}');
+                showToast('{% trans %}Success{% endtrans %}', data.message);
                 await updateStatus();
             } else {
-                showToast('{% trans %}Error{% endtrans %}', data.error || '{% trans %}Failed to create wlan_ap0{% endtrans %}', 'danger');
+                showToast('{% trans %}Error{% endtrans %}', data.error || '{% trans %}Failed to manage wlan_ap0{% endtrans %}', 'danger');
             }
         } catch (error) {
-            showToast('{% trans %}Error{% endtrans %}', '{% trans %}Failed to create wlan_ap0. Please check the console for details.{% endtrans %}', 'danger');
+            showToast('{% trans %}Error{% endtrans %}', '{% trans %}Failed to manage wlan_ap0. Please check the console for details.{% endtrans %}', 'danger');
         }
     });
 </script>

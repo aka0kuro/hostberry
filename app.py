@@ -1922,36 +1922,54 @@ def save_last_connected_network(ssid, security):
 @app.route('/api/hostapd/create_wlan_ap0', methods=['POST'])
 def create_wlan_ap0_endpoint():
     try:
-        # Comprobar si existe wlan_ap0 y su estado
-        result = subprocess.run(['ip', '-o', 'link', 'show', 'wlan_ap0'], capture_output=True, text=True)
-        if result.returncode == 0:
-            # Analizar si está UP o DOWN
-            if 'state DOWN' in result.stdout:
-                up_result = subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], capture_output=True)
-                if up_result.returncode == 0:
-                    return jsonify({'success': True, 'message': 'wlan_ap0 estaba DOWN y ahora está UP'})
-                else:
-                    return jsonify({'success': False, 'error': 'wlan_ap0 existe pero no se pudo poner UP'})
-            elif 'state UP' in result.stdout:
-                return jsonify({'success': True, 'message': 'wlan_ap0 ya está UP'})
+        # Check if interface exists
+        result = subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], 
+                              capture_output=True, text=True)
+        exists = result.returncode == 0
+        
+        if exists:
+            # Check if interface is up
+            is_up = 'state UP' in result.stdout
+            
+            # If interface exists and is down, bring it up
+            if not is_up:
+                subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], check=True)
+                return jsonify({
+                    'success': True,
+                    'message': 'Interface wlan_ap0 brought up successfully',
+                    'action': 'up'
+                })
             else:
-                # Otro estado (UNKNOWN, etc.)
-                up_result = subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], capture_output=True)
-                if up_result.returncode == 0:
-                    return jsonify({'success': True, 'message': 'wlan_ap0 ahora está UP'})
-                else:
-                    return jsonify({'success': False, 'error': 'wlan_ap0 existe pero no se pudo poner UP'})
-        # Si no existe, crearla y ponerla UP
-        if create_virtual_interface():
-            up_result = subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], capture_output=True)
-            if up_result.returncode == 0:
-                return jsonify({'success': True, 'message': 'wlan_ap0 creada y puesta UP'})
-            else:
-                return jsonify({'success': False, 'error': 'Se creó wlan_ap0 pero no se pudo poner UP'})
+                # If interface exists and is up, delete it
+                subprocess.run(['iw', 'dev', 'wlan_ap0', 'del'], check=True)
+                return jsonify({
+                    'success': True,
+                    'message': 'Interface wlan_ap0 deleted successfully',
+                    'action': 'delete'
+                })
         else:
-            return jsonify({'success': False, 'error': 'No se pudo crear wlan_ap0'})
+            # Create virtual interface
+            if create_virtual_interface():
+                return jsonify({
+                    'success': True,
+                    'message': 'Virtual interface wlan_ap0 created successfully',
+                    'action': 'create'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': 'Failed to create virtual interface'
+                })
+    except subprocess.CalledProcessError as e:
+        return jsonify({
+            'success': False,
+            'error': f'Command failed: {e.cmd}\nOutput: {e.output}'
+        })
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
 
 # Modificar la función wifi_connect para guardar la última red
 @app.route('/api/wifi/connect', methods=['GET', 'POST'])
@@ -2534,7 +2552,7 @@ def restore_network_connectivity():
 
         # Only remove virtual interface if it was used
         if ap_interface == 'wlan_ap0':
-            subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'down'], check=False)
+            # Remove virtual interface without affecting physical interfaces
             subprocess.run(['iw', 'dev', 'wlan_ap0', 'del'], check=False)
         # Do NOT bring down physical interfaces (wlan0/wlan1)
 
