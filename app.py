@@ -2395,16 +2395,42 @@ def configure_network_passthrough():
         # Enable IP forwarding
         with open('/proc/sys/net/ipv4/ip_forward', 'w') as f:
             f.write('1\n')
-        
-        # Configure NAT for both interfaces
+
+        # Get the main network interface (wlan0 or eth0)
+        main_interface = None
+        for iface in ['wlan0', 'eth0']:
+            result = subprocess.run(['ip', 'link', 'show', iface], capture_output=True)
+            if result.returncode == 0:
+                # Check if interface has an IP address
+                ip_result = subprocess.run(['ip', 'addr', 'show', iface], capture_output=True, text=True)
+                if 'inet ' in ip_result.stdout:
+                    main_interface = iface
+                    break
+
+        if not main_interface:
+            raise Exception("No main network interface found with IP address")
+
+        # Configure NAT for the main interface
         subprocess.run(['iptables', '-t', 'nat', '-A', 'POSTROUTING', 
-                       '-o', 'wlan0', '-j', 'MASQUERADE'], check=True)
-        subprocess.run(['iptables', '-t', 'nat', '-A', 'POSTROUTING', 
-                       '-o', 'eth0', '-j', 'MASQUERADE'], check=True)
+                       '-o', main_interface, '-j', 'MASQUERADE'], check=True)
         
         # Allow forwarding between interfaces
-        subprocess.run(['iptables', '-A', 'FORWARD', '-i', 'wlan_ap0', '-o', 'wlan0', '-j', 'ACCEPT'], check=True)
-        subprocess.run(['iptables', '-A', 'FORWARD', '-i', 'wlan0', '-o', 'wlan_ap0', '-m', 'state', '--state', 'ESTABLISHED,RELATED', '-j', 'ACCEPT'], check=True)
+        subprocess.run(['iptables', '-A', 'FORWARD', '-i', 'wlan_ap0', '-o', main_interface, '-j', 'ACCEPT'], check=True)
+        subprocess.run(['iptables', '-A', 'FORWARD', '-i', main_interface, '-o', 'wlan_ap0', '-m', 'state', '--state', 'ESTABLISHED,RELATED', '-j', 'ACCEPT'], check=True)
+
+        # Configure DNS forwarding
+        if os.path.exists('/etc/dnsmasq.conf'):
+            with open('/etc/dnsmasq.conf', 'a') as f:
+                f.write('\n# DNS forwarding for AP clients\n')
+                f.write('server=8.8.8.8\n')
+                f.write('server=8.8.4.4\n')
+
+        # Restart dnsmasq if it exists
+        if subprocess.run(['which', 'dnsmasq'], capture_output=True).returncode == 0:
+            subprocess.run(['systemctl', 'restart', 'dnsmasq'], check=False)
+
+        # Log the configuration
+        app.logger.info(f"Network passthrough configured using {main_interface} as main interface")
         
         return True
     except Exception as e:
