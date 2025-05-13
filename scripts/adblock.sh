@@ -92,87 +92,116 @@ process_lists() {
     local rules=0
     
     # Limpiar archivos temporales
+    sudo rm -rf "$TEMP_DIR"
+    sudo mkdir -p "$TEMP_DIR"
+    sudo chmod 755 "$TEMP_DIR"
+    
     > "$TEMP_DIR/combined.txt"
     > "$TEMP_DIR/domains.txt"
     
+    echo "Processing lists: $lists"
+    
     # Procesar cada lista seleccionada
     for list in $lists; do
+        echo "Processing list: $list"
         case $list in
             "easylist")
-                download_list "$EASYLIST_URL" "easylist.txt"
-                grep -E '^\|\|[^\/]+\^$' "$TEMP_DIR/easylist.txt" > "$TEMP_DIR/easylist_filtered.txt"
-                while IFS= read -r line; do
-                    domain=$(extract_domain "$line")
-                    if [ ! -z "$domain" ]; then
-                        echo "$domain" >> "$TEMP_DIR/domains.txt"
-                        log_realtime "$domain"
-                    fi
-                done < "$TEMP_DIR/easylist_filtered.txt"
+                if download_list "$EASYLIST_URL" "easylist.txt"; then
+                    echo "Filtering easylist..."
+                    grep -E '^\|\|[^\/]+\^$' "$TEMP_DIR/easylist.txt" > "$TEMP_DIR/easylist_filtered.txt"
+                    while IFS= read -r line; do
+                        domain=$(extract_domain "$line")
+                        if [ ! -z "$domain" ]; then
+                            echo "$domain" >> "$TEMP_DIR/domains.txt"
+                            log_realtime "$domain"
+                        fi
+                    done < "$TEMP_DIR/easylist_filtered.txt"
+                fi
                 ;;
             "easyprivacy")
-                download_list "$EASYPRIVACY_URL" "easyprivacy.txt"
-                grep -E '^\|\|[^\/]+\^$' "$TEMP_DIR/easyprivacy.txt" > "$TEMP_DIR/easyprivacy_filtered.txt"
-                while IFS= read -r line; do
-                    domain=$(extract_domain "$line")
-                    if [ ! -z "$domain" ]; then
-                        echo "$domain" >> "$TEMP_DIR/domains.txt"
-                        log_realtime "$domain"
-                    fi
-                done < "$TEMP_DIR/easyprivacy_filtered.txt"
+                if download_list "$EASYPRIVACY_URL" "easyprivacy.txt"; then
+                    echo "Filtering easyprivacy..."
+                    grep -E '^\|\|[^\/]+\^$' "$TEMP_DIR/easyprivacy.txt" > "$TEMP_DIR/easyprivacy_filtered.txt"
+                    while IFS= read -r line; do
+                        domain=$(extract_domain "$line")
+                        if [ ! -z "$domain" ]; then
+                            echo "$domain" >> "$TEMP_DIR/domains.txt"
+                            log_realtime "$domain"
+                        fi
+                    done < "$TEMP_DIR/easyprivacy_filtered.txt"
+                fi
                 ;;
             "fanboy")
-                download_list "$FANBOY_URL" "fanboy.txt"
-                grep -E '^\|\|[^\/]+\^$' "$TEMP_DIR/fanboy.txt" > "$TEMP_DIR/fanboy_filtered.txt"
-                while IFS= read -r line; do
-                    domain=$(extract_domain "$line")
-                    if [ ! -z "$domain" ]; then
-                        echo "$domain" >> "$TEMP_DIR/domains.txt"
-                        log_realtime "$domain"
-                    fi
-                done < "$TEMP_DIR/fanboy_filtered.txt"
+                if download_list "$FANBOY_URL" "fanboy.txt"; then
+                    echo "Filtering fanboy..."
+                    grep -E '^\|\|[^\/]+\^$' "$TEMP_DIR/fanboy.txt" > "$TEMP_DIR/fanboy_filtered.txt"
+                    while IFS= read -r line; do
+                        domain=$(extract_domain "$line")
+                        if [ ! -z "$domain" ]; then
+                            echo "$domain" >> "$TEMP_DIR/domains.txt"
+                            log_realtime "$domain"
+                        fi
+                    done < "$TEMP_DIR/fanboy_filtered.txt"
+                fi
                 ;;
             "malware")
-                download_list "$MALWARE_URL" "malware.txt"
-                grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' "$TEMP_DIR/malware.txt" >> "$TEMP_DIR/domains.txt"
+                if download_list "$MALWARE_URL" "malware.txt"; then
+                    echo "Filtering malware..."
+                    grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' "$TEMP_DIR/malware.txt" >> "$TEMP_DIR/domains.txt"
+                fi
                 ;;
             "social")
-                download_list "$SOCIAL_URL" "social.txt"
-                grep -E '^\|\|[^\/]+\^$' "$TEMP_DIR/social.txt" > "$TEMP_DIR/social_filtered.txt"
-                while IFS= read -r line; do
-                    domain=$(extract_domain "$line")
-                    if [ ! -z "$domain" ]; then
-                        echo "$domain" >> "$TEMP_DIR/domains.txt"
-                        log_realtime "$domain"
-                    fi
-                done < "$TEMP_DIR/social_filtered.txt"
+                if download_list "$SOCIAL_URL" "social.txt"; then
+                    echo "Filtering social..."
+                    grep -E '^\|\|[^\/]+\^$' "$TEMP_DIR/social.txt" > "$TEMP_DIR/social_filtered.txt"
+                    while IFS= read -r line; do
+                        domain=$(extract_domain "$line")
+                        if [ ! -z "$domain" ]; then
+                            echo "$domain" >> "$TEMP_DIR/domains.txt"
+                            log_realtime "$domain"
+                        fi
+                    done < "$TEMP_DIR/social_filtered.txt"
+                fi
                 ;;
             "kadhosts")
-                download_list "$KADHOSTS_URL" "kadhosts.txt"
-                grep -E '^0\.0\.0\.0' "$TEMP_DIR/kadhosts.txt" | awk '{print $2}' >> "$TEMP_DIR/domains.txt"
+                if download_list "$KADHOSTS_URL" "kadhosts.txt"; then
+                    echo "Filtering kadhosts..."
+                    grep -E '^0\.0\.0\.0' "$TEMP_DIR/kadhosts.txt" | awk '{print $2}' >> "$TEMP_DIR/domains.txt"
+                fi
                 ;;
             "adobe")
-                download_list "$ADOBE_TRACKERS_URL" "adobe.txt"
-                grep -E '^0\.0\.0\.0' "$TEMP_DIR/adobe.txt" | awk '{print $2}' >> "$TEMP_DIR/domains.txt"
+                if download_list "$ADOBE_TRACKERS_URL" "adobe.txt"; then
+                    echo "Filtering adobe..."
+                    grep -E '^0\.0\.0\.0' "$TEMP_DIR/adobe.txt" | awk '{print $2}' >> "$TEMP_DIR/domains.txt"
+                fi
                 ;;
             "firstparty")
-                download_list "$FIRSTPARTY_TRACKERS_URL" "firstparty.txt"
-                grep -E '^0\.0\.0\.0' "$TEMP_DIR/firstparty.txt" | awk '{print $2}' >> "$TEMP_DIR/domains.txt"
+                if download_list "$FIRSTPARTY_TRACKERS_URL" "firstparty.txt"; then
+                    echo "Filtering firstparty..."
+                    grep -E '^0\.0\.0\.0' "$TEMP_DIR/firstparty.txt" | awk '{print $2}' >> "$TEMP_DIR/domains.txt"
+                fi
                 ;;
             "stevenblack")
-                download_list "$STEVENBLACK_URL" "stevenblack.txt"
-                grep -E '^0\.0\.0\.0' "$TEMP_DIR/stevenblack.txt" | awk '{print $2}' >> "$TEMP_DIR/domains.txt"
+                if download_list "$STEVENBLACK_URL" "stevenblack.txt"; then
+                    echo "Filtering stevenblack..."
+                    grep -E '^0\.0\.0\.0' "$TEMP_DIR/stevenblack.txt" | awk '{print $2}' >> "$TEMP_DIR/domains.txt"
+                fi
                 ;;
             "windows")
-                download_list "$WINDOWS_SPY_URL" "windows.txt"
-                grep -E '^0\.0\.0\.0' "$TEMP_DIR/windows.txt" | awk '{print $2}' >> "$TEMP_DIR/domains.txt"
+                if download_list "$WINDOWS_SPY_URL" "windows.txt"; then
+                    echo "Filtering windows..."
+                    grep -E '^0\.0\.0\.0' "$TEMP_DIR/windows.txt" | awk '{print $2}' >> "$TEMP_DIR/domains.txt"
+                fi
                 ;;
         esac
     done
     
+    echo "Removing duplicates..."
     # Eliminar duplicados y contar dominios únicos
     sort -u "$TEMP_DIR/domains.txt" > "$TEMP_DIR/unique_domains.txt"
     domains=$(wc -l < "$TEMP_DIR/unique_domains.txt")
     
+    echo "Preparing hosts file..."
     # Preparar el archivo hosts
     > "$TEMP_DIR/combined.txt"
     while IFS= read -r domain; do
@@ -185,9 +214,11 @@ process_lists() {
     # Contar reglas totales
     rules=$(wc -l < "$TEMP_DIR/combined.txt")
     
+    echo "Saving statistics..."
     # Guardar estadísticas
-    echo "{\"domains_blocked\": $domains, \"rules_active\": $rules}" | sudo tee "$STATS_FILE" > /dev/null
+    echo "{\"domains_blocked\": $domains, \"rules_active\": $rules, \"lists_active\": $(echo $lists | wc -w)}" | sudo tee "$STATS_FILE" > /dev/null
     
+    echo "Updating hosts file..."
     # Actualizar hosts file
     if [ -f "$HOSTS_FILE" ]; then
         # Hacer backup del archivo hosts
