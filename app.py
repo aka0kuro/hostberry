@@ -2511,28 +2511,47 @@ def configure_network_passthrough():
 @app.route('/api/hostapd/interface_status')
 def hostapd_interface_status():
     try:
-        # Check if interface exists
+        interfaces = {}
+        
+        # Check wlan_ap0
         result = subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], 
                               capture_output=True, text=True)
-        exists = result.returncode == 0
+        interfaces['wlan_ap0'] = {
+            'exists': result.returncode == 0,
+            'is_up': 'state UP' in result.stdout if result.returncode == 0 else False,
+            'has_ip': False
+        }
         
-        if exists:
-            # Check if interface is up
-            is_up = 'state UP' in result.stdout
-            
-            # Check if interface has IP
+        if interfaces['wlan_ap0']['exists']:
             ip_result = subprocess.run(['ip', 'addr', 'show', 'wlan_ap0'], 
                                      capture_output=True, text=True)
-            has_ip = 'inet ' in ip_result.stdout
-        else:
-            is_up = False
-            has_ip = False
+            interfaces['wlan_ap0']['has_ip'] = 'inet ' in ip_result.stdout
+        
+        # Check wlan1
+        result = subprocess.run(['ip', 'link', 'show', 'wlan1'], 
+                              capture_output=True, text=True)
+        interfaces['wlan1'] = {
+            'exists': result.returncode == 0,
+            'is_up': 'state UP' in result.stdout if result.returncode == 0 else False,
+            'has_ip': False
+        }
+        
+        if interfaces['wlan1']['exists']:
+            ip_result = subprocess.run(['ip', 'addr', 'show', 'wlan1'], 
+                                     capture_output=True, text=True)
+            interfaces['wlan1']['has_ip'] = 'inet ' in ip_result.stdout
+            
+            # Verificar que es una interfaz física y está en modo managed
+            iw_result = subprocess.run(['iw', 'dev', 'wlan1', 'info'], 
+                                     capture_output=True, text=True)
+            if iw_result.returncode == 0 and 'type managed' in iw_result.stdout:
+                interfaces['wlan1']['is_physical'] = True
+            else:
+                interfaces['wlan1']['is_physical'] = False
 
         return jsonify({
             'success': True,
-            'exists': exists,
-            'is_up': is_up,
-            'has_ip': has_ip
+            'interfaces': interfaces
         })
     except Exception as e:
         return jsonify({
