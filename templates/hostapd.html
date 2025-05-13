@@ -748,7 +748,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 interfaceSelect.innerHTML = '';
                 
                 // Añadir wlan_ap0 si existe
-                if (data.wlan_ap0 && data.wlan_ap0.exists) {
+                if (data.interfaces.wlan_ap0 && data.interfaces.wlan_ap0.exists) {
                     const option = document.createElement('option');
                     option.value = 'wlan_ap0';
                     option.textContent = 'wlan_ap0';
@@ -758,8 +758,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     interfaceSelect.appendChild(option);
                 }
                 
-                // Añadir wlan1 si está activa
-                if (data.wlan1 && data.wlan1.exists && data.wlan1.is_up) {
+                // Añadir wlan1 si está activa y es una interfaz física
+                if (data.interfaces.wlan1 && data.interfaces.wlan1.exists && 
+                    data.interfaces.wlan1.is_up && data.interfaces.wlan1.is_physical) {
                     const option = document.createElement('option');
                     option.value = 'wlan1';
                     option.textContent = 'wlan1';
