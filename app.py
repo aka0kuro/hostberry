@@ -2311,12 +2311,20 @@ def hostapd_page():
                         key, value = line.strip().split('=', 1)
                         current_config[key] = value
         
-        # Detectar interfaces WiFi disponibles (wlan0, wlan1, wlan_ap0)
+        # Detectar interfaces WiFi físicas disponibles (excluyendo wlan0)
         interfaces = []
-        for iface in ['wlan0', 'wlan1', 'wlan_ap0']:
+        for iface in ['wlan1', 'wlan2', 'wlan3']:  # Añadir más interfaces si es necesario
             result = subprocess.run(['ip', 'link', 'show', iface], capture_output=True)
             if result.returncode == 0:
-                interfaces.append(iface)
+                # Verificar que es una interfaz física
+                phy_result = subprocess.run(['iw', 'dev', iface, 'info'], capture_output=True, text=True)
+                if phy_result.returncode == 0 and 'type managed' in phy_result.stdout:
+                    interfaces.append(iface)
+        
+        # Añadir wlan_ap0 si existe
+        if subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], capture_output=True).returncode == 0:
+            interfaces.append('wlan_ap0')
+            
         # Pasar la interfaz configurada actual
         current_config['interface'] = current_config.get('interface', 'wlan_ap0')
         return render_template(
