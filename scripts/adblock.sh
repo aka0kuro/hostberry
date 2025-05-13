@@ -30,9 +30,19 @@ sudo mkdir -p "$TEMP_DIR"
 log_realtime() {
     local domain=$1
     local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+    # Asegurarse de que el archivo existe
+    if [ ! -f "$REALTIME_LOG" ]; then
+        sudo touch "$REALTIME_LOG"
+        sudo chmod 644 "$REALTIME_LOG"
+    fi
     echo "[$timestamp] Blocked: $domain" | sudo tee -a "$REALTIME_LOG" > /dev/null
     # Mantener solo las últimas 1000 entradas
-    sudo tail -n 1000 "$REALTIME_LOG" | sudo tee "$REALTIME_LOG.tmp" > /dev/null && sudo mv "$REALTIME_LOG.tmp" "$REALTIME_LOG"
+    if [ -f "$REALTIME_LOG" ]; then
+        sudo tail -n 1000 "$REALTIME_LOG" > "$REALTIME_LOG.tmp" 2>/dev/null
+        if [ -f "$REALTIME_LOG.tmp" ]; then
+            sudo mv "$REALTIME_LOG.tmp" "$REALTIME_LOG" 2>/dev/null
+        fi
+    fi
 }
 
 # Función para mostrar estadísticas en tiempo real
