@@ -533,6 +533,14 @@ def security_config():
                 if len(parts) > 7 and parts[7] != 'anywhere':
                     blocked_ips += 1
         
+        # Also check FORWARD chain for blocked IPs
+        forward_output = subprocess.check_output(['iptables', '-L', 'FORWARD', '-n', '-v'], text=True).decode()
+        for line in forward_output.split('\n'):
+            if 'DROP' in line and 'all' in line and 'anywhere' in line:
+                parts = line.split()
+                if len(parts) > 7 and parts[7] != 'anywhere':
+                    blocked_ips += 1
+        
         last_attack = None  # This would come from log parsing in a real implementation
     except Exception as e:
         app.logger.error(f"Error getting security status: {str(e)}")
