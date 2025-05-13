@@ -1334,10 +1334,22 @@ def adblock_config():
         try:
             with open('/etc/hosts', 'r') as f:
                 hosts_content = f.read()
-                rules_count = sum(1 for line in hosts_content.splitlines() if line.strip().startswith('0.0.0.0'))
+                # Count rules only between AdBlock markers
+                adblock_section = False
+                rules_count = 0
+                for line in hosts_content.splitlines():
+                    if '# AdBlock Start' in line:
+                        adblock_section = True
+                        continue
+                    elif '# AdBlock End' in line:
+                        adblock_section = False
+                        continue
+                    elif adblock_section and line.strip().startswith('0.0.0.0'):
+                        rules_count += 1
+                
                 stats['domains_blocked'] = rules_count
                 stats['rules_active'] = rules_count
-            # Añadir número de listas activas
+            # Add number of active lists
             current_config = config.get_current_config()
             stats['lists_active'] = len(current_config.get('ADBLOCK_LISTS', []))
             stats_file = '/etc/hostberry/adblock/stats.json'
