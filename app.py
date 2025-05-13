@@ -2468,6 +2468,13 @@ def configure_network_passthrough():
         subprocess.run(['iptables', '-A', 'FORWARD', '-p', 'udp', '--dport', '53', '-j', 'ACCEPT'], check=True)
         subprocess.run(['iptables', '-A', 'FORWARD', '-p', 'tcp', '--dport', '53', '-j', 'ACCEPT'], check=True)
 
+        # Allow DHCP traffic
+        subprocess.run(['iptables', '-A', 'FORWARD', '-p', 'udp', '--dport', '67:68', '-j', 'ACCEPT'], check=True)
+        subprocess.run(['iptables', '-A', 'FORWARD', '-p', 'tcp', '--dport', '67:68', '-j', 'ACCEPT'], check=True)
+
+        # Allow ICMP (ping) for better connectivity testing
+        subprocess.run(['iptables', '-A', 'FORWARD', '-p', 'icmp', '-j', 'ACCEPT'], check=True)
+
         # Configure DNS forwarding
         if os.path.exists('/etc/dnsmasq.conf'):
             with open('/etc/dnsmasq.conf', 'a') as f:
@@ -2478,6 +2485,9 @@ def configure_network_passthrough():
                 f.write('dhcp-range=192.168.90.10,192.168.90.50,12h\n')
                 f.write('dhcp-option=3,192.168.90.1\n')
                 f.write('dhcp-option=6,8.8.8.8,8.8.4.4\n')
+                f.write('no-resolv\n')
+                f.write('no-poll\n')
+                f.write('cache-size=1000\n')
 
         # Restart dnsmasq if it exists
         if subprocess.run(['which', 'dnsmasq'], capture_output=True).returncode == 0:
