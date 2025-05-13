@@ -2556,9 +2556,14 @@ def restore_network_connectivity():
             subprocess.run(['iw', 'dev', 'wlan_ap0', 'del'], check=False)
         # Do NOT bring down physical interfaces (wlan0/wlan1)
 
-        # Clear iptables rules
-        subprocess.run(['iptables', '-F'], check=False)
-        subprocess.run(['iptables', '-t', 'nat', '-F'], check=False)
+        # Remove only AP-specific iptables rules
+        # Remove NAT rules for AP interface
+        subprocess.run(['iptables', '-t', 'nat', '-D', 'POSTROUTING', '-o', 'wlan0', '-j', 'MASQUERADE'], check=False)
+        subprocess.run(['iptables', '-t', 'nat', '-D', 'POSTROUTING', '-o', 'eth0', '-j', 'MASQUERADE'], check=False)
+        
+        # Remove forwarding rules for AP interface
+        subprocess.run(['iptables', '-D', 'FORWARD', '-i', 'wlan_ap0', '-o', 'wlan0', '-j', 'ACCEPT'], check=False)
+        subprocess.run(['iptables', '-D', 'FORWARD', '-i', 'wlan0', '-o', 'wlan_ap0', '-m', 'state', '--state', 'ESTABLISHED,RELATED', '-j', 'ACCEPT'], check=False)
 
         # Disable IP forwarding
         with open('/proc/sys/net/ipv4/ip_forward', 'w') as f:
