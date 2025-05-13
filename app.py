@@ -1340,6 +1340,12 @@ def adblock_config():
     def recalculate_adblock_stats():
         stats = {'domains_blocked': 0, 'rules_active': 0, 'lists_active': 0}
         try:
+            # Get current configuration
+            current_config = config.get_current_config()
+            active_lists = current_config.get('ADBLOCK_LISTS', [])
+            stats['lists_active'] = len(active_lists)
+
+            # Read hosts file and count rules
             with open('/etc/hosts', 'r') as f:
                 hosts_content = f.read()
                 # Count rules only between AdBlock markers
@@ -1357,14 +1363,13 @@ def adblock_config():
                 
                 stats['domains_blocked'] = rules_count
                 stats['rules_active'] = rules_count
-            # Add number of active lists
-            current_config = config.get_current_config()
-            stats['lists_active'] = len(current_config.get('ADBLOCK_LISTS', []))
+
+            # Save stats to file
             stats_file = '/etc/hostberry/adblock/stats.json'
             os.makedirs(os.path.dirname(stats_file), exist_ok=True)
             with open(stats_file, 'w') as f:
                 json.dump(stats, f)
-            app.logger.info(f"AdBlock stats: {stats}")
+            app.logger.info(f"AdBlock stats recalculated: {stats}")
         except Exception as e:
             app.logger.error(f"Error reading/updating AdBlock stats: {str(e)}")
         return stats
