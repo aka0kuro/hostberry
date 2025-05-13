@@ -2424,6 +2424,10 @@ def configure_network_passthrough():
         if not main_interface:
             raise Exception("No main network interface found with IP address")
 
+        # Clear existing NAT and forwarding rules
+        subprocess.run(['iptables', '-t', 'nat', '-F'], check=False)
+        subprocess.run(['iptables', '-F'], check=False)
+
         # Configure NAT for the main interface
         subprocess.run(['iptables', '-t', 'nat', '-A', 'POSTROUTING', 
                        '-o', main_interface, '-j', 'MASQUERADE'], check=True)
@@ -2432,12 +2436,20 @@ def configure_network_passthrough():
         subprocess.run(['iptables', '-A', 'FORWARD', '-i', 'wlan_ap0', '-o', main_interface, '-j', 'ACCEPT'], check=True)
         subprocess.run(['iptables', '-A', 'FORWARD', '-i', main_interface, '-o', 'wlan_ap0', '-m', 'state', '--state', 'ESTABLISHED,RELATED', '-j', 'ACCEPT'], check=True)
 
+        # Allow DNS traffic
+        subprocess.run(['iptables', '-A', 'FORWARD', '-p', 'udp', '--dport', '53', '-j', 'ACCEPT'], check=True)
+        subprocess.run(['iptables', '-A', 'FORWARD', '-p', 'tcp', '--dport', '53', '-j', 'ACCEPT'], check=True)
+
         # Configure DNS forwarding
         if os.path.exists('/etc/dnsmasq.conf'):
             with open('/etc/dnsmasq.conf', 'a') as f:
                 f.write('\n# DNS forwarding for AP clients\n')
                 f.write('server=8.8.8.8\n')
                 f.write('server=8.8.4.4\n')
+                f.write('interface=wlan_ap0\n')
+                f.write('dhcp-range=192.168.90.10,192.168.90.50,12h\n')
+                f.write('dhcp-option=3,192.168.90.1\n')
+                f.write('dhcp-option=6,8.8.8.8,8.8.4.4\n')
 
         # Restart dnsmasq if it exists
         if subprocess.run(['which', 'dnsmasq'], capture_output=True).returncode == 0:
@@ -2445,7 +2457,9 @@ def configure_network_passthrough():
 
         # Log the configuration
         app.logger.info(f"Network passthrough configured using {main_interface} as main interface")
-        
+        app.logger.info("NAT and forwarding rules configured")
+        app.logger.info("DNS forwarding configured")
+
         return True
     except Exception as e:
         app.logger.error(f"Error configuring network passthrough: {str(e)}")
