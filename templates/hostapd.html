@@ -202,17 +202,6 @@
                             <small class="text-muted">{% trans %}DHCP range for client devices (default: 192.168.90.10 - 192.168.90.50){% endtrans %}</small>
                         </div>
 
-                        <!-- Network Passthrough -->
-                        <div class="mb-3">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="enable_passthrough" name="enable_passthrough">
-                                <label class="form-check-label" for="enable_passthrough">
-                                    {% trans %}Enable Network Passthrough{% endtrans %}
-                                </label>
-                            </div>
-                            <small class="text-muted">{% trans %}Allow clients to access the internet through the main network interface{% endtrans %}</small>
-                        </div>
-
                         <!-- Submit Button -->
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">
@@ -479,19 +468,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             `{% trans %}AP is running but interface has issues:{% endtrans %}\n${interfaceStatus.error}`, 
                             'warning');
                     }
-                    
-                    // Check network passthrough status
-                    if (data.passthrough_status) {
-                        if (!data.passthrough_status.enabled) {
-                            showToast('{% trans %}Warning{% endtrans %}', 
-                                '{% trans %}Network passthrough is disabled. Clients will not have internet access.{% endtrans %}', 
-                                'warning');
-                        } else if (!data.passthrough_status.working) {
-                            showToast('{% trans %}Warning{% endtrans %}', 
-                                '{% trans %}Network passthrough is enabled but not working. Check routing configuration.{% endtrans %}', 
-                                'warning');
-                        }
-                    }
                 }
             } else {
                 // Handle error state
@@ -626,7 +602,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const countryCode = formData.get('country_code');
         const dhcpStart = formData.get('dhcp_start');
         const dhcpEnd = formData.get('dhcp_end');
-        const enablePassthrough = formData.get('enable_passthrough') === 'on';
 
         if (!ssid || !password || !channel || !band || !countryCode || !dhcpStart || !dhcpEnd) {
             showToast('{% trans %}Error{% endtrans %}', '{% trans %}All fields are required{% endtrans %}', 'danger');
@@ -664,7 +639,6 @@ document.addEventListener('DOMContentLoaded', function() {
             rsn_pairwise: 'CCMP',
             dhcp_start: dhcpStart,
             dhcp_end: dhcpEnd,
-            enable_passthrough: enablePassthrough,
             create_interface: !interfaceStatus.exists,
             fix_interface: interfaceStatus.exists && (!interfaceStatus.isUp || !interfaceStatus.hasIp)
         };
@@ -685,13 +659,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.success) {
                 showToast('{% trans %}Success{% endtrans %}', result.message);
                 await updateStatus();
-                
-                // If passthrough is enabled, show additional instructions
-                if (enablePassthrough) {
-                    showToast('{% trans %}Info{% endtrans %}', 
-                        '{% trans %}Network passthrough enabled. Make sure your main network interface is properly configured for internet access.{% endtrans %}', 
-                        'info');
-                }
             } else {
                 let errorMessage = result.error || '{% trans %}Failed to save configuration{% endtrans %}';
                 
