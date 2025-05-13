@@ -518,10 +518,24 @@ def security_config():
     current_config = config.get_current_config()
     # Get current security status
     try:
+        # Obtener reglas de iptables
         rules_count = int(subprocess.check_output(['iptables', '-L', '-n', '--line-numbers']).decode().count('\n')) - 2
-        blocked_ips = int(subprocess.check_output(['iptables', '-L', 'INPUT', '-n', '-v']).decode().count('DROP'))
+        
+        # Obtener IPs bloqueadas específicamente
+        blocked_ips_output = subprocess.check_output(['iptables', '-L', 'INPUT', '-n', '-v'], text=True).decode()
+        blocked_ips = 0
+        
+        # Contar solo las reglas que bloquean IPs específicas
+        for line in blocked_ips_output.split('\n'):
+            if 'DROP' in line and 'all' in line and 'anywhere' in line:
+                # Verificar si la regla tiene una IP específica
+                parts = line.split()
+                if len(parts) > 7 and parts[7] != 'anywhere':
+                    blocked_ips += 1
+        
         last_attack = None  # This would come from log parsing in a real implementation
     except Exception as e:
+        app.logger.error(f"Error getting security status: {str(e)}")
         rules_count = 0
         blocked_ips = 0
         last_attack = None
