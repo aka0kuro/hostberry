@@ -2489,6 +2489,10 @@ def hostapd_config():
         data = request.get_json()
         interface = data.get('interface', 'wlan_ap0')
         
+        # Stop services first
+        subprocess.run(['systemctl', 'stop', 'hostapd'], check=False)
+        subprocess.run(['systemctl', 'stop', 'isc-dhcp-server'], check=False)
+        
         # Crear interfaz virtual solo si se selecciona wlan_ap0
         if interface == 'wlan_ap0':
             if not create_virtual_interface():
@@ -2527,18 +2531,31 @@ def hostapd_config():
 
         # Set static IP for AP interface
         try:
+            # Remove existing IP if any
+            subprocess.run(['ip', 'addr', 'flush', 'dev', interface], check=False)
+            # Add new IP
             subprocess.run(['ip', 'addr', 'add', '192.168.90.1/24', 'dev', interface], check=True)
+            subprocess.run(['ip', 'link', 'set', interface, 'up'], check=True)
         except subprocess.CalledProcessError as e:
-            # Log specifics here. The outer handler will form the JSON response.
             stderr_info = e.stderr if hasattr(e, 'stderr') and e.stderr else (e.output if hasattr(e, 'output') and e.output else 'N/A')
             app.logger.error(f"[Hostapd Config] 'ip addr add' EXCEPTION. Command: {' '.join(e.cmd)}. Stderr/Output: {stderr_info}")
-            raise # Re-raise
+            raise
 
-        subprocess.run(['ip', 'link', 'set', interface, 'up'], check=True)
-
-        # Restart services
+        # Restart services in the correct order
         subprocess.run(['systemctl', 'restart', 'isc-dhcp-server'], check=True)
+        time.sleep(2)  # Wait for DHCP server to start
         subprocess.run(['systemctl', 'restart', 'hostapd'], check=True)
+        time.sleep(2)  # Wait for hostapd to start
+
+        # Verify services are running
+        dhcp_status = subprocess.run(['systemctl', 'is-active', 'isc-dhcp-server'], capture_output=True, text=True).stdout.strip()
+        hostapd_status = subprocess.run(['systemctl', 'is-active', 'hostapd'], capture_output=True, text=True).stdout.strip()
+
+        if dhcp_status != 'active' or hostapd_status != 'active':
+            return jsonify({
+                'success': False,
+                'error': f'Services failed to start. DHCP: {dhcp_status}, hostapd: {hostapd_status}'
+            })
 
         return jsonify({
             'success': True,
