@@ -1269,7 +1269,7 @@ def adblock_config():
             new_config['ADBLOCK_LISTS'] = selected_lists
             new_config['ADBLOCK_ENABLED'] = current_config.get('ADBLOCK_ENABLED', False)
             if config.update_config(new_config):
-                script_path = '/usr/local/bin/adblock.sh'
+                script_path = '/opt/hostberry/scripts/adblock.sh'
                 if os.path.exists(script_path):
                     def run_adblock_update():
                         global global_adblock_update_status
@@ -1298,7 +1298,7 @@ def adblock_config():
             if config.update_config(new_config):
                 # Si se desactiva AdBlock, ejecuta el script de limpieza
                 if not new_config['ADBLOCK_ENABLED']:
-                    script_path = '/usr/local/bin/adblock.sh'
+                    script_path = '/opt/hostberry/scripts/adblock.sh'
                     if os.path.exists(script_path):
                         def run_adblock_disable():
                             try:
@@ -1311,7 +1311,7 @@ def adblock_config():
                         flash('AdBlock script not found', 'danger')
                 else:
                     # Si se activa AdBlock, vuelve a aplicar las listas seleccionadas
-                    script_path = '/usr/local/bin/adblock.sh'
+                    script_path = '/opt/hostberry/scripts/adblock.sh'
                     selected_lists = new_config.get('ADBLOCK_LISTS', [])
                     if os.path.exists(script_path) and new_config['ADBLOCK_ENABLED'] and selected_lists:
                         def run_adblock_enable():
@@ -1396,7 +1396,7 @@ def adblock_update():
             if 'ADBLOCK_ENABLED' in current_config:
                 new_config['ADBLOCK_ENABLED'] = current_config['ADBLOCK_ENABLED']
             if config.update_config(new_config):
-                script_path = '/usr/local/bin/adblock.sh'
+                script_path = '/opt/hostberry/scripts/adblock.sh'
                 if os.path.exists(script_path):
                     def run_adblock_update_api():
                         global global_adblock_update_status
@@ -1421,7 +1421,7 @@ def adblock_update():
                     return jsonify({'success': False, 'error': f'Script not found at {script_path}'}), 404
             else:
                 return jsonify({'success': False, 'error': 'Failed to update configuration'}), 500
-        script_path = '/usr/local/bin/adblock.sh'
+        script_path = '/opt/hostberry/scripts/adblock.sh'
         if os.path.exists(script_path):
             current_config = config.get_current_config()
             block_lists = current_config.get('ADBLOCK_LISTS', [])
