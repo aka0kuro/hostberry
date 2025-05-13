@@ -98,10 +98,9 @@
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-network-wifi"></i></span>
                                 <select class="form-select" id="interface" name="interface" required>
-    <option value="wlan0" {{ 'selected' if current_config.interface == 'wlan0' else '' }}>wlan0</option>
-    <option value="wlan1" {{ 'selected' if current_config.interface == 'wlan1' else '' }}>wlan1</option>
-    <option value="wlan_ap0" {{ 'selected' if current_config.interface == 'wlan_ap0' or not current_config.interface else '' }}>wlan_ap0</option>
-</select>
+                                    <option value="wlan_ap0" {% if current_config.interface == 'wlan_ap0' %}selected{% endif %}>wlan_ap0</option>
+                                    <option value="wlan1" {% if current_config.interface == 'wlan1' %}selected{% endif %}>wlan1</option>
+                                </select>
                             </div>
                             <small class="text-muted">{% trans %}Choose the wireless interface for the Access Point{% endtrans %}</small>
                         </div>
@@ -735,7 +734,59 @@ document.addEventListener('DOMContentLoaded', function() {
         return status;
     };
 
-});
+    // Función para actualizar las opciones de interfaces
+    async function updateInterfaceOptions() {
+        try {
+            const response = await fetch('/api/hostapd/interface_status');
+            const data = await response.json();
+            
+            if (data.success) {
+                const interfaceSelect = document.getElementById('interface');
+                const currentValue = interfaceSelect.value;
+                
+                // Limpiar opciones actuales
+                interfaceSelect.innerHTML = '';
+                
+                // Añadir wlan_ap0 si existe
+                if (data.wlan_ap0 && data.wlan_ap0.exists) {
+                    const option = document.createElement('option');
+                    option.value = 'wlan_ap0';
+                    option.textContent = 'wlan_ap0';
+                    if (currentValue === 'wlan_ap0') {
+                        option.selected = true;
+                    }
+                    interfaceSelect.appendChild(option);
+                }
+                
+                // Añadir wlan1 si está activa
+                if (data.wlan1 && data.wlan1.exists && data.wlan1.is_up) {
+                    const option = document.createElement('option');
+                    option.value = 'wlan1';
+                    option.textContent = 'wlan1';
+                    if (currentValue === 'wlan1') {
+                        option.selected = true;
+                    }
+                    interfaceSelect.appendChild(option);
+                }
+                
+                // Si no hay opciones, mostrar mensaje
+                if (interfaceSelect.options.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = '{% trans %}No interfaces available{% endtrans %}';
+                    option.disabled = true;
+                    interfaceSelect.appendChild(option);
+                }
+            }
+        } catch (error) {
+            console.error('Error updating interface options:', error);
+        }
+    }
+
+    // Actualizar opciones de interfaces al cargar y cada 5 segundos
+    updateInterfaceOptions();
+    setInterval(updateInterfaceOptions, 5000);
+
     // Crear/Up/Delete interfaz wlan_ap0
     document.getElementById('createWlanAp0').addEventListener('click', async function() {
         try {
@@ -757,6 +808,7 @@ document.addEventListener('DOMContentLoaded', function() {
             showToast('{% trans %}Error{% endtrans %}', '{% trans %}Failed to manage wlan_ap0. Please check the console for details.{% endtrans %}', 'danger');
         }
     });
+});
 </script>
 
 <style>
