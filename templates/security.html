@@ -17,7 +17,7 @@
     <!-- Stats Cards -->
     <div class="row mb-4">
         <!-- Firewall Status -->
-        <div class="col-xl-3 col-md-6 mb-4">
+        <div class="col-xl-4 col-md-6 mb-4">
             <div class="card border-left-{% if config.FIREWALL_ENABLED %}success{% else %}danger{% endif %} shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
@@ -38,7 +38,7 @@
         </div>
 
         <!-- Blocked IPs -->
-        <div class="col-xl-3 col-md-6 mb-4">
+        <div class="col-xl-4 col-md-6 mb-4">
             <div class="card border-left-info shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
@@ -57,7 +57,7 @@
         </div>
 
         <!-- Last Attack -->
-        <div class="col-xl-3 col-md-6 mb-4">
+        <div class="col-xl-4 col-md-12 mb-4">
             <div class="card border-left-{% if security_status.last_attack %}danger{% else %}success{% endif %} shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
