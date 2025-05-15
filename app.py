@@ -2366,6 +2366,10 @@ def hostapd_page():
 def create_virtual_interface():
     """Create virtual interface for AP mode"""
     try:
+        # Install wifi-ap-sta if not present
+        if subprocess.run(['which', 'wifi-ap-sta'], capture_output=True).returncode != 0:
+            subprocess.run(['apt-get', 'install', '-y', 'wifi-ap-sta'], check=True)
+
         # Create udev rule for virtual interface
         udev_rule = """SUBSYSTEM=="ieee80211", ACTION=="add|change", KERNEL=="phy0", \
 RUN+="/sbin/iw phy phy0 interface add wlan_ap0 type __ap", \
@@ -2378,10 +2382,18 @@ RUN+="/bin/ip link set wlan_ap0 address 99:88:77:66:55:44"
         subprocess.run(['udevadm', 'control', '--reload-rules'], check=True)
         subprocess.run(['udevadm', 'trigger'], check=True)
         
+        # Ensure NetworkManager doesn't manage the AP interface
+        if os.path.exists('/etc/NetworkManager/conf.d'):
+            with open('/etc/NetworkManager/conf.d/10-globally-managed-devices.conf', 'w') as f:
+                f.write('[keyfile]\nunmanaged-devices=interface-name:wlan_ap0\n')
+            subprocess.run(['systemctl', 'restart', 'NetworkManager'], check=True)
+        
         # Wait for interface to be created
         for _ in range(10):  # Try for 10 seconds
             if subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], 
                             capture_output=True).returncode == 0:
+                # Set interface up
+                subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], check=True)
                 return True
             time.sleep(1)
         return False
@@ -2497,6 +2509,12 @@ def configure_network_passthrough():
         # Restart dnsmasq if it exists
         if subprocess.run(['which', 'dnsmasq'], capture_output=True).returncode == 0:
             subprocess.run(['systemctl', 'restart', 'dnsmasq'], check=False)
+
+        # Ensure NetworkManager doesn't interfere with wlan_ap0
+        if os.path.exists('/etc/NetworkManager/conf.d'):
+            with open('/etc/NetworkManager/conf.d/10-globally-managed-devices.conf', 'w') as f:
+                f.write('[keyfile]\nunmanaged-devices=interface-name:wlan_ap0\n')
+            subprocess.run(['systemctl', 'restart', 'NetworkManager'], check=True)
 
         # Log the configuration
         app.logger.info(f"Network passthrough configured using {main_interface} as main interface")
