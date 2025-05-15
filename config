@@ -1,5 +1,5 @@
 # Configuración básica
-AP_IFACE="wlan0"
+AP_IFACE="wlan_ap0"
 WIFI_IFACE="wlan0"
 ETH_IFACE="eth0"
 
@@ -16,3 +16,6 @@ SSH_ENABLED=true
 SSH_PORT=22
 FIREWALL_ENABLED=true
 APPARMOR_ENABLED=true
+
+# Configuración de modo AP+STA
+AP_STA_MODE=true
