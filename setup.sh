@@ -17,7 +17,7 @@ HOSTBERRY_DIR="/opt/hostberry"
 SCRIPTS_DIR="$HOSTBERRY_DIR/scripts"
 
 # Dependencias del sistema
-DEPS=(python3 python3-pip python3-venv openvpn resolvconf git curl dnsmasq hostapd iptables nftables libnss3-tools ufw openssl wget)
+DEPS=(python3 python3-pip python3-venv openvpn resolvconf git curl dnsmasq hostapd isc-dhcp-server iptables nftables libnss3-tools ufw openssl wget)
 
 # Función para loguear mensajes
 log() {
