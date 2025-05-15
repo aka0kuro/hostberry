@@ -2366,10 +2366,6 @@ def hostapd_page():
 def create_virtual_interface():
     """Create virtual interface for AP mode"""
     try:
-        # Install wifi-ap-sta if not present
-        if subprocess.run(['which', 'wifi-ap-sta'], capture_output=True).returncode != 0:
-            subprocess.run(['apt-get', 'install', '-y', 'wifi-ap-sta'], check=True)
-
         # Create udev rule for virtual interface
         udev_rule = """SUBSYSTEM=="ieee80211", ACTION=="add|change", KERNEL=="phy0", \
 RUN+="/sbin/iw phy phy0 interface add wlan_ap0 type __ap", \
