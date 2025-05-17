@@ -16,6 +16,9 @@
             <button id="createWlanAp0" class="btn btn-secondary btn-sm ms-2">
                 <i class="fas fa-plus me-1" id="createWlanAp0Icon"></i> <span id="createWlanAp0Text">{% trans %}Create wlan_ap0{% endtrans %}</span>
             </button>
+            <button id="toggleWlanAp0" class="btn btn-warning btn-sm ms-2">
+                <i class="fas fa-arrow-up me-1" id="toggleWlanAp0Icon"></i> <span id="toggleWlanAp0Text">{% trans %}Up wlan_ap0{% endtrans %}</span>
+            </button>
         </div>
     </div>
 
@@ -261,6 +264,12 @@
 document.addEventListener('DOMContentLoaded', function() {
     const toggleApBtn = document.getElementById('toggleAp');
     const toggleText = document.getElementById('toggleText');
+    const createWlanAp0Btn = document.getElementById('createWlanAp0');
+    const createWlanAp0Text = document.getElementById('createWlanAp0Text');
+    const createWlanAp0Icon = document.getElementById('createWlanAp0Icon');
+    const toggleWlanAp0Btn = document.getElementById('toggleWlanAp0');
+    const toggleWlanAp0Text = document.getElementById('toggleWlanAp0Text');
+    const toggleWlanAp0Icon = document.getElementById('toggleWlanAp0Icon');
     const apStatus = document.getElementById('apStatus');
     const clientCount = document.getElementById('clientCount');
     const currentChannel = document.getElementById('currentChannel');
@@ -694,45 +703,85 @@ document.addEventListener('DOMContentLoaded', function() {
     updateStatus();
     setInterval(updateStatus, 5000);
 
-    // Cambiar estado del botón según wlan_ap0 esté UP o DOWN
-    function updateCreateWlanAp0Button(status) {
-        const btn = document.getElementById('createWlanAp0');
-        const text = document.getElementById('createWlanAp0Text');
-        const icon = document.getElementById('createWlanAp0Icon');
-        
-        if (status && status.wlan_ap0) {
-            if (status.wlan_ap0.state === 'UP') {
-                btn.classList.remove('btn-secondary', 'btn-warning');
-                btn.classList.add('btn-danger');
-                text.textContent = '{% trans %}Delete wlan_ap0{% endtrans %}';
-                icon.classList.remove('fa-plus', 'fa-arrow-up');
-                icon.classList.add('fa-trash');
-                btn.disabled = false;
-            } else if (status.wlan_ap0.state === 'DOWN') {
-                btn.classList.remove('btn-secondary', 'btn-danger');
-                btn.classList.add('btn-warning');
-                text.textContent = '{% trans %}Up wlan_ap0{% endtrans %}';
-                icon.classList.remove('fa-plus', 'fa-trash');
-                icon.classList.add('fa-arrow-up');
-                btn.disabled = false;
-            }
+    // Función para actualizar el estado de los botones
+    function updateButtonStates(status) {
+        // Actualizar botón de AP
+        if (status && status.hostapd === 'running') {
+            toggleText.textContent = '{% trans %}Stop AP{% endtrans %}';
+            toggleApBtn.classList.remove('btn-primary');
+            toggleApBtn.classList.add('btn-danger');
         } else {
-            btn.classList.remove('btn-warning', 'btn-danger');
-            btn.classList.add('btn-secondary');
-            text.textContent = '{% trans %}Create wlan_ap0{% endtrans %}';
-            icon.classList.remove('fa-arrow-up', 'fa-trash');
-            icon.classList.add('fa-plus');
-            btn.disabled = false;
+            toggleText.textContent = '{% trans %}Start AP{% endtrans %}';
+            toggleApBtn.classList.remove('btn-danger');
+            toggleApBtn.classList.add('btn-primary');
+        }
+
+        // Actualizar botón de wlan_ap0
+        if (status && status.wlan_ap0) {
+            if (status.wlan_ap0.exists) {
+                createWlanAp0Text.textContent = '{% trans %}Delete wlan_ap0{% endtrans %}';
+                createWlanAp0Icon.classList.remove('fa-plus');
+                createWlanAp0Icon.classList.add('fa-trash');
+                createWlanAp0Btn.classList.remove('btn-secondary');
+                createWlanAp0Btn.classList.add('btn-danger');
+            } else {
+                createWlanAp0Text.textContent = '{% trans %}Create wlan_ap0{% endtrans %}';
+                createWlanAp0Icon.classList.remove('fa-trash');
+                createWlanAp0Icon.classList.add('fa-plus');
+                createWlanAp0Btn.classList.remove('btn-danger');
+                createWlanAp0Btn.classList.add('btn-secondary');
+            }
+        }
+
+        // Actualizar botón de toggle wlan_ap0
+        if (status && status.wlan_ap0) {
+            if (status.wlan_ap0.is_up) {
+                toggleWlanAp0Text.textContent = '{% trans %}Down wlan_ap0{% endtrans %}';
+                toggleWlanAp0Icon.classList.remove('fa-arrow-up');
+                toggleWlanAp0Icon.classList.add('fa-arrow-down');
+                toggleWlanAp0Btn.classList.remove('btn-warning');
+                toggleWlanAp0Btn.classList.add('btn-danger');
+            } else {
+                toggleWlanAp0Text.textContent = '{% trans %}Up wlan_ap0{% endtrans %}';
+                toggleWlanAp0Icon.classList.remove('fa-arrow-down');
+                toggleWlanAp0Icon.classList.add('fa-arrow-up');
+                toggleWlanAp0Btn.classList.remove('btn-danger');
+                toggleWlanAp0Btn.classList.add('btn-warning');
+            }
         }
     }
 
-    // Hook para updateStatus()
-    const origUpdateStatus = updateStatus;
+    // Modificar la función updateStatus para incluir la actualización de botones
+    const originalUpdateStatus = updateStatus;
     updateStatus = async function() {
-        const status = await origUpdateStatus();
-        updateCreateWlanAp0Button(status);
+        const status = await originalUpdateStatus();
+        updateButtonStates(status);
         return status;
     };
+
+    // Event listener para el botón de toggle wlan_ap0
+    toggleWlanAp0Btn.addEventListener('click', async function() {
+        try {
+            const response = await fetch('/api/hostapd/toggle_wlan_ap0', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                }
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast('{% trans %}Success{% endtrans %}', data.message);
+                await updateStatus();
+            } else {
+                showToast('{% trans %}Error{% endtrans %}', data.error, 'danger');
+            }
+        } catch (error) {
+            console.error('Error toggling wlan_ap0:', error);
+            showToast('{% trans %}Error{% endtrans %}', '{% trans %}Failed to toggle wlan_ap0{% endtrans %}', 'danger');
+        }
+    });
 
     // Función para actualizar las opciones de interfaces
     async function updateInterfaceOptions() {

@@ -2998,6 +2998,45 @@ def adblock_realtime_log():
         pass
     return jsonify({'domains': domains[::-1]})
 
+@app.route('/api/hostapd/toggle_wlan_ap0', methods=['POST'])
+def toggle_wlan_ap0():
+    try:
+        # Check if wlan_ap0 exists
+        result = subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], capture_output=True)
+        if result.returncode != 0:
+            return jsonify({
+                'success': False,
+                'error': 'wlan_ap0 interface does not exist'
+            })
+
+        # Check current state
+        ip_result = subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], capture_output=True, text=True)
+        is_up = 'state UP' in ip_result.stdout
+
+        if is_up:
+            # Bring interface down
+            subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'down'], check=True)
+            message = 'wlan_ap0 interface brought down successfully'
+        else:
+            # Bring interface up
+            subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], check=True)
+            # Ensure it's in AP mode
+            subprocess.run(['iw', 'dev', 'wlan_ap0', 'set', 'type', '__ap'], check=True)
+            # Set static IP
+            subprocess.run(['ip', 'addr', 'add', '192.168.90.1/24', 'dev', 'wlan_ap0'], check=True)
+            message = 'wlan_ap0 interface brought up successfully'
+
+        return jsonify({
+            'success': True,
+            'message': message
+        })
+    except Exception as e:
+        app.logger.error(f"Error toggling wlan_ap0: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
 if __name__ == '__main__':
     # Intentar reconexión automática al inicio
     auto_connect_last_wifi()
