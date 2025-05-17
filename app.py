@@ -3061,22 +3061,56 @@ def toggle_wlan_ap0():
             subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'down'], check=True)
             message = 'wlan_ap0 interface brought down successfully'
         else:
-            # Bring interface up
-            subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], check=True)
-            # Ensure it's in AP mode
-            subprocess.run(['iw', 'dev', 'wlan_ap0', 'set', 'type', '__ap'], check=True)
-            
+            # First ensure the interface is in AP mode
+            try:
+                subprocess.run(['iw', 'dev', 'wlan_ap0', 'set', 'type', '__ap'], check=True)
+                app.logger.info("Set wlan_ap0 to AP mode")
+            except subprocess.CalledProcessError as e:
+                app.logger.error(f"Error setting AP mode: {str(e)}")
+                # Try to recreate the interface
+                subprocess.run(['iw', 'dev', 'wlan_ap0', 'del'], check=False)
+                subprocess.run(['iw', 'phy', 'phy0', 'interface', 'add', 'wlan_ap0', 'type', '__ap'], check=True)
+                app.logger.info("Recreated wlan_ap0 interface")
+
+            # Set MAC address
+            try:
+                subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'address', '99:88:77:66:55:44'], check=True)
+                app.logger.info("Set MAC address for wlan_ap0")
+            except subprocess.CalledProcessError as e:
+                app.logger.error(f"Error setting MAC address: {str(e)}")
+
             # Remove existing IP if any
             subprocess.run(['ip', 'addr', 'flush', 'dev', 'wlan_ap0'], check=False)
-            # Add new IP
+            
+            # Bring interface up
+            try:
+                subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], check=True)
+                app.logger.info("Brought up wlan_ap0 interface")
+            except subprocess.CalledProcessError as e:
+                app.logger.error(f"Error bringing up interface: {str(e)}")
+                raise Exception("Failed to bring up wlan_ap0 interface")
+
+            # Add IP address
             try:
                 subprocess.run(['ip', 'addr', 'add', '192.168.90.1/24', 'dev', 'wlan_ap0'], check=True)
+                app.logger.info("Set IP address for wlan_ap0")
             except subprocess.CalledProcessError as e:
                 app.logger.error(f"Error setting IP address: {str(e)}")
-                # Continue anyway as the interface is up and in AP mode
-                message = 'wlan_ap0 interface brought up successfully (IP configuration skipped)'
-            else:
-                message = 'wlan_ap0 interface brought up successfully'
+                # Continue anyway as the interface is up
+
+            # Verify interface is properly configured
+            ip_check = subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], capture_output=True, text=True)
+            if 'state UP' not in ip_check.stdout:
+                raise Exception("Interface failed to come up properly")
+
+            # Ensure NetworkManager doesn't interfere
+            if os.path.exists('/etc/NetworkManager/conf.d'):
+                with open('/etc/NetworkManager/conf.d/10-globally-managed-devices.conf', 'w') as f:
+                    f.write('[keyfile]\nunmanaged-devices=interface-name:wlan_ap0\n')
+                subprocess.run(['systemctl', 'restart', 'NetworkManager'], check=True)
+                app.logger.info("Updated NetworkManager configuration")
+
+            message = 'wlan_ap0 interface brought up successfully'
 
         return jsonify({
             'success': True,
