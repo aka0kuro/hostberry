@@ -3068,6 +3068,11 @@ def toggle_wlan_ap0():
             subprocess.run(['iw', 'dev', 'wlan_ap0', 'del'], check=False)
             time.sleep(1)  # Wait for interface to be fully deleted
             
+            # Check if phy0 exists and is available
+            phy_check = subprocess.run(['iw', 'phy'], capture_output=True, text=True)
+            if 'phy0' not in phy_check.stdout:
+                raise Exception("No wireless interface (phy0) found")
+            
             # Create new interface in AP mode
             try:
                 subprocess.run(['iw', 'phy', 'phy0', 'interface', 'add', 'wlan_ap0', 'type', '__ap'], check=True)
@@ -3077,14 +3082,9 @@ def toggle_wlan_ap0():
                 app.logger.error(f"Error creating interface: {str(e)}")
                 raise Exception("Failed to create wlan_ap0 interface")
 
-            # Bring up the interface first
-            try:
-                subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], check=True)
-                app.logger.info("Brought up wlan_ap0 interface")
-                time.sleep(1)  # Wait for interface to be up
-            except subprocess.CalledProcessError as e:
-                app.logger.error(f"Error bringing up interface: {str(e)}")
-                raise Exception("Failed to bring up wlan_ap0 interface")
+            # Verify interface was created
+            if subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], capture_output=True).returncode != 0:
+                raise Exception("Interface was not created successfully")
 
             # Remove any existing IP
             subprocess.run(['ip', 'addr', 'flush', 'dev', 'wlan_ap0'], check=False)
@@ -3105,10 +3105,24 @@ def toggle_wlan_ap0():
                 app.logger.info("Updated NetworkManager configuration")
                 time.sleep(1)  # Wait for NetworkManager to restart
 
+            # Bring up the interface
+            try:
+                subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], check=True)
+                app.logger.info("Brought up wlan_ap0 interface")
+                time.sleep(1)  # Wait for interface to be up
+            except subprocess.CalledProcessError as e:
+                app.logger.error(f"Error bringing up interface: {str(e)}")
+                raise Exception("Failed to bring up wlan_ap0 interface")
+
             # Final verification
             ip_check = subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], capture_output=True, text=True)
             if 'state UP' not in ip_check.stdout:
                 raise Exception("Interface failed to come up properly")
+
+            # Additional verification of IP address
+            ip_addr_check = subprocess.run(['ip', 'addr', 'show', 'wlan_ap0'], capture_output=True, text=True)
+            if '192.168.90.1/24' not in ip_addr_check.stdout:
+                raise Exception("IP address not properly configured")
 
             message = 'wlan_ap0 interface brought up successfully'
 
