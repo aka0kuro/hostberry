@@ -2390,6 +2390,13 @@ RUN+="/bin/ip link set wlan_ap0 address 99:88:77:66:55:44"
                             capture_output=True).returncode == 0:
                 # Set interface up
                 subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], check=True)
+                
+                # Ensure the interface is in AP mode
+                subprocess.run(['iw', 'dev', 'wlan_ap0', 'set', 'type', '__ap'], check=True)
+                
+                # Set static IP for AP interface
+                subprocess.run(['ip', 'addr', 'add', '192.168.90.1/24', 'dev', 'wlan_ap0'], check=True)
+                
                 return True
             time.sleep(1)
         return False
@@ -2534,6 +2541,9 @@ def configure_network_passthrough():
             with open('/etc/NetworkManager/conf.d/10-globally-managed-devices.conf', 'w') as f:
                 f.write('[keyfile]\nunmanaged-devices=interface-name:wlan_ap0\n')
             subprocess.run(['systemctl', 'restart', 'NetworkManager'], check=True)
+
+        # Add route for AP subnet
+        subprocess.run(['ip', 'route', 'add', '192.168.90.0/24', 'dev', 'wlan_ap0'], check=True)
 
         # Log the configuration
         app.logger.info(f"Network passthrough configured using {main_interface} as main interface")
