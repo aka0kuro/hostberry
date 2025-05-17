@@ -368,11 +368,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <small class="text-muted">
                     {% trans %}Please check the following:{% endtrans %}
                     <ul class="mb-0 mt-1">
-                        <li>{% trans %}hostapd is installed:{% endtrans %} <code>sudo apt-get install hostapd</code></li>
-                        <li>{% trans %}hostapd service is unmasked:{% endtrans %} <code>sudo systemctl unmask hostapd</code></li>
-                        <li>{% trans %}hostapd service is enabled:{% endtrans %} <code>sudo systemctl enable hostapd</code></li>
-                        <li>{% trans %}hostapd service is running:{% endtrans %} <code>sudo systemctl start hostapd</code></li>
-                        <li>{% trans %}WiFi interface is available:{% endtrans %} <code>iwconfig</code></li>
+                        <li>{% trans %}Check interface status:{% endtrans %} <code>ip link show wlan_ap0</code></li>
+                        <li>{% trans %}Check hostapd status:{% endtrans %} <code>systemctl status hostapd</code></li>
+                        <li>{% trans %}Check iptables rules:{% endtrans %} <code>iptables -L -t nat</code></li>
+                        <li>{% trans %}Check routing:{% endtrans %} <code>ip route show</code></li>
                     </ul>
                 </small>
             `;

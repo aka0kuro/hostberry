@@ -3022,9 +3022,18 @@ def toggle_wlan_ap0():
             subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], check=True)
             # Ensure it's in AP mode
             subprocess.run(['iw', 'dev', 'wlan_ap0', 'set', 'type', '__ap'], check=True)
-            # Set static IP
-            subprocess.run(['ip', 'addr', 'add', '192.168.90.1/24', 'dev', 'wlan_ap0'], check=True)
-            message = 'wlan_ap0 interface brought up successfully'
+            
+            # Remove existing IP if any
+            subprocess.run(['ip', 'addr', 'flush', 'dev', 'wlan_ap0'], check=False)
+            # Add new IP
+            try:
+                subprocess.run(['ip', 'addr', 'add', '192.168.90.1/24', 'dev', 'wlan_ap0'], check=True)
+            except subprocess.CalledProcessError as e:
+                app.logger.error(f"Error setting IP address: {str(e)}")
+                # Continue anyway as the interface is up and in AP mode
+                message = 'wlan_ap0 interface brought up successfully (IP configuration skipped)'
+            else:
+                message = 'wlan_ap0 interface brought up successfully'
 
         return jsonify({
             'success': True,
