@@ -2684,14 +2684,23 @@ def restore_network_connectivity():
             subprocess.run(['iw', 'dev', 'wlan_ap0', 'del'], check=False)
         # Do NOT bring down physical interfaces (wlan0/wlan1)
 
-        # Remove only AP-specific iptables rules
-        # Remove NAT rules for AP interface
-        subprocess.run(['iptables', '-t', 'nat', '-D', 'POSTROUTING', '-o', 'wlan0', '-j', 'MASQUERADE'], check=False)
-        subprocess.run(['iptables', '-t', 'nat', '-D', 'POSTROUTING', '-o', 'eth0', '-j', 'MASQUERADE'], check=False)
-        
-        # Remove forwarding rules for AP interface
-        subprocess.run(['iptables', '-D', 'FORWARD', '-i', 'wlan_ap0', '-o', 'wlan0', '-j', 'ACCEPT'], check=False)
-        subprocess.run(['iptables', '-D', 'FORWARD', '-i', 'wlan0', '-o', 'wlan_ap0', '-m', 'state', '--state', 'ESTABLISHED,RELATED', '-j', 'ACCEPT'], check=False)
+        # Helper function to safely delete iptables rules
+        def safe_delete_rule(chain, rule):
+            try:
+                # Check if rule exists
+                check_cmd = ['iptables', '-C', chain] + rule.split()
+                if subprocess.run(check_cmd, capture_output=True).returncode == 0:
+                    # Rule exists, delete it
+                    delete_cmd = ['iptables', '-D', chain] + rule.split()
+                    subprocess.run(delete_cmd, check=True)
+            except subprocess.CalledProcessError:
+                pass  # Rule doesn't exist, ignore
+
+        # Remove AP-specific iptables rules safely
+        safe_delete_rule('nat', 'POSTROUTING -o wlan0 -j MASQUERADE')
+        safe_delete_rule('nat', 'POSTROUTING -o eth0 -j MASQUERADE')
+        safe_delete_rule('FORWARD', '-i wlan_ap0 -o wlan0 -j ACCEPT')
+        safe_delete_rule('FORWARD', '-i wlan0 -o wlan_ap0 -m state --state ESTABLISHED,RELATED -j ACCEPT')
 
         # Disable IP forwarding
         with open('/proc/sys/net/ipv4/ip_forward', 'w') as f:
