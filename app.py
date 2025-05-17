@@ -2366,40 +2366,83 @@ def hostapd_page():
 def create_virtual_interface():
     """Create virtual interface for AP mode"""
     try:
+        # First check if the interface already exists
+        if subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], capture_output=True).returncode == 0:
+            app.logger.info("wlan_ap0 interface already exists")
+            return True
+
+        # Check if we have the required commands
+        for cmd in ['iw', 'ip']:
+            if subprocess.run(['which', cmd], capture_output=True).returncode != 0:
+                raise Exception(f"Required command '{cmd}' not found")
+
+        # Check if we have a wireless interface
+        iw_phy = subprocess.run(['iw', 'phy'], capture_output=True, text=True)
+        if iw_phy.returncode != 0:
+            raise Exception("No wireless interfaces found")
+
         # Create udev rule for virtual interface
         udev_rule = """SUBSYSTEM=="ieee80211", ACTION=="add|change", KERNEL=="phy0", \
 RUN+="/sbin/iw phy phy0 interface add wlan_ap0 type __ap", \
 RUN+="/bin/ip link set wlan_ap0 address 99:88:77:66:55:44"
 """
-        with open('/etc/udev/rules.d/70-persistent-net.rules', 'w') as f:
-            f.write(udev_rule)
+        try:
+            with open('/etc/udev/rules.d/70-persistent-net.rules', 'w') as f:
+                f.write(udev_rule)
+            app.logger.info("Created udev rule for wlan_ap0")
+        except Exception as e:
+            app.logger.error(f"Error creating udev rule: {str(e)}")
+            raise Exception(f"Failed to create udev rule: {str(e)}")
         
         # Reload udev rules
-        subprocess.run(['udevadm', 'control', '--reload-rules'], check=True)
-        subprocess.run(['udevadm', 'trigger'], check=True)
+        try:
+            subprocess.run(['udevadm', 'control', '--reload-rules'], check=True)
+            subprocess.run(['udevadm', 'trigger'], check=True)
+            app.logger.info("Reloaded udev rules")
+        except subprocess.CalledProcessError as e:
+            app.logger.error(f"Error reloading udev rules: {str(e)}")
+            raise Exception(f"Failed to reload udev rules: {str(e)}")
         
         # Ensure NetworkManager doesn't manage the AP interface
         if os.path.exists('/etc/NetworkManager/conf.d'):
-            with open('/etc/NetworkManager/conf.d/10-globally-managed-devices.conf', 'w') as f:
-                f.write('[keyfile]\nunmanaged-devices=interface-name:wlan_ap0\n')
-            subprocess.run(['systemctl', 'restart', 'NetworkManager'], check=True)
+            try:
+                with open('/etc/NetworkManager/conf.d/10-globally-managed-devices.conf', 'w') as f:
+                    f.write('[keyfile]\nunmanaged-devices=interface-name:wlan_ap0\n')
+                subprocess.run(['systemctl', 'restart', 'NetworkManager'], check=True)
+                app.logger.info("Configured NetworkManager to ignore wlan_ap0")
+            except Exception as e:
+                app.logger.error(f"Error configuring NetworkManager: {str(e)}")
+                # Continue anyway as this is not critical
         
         # Wait for interface to be created
-        for _ in range(10):  # Try for 10 seconds
-            if subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], 
-                            capture_output=True).returncode == 0:
+        for attempt in range(10):  # Try for 10 seconds
+            app.logger.info(f"Attempt {attempt + 1} to create wlan_ap0")
+            
+            # Try to create the interface directly
+            try:
+                subprocess.run(['iw', 'phy', 'phy0', 'interface', 'add', 'wlan_ap0', 'type', '__ap'], check=True)
+                app.logger.info("Created wlan_ap0 interface")
+                
+                # Set MAC address
+                subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'address', '99:88:77:66:55:44'], check=True)
+                app.logger.info("Set MAC address for wlan_ap0")
+                
                 # Set interface up
                 subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], check=True)
+                app.logger.info("Brought up wlan_ap0 interface")
                 
-                # Ensure the interface is in AP mode
-                subprocess.run(['iw', 'dev', 'wlan_ap0', 'set', 'type', '__ap'], check=True)
-                
-                # Set static IP for AP interface
-                subprocess.run(['ip', 'addr', 'add', '192.168.90.1/24', 'dev', 'wlan_ap0'], check=True)
-                
-                return True
+                # Verify interface exists and is up
+                if subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], capture_output=True).returncode == 0:
+                    app.logger.info("Successfully created and configured wlan_ap0")
+                    return True
+            except subprocess.CalledProcessError as e:
+                app.logger.error(f"Error in attempt {attempt + 1}: {str(e)}")
+                # Try to clean up if interface was partially created
+                subprocess.run(['iw', 'dev', 'wlan_ap0', 'del'], check=False)
+            
             time.sleep(1)
-        return False
+        
+        raise Exception("Failed to create wlan_ap0 interface after 10 attempts")
     except Exception as e:
         app.logger.error(f"Error creating virtual interface: {str(e)}")
         return False
