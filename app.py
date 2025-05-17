@@ -2383,8 +2383,7 @@ def create_virtual_interface():
 
         # Create udev rule for virtual interface
         udev_rule = """SUBSYSTEM=="ieee80211", ACTION=="add|change", KERNEL=="phy0", \
-RUN+="/sbin/iw phy phy0 interface add wlan_ap0 type __ap", \
-RUN+="/bin/ip link set wlan_ap0 address 99:88:77:66:55:44"
+RUN+="/sbin/iw phy phy0 interface add wlan_ap0 type __ap"
 """
         try:
             with open('/etc/udev/rules.d/70-persistent-net.rules', 'w') as f:
@@ -2410,6 +2409,7 @@ RUN+="/bin/ip link set wlan_ap0 address 99:88:77:66:55:44"
                     f.write('[keyfile]\nunmanaged-devices=interface-name:wlan_ap0\n')
                 subprocess.run(['systemctl', 'restart', 'NetworkManager'], check=True)
                 app.logger.info("Configured NetworkManager to ignore wlan_ap0")
+                time.sleep(2)  # Wait for NetworkManager to restart
             except Exception as e:
                 app.logger.error(f"Error configuring NetworkManager: {str(e)}")
                 # Continue anyway as this is not critical
@@ -2420,25 +2420,49 @@ RUN+="/bin/ip link set wlan_ap0 address 99:88:77:66:55:44"
             
             # Try to create the interface directly
             try:
+                # First, ensure any existing interface is removed
+                subprocess.run(['iw', 'dev', 'wlan_ap0', 'del'], check=False)
+                time.sleep(1)  # Wait for interface to be fully deleted
+                
+                # Create new interface
                 subprocess.run(['iw', 'phy', 'phy0', 'interface', 'add', 'wlan_ap0', 'type', '__ap'], check=True)
                 app.logger.info("Created wlan_ap0 interface")
+                time.sleep(2)  # Wait for interface to be fully created
                 
-                # Set MAC address
-                subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'address', '99:88:77:66:55:44'], check=True)
-                app.logger.info("Set MAC address for wlan_ap0")
+                # Verify interface exists
+                if subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], capture_output=True).returncode != 0:
+                    raise Exception("Interface was not created successfully")
+                
+                # Set interface down before modifying MAC
+                subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'down'], check=True)
+                time.sleep(1)  # Wait for interface to be down
+                
+                # Try to set MAC address
+                try:
+                    subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'address', '99:88:77:66:55:44'], check=True)
+                    app.logger.info("Set MAC address for wlan_ap0")
+                except subprocess.CalledProcessError as e:
+                    app.logger.warning(f"Could not set MAC address: {str(e)}")
+                    # Continue anyway as this is not critical
                 
                 # Set interface up
                 subprocess.run(['ip', 'link', 'set', 'wlan_ap0', 'up'], check=True)
                 app.logger.info("Brought up wlan_ap0 interface")
+                time.sleep(1)  # Wait for interface to be up
                 
-                # Verify interface exists and is up
-                if subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], capture_output=True).returncode == 0:
-                    app.logger.info("Successfully created and configured wlan_ap0")
-                    return True
+                # Final verification
+                ip_check = subprocess.run(['ip', 'link', 'show', 'wlan_ap0'], capture_output=True, text=True)
+                if 'state UP' not in ip_check.stdout:
+                    raise Exception("Interface failed to come up properly")
+                
+                app.logger.info("Successfully created and configured wlan_ap0")
+                return True
+                
             except subprocess.CalledProcessError as e:
                 app.logger.error(f"Error in attempt {attempt + 1}: {str(e)}")
                 # Try to clean up if interface was partially created
                 subprocess.run(['iw', 'dev', 'wlan_ap0', 'del'], check=False)
+                time.sleep(1)  # Wait before next attempt
             
             time.sleep(1)
         
