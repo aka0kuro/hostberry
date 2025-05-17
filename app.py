@@ -2400,6 +2400,20 @@ RUN+="/bin/ip link set wlan_ap0 address 99:88:77:66:55:44"
 def configure_hostapd(ssid, password, channel, hw_mode, country_code, interface):
     """Configure hostapd"""
     try:
+        # First ensure hostapd is unmasked and enabled
+        try:
+            # Unmask hostapd service
+            subprocess.run(['systemctl', 'unmask', 'hostapd'], check=True)
+            app.logger.info("Hostapd service unmasked successfully")
+            
+            # Enable hostapd service
+            subprocess.run(['systemctl', 'enable', 'hostapd'], check=True)
+            app.logger.info("Hostapd service enabled successfully")
+        except subprocess.CalledProcessError as e:
+            app.logger.error(f"Error configuring hostapd service: {str(e)}")
+            return False
+
+        # Create hostapd configuration
         config = f"""interface={interface}
 driver=nl80211
 ssid={ssid}
@@ -2415,6 +2429,15 @@ rsn_pairwise=CCMP
 """
         with open('/etc/hostapd/hostapd.conf', 'w') as f:
             f.write(config)
+            
+        # Ensure hostapd service is started
+        try:
+            subprocess.run(['systemctl', 'restart', 'hostapd'], check=True)
+            app.logger.info("Hostapd service started successfully")
+        except subprocess.CalledProcessError as e:
+            app.logger.error(f"Error starting hostapd service: {str(e)}")
+            return False
+            
         return True
     except Exception as e:
         app.logger.error(f"Error configuring hostapd: {str(e)}")
