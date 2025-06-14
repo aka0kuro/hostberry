@@ -1,34 +1,38 @@
 #!/usr/bin/env python3
-from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response, jsonify, abort
-import subprocess
-import os
-from dotenv import load_dotenv
-import time
-import logging
-import threading
-
-# Estado global para saber si hay una actualización en curso
-global_adblock_update_status = {'updating': False, 'last_result': None, 'last_error': None}
-
-logging.Formatter.converter = time.localtime
-from hostberry_config import HostBerryConfig
-import time
-from werkzeug.utils import secure_filename
-import re
-from flask_babel import Babel, gettext as _
-import logging
-from logging.handlers import RotatingFileHandler
-import psutil
+# Standard library imports
 import datetime
-import pytz
-import subprocess
-import socket
-from collections import deque
-from flask_wtf.csrf import CSRFProtect
-from flask_wtf import FlaskForm
-from wtforms import BooleanField, SelectField
 import logging
 import logging.config
+import os
+import re
+import socket
+import subprocess
+import sys
+import threading
+import time
+from collections import deque
+from logging.handlers import RotatingFileHandler
+
+# Third-party imports
+from dotenv import load_dotenv
+from flask import (Flask, abort, flash, jsonify, make_response, redirect,
+                  render_template, request, session, url_for)
+from flask_babel import Babel, gettext as _
+from flask_wtf import FlaskForm
+from flask_wtf.csrf import CSRFProtect
+import psutil
+import pytz
+from werkzeug.utils import secure_filename
+from wtforms import BooleanField, SelectField
+
+# Local application imports
+from hostberry_config import HostBerryConfig
+
+# Global state for update status
+global_adblock_update_status = {'updating': False, 'last_result': None, 'last_error': None}
+
+# Configure logging timezone
+logging.Formatter.converter = time.localtime
 import os
 import secrets
 import json
