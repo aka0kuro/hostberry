@@ -1,822 +1,329 @@
 #!/bin/bash
+#
+# HostBerry Installer - Instala y actualiza HostBerry
+# Basado en el instalador de RaspAP
+#
+# Uso: setup.sh [opciones]
+#
+# Opciones:
+#   -y, --yes, --assume-yes     Responde "sí" a todas las preguntas
+#   -u, --update                Actualizar instalación existente
+#   -b, --backup                Crear respaldo antes de actualizar
+#   -h, --help                  Mostrar este mensaje de ayuda
+#   -v, --version               Mostrar información de versión
+#   -c, --cert                  Instalar certificado SSL
+#   -r, --restore <archivo>     Restaurar desde archivo de respaldo
+#   -d, --debug                 Habilitar modo depuración
+#   -f, --force                 Forzar instalación incluso si ya está instalado
 
-# Activar modo estricto
-set -euo pipefail
+# Configuración global
+set -eo pipefail
 
-# Configuración global y constantes
-readonly ANSI_GREEN='\033[0;32m'
-readonly ANSI_YELLOW='\033[0;33m'
-readonly ANSI_RED='\033[0;31m'
-readonly ANSI_RESET='\033[0m'
+# Constantes
+readonly VERSION="2.0.0"
+readonly REPO_OWNER="aka0kuro"
+readonly REPO_NAME="hostberry"
+readonly GIT_REPO="https://github.com/${REPO_OWNER}/${REPO_NAME}.git"
+readonly INSTALL_DIR="/opt/hostberry"
+readonly CONFIG_DIR="/etc/hostberry"
+readonly LOG_FILE="/var/log/hostberry-install.log"
+readonly REQUIREMENTS_FILE="${INSTALL_DIR}/requirements.txt"
+readonly SERVICE_FILE="/etc/systemd/system/hostberry.service"
+readonly BACKUP_DIR="/var/backups/hostberry"
+readonly NGINX_SITE="/etc/nginx/sites-available/hostberry"
+readonly NGINX_SITE_ENABLED="/etc/nginx/sites-enabled/hostberry"
 
-# Directorios y rutas principales
-readonly SSL_DIR="/etc/hostberry/ssl"
-readonly SSL_HOSTNAME="hostberry.local"
-readonly VENV_DIR="/opt/hostberry/venv"
-readonly REQUIREMENTS="requirements.txt"
-readonly SYSTEMD_SERVICE="hostberry-web.service"
-readonly BACKUP_DIR="/opt/hostberry_backups"
-readonly HOSTBERRY_DIR="/opt/hostberry"
-readonly SCRIPTS_DIR="$HOSTBERRY_DIR/scripts"
+# Colores
+readonly COL_NC='\e[0m' # Sin color
+readonly COL_LIGHT_GREEN='\e[1;32m'
+readonly COL_LIGHT_RED='\e[1;31m'
+readonly COL_LIGHT_CYAN='\e[1;36m'
+readonly COL_LIGHT_YELLOW='\e[1;33m'
+readonly COL_LIGHT_BLUE='\e[1;34m'
+TICK="[${COL_LIGHT_GREEN}✓${COL_NC}]"
+CROSS="[${COL_LIGHT_RED}✗${COL_NC}]"
+INFO="[i]"
+DONE="[${COL_LIGHT_GREEN}✓${COL_NC}]"
+WARN="[${COL_LIGHT_YELLOW}!${COL_NC}]"
 
-# Función para loguear mensajes con marca de tiempo
-log() {
-    local color="$1"
-    local level="$2"
-    shift 2
-    local message="$*"
+# Variables globales
+ASSUME_YES=0
+DO_UPDATE=0
+DO_BACKUP=0
+DO_RESTORE=""
+INSTALL_CERT=0
+DEBUG=0
+FORCE=0
+CURRENT_USER=$(who | awk '{print $1}')
+
+# Inicializar logging
+setup_logging() {
+    local log_dir
+    log_dir=$(dirname "${LOG_FILE}")
+    mkdir -p "${log_dir}"
+    exec > >(tee -a "${LOG_FILE}")
+    exec 2>&1
+    _install_log "Iniciando registro en ${LOG_FILE}"
+}
+
+# Mostrar mensaje de registro
+_install_log() {
     local timestamp
     timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    echo -e "${color}[${timestamp}] [${level}] ${message}${ANSI_RESET}"
+    echo -e "[${timestamp}] $*"
 }
 
-# Función para ejecutar comandos con manejo de errores
-run_cmd() {
-    local cmd=("$@")
-    log "$ANSI_YELLOW" "EXEC" "Ejecutando: ${cmd[*]}"
-    
-    if "${cmd[@]}"; then
-        return 0
-    else
-        local status=$?
-        log "$ANSI_RED" "ERROR" "Comando falló con estado $status: ${cmd[*]}"
-        return $status
-    fi
+# Mostrar estado de la instalación
+_install_status() {
+    case $1 in
+        0)
+            echo -e " ${TICK} $2"
+            ;;
+        *)
+            echo -e " ${CROSS} $2"
+            if [ "${DEBUG}" -eq 1 ]; then
+                _install_log "Error: $1"
+            fi
+            return 1
+            ;;
+    esac
 }
 
-# Función para verificar si un comando está instalado
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
+# Mostrar separador
+_install_divider() {
+    echo -e "${COL_LIGHT_BLUE}----------------------------------------${COL_NC}"
 }
 
-# Función para confirmar acción con el usuario
-confirm() {
-    local message="${1:-¿Estás seguro?}"
-    local default="${2:-y}"
-    
-    if [ "$default" = "y" ]; then
-        prompt="[Y/n]"
-    else
-        prompt="[y/N]"
+# Verificar si se ejecuta como root
+check_root() {
+    _install_log "Verificando privilegios de superusuario"
+    if [ "$(id -u)" -ne 0 ]; then
+        _install_log "Este script debe ejecutarse como root"
+        exit 1
     fi
-    
-    while true; do
-        read -r -p "$message $prompt " response
-        case "$response" in
-            [Yy]*) return 0 ;;
-            [Nn]*) return 1 ;;
-            *) 
-                if [ -z "$response" ]; then
-                    [ "$default" = "y" ] && return 0 || return 1
-                fi
-                ;;
-        esac
-    done
-}
-
-# Función para manejo de errores
-handle_error() {
-    local error_msg="$*"
-    local error_line="${BASH_LINENO[0]}"
-    local error_func="${FUNCNAME[1]:-main}"
-    
-    log "$ANSI_RED" "ERROR" "Error en $error_func (línea $error_line): $error_msg"
-    
-    if [ -x "$SCRIPTS_DIR/restore_services.sh" ]; then
-        log "$ANSI_YELLOW" "INFO" "Intentando restaurar servicios..."
-        "$SCRIPTS_DIR/restore_services.sh" || true
-    fi
-    
-    exit 1
-}
-
-# Configurar trap para manejar la salida del script
-trap 'cleanup' EXIT INT TERM
-
-# Función de limpieza al salir
-cleanup() {
-    local exit_code=$?
-    
-    if [ $exit_code -ne 0 ]; then
-        log "$ANSI_RED" "ERROR" "El script terminó con error (código: $exit_code)"
-    else
-        log "$ANSI_GREEN" "INFO" "Script completado exitosamente"
-    fi
-    
-    # Cualquier otra limpieza necesaria
-    
-    exit $exit_code
-}
-
-# Mostrar resumen de acciones
-show_summary() {
-    log "$ANSI_YELLOW" "INFO" "=== Resumen de acciones ==="
-    log "$ANSI_YELLOW" "INFO" "Directorio principal: $HOSTBERRY_DIR"
-    log "$ANSI_YELLOW" "INFO" "Directorio de logs: $HOSTBERRY_DIR/logs"
-    log "$ANSI_YELLOW" "INFO" "Directorio de scripts: $SCRIPTS_DIR"
-    log "$ANSI_YELLOW" "INFO" "Directorio de certificados SSL: $SSL_DIR"
-    log "$ANSI_YELLOW" "INFO" "Servicio systemd: $SYSTEMD_SERVICE"
-    log "$ANSI_YELLOW" "INFO" "=========================="
-}
-
-# Verificar compatibilidad del sistema
-check_system_compatibility() {
-    log "$ANSI_YELLOW" "INFO" "Verificando compatibilidad del sistema..."
-    
-    # Verificar sistema operativo
-    if [ ! -f /etc/os-release ]; then
-        log "$ANSI_RED" "ERROR" "No se pudo determinar el sistema operativo"
-        return 1
-    fi
-    
-    # Verificar arquitectura
-    local arch
-    arch=$(uname -m)
-    if [ "$arch" != "armv7l" ] && [ "$arch" != "aarch64" ]; then
-        log "$ANSI_YELLOW" "WARN" "Este script está diseñado para Raspberry Pi (ARM). Arquitectura detectada: $arch"
-        if ! confirm "¿Desea continuar de todos modos?"; then
-            exit 1
-        fi
-    fi
-    
-    # Verificar versión de Python
-    if ! command_exists python3; then
-        log "$ANSI_RED" "ERROR" "Python 3 no está instalado"
-        return 1
-    fi
-    
-    log "$ANSI_GREEN" "INFO" "Sistema compatible verificado correctamente"
     return 0
 }
 
-# Instalar dependencias del sistema
-install_system_deps() {
-    log "$ANSI_YELLOW" "INFO" "Instalando dependencias del sistema..."
-    
-    # Actualizar lista de paquetes
-    run_cmd apt-get update
-    
-    # Instalar paquetes necesarios
-    run_cmd apt-get install -y python3-pip python3-venv python3-dev \
-        git curl wget \
-        openvpn resolvconf dnsmasq hostapd isc-dhcp-server \
-        iptables nftables ufw openssl \
-        libnss3-tools
-    
-    log "$ANSI_GREEN" "INFO" "Dependencias del sistema instaladas correctamente"
+# Verificar conexión a internet
+check_internet() {
+    _install_log "Verificando conexión a internet"
+    if ! ping -q -c 1 -W 5 8.8.8.8 &> /dev/null; then
+        _install_log "No se detectó conexión a internet"
+        return 1
+    fi
+    return 0
 }
 
-# Configurar entorno virtual de Python
-setup_python_venv() {
-    log "$ANSI_YELLOW" "INFO" "Configurando entorno virtual de Python..."
-    
-    # Crear directorio si no existe
-    mkdir -p "$HOSTBERRY_DIR"
-    
-    # Crear entorno virtual
-    if [ ! -d "$VENV_DIR" ]; then
-        run_cmd python3 -m venv "$VENV_DIR"
-        log "$ANSI_GREEN" "INFO" "Entorno virtual creado en $VENV_DIR"
-    else
-        log "$ANSI_YELLOW" "INFO" "El entorno virtual ya existe en $VENV_DIR"
-    fi
-    
-    # Instalar dependencias de Python
-    if [ -f "$HOSTBERRY_DIR/$REQUIREMENTS" ]; then
-        log "$ANSI_YELLOW" "INFO" "Instalando dependencias de Python..."
-        run_cmd "$VENV_DIR/bin/pip" install --upgrade pip
-        run_cmd "$VENV_DIR/bin/pip" install -r "$HOSTBERRY_DIR/$REQUIREMENTS"
-    else
-        log "$ANSI_YELLOW" "WARN" "No se encontró el archivo $REQUIREMENTS"
-    fi
-    
-    log "$ANSI_GREEN" "INFO" "Entorno virtual configurado correctamente"
-}
-
-# Verificar si se está ejecutando como root
-check_root() {
-    if [ "$(id -u)" -ne 0 ]; then
-        log "$ANSI_RED" "ERROR" "Este script debe ejecutarse como root"
-        exit 1
-    fi
-}
-
-# Obtener la IP del sistema
-get_system_ip() {
-    local ip
-    ip=$(hostname -I | awk '{print $1}')
-    if [ -z "$ip" ]; then
-        ip="127.0.0.1"
-    fi
-    echo "$ip"
+# Mostrar mensaje de bienvenida
+display_welcome() {
+    _install_divider
+    echo -e "     ${COL_LIGHT_CYAN}Instalador de HostBerry${COL_NC} v${VERSION}"
+    echo ""
+    echo -e "  Este instalador configurará o actualizará HostBerry"
+    echo -e "  en su sistema."
+    _install_divider
 }
 
 # Mostrar ayuda
 show_help() {
-    echo "Uso: $0 [OPCIONES]"
-    echo "Configura e instala HostBerry en el sistema"
-    echo ""
-    echo "Opciones:"
-    echo "  --install     Instalar HostBerry"
-    echo "  --update      Actualizar instalación existente"
-    echo "  --cert        Generar certificados SSL"
-    echo "  --network     Configurar red"
-    echo "  --nginx       Configurar Nginx"
-    echo "  --help        Mostrar esta ayuda y salir"
-    echo ""
+    grep '^#/' "$0" | cut -c 4-
     exit 0
 }
 
-# Procesar argumentos de línea de comandos
-process_arguments() {
-    local install_flag=0
-    local update_flag=0
-    local cert_flag=0
-    local network_flag=0
-    local nginx_flag=0
-    local show_help_flag=0
-    
-    if [ $# -eq 0 ]; then
-        show_help
-        exit 0
-    fi
-    
+# Mostrar versión
+show_version() {
+    echo "HostBerry Installer v${VERSION}"
+    exit 0
+}
+
+# Analizar argumentos de línea de comandos
+parse_arguments() {
     while [ $# -gt 0 ]; do
-        case "$1" in
-            --help)
-                show_help_flag=1
+        case $1 in
+            -y|--yes|--assume-yes)
+                ASSUME_YES=1
                 ;;
-            --install)
-                install_flag=1
+            -u|--update)
+                DO_UPDATE=1
                 ;;
-            --update)
-                update_flag=1
+            -b|--backup)
+                DO_BACKUP=1
                 ;;
-            --cert)
-                cert_flag=1
+            -r|--restore)
+                shift
+                DO_RESTORE="$1"
                 ;;
-            --network)
-                network_flag=1
+            -c|--cert)
+                INSTALL_CERT=1
                 ;;
-            --nginx)
-                nginx_flag=1
+            -d|--debug)
+                DEBUG=1
+                set -x
+                ;;
+            -f|--force)
+                FORCE=1
+                ;;
+            -h|--help)
+                show_help
+                ;;
+            -v|--version)
+                show_version
                 ;;
             *)
-                log "$ANSI_RED" "ERROR" "Opción no válida: $1"
-                show_help_flag=1
+                _install_log "Opción desconocida: $1"
+                show_help
                 ;;
         esac
         shift
     done
-    
-    if [ "$show_help_flag" -eq 1 ]; then
-        show_help
-    fi
-    
-    # Ejecutar acciones según las banderas
-    if [ "$install_flag" -eq 1 ]; then
-        perform_installation
-    fi
-    
-    if [ "$update_flag" -eq 1 ]; then
-        perform_update
-    fi
-    
-    if [ "$cert_flag" -eq 1 ]; then
-        setup_ssl_certificates
-    fi
-    
-    if [ "$network_flag" -eq 1 ]; then
-        configure_network
-    fi
-    
-    if [ "$nginx_flag" -eq 1 ]; then
-        configure_nginx
-    fi
-    
-    # Si no se especificó ninguna acción, mostrar ayuda
-    if [ "$install_flag" -eq 0 ] && [ "$update_flag" -eq 0 ] && \
-       [ "$cert_flag" -eq 0 ] && [ "$network_flag" -eq 0 ] && \
-       [ "$nginx_flag" -eq 0 ]; then
-        show_help
-        exit 1
-    fi
 }
 
-# Función para verificar requisitos previos de SSL
-check_ssl_prerequisites() {
-    log "$ANSI_YELLOW" "INFO" "Verificando requisitos previos para SSL..."
+# Verificar requisitos del sistema
+check_requirements() {
+    _install_log "Verificando requisitos del sistema"
     
-    # Verificar si mkcert está instalado
-    if ! command_exists mkcert; then
-        log "$ANSI_RED" "ERROR" "mkcert no está instalado. Por favor, instálelo primero."
-        log "$ANSI_YELLOW" "INFO" "Puede instalarlo con: sudo apt install libnss3-tools mkcert"
-        return 1
-    fi
+    local missing=()
     
-    log "$ANSI_GREEN" "INFO" "Requisitos previos para SSL verificados correctamente"
-    return 0
-}
-
-# Función para generar certificados SSL
-generate_ssl_cert() {
-    log "$ANSI_YELLOW" "INFO" "Generando certificados SSL..."
+    # Comandos requeridos
+    local required_commands=(
+        python3
+        pip3
+        git
+        systemctl
+        nginx
+    )
     
-    # Verificar requisitos previos
-    if ! check_ssl_prerequisites; then
-        return 1
-    fi
-    
-    # Crear directorio de certificados si no existe
-    mkdir -p "$SSL_DIR"
-    
-    # Verificar si ya existen certificados
-    if [ -f "$SSL_DIR/$SSL_HOSTNAME.pem" ] && [ -f "$SSL_DIR/$SSL_HOSTNAME-key.pem" ]; then
-        log "$ANSI_YELLOW" "INFO" "Los certificados SSL ya existen en $SSL_DIR/"
-        if ! confirm "¿Desea sobrescribir los certificados existentes?"; then
-            return 0
+    for cmd in "${required_commands[@]}"; do
+        if ! command -v "${cmd}" &> /dev/null; then
+            missing+=("${cmd}")
         fi
-    fi
-    
-    # Generar certificados autofirmados
-    log "$ANSI_YELLOW" "INFO" "Generando certificados autofirmados para $SSL_HOSTNAME..."
-    
-    # Instalar CA local
-    mkcert -install
-    
-    # Generar certificado para el hostname
-    mkcert "$SSL_HOSTNAME" "*.$SSL_HOSTNAME" "localhost" 127.0.0.1 ::1
-    
-    # Mover certificados al directorio de SSL
-    mv "$SSL_HOSTNAME.pem" "$SSL_HOSTNAME-key.pem" "$SSL_DIR/"
-    
-    # Asegurar permisos
-    chmod 600 "$SSL_DIR/$SSL_HOSTNAME-key.pem"
-    chmod 644 "$SSL_DIR/$SSL_HOSTNAME.pem"
-    chown -R root:root "$SSL_DIR"
-    
-    log "$ANSI_GREEN" "INFO" "Certificados SSL generados correctamente en $SSL_DIR/"
-    return 0
-}
-
-# Configurar red y firewall
-configure_network() {
-    log "$ANSI_YELLOW" "INFO" "Configurando red y firewall..."
-    
-    # Habilitar IP forwarding
-    echo 1 > /proc/sys/net/ipv4/ip_forward
-    echo "net.ipv4.ip_forward=1" | tee -a /etc/sysctl.conf
-    
-    # Configurar NAT
-    run_cmd iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-    run_cmd iptables -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
-    run_cmd iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT
-    
-    # Asegurarse de que el directorio de iptables exista
-    if [ ! -d "/etc/iptables" ]; then
-        log "$ANSI_YELLOW" "INFO" "Creando directorio /etc/iptables/..."
-        run_cmd mkdir -p /etc/iptables
-    fi
-    
-    # Guardar reglas de iptables
-    log "$ANSI_YELLOW" "INFO" "Guardando reglas de iptables..."
-    run_cmd iptables-save > /etc/iptables/rules.v4 || {
-        log "$ANSI_RED" "ERROR" "No se pudo guardar las reglas de iptables"
-        log "$ANSI_YELLOW" "INFO" "Intentando con sudo..."
-        sudo iptables-save | sudo tee /etc/iptables/rules.v4 >/dev/null || {
-            log "$ANSI_RED" "ERROR" "No se pudo guardar las reglas de iptables con sudo"
-            return 1
-        }
-    }
-    
-    # Hacer que las reglas persistan después del reinicio
-    if command -v netfilter-persistent >/dev/null 2>&1; then
-        log "$ANSI_YELLOW" "INFO" "Haciendo que las reglas de iptables persistan..."
-        run_cmd netfilter-persistent save
-    fi
-    
-    log "$ANSI_GREEN" "INFO" "Red y firewall configurados correctamente"
-    return 0
-}
-
-# Función para restaurar backup de HostBerry
-restore_hostberry_backup() {
-    log "$ANSI_YELLOW" "INFO" "Iniciando restauración de respaldo..."
-    
-    # Verificar si existe el directorio de backups
-    if [ ! -d "$BACKUP_DIR" ] || [ -z "$(ls -A "$BACKUP_DIR" 2>/dev/null)" ]; then
-        log "$ANSI_RED" "ERROR" "No se encontraron archivos de respaldo en $BACKUP_DIR"
-        return 1
-    fi
-    
-    # Mostrar lista de backups disponibles
-    log "$ANSI_YELLOW" "INFO" "Respaldos disponibles en $BACKUP_DIR:"
-    local i=1
-    local backups=()
-    
-    while IFS= read -r -d $'\0' file; do
-        backups+=("$file")
-        echo "  $i) $(basename "$file")"
-        ((i++))
-    done < <(find "$BACKUP_DIR" -type f -name "hostberry_*.tar.gz" -print0 | sort -zr)
-    
-    if [ ${#backups[@]} -eq 0 ]; then
-        log "$ANSI_RED" "ERROR" "No se encontraron archivos de respaldo válidos"
-        return 1
-    fi
-    
-    # Solicitar selección de backup
-    local selection=0
-    while [[ ! "$selection" =~ ^[0-9]+$ ]] || [ "$selection" -lt 1 ] || [ "$selection" -gt ${#backups[@]} ]; do
-        read -rp "Seleccione el número del respaldo a restaurar (1-${#backups[@]}): " selection
     done
     
-    local selected_backup="${backups[$((selection-1))]}"
-    
-    # Confirmar restauración
-    if ! confirm "¿Está seguro de restaurar desde $(basename "$selected_backup")?" "n"; then
-        log "$ANSI_YELLOW" "INFO" "Restauración cancelada"
-        return 0
+    if [ ${#missing[@]} -gt 0 ]; then
+        _install_log "Faltan comandos requeridos: ${missing[*]}"
+        return 1
     fi
     
-    # Detener servicios si están en ejecución
-    if systemctl is-active --quiet hostberry; then
-        run_cmd systemctl stop hostberry
+    # Versión mínima de Python
+    local python_version
+    python_version=$(python3 -c 'import sys; print("{}.{}".format(sys.version_info.major, sys.version_info.minor))')
+    if [ "$(echo "${python_version} < 3.7" | bc)" -eq 1 ]; then
+        _install_log "Se requiere Python 3.7 o superior. Versión actual: ${python_version}"
+        return 1
     fi
     
-    # Extraer backup
-    log "$ANSI_YELLOW" "INFO" "Restaurando desde $(basename "$selected_backup")..."
-    run_cmd tar -xzf "$selected_backup" -C / --strip-components=1
-    
-    # Asegurar permisos
-    chown -R root:root "$HOSTBERRY_DIR"
-    chmod -R 755 "$HOSTBERRY_DIR"
-    
-    # Reiniciar servicios
-    run_cmd systemctl daemon-reload
-    run_cmd systemctl restart hostberry
-    
-    log "$ANSI_GREEN" "INFO" "Restauración completada exitosamente"
     return 0
 }
 
-# Función para actualizar desde GitHub
-update_from_github() {
-    local temp_dir
-    temp_dir=$(mktemp -d)
+# Instalar dependencias del sistema
+install_dependencies() {
+    _install_log "Instalando dependencias del sistema"
     
-    log "$ANSI_YELLOW" "INFO" "Actualizando desde GitHub..."
-    
-    # Clonar el repositorio en un directorio temporal
-    run_cmd git clone --depth 1 "https://github.com/aka0kuro/hostberry.git" "$temp_dir"
-    
-    # Copiar archivos, excluyendo directorios específicos
-    log "$ANSI_YELLOW" "INFO" "Copiando archivos..."
-    rsync -av --exclude='.git' --exclude='venv' --exclude='__pycache__' "$temp_dir/" "$HOSTBERRY_DIR/"
-    
-    # Limpiar
-    rm -rf "$temp_dir"
-    
-    # Actualizar dependencias de Python
-    if [ -f "$HOSTBERRY_DIR/requirements.txt" ]; then
-        log "$ANSI_YELLOW" "INFO" "Actualizando dependencias de Python..."
-        "$VENV_DIR/bin/pip" install --upgrade -r "$HOSTBERRY_DIR/requirements.txt"
-    fi
-    
-    # Asegurar permisos
-    chown -R root:root "$HOSTBERRY_DIR"
-    find "$HOSTBERRY_DIR" -type d -exec chmod 755 {} \;
-    find "$HOSTBERRY_DIR" -type f -exec chmod 644 {} \;
-    chmod +x "$HOSTBERRY_DIR/setup.sh"
-    
-    log "$ANSI_GREEN" "INFO" "Actualización completada exitosamente"
-    return 0
-}
-
-# Actualizar HostBerry
-update_hostberry() {
-    log "$ANSI_YELLOW" "INFO" "Iniciando actualización de HostBerry..."
-    
-    # Verificar si hay actualizaciones disponibles
-    if ! check_for_updates; then
-        log "$ANSI_YELLOW" "INFO" "No hay actualizaciones disponibles"
-        return 0
-    fi
-    
-    # Confirmar actualización
-    if ! confirm "¿Desea continuar con la actualización?" "y"; then
-        log "$ANSI_YELLOW" "INFO" "Actualización cancelada"
-        return 0
-    fi
-    
-    # Crear respaldo antes de actualizar
-    if ! create_backup; then
-        log "$ANSI_RED" "ERROR" "No se pudo crear un respaldo. Abortando actualización"
-        return 1
-    fi
-    
-    # Actualizar desde GitHub
-    if ! update_from_github; then
-        log "$ANSI_RED" "ERROR" "Error al actualizar desde GitHub"
-        return 1
-    fi
-    
-    # Reiniciar servicios
-    log "$ANSI_YELLOW" "INFO" "Reiniciando servicios..."
-    if systemctl is-active --quiet hostberry; then
-        run_cmd systemctl restart hostberry
-    fi
-    
-    log "$ANSI_GREEN" "INFO" "HostBerry ha sido actualizado exitosamente"
-    return 0
-}
-
-# Función para mostrar información de acceso
-show_access_info() {
-    local ip
-    ip=$(get_system_ip)
-    
-    log "$ANSI_GREEN" "INFO" "=========================================="
-    log "$ANSI_GREEN" "INFO" "HostBerry instalado correctamente"
-    log "$ANSI_GREEN" "INFO" "Accede a la interfaz web en: http://$ip"
-    log "$ANSI_GREEN" "INFO" "O usa: http://$(hostname).local"
-    log "$ANSI_GREEN" "INFO" "=========================================="
-}
-
-# Función para verificar y configurar el firewall
-configure_firewall() {
-    log "$ANSI_YELLOW" "INFO" "Configurando firewall..."
-    
-    # Habilitar UFW si no está activo
-    if ! ufw status | grep -q "Status: active"; then
-        log "$ANSI_YELLOW" "INFO" "Habilitando UFW..."
-        run_cmd ufw --force enable
-    fi
-    
-    # Permitir puertos necesarios
-    run_cmd ufw allow 22/tcp    # SSH
-    run_cmd ufw allow 80/tcp    # HTTP
-    run_cmd ufw allow 443/tcp   # HTTPS
-    
-    log "$ANSI_GREEN" "INFO" "Firewall configurado correctamente"
-}
-
-# Función para verificar actualizaciones disponibles sin autenticación
-check_for_updates() {
-    log "$ANSI_YELLOW" "INFO" "Verificando actualizaciones disponibles..."
-    
-    # Si no hay directorio de git, no se puede verificar actualizaciones
-    if [ ! -d "$HOSTBERRY_DIR/.git" ]; then
-        log "$ANSI_YELLOW" "WARN" "No se encontró repositorio git. No se puede verificar actualizaciones."
-        return 1
-    fi
-    
-    # Obtener información del repositorio remoto
-    local remote_url
-    remote_url=$(git -C "$HOSTBERRY_DIR" config --get remote.origin.url)
-    if [ -z "$remote_url" ]; then
-        log "$ANSI_YELLOW" "WARN" "No se pudo determinar la URL del repositorio remoto."
-        return 1
-    fi
-    
-    # Crear un directorio temporal para clonar
-    local temp_dir
-    temp_dir=$(mktemp -d)
-    local current_branch
-    current_branch=$(git -C "$HOSTBERRY_DIR" rev-parse --abbrev-ref HEAD)
-    local current_commit
-    current_commit=$(git -C "$HOSTBERRY_DIR" rev-parse HEAD)
-    
-    # Clonar el repositorio en modo shallow para ahorrar ancho de banda
-    log "$ANSI_YELLOW" "INFO" "Obteniendo información de actualizaciones..."
-    if git clone --depth 1 --single-branch --branch "$current_branch" "$remote_url" "$temp_dir" 2>/dev/null; then
-        # Obtener el último commit remoto
-        local remote_commit
-        remote_commit=$(git -C "$temp_dir" rev-parse HEAD)
-        
-        # Comparar commits
-        if [ "$current_commit" != "$remote_commit" ]; then
-            log "$ANSI_YELLOW" "INFO" "Hay actualizaciones disponibles!"
-            log "$ANSI_YELLOW" "INFO" "Versión actual: $current_commit"
-            log "$ANSI_YELLOW" "INFO" "Versión más reciente: $remote_commit"
-            
-            # Obtener mensaje del último commit
-            local commit_message
-            commit_message=$(git -C "$temp_dir" log -1 --pretty=%B)
-            log "$ANSI_YELLOW" "INFO" "Últimos cambios:\n$commit_message"
-            
-            rm -rf "$temp_dir"
-            return 0
-        else
-            log "$ANSI_GREEN" "INFO" "Ya tienes la última versión."
-            rm -rf "$temp_dir"
-            return 1
-        fi
+    if [ -f /etc/debian_version ]; then
+        # Distribuciones basadas en Debian
+        apt-get update
+        apt-get install -y \
+            python3-venv \
+            python3-pip \
+            python3-dev \
+            nginx \
+            git \
+            build-essential \
+            libssl-dev \
+            libffi-dev \
+            python3-setuptools \
+            python3-wheel
+    elif [ -f /etc/redhat-release ]; then
+        # Distribuciones basadas en RedHat
+        dnf install -y \
+            python3 \
+            python3-pip \
+            python3-devel \
+            nginx \
+            git \
+            gcc \
+            openssl-devel \
+            libffi-devel \
+            python3-setuptools \
+            python3-wheel
     else
-        log "$ANSI_RED" "ERROR" "No se pudo verificar actualizaciones. Verifica tu conexión a Internet."
-        rm -rf "$temp_dir"
+        _install_log "Distribución no soportada"
         return 1
     fi
+    
+    return $?
 }
 
-# Función para crear un respaldo antes de actualizar
-create_backup() {
-    log "$ANSI_YELLOW" "INFO" "Creando respaldo de la instalación actual..."
+# Configurar entorno virtual de Python
+setup_python_venv() {
+    _install_log "Configurando entorno virtual de Python"
     
-    # Crear directorio de respaldos si no existe
-    mkdir -p "$BACKUP_DIR"
+    if [ ! -d "${INSTALL_DIR}" ]; then
+        mkdir -p "${INSTALL_DIR}"
+    fi
     
-    # Nombre del archivo de respaldo
-    local backup_file
-    backup_file="${BACKUP_DIR}/hostberry_$(date +%Y%m%d_%H%M%S).tar.gz"
+    # Crear entorno virtual
+    python3 -m venv "${INSTALL_DIR}/venv"
     
-    # Crear respaldo
-    log "$ANSI_YELLOW" "INFO" "Creando respaldo en $backup_file..."
+    # Activar entorno virtual
+    # shellcheck source=/dev/null
+    source "${INSTALL_DIR}/venv/bin/activate"
     
-    # Excluir directorios grandes y archivos temporales
-    if tar --exclude='venv' --exclude='__pycache__' --exclude='.git' -czf "$backup_file" -C / "${HOSTBERRY_DIR#/}" 2>/dev/null; then
-        log "$ANSI_GREEN" "INFO" "Respaldo creado exitosamente: $backup_file"
-        return 0
-    else
-        log "$ANSI_RED" "ERROR" "Error al crear el respaldo"
+    # Actualizar pip
+    pip install --upgrade pip setuptools wheel
+    
+    return $?
+}
+
+# Instalar dependencias de Python
+install_python_deps() {
+    _install_log "Instalando dependencias de Python"
+    
+    if [ ! -f "${REQUIREMENTS_FILE}" ]; then
+        _install_log "Archivo de requisitos no encontrado: ${REQUIREMENTS_FILE}"
         return 1
     fi
+    
+    pip install -r "${REQUIREMENTS_FILE}"
+    return $?
 }
 
-# Función para verificar y reiniciar el servicio
-verify_service() {
-    log "$ANSI_YELLOW" "INFO" "Verificando servicio web..."
+# Configurar servicio systemd
+setup_systemd_service() {
+    _install_log "Configurando servicio systemd"
     
-    # Verificar si el servicio está activo
-    if ! systemctl is-active --quiet hostberry; then
-        log "$ANSI_YELLOW" "WARN" "El servicio no está activo. Iniciando..."
-        systemctl start hostberry || {
-            log "$ANSI_RED" "ERROR" "No se pudo iniciar el servicio"
-            return 1
-        }
-    fi
+    local service_file="${INSTALL_DIR}/install/hostberry.service"
     
-    # Verificar que el puerto esté escuchando
-    if ! command -v netstat >/dev/null || ! netstat -tulpn 2>/dev/null | grep -q ":80.*LISTEN"; then
-        echo "[INFO] El puerto 80 no está en uso o no se pudo verificar"
-    else
-        echo "[INFO] Servicio web en puerto 80 verificado"
-    fi
-}
-
-# Función para realizar la instalación completa
-perform_installation() {
-    log "$ANSI_YELLOW" "INFO" "Iniciando instalación de HostBerry..."
-    
-    # Verificar compatibilidad del sistema
-    check_system_compatibility
-    
-    # Instalar dependencias del sistema
-    install_system_deps
-    
-    # Configurar entorno virtual de Python
-    setup_python_venv
-    
-    # Configurar Gunicorn
-    configure_gunicorn
-    
-    # Configurar red y firewall
-    configure_network
-    
-    # Configurar certificados SSL
-    setup_ssl_certificates
-    
-    # Verificar y reiniciar el servicio
-    verify_service
-    
-    # Mostrar información de acceso
-    show_access_info
-    
-    log "$ANSI_GREEN" "INFO" "Instalación completada exitosamente"
-}
-
-# Función para instalar mkcert usando go install
-install_mkcert() {
-    if ! command -v mkcert &> /dev/null; then
-        log "$ANSI_YELLOW" "INFO" "Instalando mkcert..."
-        
-        # Instalar dependencias necesarias
-        if [ -f /etc/debian_version ] || [ -f /etc/raspbian_version ]; then
-            # Para Debian/Ubuntu/Raspberry Pi OS
-            run_cmd sudo apt-get update
-            run_cmd sudo apt-get install -y libnss3-tools wget golang-go
-        elif [ -f /etc/redhat-release ]; then
-            # Para RHEL/CentOS
-            run_cmd sudo yum install -y nss-tools wget golang
-        fi
-        
-        # Instalar mkcert usando go install
-        if ! command -v mkcert &> /dev/null; then
-            log "$ANSI_YELLOW" "INFO" "Instalando mkcert con Go..."
-            export GOPATH="$HOME/go"
-            export PATH="$PATH:$GOPATH/bin"
-            run_cmd go install filippo.io/mkcert@latest
-            
-            # Mover a /usr/local/bin para que esté disponible globalmente
-            if [ -f "$GOPATH/bin/mkcert" ]; then
-                run_cmd sudo cp "$GOPATH/bin/mkcert" /usr/local/bin/
-                run_cmd sudo chmod +x /usr/local/bin/mkcert
-            else
-                log "$ANSI_RED" "ERROR" "No se pudo instalar mkcert con Go"
-                return 1
-            fi
-        fi
-    fi
-    
-    # Crear CA local si no existe
-    if [ ! -f "$HOME/.local/share/mkcert/rootCA.pem" ]; then
-        log "$ANSI_YELLOW" "INFO" "Creando CA local..."
-        # Usar sudo para instalar la CA en el almacén del sistema
-        sudo mkcert -install
-    fi
-}
-
-# Función para configurar certificados SSL locales con mkcert
-setup_ssl_certificates() {
-    log "$ANSI_YELLOW" "INFO" "Configurando certificados SSL locales con mkcert..."
-    
-    # Instalar mkcert si no está instalado
-    install_mkcert
-    
-    # Obtener el nombre de dominio
-    local domain
-    domain=$(get_domain_name || echo "localhost")
-    
-    # Directorio para los certificados
-    local certs_dir="/etc/ssl/certs"
-    local key_dir="/etc/ssl/private"
-    
-    # Crear directorios si no existen
-    run_cmd sudo mkdir -p "$certs_dir" "$key_dir"
-    
-    # Generar certificados
-    log "$ANSI_YELLOW" "INFO" "Generando certificados para $domain..."
-    
-    # Generar certificado para el dominio y localhost
-    if mkcert -cert-file /tmp/cert.pem -key-file /tmp/key.pem "$domain" "localhost" 127.0.0.1 ::1; then
-        # Mover certificados a ubicaciones estándar
-        run_cmd sudo mv /tmp/cert.pem "$certs_dir/$domain.crt"
-        run_cmd sudo mv /tmp/key.pem "$key_dir/$domain.key"
-        run_cmd sudo chmod 644 "$certs_dir/$domain.crt"
-        run_cmd sudo chmod 600 "$key_dir/$domain.key"
-        
-        log "$ANSI_GREEN" "INFO" "Certificados generados exitosamente en:"
-        log "$ANSI_GREEN" "INFO" "  - Certificado: $certs_dir/$domain.crt"
-        log "$ANSI_GREEN" "INFO" "  - Clave privada: $key_dir/$domain.key"
-        
-        # Configurar Nginx para usar los certificados
-        configure_nginx_ssl "$domain" "$certs_dir/$domain.crt" "$key_dir/$domain.key"
-        
-        return 0
-    else
-        log "$ANSI_RED" "ERROR" "Error al generar los certificados con mkcert"
+    if [ ! -f "${service_file}" ]; then
+        _install_log "Archivo de servicio no encontrado: ${service_file}"
         return 1
     fi
+    
+    cp "${service_file}" "/etc/systemd/system/"
+    systemctl daemon-reload
+    systemctl enable hostberry
+    
+    return $?
 }
 
-# Función para configurar Nginx con SSL
-configure_nginx_ssl() {
-    local domain=$1
-    local cert_path=$2
-    local key_path=$3
+# Configurar Nginx
+setup_nginx() {
+    _install_log "Configurando Nginx"
     
-    log "$ANSI_YELLOW" "INFO" "Configurando Nginx para usar los certificados SSL..."
+    if [ ! -d "/etc/nginx/sites-available" ]; then
+        mkdir -p "/etc/nginx/sites-available"
+    fi
     
-    # Crear configuración de Nginx para SSL
-    local nginx_conf="/etc/nginx/sites-available/$domain"
+    if [ ! -d "/etc/nginx/sites-enabled" ]; then
+        mkdir -p "/etc/nginx/sites-enabled"
+    fi
     
-    # Crear configuración SSL
-    cat << EOF | sudo tee "$nginx_conf" > /dev/null
+    # Crear configuración de Nginx
+    cat > "${NGINX_SITE}" << EOL
 server {
     listen 80;
-    listen [::]:80;
-    server_name $domain;
-    return 301 https://\$host\$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-    server_name $domain;
+    server_name _;
     
-    ssl_certificate $cert_path;
-    ssl_certificate_key $key_path;
-    
-    # Configuración SSL recomendada
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_prefer_server_ciphers on;
-    ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256';
-    ssl_session_timeout 1d;
-    ssl_session_cache shared:SSL:10m;
-    ssl_stapling on;
-    ssl_stapling_verify on;
-    
-    # Configuración de la aplicación
     location / {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host \$host;
@@ -824,100 +331,325 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
+    
+    location /static/ {
+        alias ${INSTALL_DIR}/static/;
+    }
+    
+    location /media/ {
+        alias ${INSTALL_DIR}/media/;
+    }
 }
-EOF
+EOL
     
-    # Habilitar el sitio
-    if [ -f "/etc/nginx/sites-enabled/$domain" ]; then
-        run_cmd sudo rm "/etc/nginx/sites-enabled/$domain"
-    fi
-    run_cmd sudo ln -s "$nginx_conf" "/etc/nginx/sites-enabled/"
+    # Habilitar sitio
+    ln -sf "${NGINX_SITE}" "${NGINX_SITE_ENABLED}"
     
-    # Verificar configuración de Nginx
-    if sudo nginx -t; then
-        log "$ANSI_GREEN" "INFO" "Configuración de Nginx verificada correctamente"
-        # Reiniciar Nginx
-        if systemctl is-active --quiet nginx; then
-            run_cmd sudo systemctl restart nginx
-        else
-            run_cmd sudo systemctl start nginx
-        fi
-    else
-        log "$ANSI_RED" "ERROR" "Error en la configuración de Nginx"
+    # Probar configuración
+    if ! nginx -t; then
+        _install_log "Error en la configuración de Nginx"
         return 1
     fi
+    
+    # Reiniciar Nginx
+    systemctl restart nginx
+    
+    return $?
 }
 
-# Función para configurar Gunicorn
-configure_gunicorn() {
-    echo "[INFO] Creando configuración de Gunicorn..."
+# Configurar certificado SSL
+setup_ssl_certificate() {
+    _install_log "Configurando certificado SSL"
     
-    # Crear directorio de configuración si no existe
-    mkdir -p "$HOSTBERRY_DIR/conf"
+    if [ ! -d "${CONFIG_DIR}/ssl" ]; then
+        mkdir -p "${CONFIG_DIR}/ssl"
+    fi
     
-    # Crear archivo de configuración
-    cat > "$HOSTBERRY_DIR/conf/gunicorn.conf.py" << 'EOF'
-import multiprocessing
-import os
-
-# Configuración básica
-bind = "0.0.0.0:80"
-workers = multiprocessing.cpu_count() * 2 + 1
-worker_class = "sync"
-timeout = 120
-keepalive = 5
-max_requests = 1000
-loglevel = "info"
-accesslog = "/var/log/hostberry/access.log"
-errorlog = "/var/log/hostberry/error.log"
-backlog = 2048
-graceful_timeout = 30
-
-# Configuración de logs
-accesslog = "/opt/hostberry/logs/access.log"
-errorlog = "/opt/hostberry/logs/error.log"
-loglevel = "info"
-
-# Configuración de seguridad
-user = "root"
-group = "root"
-
-# Configuración de rendimiento
-preload_app = True
-reuse_port = True
-
-# Configuración de timeouts
-timeout = 300
-keepalive = 5
-EOF
+    # Generar certificado autofirmado
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout "${CONFIG_DIR}/ssl/hostberry.key" \
+        -out "${CONFIG_DIR}/ssl/hostberry.crt" \
+        -subj "/CN=hostberry.local"
     
-    log "$ANSI_GREEN" "INFO" "Configuración de Gunicorn creada en $HOSTBERRY_DIR/conf/gunicorn.conf.py"
+    # Actualizar configuración de Nginx para usar SSL
+    if [ -f "${NGINX_SITE}" ]; then
+        sed -i 's/listen 80;/listen 443 ssl;\n    ssl_certificate \/etc\/hostberry\/ssl\/hostberry.crt;\n    ssl_certificate_key \/etc\/hostberry\/ssl\/hostberry.key;/' "${NGINX_SITE}"
+        
+        # Redirigir HTTP a HTTPS
+        echo -e "server {\n    listen 80;\n    server_name _;\n    return 301 https://\$host\$request_uri;\n}" | tee "${NGINX_SITE}.http" > /dev/null
+        
+        # Recargar Nginx
+        systemctl reload nginx
+    fi
+    
+    return 0
+}
+
+# Crear respaldo
+create_backup() {
+    _install_log "Creando respaldo"
+    
+    local timestamp
+    timestamp=$(date +%Y%m%d%H%M%S)
+    local backup_dir="${BACKUP_DIR}/hostberry_${timestamp}"
+    
+    mkdir -p "${backup_dir}"
+    
+    # Copiar configuración
+    if [ -d "${CONFIG_DIR}" ]; then
+        cp -r "${CONFIG_DIR}" "${backup_dir}/"
+    fi
+    
+    # Copiar base de datos
+    if [ -f "${INSTALL_DIR}/db.sqlite3" ]; then
+        cp "${INSTALL_DIR}/db.sqlite3" "${backup_dir}/"
+    fi
+    
+    # Crear archivo comprimido
+    local backup_file="${BACKUP_DIR}/hostberry_backup_${timestamp}.tar.gz"
+    tar -czf "${backup_file}" -C "${backup_dir}" .
+    
+    # Limpiar
+    rm -rf "${backup_dir}"
+    
+    _install_log "Respaldo creado: ${backup_file}"
+    echo "${backup_file}"
+    
+    return 0
+}
+
+# Restaurar desde respaldo
+restore_backup() {
+    local backup_file="$1"
+    
+    if [ ! -f "${backup_file}" ]; then
+        _install_log "Archivo de respaldo no encontrado: ${backup_file}"
+        return 1
+    fi
+    
+    _install_log "Restaurando desde respaldo: ${backup_file}"
+    
+    # Detener servicios
+    systemctl stop hostberry
+    
+    # Extraer respaldo
+    local temp_dir
+    temp_dir=$(mktemp -d)
+    tar -xzf "${backup_file}" -C "${temp_dir}"
+    
+    # Restaurar configuración
+    if [ -d "${temp_dir}/$(basename "${CONFIG_DIR}")" ]; then
+        cp -r "${temp_dir}/$(basename "${CONFIG_DIR}")" "$(dirname "${CONFIG_DIR}")"
+    fi
+    
+    # Restaurar base de datos
+    if [ -f "${temp_dir}/db.sqlite3" ]; then
+        cp "${temp_dir}/db.sqlite3" "${INSTALL_DIR}/"
+    fi
+    
+    # Limpiar
+    rm -rf "${temp_dir}"
+    
+    # Iniciar servicios
+    systemctl start hostberry
+    
+    _install_log "Restauración completada"
+    return 0
+}
+
+# Actualizar desde GitHub
+update_from_github() {
+    _install_log "Actualizando desde GitHub"
+    
+    if [ ! -d "${INSTALL_DIR}/.git" ]; then
+        _install_log "No se puede actualizar: ${INSTALL_DIR} no es un repositorio git"
+        return 1
+    fi
+    
+    # Guardar cambios locales
+    cd "${INSTALL_DIR}" || return 1
+    
+    # Obtener cambios remotos
+    git fetch --all
+    
+    # Verificar si hay actualizaciones
+    local current_branch
+    current_branch=$(git rev-parse --abbrev-ref HEAD)
+    
+    if [ "$(git rev-list HEAD...origin/${current_branch} --count)" -eq 0 ]; then
+        _install_log "No hay actualizaciones disponibles"
+        return 0
+    fi
+    
+    # Crear respaldo antes de actualizar
+    if [ "${DO_BACKUP}" -eq 1 ]; then
+        create_backup
+    fi
+    
+    # Actualizar código
+    git reset --hard "origin/${current_branch}"
+    
+    # Actualizar dependencias
+    source "${INSTALL_DIR}/venv/bin/activate"
+    install_python_deps
+    
+    # Aplicar migraciones
+    python manage.py migrate --noinput
+    
+    # Recolectar archivos estáticos
+    python manage.py collectstatic --noinput
+    
+    # Reiniciar servicios
+    systemctl restart hostberry
+    
+    _install_log "Actualización completada"
+    return 0
+}
+
+# Instalar HostBerry
+install_hostberry() {
+    _install_log "Instalando HostBerry"
+    
+    # Crear directorio de instalación
+    mkdir -p "${INSTALL_DIR}"
+    
+    # Clonar repositorio
+    if [ ! -d "${INSTALL_DIR}/.git" ]; then
+        git clone "${GIT_REPO}" "${INSTALL_DIR}"
+    else
+        _install_log "El directorio ${INSTALL_DIR} ya existe. Usando -f para forzar reinstalación."
+        if [ "${FORCE}" -ne 1 ] && [ "${DO_UPDATE}" -ne 1 ]; then
+            _install_log "Use --force para forzar la instalación o --update para actualizar"
+            return 1
+        fi
+    fi
+    
+    cd "${INSTALL_DIR}" || return 1
+    
+    # Configurar entorno virtual
+    setup_python_venv
+    
+    # Instalar dependencias de Python
+    install_python_deps
+    
+    # Aplicar migraciones
+    python manage.py migrate --noinput
+    
+    # Crear superusuario si no existe
+    if ! python manage.py shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', 'admin@example.com', 'admin')"; then
+        _install_log "Error al crear el superusuario"
+        return 1
+    fi
+    
+    # Recolectar archivos estáticos
+    python manage.py collectstatic --noinput
+    
+    # Configurar servicio systemd
+    setup_systemd_service
+    
+    # Configurar Nginx
+    setup_nginx
+    
+    # Configurar certificado SSL si es necesario
+    if [ "${INSTALL_CERT}" -eq 1 ]; then
+        setup_ssl_certificate
+    fi
+    
+    # Iniciar servicio
+    systemctl start hostberry
+    
+    _install_log "Instalación completada"
+    return 0
+}
+
+# Mostrar información de acceso
+show_access_info() {
+    local ip_address
+    ip_address=$(hostname -I | awk '{print $1}')
+    
+    _install_divider
+    echo -e "${COL_LIGHT_GREEN}Instalación completada${COL_NC}"
+    echo ""
+    echo -e "HostBerry está ahora disponible en:"
+    echo -e "  - ${COL_LIGHT_CYAN}http://${ip_address}${COL_NC}"
+    
+    if [ "${INSTALL_CERT}" -eq 1 ]; then
+        echo -e "  - ${COL_LIGHT_CYAN}https://${ip_address}${COL_NC} (con advertencia de certificado)"
+    fi
+    
+    echo ""
+    echo -e "Credenciales por defecto:"
+    echo -e "  - Usuario: ${COL_LIGHT_YELLOW}admin${COL_NC}"
+    echo -e "  - Contraseña: ${COL_LIGHT_YELLOW}admin${COL_NC}"
+    echo ""
+    echo -e "Recuerde cambiar la contraseña después del primer inicio de sesión."
+    _install_divider
 }
 
 # Función principal
 main() {
-    # Verificar si se está ejecutando como root
+    # Configurar logging
+    setup_logging
+    
+    # Mostrar mensaje de bienvenida
+    display_welcome
+    
+    # Analizar argumentos
+    parse_arguments "$@"
+    
+    # Verificar privilegios de superusuario
     check_root
     
-    # Procesar argumentos de línea de comandos
-    process_arguments "$@"
+    # Verificar conexión a internet
+    if ! check_internet; then
+        _install_log "Se requiere conexión a internet para continuar"
+        exit 1
+    fi
     
-    # Mostrar resumen de acciones
-    show_summary
+    # Restaurar desde respaldo si se especificó
+    if [ -n "${DO_RESTORE}" ]; then
+        if ! restore_backup "${DO_RESTORE}"; then
+            _install_log "Error al restaurar desde el respaldo"
+            exit 1
+        fi
+        exit 0
+    fi
     
-    # Crear directorios necesarios
-    mkdir -p "$HOSTBERRY_DIR"
-    mkdir -p "$HOSTBERRY_DIR/logs"
-    mkdir -p "$HOSTBERRY_DIR/conf"
+    # Actualizar instalación existente
+    if [ "${DO_UPDATE}" -eq 1 ]; then
+        if ! update_from_github; then
+            _install_log "Error al actualizar HostBerry"
+            exit 1
+        fi
+        exit 0
+    fi
     
-    # Configurar Gunicorn
-    configure_gunicorn
+    # Verificar requisitos del sistema
+    if ! check_requirements; then
+        _install_log "No se cumplen los requisitos del sistema"
+        exit 1
+    fi
     
-    log "$ANSI_GREEN" "INFO" "Configuración completada exitosamente"
-    exit 0
+    # Instalar dependencias del sistema
+    if ! install_dependencies; then
+        _install_log "Error al instalar dependencias del sistema"
+        exit 1
+    fi
+    
+    # Instalar HostBerry
+    if ! install_hostberry; then
+        _install_log "Error al instalar HostBerry"
+        exit 1
+    fi
+    
+    # Mostrar información de acceso
+    show_access_info
+    
+    _install_log "Proceso completado con éxito"
+    return 0
 }
 
-# Ejecutar la función principal
+# Ejecutar función principal
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
     main "$@"
 fi
