@@ -594,17 +594,27 @@ install_hostberry() {
     # Instalar dependencias de Python
     install_python_deps
     
-    # Aplicar migraciones
-    python manage.py migrate --noinput
-    
-    # Crear superusuario si no existe
-    if ! python manage.py shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', 'admin@example.com', 'admin')"; then
-        _install_log "Error al crear el superusuario"
+    # Verificar si existe el script de inicialización de la base de datos
+    if [ -f "${INSTALL_DIR}/scripts/init_db.py" ]; then
+        _install_log "Inicializando base de datos..."
+        cd "${INSTALL_DIR}" || return 1
+        python -m scripts.init_db
+        if [ $? -ne 0 ]; then
+            _install_log "Error al inicializar la base de datos"
+            return 1
+        fi
+    else
+        _install_log "No se encontró el script de inicialización de la base de datos"
         return 1
     fi
     
-    # Recolectar archivos estáticos
-    python manage.py collectstatic --noinput
+    # Recolectar archivos estáticos si existe el directorio
+    if [ -d "${INSTALL_DIR}/app/static" ]; then
+        _install_log "Recolectando archivos estáticos..."
+        mkdir -p "${INSTALL_DIR}/app/static"
+        # Crear archivos estáticos necesarios si no existen
+        touch "${INSTALL_DIR}/app/static/.keep"
+    fi
     
     # Configurar servicio systemd
     setup_systemd_service
