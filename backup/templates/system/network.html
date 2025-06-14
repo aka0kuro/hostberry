@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}{% trans %}Network Configuration{% endtrans %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="page-title"><i class="bi bi-hdd-network me-2"></i>{% trans %}Network Configuration{% endtrans %}</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-ethernet me-2"></i>{% trans %}Interface Settings{% endtrans %}
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('network_config') }}">
+                        <div class="mb-3">
+                            <label for="interface" class="form-label">{% trans %}Network Interface{% endtrans %}</label>
+                            <select class="form-select" id="interface" name="interface">
+                                {% for iface in network_interfaces %}
+                                    <option value="{{ iface }}" {% if iface == config.NETWORK_INTERFACE %}selected{% endif %}>{{ iface }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ip_address" class="form-label">{% trans %}IP Address{% endtrans %}</label>
+                            <input type="text" class="form-control" id="ip_address" name="ip_address" value="{{ config.IP_ADDRESS }}">
+                        </div>
+                        <button type="submit" class="btn btn-primary">{% trans %}Save Settings{% endtrans %}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-speedometer2 me-2"></i>{% trans %}Network Status{% endtrans %}
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>{% trans %}Current Interface:{% endtrans %}</strong> {{ network_status.interface }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>{% trans %}IP Address:{% endtrans %}</strong> {{ network_status.ip_address }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>{% trans %}Upload:{% endtrans %}</strong> {{ network_status.upload }} Mbps
+                    </div>
+                    <div class="mb-3">
+                        <strong>{% trans %}Download:{% endtrans %}</strong> {{ network_status.download }} Mbps
+                    </div>
+                    <button class="btn btn-secondary" onclick="location.reload()">
+                        <i class="bi bi-arrow-repeat me-1"></i>{% trans %}Refresh{% endtrans %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
