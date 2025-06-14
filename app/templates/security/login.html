@@ -1,0 +1,116 @@
+{% extends "security/auth_base.html" %}
+
+{% block auth_title %}Iniciar Sesión{% endblock %}
+
+{% block auth_content %}
+<form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+    {{ form.hidden_tag() }}
+    
+    <div class="mb-3">
+        {{ form.username.label(class="form-label") }}
+        <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-user"></i></span>
+            {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""), 
+                         placeholder=form.username.render_kw.placeholder) }}
+        </div>
+        {% if form.username.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.username.errors[0] }}
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="mb-3">
+        <div class="d-flex justify-content-between">
+            {{ form.password.label(class="form-label") }}
+            <a href="#" class="small text-decoration-none">¿Olvidaste tu contraseña?</a>
+        </div>
+        <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""),
+                          id="password",
+                          placeholder=form.password.render_kw.placeholder) }}
+            <button class="btn btn-outline-secondary toggle-password" type="button" 
+                    data-bs-toggle="tooltip" 
+                    title="Mostrar/ocultar contraseña">
+                <i class="fas fa-eye"></i>
+            </button>
+        </div>
+        {% if form.password.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.password.errors[0] }}
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="mb-3 form-check">
+        {{ form.remember_me(class="form-check-input") }}
+        {{ form.remember_me.label(class="form-check-label") }}
+    </div>
+    
+    <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-sign-in-alt me-2"></i> Iniciar Sesión
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+
+.input-group-text {
+    background-color: var(--input-bg);
+    border-right: none;
+}
+
+.input-group .form-control {
+    border-left: none;
+}
+
+/* Ajustes para el tema oscuro */
+body.blue .card,
+body.red .card,
+body.green .card {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+}
+</style>
+
+<script>
+// Mostrar/ocultar contraseña
+document.querySelectorAll('.toggle-password').forEach(button => {
+    button.addEventListener('click', function() {
+        const password = document.querySelector(this.previousElementSibling);
+        const icon = this.querySelector('i');
+        
+        if (password.type === 'password') {
+            password.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            password.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    });
+});
+
+// Validación de formulario
+(function () {
+    'use strict'
+    
+    var forms = document.querySelectorAll('.needs-validation')
+    
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
+{% endblock %}

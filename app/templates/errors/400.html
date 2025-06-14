@@ -1,0 +1,54 @@
+{% extends "errors/error.html" %}
+
+{% block title %}Solicitud incorrecta (400) - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="error-container">
+                <div class="error-icon mb-4">
+                    <i class="fas fa-exclamation-circle fa-5x text-danger"></i>
+                </div>
+                <h1 class="display-1 fw-bold text-danger">400</h1>
+                <h2 class="mb-4">Solicitud incorrecta</h2>
+                
+                <div class="error-message mb-4">
+                    <p class="lead">La solicitud enviada no es válida o no puede ser procesada.</p>
+                    <p>Parece que hay un problema con la solicitud que intentaste realizar.</p>
+                </div>
+                
+                <div class="suggestions bg-light p-4 rounded-3 mb-4 text-start">
+                    <h5 class="mb-3">¿Qué puedes hacer?</h5>
+                    <ul class="mb-0">
+                        <li class="mb-2">Verifica que la URL sea correcta</li>
+                        <li class="mb-2">Asegúrate de que todos los campos del formulario estén completos y sean válidos</li>
+                        <li class="mb-2">Si el problema persiste, intenta recargar la página</li>
+                        <li>Si crees que esto es un error, por favor <a href="{{ url_for('main.contact') }}">contáctanos</a></li>
+                    </ul>
+                </div>
+                
+                <div class="error-actions">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-home me-2"></i> Volver al Inicio
+                    </a>
+                    <a href="{{ url_for('main.contact') }}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-envelope me-2"></i> Contactar Soporte
+                    </a>
+                </div>
+                
+                {% if error_info and config.get('DEBUG') %}
+                <div class="error-details mt-5">
+                    <h5>Detalles del error (solo visible en modo desarrollo):</h5>
+                    <div class="card bg-dark text-light">
+                        <div class="card-body">
+                            <pre class="mb-0" style="white-space: pre-wrap; font-family: monospace; font-size: 0.8rem;">{{ error_info }}</pre>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

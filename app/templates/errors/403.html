@@ -1,0 +1,120 @@
+{% extends "errors/error.html" %}
+
+{% block title %}Acceso prohibido (403) - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="error-container">
+                <div class="error-icon mb-4">
+                    <i class="fas fa-ban fa-5x text-danger"></i>
+                </div>
+                <h1 class="display-1 fw-bold text-danger">403</h1>
+                <h2 class="mb-4">Acceso prohibido</h2>
+                
+                <div class="error-message mb-4">
+                    <p class="lead">No tienes permiso para acceder a este recurso.</p>
+                    <p>El servidor entendió la solicitud, pero se niega a autorizarla.</p>
+                </div>
+                
+                <div class="suggestions bg-light p-4 rounded-3 mb-4 text-start">
+                    <h5 class="mb-3">¿Qué puedes hacer?</h5>
+                    <ul class="mb-0">
+                        <li class="mb-2">Asegúrate de haber iniciado sesión con una cuenta que tenga los permisos necesarios</li>
+                        <li class="mb-2">Si crees que esto es un error, verifica la URL o los permisos de tu cuenta</li>
+                        <li>Para solicitar acceso, por favor contacta al administrador del sistema</li>
+                    </ul>
+                </div>
+                
+                <div class="error-actions">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-home me-2"></i> Volver al Inicio
+                    </a>
+                    <a href="{{ url_for('main.contact') }}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-envelope me-2"></i> Contactar Soporte
+                    </a>
+                </div>
+                
+                {% if error_info and config.get('DEBUG') %}
+                <div class="error-details mt-5">
+                    <h5>Detalles del error (solo visible en modo desarrollo):</h5>
+                    <div class="card bg-dark text-light">
+                        <div class="card-body">
+                            <pre class="mb-0" style="white-space: pre-wrap; font-family: monospace; font-size: 0.8rem;">{{ error_info }}</pre>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-container {
+    padding: 40px 0;
+    text-align: center;
+}
+
+.error-icon {
+    margin-bottom: 30px;
+}
+
+.error-container h1 {
+    font-size: 8rem;
+    line-height: 1;
+    margin-bottom: 20px;
+}
+
+.error-container h2 {
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.error-message {
+    max-width: 600px;
+    margin: 0 auto 30px;
+}
+
+.suggestions {
+    max-width: 600px;
+    margin: 0 auto 30px;
+    text-align: left;
+}
+
+.error-actions .btn {
+    min-width: 180px;
+    margin-bottom: 15px;
+}
+
+.error-details {
+    margin-top: 40px;
+    text-align: left;
+}
+
+.error-details pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 0.9rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    .error-container h1 {
+        font-size: 6rem;
+    }
+    
+    .error-actions .btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    
+    .error-actions .btn:last-child {
+        margin-bottom: 0;
+    }
+}
+</style>
+{% endblock %}

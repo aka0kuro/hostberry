@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0 rounded-lg mt-5">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">{% block auth_title %}{% endblock %}</h4>
+                        <a href="{{ url_for('main.index') }}" class="text-white">
+                            <i class="fas fa-home"></i> Inicio
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    {# Mostrar mensajes flash #}
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    {# Contenido del formulario #}
+                    {% block auth_content %}
+                    {% endblock %}
+                </div>
+                <div class="card-footer bg-transparent text-center py-3">
+                    {% block auth_footer %}
+                        <p class="mb-0">
+                            {% if request.endpoint != 'auth.login' %}
+                                <a href="{{ url_for('auth.login') }}" class="text-decoration-none">
+                                    <i class="fas fa-sign-in-alt me-1"></i> Iniciar sesión
+                                </a>
+                            {% endif %}
+                            
+                            {% if request.endpoint != 'auth.register' and config.get('SECURITY_REGISTERABLE', True) %}
+                                <span class="mx-2">•</span>
+                                <a href="{{ url_for('auth.register') }}" class="text-decoration-none">
+                                    <i class="fas fa-user-plus me-1"></i> Registrarse
+                                </a>
+                            {% endif %}
+                        </p>
+                    {% endblock %}
+                </div>
+            </div>
+            
+            {% block extra_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Activar tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

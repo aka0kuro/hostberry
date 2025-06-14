@@ -1,5 +1,6 @@
 import os
 import json
+from datetime import timedelta
 from pathlib import Path
 from typing import Dict, Any, Optional
 
@@ -18,7 +19,28 @@ class Config:
     LOGS_DIR = BASE_DIR / 'logs'
     
     # Configuración de la base de datos
-    DATABASE_URI = f"sqlite:///{DATA_DIR}/hostberry.db"
+    SQLALCHEMY_DATABASE_URI = f"sqlite:///{DATA_DIR}/hostberry.db"
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ECHO = False
+    
+    # Configuración de seguridad
+    SECURITY_PASSWORD_SALT = os.getenv('SECURITY_PASSWORD_SALT', 'dev-salt-123')
+    SECURITY_PASSWORD_HASH = 'bcrypt'
+    
+    # Configuración de sesión
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    
+    # Configuración de tokens CSRF
+    WTF_CSRF_ENABLED = True
+    WTF_CSRF_TIME_LIMIT = 3600  # 1 hora
+    
+    # Configuración de Flask-Login
+    REMEMBER_COOKIE_DURATION = timedelta(days=7)
+    REMEMBER_COOKIE_SECURE = True
+    REMEMBER_COOKIE_HTTPONLY = True
+    SESSION_PROTECTION = 'strong'
     
     # Configuración de red
     DEFAULT_NETWORK_INTERFACE = "wlan0"

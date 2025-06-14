@@ -2,14 +2,11 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 from datetime import datetime, timedelta
-from flask import Flask, session
-from flask_babel import Babel
-from flask_wtf.csrf import CSRFProtect
+from flask import Flask, session, redirect, url_for, flash, request, jsonify
 from dotenv import load_dotenv
 
-# Inicializar extensiones
-babel = Babel()
-csrf = CSRFProtect()
+# Importar extensiones
+from .extensions import db, login_manager, csrf, babel
 
 # Cargar variables de entorno
 load_dotenv()
@@ -45,8 +42,10 @@ def create_app(config_name='default'):
         app.logger.info('HostBerry iniciando...')
     
     # Inicializar extensiones
-    babel.init_app(app)
+    db.init_app(app)
+    login_manager.init_app(app)
     csrf.init_app(app)
+    babel.init_app(app)
     
     # Configuración de Babel
     from app.utils.i18n_utils import get_locale
@@ -65,6 +64,18 @@ def create_app(config_name='default'):
     def before_request():
         session.permanent = True
         app.permanent_session_lifetime = timedelta(days=1)
+        
+        # Actualizar última vez que se vio al usuario
+        if current_user.is_authenticated:
+            current_user.update_last_seen()
+    
+    # Manejar rutas protegidas
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        if request.blueprint == 'api':
+            return jsonify({'error': 'No autorizado'}), 401
+        flash('Por favor inicia sesión para acceder a esta página.', 'warning')
+        return redirect(url_for('auth.login', next=request.url))
     
     # Configurar contexto de aplicación
     with app.app_context():

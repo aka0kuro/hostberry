@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Cuenta - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <!-- Menú lateral de la cuenta -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Mi Cuenta</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('auth.account') }}" 
+                       class="list-group-item list-group-item-action active" 
+                       aria-current="true">
+                        <i class="fas fa-user-circle me-2"></i>Perfil
+                    </a>
+                    <a href="{{ url_for('auth.change_password') }}" 
+                       class="list-group-item list-group-item-action">
+                        <i class="fas fa-key me-2"></i>Cambiar Contraseña
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <i class="fas fa-cog me-2"></i>Preferencias
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action text-danger">
+                        <i class="fas fa-trash-alt me-2"></i>Eliminar Cuenta
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Información de la cuenta -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">Información de la Cuenta</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <strong>Miembro desde:</strong><br>
+                        <span class="text-muted">
+                            {{ current_user.created_at.strftime('%d/%m/%Y') }}
+                        </span>
+                    </p>
+                    <p class="mb-0">
+                        <strong>Último acceso:</strong><br>
+                        <span class="text-muted">
+                            {% if current_user.last_seen %}
+                                {{ current_user.last_seen.strftime('%d/%m/%Y %H:%M') }}
+                            {% else %}
+                                No disponible
+                            {% endif %}
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <!-- Contenido principal -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Mi Perfil</h5>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <div class="text-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            <img src="{{ url_for('static', filename='img/avatar-default.png') }}" 
+                                 class="rounded-circle border" 
+                                 width="120" 
+                                 height="120" 
+                                 alt="{{ current_user.username }}">
+                            <button class="btn btn-sm btn-primary rounded-circle position-absolute bottom-0 end-0"
+                                    style="width: 36px; height: 36px;"
+                                    title="Cambiar foto">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                        </div>
+                        <h4 class="mt-3 mb-0">{{ current_user.username }}</h4>
+                        <span class="badge bg-{{ 'success' if current_user.is_active else 'secondary' }}">
+                            {{ 'Activo' if current_user.is_active else 'Inactivo' }}
+                        </span>
+                        {% if current_user.is_admin %}
+                            <span class="badge bg-danger ms-1">Administrador</span>
+                        {% endif %}
+                    </div>
+                    
+                    <form method="POST" action="#" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="first_name" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="first_name" value="{{ current_user.first_name or '' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="last_name" class="form-label">Apellido</label>
+                                <input type="text" class="form-control" id="last_name" value="{{ current_user.last_name or '' }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Correo Electrónico</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" value="{{ current_user.email }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="bio" class="form-label">Biografía</label>
+                            <textarea class="form-control" id="bio" rows="3" 
+                                      placeholder="Cuéntanos algo sobre ti">{{ current_user.bio or '' }}</textarea>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="button" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

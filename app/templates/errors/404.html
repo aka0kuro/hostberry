@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Página no encontrada (404) - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="error-404">
+                <h1 class="display-1 text-primary fw-bold">404</h1>
+                <h2 class="mb-4">¡Ups! Página no encontrada</h2>
+                <div class="error-details mb-4">
+                    <p class="lead">Lo sentimos, la página que estás buscando no existe o ha sido movida.</p>
+                    <p>Puedes volver a la página de inicio o usar el menú de navegación.</p>
+                </div>
+                <div class="error-actions">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-home me-2"></i> Ir al Inicio
+                    </a>
+                    <a href="{{ url_for('main.contact') }}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-envelope me-2"></i> Contactar Soporte
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-404 {
+    padding: 40px 0;
+    text-align: center;
+}
+
+.error-404 h1 {
+    font-size: 10rem;
+    line-height: 1;
+    margin-bottom: 20px;
+}
+
+.error-404 h2 {
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.error-details {
+    max-width: 600px;
+    margin: 0 auto 30px;
+}
+
+.error-actions .btn {
+    min-width: 180px;
+}
+
+@media (max-width: 768px) {
+    .error-404 h1 {
+        font-size: 8rem;
+    }
+    
+    .error-actions .btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    
+    .error-actions .btn:last-child {
+        margin-bottom: 0;
+    }
+}
+</style>
+{% endblock %}
