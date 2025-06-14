@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 # Standard library imports
 import datetime
+import json
 import logging
 import logging.config
 import os
 import re
+import secrets
 import socket
 import subprocess
 import sys
 import threading
 import time
-from collections import deque
+from base64 import b64decode, b64encode
+from collections import deque, defaultdict
+from functools import wraps
 from logging.handlers import RotatingFileHandler
-
-# Third-party imports
+from cryptography.fernet import Fernet
 from dotenv import load_dotenv
 from flask import (Flask, abort, flash, jsonify, make_response, redirect,
                   render_template, request, session, url_for)
@@ -33,11 +36,6 @@ global_adblock_update_status = {'updating': False, 'last_result': None, 'last_er
 
 # Configure logging timezone
 logging.Formatter.converter = time.localtime
-import os
-import secrets
-import json
-from cryptography.fernet import Fernet
-from base64 import b64encode, b64decode
 
 # Initialize environment and logging
 if not os.path.exists('.env'):
