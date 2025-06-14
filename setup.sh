@@ -701,27 +701,46 @@ install_mkcert() {
         log "$ANSI_YELLOW" "INFO" "Instalando mkcert..."
         
         # Instalar dependencias necesarias
-        if [ -f /etc/debian_version ]; then
-            # Para Debian/Ubuntu
+        if [ -f /etc/debian_version ] || [ -f /etc/raspbian_version ]; then
+            # Para Debian/Ubuntu/Raspberry Pi OS
             run_cmd sudo apt-get update
-            run_cmd sudo apt-get install -y libnss3-tools
+            run_cmd sudo apt-get install -y libnss3-tools wget
         elif [ -f /etc/redhat-release ]; then
             # Para RHEL/CentOS
-            run_cmd sudo yum install -y nss-tools
+            run_cmd sudo yum install -y nss-tools wget
         fi
         
         # Instalar mkcert
         if ! command -v mkcert &> /dev/null; then
-            run_cmd curl -JLO "https://dl.filippo.io/mkcert/latest?for=linux/amd64"
-            chmod +x mkcert-v*-linux-amd64
-            sudo mv mkcert-v*-linux-amd64 /usr/local/bin/mkcert
+            # Determinar la arquitectura
+            ARCHITECTURE=$(uname -m)
+            MKCERT_URL=""
+            
+            case "$ARCHITECTURE" in
+                "x86_64")
+                    MKCERT_URL="https://github.com/FiloSottile/mkcert/releases/latest/download/mkcert-linux-amd64"
+                    ;;
+                "armv7l" | "armv8l" | "aarch64")
+                    # Para Raspberry Pi 3/4 (ARM 32/64 bits)
+                    MKCERT_URL="https://github.com/FiloSottile/mkcert/releases/latest/download/mkcert-linux-arm"
+                    ;;
+                *)
+                    log "$ANSI_RED" "ERROR" "Arquitectura no soportada: $ARCHITECTURE"
+                    return 1
+                    ;;
+            esac
+            
+            log "$ANSI_YELLOW" "INFO" "Descargando mkcert para $ARCHITECTURE..."
+            run_cmd sudo wget -O /usr/local/bin/mkcert "$MKCERT_URL"
+            run_cmd sudo chmod +x /usr/local/bin/mkcert
         fi
     fi
     
     # Crear CA local si no existe
     if [ ! -f "$HOME/.local/share/mkcert/rootCA.pem" ]; then
         log "$ANSI_YELLOW" "INFO" "Creando CA local..."
-        run_cmd mkcert -install
+        # Usar sudo para instalar la CA en el almacén del sistema
+        sudo mkcert -install
     fi
 }
 
