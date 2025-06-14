@@ -695,7 +695,7 @@ perform_installation() {
     log "$ANSI_GREEN" "INFO" "Instalación completada exitosamente"
 }
 
-# Función para instalar mkcert
+# Función para instalar mkcert usando go install
 install_mkcert() {
     if ! command -v mkcert &> /dev/null; then
         log "$ANSI_YELLOW" "INFO" "Instalando mkcert..."
@@ -704,35 +704,27 @@ install_mkcert() {
         if [ -f /etc/debian_version ] || [ -f /etc/raspbian_version ]; then
             # Para Debian/Ubuntu/Raspberry Pi OS
             run_cmd sudo apt-get update
-            run_cmd sudo apt-get install -y libnss3-tools wget
+            run_cmd sudo apt-get install -y libnss3-tools wget golang-go
         elif [ -f /etc/redhat-release ]; then
             # Para RHEL/CentOS
-            run_cmd sudo yum install -y nss-tools wget
+            run_cmd sudo yum install -y nss-tools wget golang
         fi
         
-        # Instalar mkcert
+        # Instalar mkcert usando go install
         if ! command -v mkcert &> /dev/null; then
-            # Determinar la arquitectura
-            ARCHITECTURE=$(uname -m)
-            MKCERT_URL=""
+            log "$ANSI_YELLOW" "INFO" "Instalando mkcert con Go..."
+            export GOPATH="$HOME/go"
+            export PATH="$PATH:$GOPATH/bin"
+            run_cmd go install filippo.io/mkcert@latest
             
-            case "$ARCHITECTURE" in
-                "x86_64")
-                    MKCERT_URL="https://github.com/FiloSottile/mkcert/releases/latest/download/mkcert-linux-amd64"
-                    ;;
-                "armv7l" | "armv8l" | "aarch64")
-                    # Para Raspberry Pi 3/4 (ARM 32/64 bits)
-                    MKCERT_URL="https://github.com/FiloSottile/mkcert/releases/latest/download/mkcert-linux-arm"
-                    ;;
-                *)
-                    log "$ANSI_RED" "ERROR" "Arquitectura no soportada: $ARCHITECTURE"
-                    return 1
-                    ;;
-            esac
-            
-            log "$ANSI_YELLOW" "INFO" "Descargando mkcert para $ARCHITECTURE..."
-            run_cmd sudo wget -O /usr/local/bin/mkcert "$MKCERT_URL"
-            run_cmd sudo chmod +x /usr/local/bin/mkcert
+            # Mover a /usr/local/bin para que esté disponible globalmente
+            if [ -f "$GOPATH/bin/mkcert" ]; then
+                run_cmd sudo cp "$GOPATH/bin/mkcert" /usr/local/bin/
+                run_cmd sudo chmod +x /usr/local/bin/mkcert
+            else
+                log "$ANSI_RED" "ERROR" "No se pudo instalar mkcert con Go"
+                return 1
+            fi
         fi
     fi
     
