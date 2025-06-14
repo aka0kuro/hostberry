@@ -22,7 +22,7 @@ def create_app(config_name='default'):
     app = Flask(__name__)
     
     # Cargar configuración
-    from config import config
+    from app.config import config
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
     
@@ -49,7 +49,7 @@ def create_app(config_name='default'):
     csrf.init_app(app)
     
     # Configuración de Babel
-    from app.utils.i18n import get_locale
+    from app.utils.i18n_utils import get_locale
     babel.init_app(app, locale_selector=get_locale)
     
     # Registrar blueprints
