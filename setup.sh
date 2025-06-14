@@ -92,7 +92,158 @@ _install_status() {
 # Mostrar separador
 _install_divider() {
     echo -e "${COL_LIGHT_BLUE}----------------------------------------${COL_NC}"
-}
+    echo -e """:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::clllllllcc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cloc,''',;:lllc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cll;........';lolc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cll:'..'........';clc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cll:;'..............':oc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cll,''..'............':lc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::coc'.'....'..........':ol::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cc:::c::::::::::::::::::::::::::::::::::::::::::::::::::::::::coc,.............'...,coc::::::::::::::::::::::::::::::::::::::c:ccc:c::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cllc:cllllllcccllllllcc::::::::::::::::::::::::::::::::::::::::::::col,................';llc:::::::::::::::::::::::::::::ccclllllcclllccclcclllc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cc;,''''''''''',,,;:::cclollc::::::::::::::::::::::::::::::::::::::col,................,coc:::::::::::::::::::::::::ccllllc:::;;,,''''''''''',;loc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cl;.....................'',;::clllc::::::::::::::::::::::::::::::::coo,................;loc::::::::::::::::::::::clolcc:;,''....................,ll:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cl;...........................',;:clolc::::::::::::::::::::::::::::lo;...............';ll::::::::::::::::::::cllcc:;,'..........................'ldc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cl:...............................',;ccllc::::::::::::::::::::::::co:'..............':lc:::::::::::::::::cclll:;'...''.....'...'................'coc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::oc'.........................'........',:lllc:::::::::::::::::::::lc'..............':ol:::::::::::::::ccllc:,'......'.'.........................,cl:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cc,.....................................',:cllc:::::::::::::::::co:.'.............,ll::::::::::::::cllc:,'........'............................;ol:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::co;................................''.'....';colc:::::::::::::::ll,..............,clc::::::::::::cllc,'.............................'.........'coc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::clc'.....................''........''..''.....,:lol::::::::::::coc'.............'coc:::::::::::loc;'..........................................,ll::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::ll;...................................'......'.';lllc:::::::::lo;.............':ol:::::::::clll;'.......'...'................................:oc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::coc'.......................................'''...';loc::::::::lc'.............,ll::::::::clol;'.............................................,ll:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::co:'..................................''..'.......':llc:::::coc'.............:lc:::::::cll;'.''...........................................'clc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::ll;'...'.............................'.............,:ol::::cdc'............'co::::::cll:'...............................................'coc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::ll;.................................................,coc::coc'............,lc:::::clc,.................................................:ol:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::clc,.'...............................................':ol:co:'............:dl:::cll;'.................................................;ll::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::clc,..................................................;loloc'............cxl::col;.................................................';ll:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::clo;..................................................,coxl'............cxl:coc,..'''............................................':lc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::ll;'.................................................'cko'............cxlcl:'.................................................'coc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cl:'.......................................'.........'lo,............:dol;'..........................................''.....,clc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cll;'................................................';'............;oo:'................................................':llc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::loc'..............................................................'cc'...............................................';loc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cll;'............................................................',,..............................................';lol:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cll:,..........................................................................................................,looc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::lol:,'................................................................'...................................';cllc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cllc;'.......................................................................................'.......',:lllc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::clll:,'.......................................................''................................',:lllc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cccllooooollllll:,'.................'...........'''',,,,,,,,,;,,,,,,''''''............................',:lodollooooolllccc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::ccllllllloolooooooolllldxddl:,'.............''..''',,;;;::::ccccccccccccccccc::::;;,,''...................',:loddoloolloooooolloloollllccc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cllllllllllcccccccccccccc:ccccloool:,'''.........'',,;::ccccccccccccccccccccccccccccccccc::;;,''...........'',;:clllccccccccccccccccccccclllooolollc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cllooolcccccccccccc:cccccccccccccccccccccc::;,''''',;;:ccccccccccccccccccccccccccccccccccccccccccc::;,''...'',;::ccccc:ccccccccccccccccccccccccc:ccclooooolc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::loooolccccccccccccccccccccccccccccccccccccccccccc::::::cccccccccccccccccccccccccccccccccccccccccccccccccc:;;,;::cccccccccc:cccccccccccccccccccccccccccccccccoooolc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cloollcccccccccccccccc:ccccccc::cccccccccccccccccccccccccccccccccccccccc:ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc:ccccccccccccclloolc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::coolcc:ccccccccccccc:ccccccccccccccccccccccccccccccccccccccccccccccccc:::cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccclollc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::clooccc:cccccccccccccccccccccccccccccccccccccccccccc:cccccccccccccccccccc:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc:cccccccccccccccccccccccccoolc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::coolccccccccccccccccccccccc:ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccooc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::cooccccccccccccccccccccccccccccccccccccccccccc:ccccc:ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccclol::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::clolccccccccccccccccccccccccccccccccccccccccc::cccccccccccccccccccccccccccccccccc:cccccc::cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccldoc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::codlcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccldoc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::cldlccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc::cccccccccccccccccccccccccccccccccccccccccccccccccclolc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::lolcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc:ccccccccccccccccccccccccccccccccccccccccccccc:colc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::ldocccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc::cccccccccccccccccccccccccccccccccccccccccccccc:lol:::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::cddcccccccccccccccccccccccccccccccccccccccccccccccccccccccc:cccccccccccccccccccccccccccccccccccc:ccccccccccccccccccccccccccccccccccccccccccccc::ccccccccccccccccccccccccccccccccccccccccccccccooc::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::lolcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc:ccc:cccllooooddddddddddoooolllccccc:ccccccccccccccccccccccccccccc:ccccccccccccccccccccccccccccccccccccccccccc:::lol::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::coocccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc::ccllodxkOO0KKXXXNNNNNNNNNNNNXXXXKKK0OOkkxdollccc:ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccooc:::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::cooccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccloxkO0KXNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNXXKOkxdolccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc:clc:::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::ccllllccc:ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccodxO0KNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNXKOkdolcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc:clllcc::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::ccllolllccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccloxO0XNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNXKOxdlcccccccccccccccccccccccccccccccccccccccccccccccccccccccccclllooolcc::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::cloolcccccccccccccccccccccccccccccccccccccccccccccccccccc:cccccccccloxOKXNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNXKOxocccccccccccccccccccccccccccccccccccccccccccccccccccccccccccclloolc::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::cloooccccccccccccccccccccccccccccccccccccccccccccccccccccccc:cccc:cldk0XNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNXXXNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNX0xolc:ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccloolc:::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::loolcc:ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccldkKNNNNNNNNNNNNNNNNNNNNNNNNNNXK00OkkxxxdddddoodddddxxxkOO00KXNNNNNNNNNNNNNNNNNNNNNNNNNNNX0kocccccccccccccccccccccccccccccccccccccccccccccccccccccccccccclodlc:::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::cloolccc:ccccccccccccccccccccccccccccccccccccccccccccccccccccccc:cok0XNNNNNNNNNNNNNNNNNNNNNNK0Okxdolccccccccccccccccc::ccc::cccllodxkO0KXNNNNNNNNNNNNNNNNNNNNNNNX0xoc:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccloolc:::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::coolccccccc:cccccccccccccccccccccccccccccccccccccccccccccc:cccccldOXNNNNNNNNNNNNNNNNNNNNX0OxdlccccccccccccccccccccccccccccccccccccccccccldxO0XNNNNNNNNNNNNNNNNNNNNNNKkocccccccccccccccccccccccccccccccccccccccccccc:cccccccccccccclooc::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::cldocccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc:lOXNNNNNNNNNNNNNNNNNNXKOxocccc::ccccccccccccccccccccccccccccccccc::cc:ccc:ccccodk0XNNNNNNNNNNNNNNNNNNNN0dccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccoolc::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::cldlccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdXNNNNNNNNNNNNNNNNKOxolc::::cccccccccccccccccccccccccccccccccccccccc::ccccccccc::codOKNNNNNNNNNNNNNNNNNNOlcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccclolc:::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::codl:cccccccccccccccccccccccccccccccccccccccccccccccccc:ccccccccccco0NNNNNNNNNNNNNXOxocccccccccccccccccccccccccccccc:ccccccccccccccccccccccccccccc:cccccldOKNNNNNNNNNNNNNNNkcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccolc::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::ldlcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdKNNNNNNNNNXKkocccccccccccccccccccccc:ccccloodddxxxxxxxddddoollcccccccccccccccccccccccclxOXNNNNNNNNNNXklccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccol::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::ldocccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccokKNNNNNXOdlc:cccccccccccccccc::clodxkO00KXXNNNNNNNNNNNNNNXXKK0Okxdolc::cccccccccccccc:ccokKNNNNNX0kdccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccloc:::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::cooccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc:ccccccldkkkxocccccccccccccccccccloxk0KXNNNNNNNNNNNNNNNNNNNNNNNNNNWNNNNNXK0kxolcccccccccccccccccldkkkdoccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccooc::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::colcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc::ccccccccccccccccccloxOKXNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNXKOxolccccccccc:ccccc::cccccccccccccccccccccccccccccccccc:cccccccccccccccccccccccccccccccc:cccc:ldl::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::ldlccccccccccccccccccccccccccccccccccccccccccccccc:cccccccccccccccccccccccccccccccccccccccccldkKXNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNX0kocccccccccccccccccccccccccccccccc:ccccccccccccccccccccccccccccccccccccccccccccccccccccccccooc:::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::ooc:ccccccccccccccccccccccccccccccccccccccccccc:cc::ccllccccccccccccccccccccccccccccccccccdkKNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNWNNNNNX0dlcccccccccccccccccccccccccccc::ccclllcc:cccccccccccccccccccccccccccccccccccccccccccccccodl:::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::clcccccccccccccc:ccc:cccccccccccccccccccccccccccccldOKKKOxlcccccccccccccccccccccccccccccd0XNNNNNNNNNNNNNNNNNNNNNNNNNNNXXXXXXXXNNNNNNNNNNNNNNNNNNNNNNNNNNN0xc:ccccccccccccccccccccccccccclx0KKK0xlccccccccccccccccccccccccccccccccccccccccccccccclol:::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::ccccccccccccccccccccccccccccccccccc:cccccccccccccd0XNNNNNNKxcccccccccccccccccccccccccccdKNNNNNNNNNNNNNNNNNNNNXK0OkkxdddoooooooddxxkO0KXNNNNNNNNNNNNNNNNNNNKdcccccccccccccccccccccccccccdKNNNNNNNKxlcccccccccccccccccccccccccccccccccccccccccccccccc:::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::loccccccccccccccccccccccccccccccc:::ccccccccc:clkXNNNNNNNNNKdccccccccccccccccccccccccccdKNNNNNNNNNNNNNNNNK0kxolccc::cccccccccccc::ccclodk0XNNNNNNNWNNNNNNNKocccccccccccccc::ccc:cc:cccdKNNNNNNNNNXOoccccccc::cccccccccccccccccccccccccccccccccccclc:::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::loccccccccccccccccccccccccccccccccccccccccccccd0NNNNNNNNNNNKdcccccccccccccccccccccccccccxKNNNNNNNNNNNX0kdlccccccccccccccccccccccccccccc:ccodOKXNNNWNNNNNNKdc:ccccccccccccccccc:cccc:ccxXNNNNNNNNNNNKxlccccc:ccccccccccccccccccccc:ccccccccccccc:ldl:::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::colccccccccccccccccccccccccccccccccccccccccclxXNNNNNNNNNNNKxlccccccccccccccccccccccccccccoOXNNNNNNKOxocccccccccccccccccccccccccccccccccccccccldk0XNNNNNXOoc:ccccccccc:ccccccccccccc::clxKNNNNNNNNNNNXOoccccc::ccccccccccccccccccccccccccccccccccooc:::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::cooccccccccccccccccccccccccccccccccccccccccoOXNNNNNNNNNNXOoccccccccccccccccccccccccccccccccoxO0Okdlccccccccccccccccc:cccccccccccccccccccc:ccccccloxOOOxoc::cccccccccc:ccccccccccccccccccokXNNNNNNNNNNN0dccccccccccccccccccccccccccccccccccccccclol::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::ldl:ccccccccccccccccccccccccccccccccccccco0NNNNNNNNNNNKxlcccc:ccccccccccccccccccccccccccccc:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccc:ccccccccccccccccccccccccccccccccccd0NNNNNNNNNNNKdcccccccccccccccccccccccccc:cccccccccccooc::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::ooccccccccccccccccccccccccccccccccccccco0NNNNNNNNNNNOoc:cccc:ccccccccccccccccccccccccccccccccccccccccccccccccc:::cccllllllccccccccccccccccccccccccccc:cccccccc:cccccccccccccccccccccccccclOXNNNNNNNNNNKdc:ccccccccccccccccccccccccccccccccc:lol:::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::cooccccc:cccccccccccccccccccccccccccc:o0NNNNNNNNNNXOl:cc:cc:cc::cccclodoocccccccccccccccccccccccc:ccccccccccccldxkO0KKKKKK00Okxolcccccccccccc:ccccccccccccccccccccccccoodolccccccccccccccclxKNNNNNNNNNNKdccccccccc:ccccccccccccccccccccc:cccooc:::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::lolcccccccccccccccccccccccccccccccc:lONNNNNNNNNNXklcccccccccc:cccdkKXNNX0xlcccccccccccccccccccccc:ccccccccox0KNNNNNNNNNNNNNNNNXKOxlc:c:ccccccccccccccccccccccccccccd0XNNXKOdcccccccccccccccdKNNNNNNNNNN0occ:ccccccccccccccccccccccccccccccooc::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::lolcccccccccccccccccccccccccccccc:cxXNNNNNNNNNXklcccccccccc::coOXNNNNNNNXklcccccccccccccccccc:::cc:ccccdOXNNNNNNNNNNNNNNNNNNNNNNNKkoccccc:cccccccccccccccccccccccxXNNNNNNNXOoccccccccccccccdKNNNNNNNNNNOlcccccccccccccccccccccc:ccccccccloc:::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::clolcccccccccccccccccccccccccccccoKNNNNNNNNNNOlcccccccccccccd0NNNNNNNNNN0o::cccccccccccccccc::cc::ccoOXNNNNNNNNNNNNNNNNNNNNNNNNNNNXkoccc:cccccccccccccccccccccccxXNNNNNNNNNKxcccccccccccc:cxXNNNNNNNNNXxccccccccccccccccccccccccccccclolc::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::cloolcccccccccccccccccccccccccclkNNNNNNNNNN0occcc:ccccccccdKNNNNNNNNNNXxc:::cccccccccccc:cccccc:ccdKNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNKdc:cccccccccccc:ccccccc:ccco0NNNNNNNNNNXklccccccccccc:lkNNNNNNNNNN0o:ccccccccccccccccc::cccccclddlc:::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::clodlcccccccccccccccccc:cccccdKNNNNNNNNNXxcccc::cccccccdKNNNNNNNNNNKdcccccccccc:::cccccccccccc:o0NNNNNNNNNNKOxddddddxk0XNNNNNNNNNN0l:cccccc::cccccccccccccccccoONNNNNNNNNNXkl::cccccc::::o0NNNNNNNNNXxccccccccccccccccccc:cccclddlc:::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::cloollc:ccccccccccccccccccckNWNNNNNNNN0l:ccccccccccco0NNNNNNNNNNOoccccccccccccccccccccccccccco0NNNNNNNNXkocc::;:::::cdOXNNNNNNNNOl:c:cccccccc:ccccccccccccccclONNNNNNNNNNKdccccccccccc:ckNNNNNNNNNNOl:ccccccccccccccccc:cclodlc:::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::cllolccccccccccccccccccl0NNNNNNNNNXxcccccccccccccdXNNNNNNNNNKocccccccccccccccccccccccccc:ccoOXNNNNX0dcc:;,'''',,;:cld0XNNNNKkl::ccccccccccccccccccccccccccco0NNNNNNNNNNOl:cccccccccc:dKNNNNNNNNNKoccccccccccccccccc:cloolc:::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::ldoccccccccccccccccccoKNNNNNNNNNKdccccccccccccckXNNNNNNWNNKdccccccccccccccccccccccccc:cccccoxxxxoccc:,''''''''';:ccloxxxdoc::::ccccccccccccccccccccc::cc:o0NNNNNNNNNN0occccccccccc:lONNNNNNNNNXxccccccccccccccccccldlc:::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::lolccccccccccc::ccccccdXNNNNNNNNN0lccccccccccc:cxXNNNNNNNNNNKkdolllllllllcccccccccccccccccccccccccccc:,''''''''',:ccc:cc:cccccccccccccccccccccclllllllllox0NNNNNNNNNNN0occccccccccccckXNNNNNNNNNkcccccccccccccccccccldl:::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::lolccccccccccccccccccc:dXNNNNNNNNNOl:ccccccccccccdKNNNNNNNNNNNNNXKKKKKXXKKOdlccccccccc:ccccccccccccccc:,''''''''',:cc:ccccccccccccccccccccc:cdO0KKKKKKKKKXNNNNNNNNNNNNNOlcccccccccccccxXNNNNNNNNNkccccccccccccccccccccldl::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::lolcccccc::cccccccccccc:dXNNNNNNNNNOlccccc:ccccccclONNNNNNNNNNNNNNNNNNNNNNNNXklcccccccccccccccccccccccc:,''''''''',:ccccccccccccccccccccccc:lkXNNNNNNNNNNNNNNNNNNNNNNNNKdccccccccccccccdXWNNNNNNNNkcccccccccccccccccccccloc:::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::lolc:ccccccccccccccccccc:dKNNNNNNNNNOlcccccccccccccclOXNNNNNNNNNNNNNNNNNNNNNNN0o:ccccccccccccccccccccccc:,''''''''',:ccccccccccccccccccccccc:o0NNNNNNNNNNNNNNNNNNNNNNNN0dcccccccccccccc:dXWNNNNNNNNkc:cccccc:cccccccccccccooc::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::cooc:cccccccccccccccc::cc:oKNNNNNNNNNOlccccccccccccccclx0NNNNNNNNNNNNNNNNNNNNNXkccccccccccccccccccccccccc:,''''''''';:ccccccccccccccccccccccc:lkXNNNNNNNNNNNNNNNNNNNNNKkoccccccccccccccc:dKNNNNNNNNXxcccccccccccccccccccccclol::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::colcccccccccccccccccccccc:lkNNNNNNNNKdccccccccccccccccccldk0KXNNNNNNNNNNNNNXKOdcccccccccccccccccccccccccc:,'''','''',:ccccccccccccccccccccccccccok0XXNNNNNNNNNNNNNXKOxocccccccccccccccccclONNNNNNNNKo:cccccccccccc:cccccccccooc:::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::loccccccccccccccccccccccccclxKXNNXKkoccccccccccccccccccccccclodddddddddddddolcccccccccccccccccccccccccccc:,''''''''',:ccccccccccccccccccccccccccccclodxxdddddxxddoolcccc:ccccccccccccccccclk0XNNNKOoccccccccccccccccccccccccooc:::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::odc:cccccccccccccccccccccccccloddolccccccccccccccccc:cccccccccccccccccc:ccccccccccccccccccccccccccccccccc:,''''''''',:cccccccccccccccccccccccccccc:ccccc:cccccc:ccccccc:ccccccccccccccc:cccclodddoccccccccccccccccccccccccccldl:::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::loc:ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc:,''''''''',:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc:ccccccccccccccccccccccccccccccccccccccol:::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::ooccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc::::::::::::::::::::::::::::::::::::::::::;,''''''''',::::::::::::::::::::::::::::::::::::::::::::ccccccccc:ccccccccccccccccccccccccccccccccccccccccccccccccccoo:::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::odcccccccccccccccccccccccccccccccccccccccccccccccccccccccc::;;,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,''''''''''',,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,;;::cccccccccccccccccccccccccccccccccccccccccccccccccccc::ccll:::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::ldl:ccccccccccccccccccccccccccccccccccccccccccccccccccc:;;,,''''''''''''''''''','''''',,'''''''''''''''''''''''''''''''''''''''''''''',,''''''''''''''''''''''''''',,;;:ccccccccccccccccccccccccccccccccccccccccccccccccccccclc:::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::col:cccccccccccccccccccccccccccccccccccccccccccccccc::;,''''''''''''''''''',,'''''''',,'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''',;:ccccccccccccccccccccccccccccccccccccccccccccccccc:odl:::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::cooc::ccccccccccccccccccccccccccccccccccccccccccccc:;,''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''',:cccccccccccccccccccccccccccccccccccccccccccccccccooc:::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::ldlcccccccccccccccccccccccccccccccccccccccccccccc:;,'''''''',''',,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,''''''''''',;cccccccccccccccccccccccccccccccccccccccccccccc:ldl::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::cooc:cccccccccccccccccccccccccccccccccccccccccccc;,''''''''',cdkOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOkdc;''''''''',;ccccccccccccccccccccccccccccccccccccccccccccccooc::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::cdoccc::ccccccccccccccccccccccccccccccccccccccc:,''''''''':kXNNNNNNNNNNNNNWNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNXkc,'''''''',:ccccccccccccccccccccccccccccccccccccccccccccooc:::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::lolccccccccccccccccccccccc:::::ccccccccccccccc;,'''''''':kNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNO:'''''''',;cccccccccccccccccccccccccccccccccccccccccccloc::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::colccccccccccccccccccccccccccccccccccccccccc:;'''''''''cKWNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNXl'''''''',;cccccccccccccccccccccccccccccccccccccccccldoc:::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::looccccccccccccccccc::::ccccccc:ccccccccccc:;'''''''''c0NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNKl''''''''';cccccccccccccccccccccccccccccccccccccccclooc::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::clolcccccccccccccccc::cccc:ccccccccccccccc:;'''''''''c0WNNNNNNNNNNNNXKKXNNNNNNNNNNNNNNNNNXKKXNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNWXl''''''''';cccccccccccccccccccccccccccccccccccccccool::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::coolcccccccccccccccccccccccccccccccccccc:;'''''''''cKWNNNNNNNNNXOoc:::ld0NNNNNNNNNNNXkoc:;:ld0NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNXo''''''''';ccccccccccccccccccccccccccccccccc:ccclolc:::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::cooolcccccccccccccccccccccccccccccccccc;'''''''''c0WNNNNNNNWXd,'''''',:kNNNNNNNNNKo,'''''',:kXNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNXo,,''''''';cccccccccccccccccccccccccccccccccccoooc:::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::coollc:ccccccccccccccccccccccccccccc:;'''''''''c0WNNNNNNNNk;'''''''',c0NNNNNNNNk;''''','''c0NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNXo''''',''';:cccccccccccccccccccccccccccccccllllc:::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::cllollcccccccccccccccccccccccccccc:;'''''''''cKNNNNNNNNNO:'''''''',lKNNNNNNNNO:'''''''',lKNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNKo'''''''',;:ccccccccccccccc:cccccccccc:clloolc:::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::cllllllc:cccccccccccccccccccccc:;'''''''''cKNNNNNNNNNXk:,''''',l0NNNNNNNNNXkc,''''';o0NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNKo''''',''';:ccccccccccccccccccccccccclooolc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::cloolllcccccccccccccccccccc:;'''''''''cKNNNNNNNNNNNKkdolodOXNNNNNNNNNNNNKOdooox0XNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNXo''''''''';:ccccccccccccccccc:cccllolllc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::ccloooolcccccccccccccccc:;'''''''''cKNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNKo''''''''';:ccccccccccccccccclollllc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::clcccccccccccccccccc;'''''''''c0WNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNKo''''''''';:cccccccccccccccccddc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::ldl:cccccccccccccccc;,'''''''':kNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN0c''''''''';ccccccccccccccccccddc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::lol:cccccccccccccccc:,'''''''',:kXNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNOl,'''''''',:ccccccccccccccccccddc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::colccccccccccccccccc:;,''''''',',cdO0KXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXKOxl;''''''''',;:ccccccccccccccccccol::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::oocccccccccccccc:ccc:;,''''''''''',;:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc:cccccccccccccccccccccccccccc:;,''''''''''',;:cccccccccccccccccclol::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::lol:ccccccccccccccccc:;,''''''''''''''''''',,''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''','''''''''''''''''',;:cccccccccccccccccccooc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::coocccccccccccccccccccc:;,''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''',,'''''''''''''',,''''''''',,''''''''''''''',;:cccccccccccccccccccclol:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::colcccccccccccccccccccc::;,,''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''','',,,,''''''''',,;:ccccccccccccccccccccccooc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::lolcccccccccccccccccccccc::;;,,,,'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''',,''''''''',''''''''',,,,;;::cccccccccccccccccccccccooc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::clolc:cccccccccccccccccccccccc::::::;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:;;;;;;::;;;;;;;::;;:;;;;;:;;;;;;;;;::::cccccccccccccccccccccccccccodl:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::lolcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc::ccccccccccccccccccccccccccccccccc:ccooc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::lolcccccccccccccccccccccccccccccccccccccccccccccccccc::cccccccc:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccclooc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::coolccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccoolc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cloolcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccclllc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cloolccccc:ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc:cccccccccccccccccccccccccccloolc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cloolcccccccccccccccccccccccccccccccccccccccccccccccccccccccccc:cccccccccccccccccccccccccccccccccccccccccccccc:ccccccccccccccccc:ccccc:cloooc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cloollcccccccccccccccccccccccccccccccccccccccccccccccccccccc::ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccclloolc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cloollcc:cccccccccccccccccccccccccc:ccccccccccccccccccccccccccccccccccccccc:ccccccccccccccccccccccc:ccccc:ccccccccccccccccccclllolc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::clllllllcccccc:ccccc:cccccc:cccccccccccccccccccccccccccccc::cccccccccccccccccccccccccccccccccccccccccc:ccccccccccccclllollocc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::clllllollooolcclooodolcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccllclooooooooolloollllcc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cccccccccclloocccccccccccccccccccccccccccccccc:ccccccccccccccccccccccccccccccccc:ccclolcclccccccccc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::coocccccccccccccccccccccccccccccccccccc:::ccccccccccccccccccccccccccccccolc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cooccccccccccccccccccc:ccccccccccccccccccccccccc:cccccc::c::ccccccccccolc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::coocccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccclooc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::coolccccccccccccccccc:ccccccccccccccccccccccccccccccccccccccccccclolc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::loocccccccccccccccc:ccccccccccccccccccccccccccccccccccccccccccool::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::coolccccc:ccccccccccccccccccccccccc:ccccccccccccccccccccccclooc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cloolccccccccccccccccccccccccccccc:ccccccccccccccccccccclolc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cloolcccccccc:ccccccccccccccccccccccccccccc:cccccccloolc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cllollccccccccccc:cccccccccccccccccccccccccc:clooolc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cloollcccccccccccccccccccccccccccccccccclooolc::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::cllooollccccccccccccccccccccccclllloolc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::ccllllllloolloooollccloooloolllc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::ccccclloollcccccccc:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+"""
+}  
 
 # Verificar si se ejecuta como root
 check_root() {
@@ -374,32 +525,70 @@ install_python_deps() {
 setup_systemd_service() {
     _install_log "Configurando servicio systemd"
     
-    local service_file="${INSTALL_DIR}/install/hostberry.service"
+    # Crear directorio de instalación si no existe
+    mkdir -p "${INSTALL_DIR}/install"
     
-    if [ ! -f "${service_file}" ]; then
-        _install_log "Archivo de servicio no encontrado: ${service_file}"
+    # Crear archivo de servicio optimizado para Raspberry Pi 3
+    cat > "/etc/systemd/system/hostberry.service" << EOL
+[Unit]
+Description=HostBerry Web Interface
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=${INSTALL_DIR}
+Environment="PATH=${INSTALL_DIR}/venv/bin"
+# Usar solo 1 worker en Raspberry Pi 3 para mejor rendimiento
+# Usar sync worker en lugar del predeterminado para mejor compatibilidad
+ExecStart=${INSTALL_DIR}/venv/bin/gunicorn --workers 1 --worker-class sync --bind unix:${INSTALL_DIR}/hostberry.sock -m 007 app:app
+# Configuración de tiempo de espera más generosa para hardware limitado
+TimeoutStartSec=300
+# Asegurar que el servicio se reinicie si falla
+Restart=on-failure
+RestartSec=10s
+# Límites de recursos para evitar sobrecargar la Raspberry Pi
+MemoryLimit=256M
+CPUQuota=80%
+
+[Install]
+WantedBy=multi-user.target
+EOL
+    
+    # Recargar systemd
+    systemctl daemon-reload
+    
+    # Habilitar e iniciar el servicio
+    systemctl enable hostberry
+    systemctl start hostberry
+    
+    # Verificar que el servicio se haya iniciado correctamente
+    if ! systemctl is-active --quiet hostberry; then
+        _install_log "Error al iniciar el servicio hostberry"
+        journalctl -u hostberry -n 30 --no-pager
         return 1
     fi
     
-    cp "${service_file}" "/etc/systemd/system/"
-    systemctl daemon-reload
-    systemctl enable hostberry
-    
-    return $?
+    return 0
 }
 
 # Configurar Nginx
 setup_nginx() {
     _install_log "Configurando Nginx"
-    
+
     if [ ! -d "/etc/nginx/sites-available" ]; then
         mkdir -p "/etc/nginx/sites-available"
     fi
-    
+
     if [ ! -d "/etc/nginx/sites-enabled" ]; then
         mkdir -p "/etc/nginx/sites-enabled"
     fi
-    
+
+    # Deshabilitar el sitio por defecto de Nginx si existe
+    if [ -f "/etc/nginx/sites-enabled/default" ]; then
+        _install_log "Deshabilitando el sitio por defecto de Nginx"
+        rm -f "/etc/nginx/sites-enabled/default"
+    fi
+
     # Crear configuración de Nginx
     cat > "${NGINX_SITE}" << EOL
 server {
