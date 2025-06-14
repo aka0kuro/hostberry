@@ -183,6 +183,7 @@ check_requirements() {
     _install_log "Verificando requisitos del sistema"
     
     local missing=()
+    local install_needed=0
     
     # Comandos requeridos
     local required_commands=(
@@ -196,20 +197,48 @@ check_requirements() {
     for cmd in "${required_commands[@]}"; do
         if ! command -v "${cmd}" &> /dev/null; then
             missing+=("${cmd}")
+            install_needed=1
         fi
     done
     
-    if [ ${#missing[@]} -gt 0 ]; then
-        _install_log "Faltan comandos requeridos: ${missing[*]}"
-        return 1
+    # Si faltan dependencias, intentar instalarlas
+    if [ ${install_needed} -eq 1 ]; then
+        _install_log "Instalando dependencias faltantes: ${missing[*]}"
+        if ! install_dependencies; then
+            _install_log "Error al instalar dependencias faltantes"
+            return 1
+        fi
+        
+        # Verificar nuevamente después de la instalación
+        missing=()
+        for cmd in "${required_commands[@]}"; do
+            if ! command -v "${cmd}" &> /dev/null; then
+                missing+=("${cmd}")
+            fi
+        done
+        
+        if [ ${#missing[@]} -gt 0 ]; then
+            _install_log "No se pudieron instalar los siguientes comandos: ${missing[*]}"
+            return 1
+        fi
     fi
     
     # Versión mínima de Python
     local python_version
-    python_version=$(python3 -c 'import sys; print("{}.{}".format(sys.version_info.major, sys.version_info.minor))')
-    if [ "$(echo "${python_version} < 3.7" | bc)" -eq 1 ]; then
-        _install_log "Se requiere Python 3.7 o superior. Versión actual: ${python_version}"
-        return 1
+    python_version=$(python3 -c 'import sys; print("{}.{}".format(sys.version_info.major, sys.version_info.minor))' 2>/dev/null)
+    if [ $? -ne 0 ] || [ "$(echo "${python_version:-0} < 3.7" | bc 2>/dev/null)" = "1" ]; then
+        _install_log "Se requiere Python 3.7 o superior. Instalando versión compatible..."
+        
+        if [ -f /etc/debian_version ]; then
+            apt-get install -y python3.9 python3.9-venv
+            update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
+        elif [ -f /etc/redhat-release ]; then
+            dnf install -y python39 python39-pip
+            update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
+        else
+            _install_log "No se pudo instalar Python 3.9 automáticamente en esta distribución"
+            return 1
+        fi
     fi
     
     return 0
