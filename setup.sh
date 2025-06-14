@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Activar modo estricto
+set -euo pipefail
+
 # ============================================
 # Configuración global y constantes
 # ============================================
@@ -290,11 +293,6 @@ check_root() {
     fi
 }
 
-# Verificar si un comando está disponible
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
-
 # Obtener la IP del sistema
 get_system_ip() {
     local ip
@@ -336,15 +334,17 @@ process_arguments() {
     local cert_flag=0
     local network_flag=0
     local nginx_flag=0
+    local show_help_flag=0
     
     if [ $# -eq 0 ]; then
         show_help
+        exit 0
     fi
     
     while [ $# -gt 0 ]; do
         case "$1" in
             --help)
-                show_help
+                show_help_flag=1
                 ;;
             --install)
                 install_flag=1
@@ -363,11 +363,16 @@ process_arguments() {
                 ;;
             *)
                 log "$ANSI_RED" "ERROR" "Opción no válida: $1"
-                show_help
+                show_help_flag=1
                 ;;
         esac
         shift
     done
+    
+    if [ "$show_help_flag" -eq 1 ]; then
+        show_help
+        exit 0
+    fi
     
     # Ejecutar acciones según las banderas
     if [ "$install_flag" -eq 1 ]; then
@@ -388,6 +393,14 @@ process_arguments() {
     
     if [ "$nginx_flag" -eq 1 ]; then
         configure_nginx
+    fi
+    
+    # Si no se especificó ninguna acción, mostrar ayuda
+    if [ "$install_flag" -eq 0 ] && [ "$update_flag" -eq 0 ] && \
+       [ "$cert_flag" -eq 0 ] && [ "$network_flag" -eq 0 ] && \
+       [ "$nginx_flag" -eq 0 ]; then
+        show_help
+        exit 1
     fi
 }
 
@@ -979,113 +992,10 @@ verify_service() {
     log "$ANSI_GREEN" "INFO" "Servicio web verificado y funcionando correctamente"
 }
 
-# Procesar argumentos y ejecutar acciones
-main() {
-    # Configurar localización para evitar problemas con caracteres especiales
-    export LC_ALL=C.UTF-8
-    export LANG=C.UTF-8
-    
-    # Procesar argumentos
-    local GENERATE_CERT=false
-    local CONFIGURE_NETWORK=false
-    local UPDATE_MODE=false
-    
-    # Verificar compatibilidad del sistema
-    check_system_compatibility
-    
-    # Crear directorio de scripts si no existe
-    mkdir -p "$SCRIPTS_DIR"
-    INSTALL_MODE=false
-
-    for arg in "$@"; do
-        case $arg in
-            --help)
-                SHOW_HELP=true
-                ;;
-            --update)
-                UPDATE_MODE=true
-                ;;
-            --cert)
-                GENERATE_CERT=true
-                ;;
-            --network)
-                CONFIGURE_NETWORK=true
-                ;;
-            --install)
-                INSTALL_MODE=true
-                ;;
-            *)
-                log "$ANSI_RED" "ERROR" "Opción desconocida: $arg"
-                SHOW_HELP=true
-                ;;
-        esac
-    done
-
-    if [ "$SHOW_HELP" = true ]; then
-        show_help
-    fi
-
-    if [ "$INSTALL_MODE" = true ]; then
-        update_hostberry
-        configure_network
-        generate_ssl_cert
-        show_access_info
-        exit 0
-    fi
-
-    if [ "$SHOW_HELP" = true ] || [ $# -eq 0 ]; then
-        show_help
-    fi
-
-    check_root
-    show_summary
-
-    # Crear directorio principal si no existe
-    mkdir -p "$HOSTBERRY_DIR"
-    chmod 755 "$HOSTBERRY_DIR"
-    chown root:root "$HOSTBERRY_DIR"
-
-    # Crear directorio de logs y archivos necesarios
-    log "$ANSI_YELLOW" "INFO" "Creando directorio de logs..."
-    mkdir -p "$HOSTBERRY_DIR/logs"
-    chmod 755 "$HOSTBERRY_DIR/logs"
-    touch "$HOSTBERRY_DIR/logs/access.log" "$HOSTBERRY_DIR/logs/error.log"
-    chmod 644 "$HOSTBERRY_DIR/logs/access.log" "$HOSTBERRY_DIR/logs/error.log"
-    chown -R root:root "$HOSTBERRY_DIR/logs"
-    log "$ANSI_GREEN" "INFO" "Directorio de logs creado y configurado"
-
-    # Crear directorio de scripts si no existe
-    mkdir -p "$SCRIPTS_DIR"
-    chmod 755 "$SCRIPTS_DIR"
-    chown root:root "$SCRIPTS_DIR"
-
-    if [ "$UPDATE_MODE" = true ]; then
-        update_hostberry
-        configure_firewall
-        verify_service
-        show_access_info
-    fi
-    
-    if [ "$GENERATE_CERT" = true ]; then
-        generate_ssl_cert
-    fi
-    
-    if [ "$CONFIGURE_NETWORK" = true ]; then
-        configure_network
-    fi
-    
-    # Si no se pasó ningún argumento relevante, realizar instalación inicial
-    if [ "$UPDATE_MODE" = false ] && [ "$GENERATE_CERT" = false ] && [ "$CONFIGURE_NETWORK" = false ]; then
-        log "$ANSI_YELLOW" "INFO" "Iniciando instalación inicial..."
-        check_and_install_deps
-        setup_venv
-        configure_firewall
-        verify_service
-        show_access_info
-        
-        # Crear archivo de configuración de Gunicorn
-        log "$ANSI_YELLOW" "INFO" "Creando configuración de Gunicorn..."
-        cat > "$HOSTBERRY_DIR/gunicorn.conf.py" << 'EOF'
+# Función para configurar Gunicorn
+configure_gunicorn() {
+    log "$ANSI_YELLOW" "INFO" "Creando configuración de Gunicorn..."
+    cat > "$HOSTBERRY_DIR/gunicorn.conf.py" << 'EOF'
 import multiprocessing
 import os
 
@@ -1139,8 +1049,9 @@ def worker_int(worker):
 
 def worker_abort(worker):
     worker.log.info("worker received SIGABRT signal")
-    fi
-}
+
+# Cerrar el bloque de configuración de Gunicorn
+EOF
 
 # ============================================
 # Punto de entrada principal
@@ -1156,6 +1067,39 @@ main() {
     
     # Mostrar resumen de acciones
     show_summary
+
+    # Crear directorio principal si no existe
+    mkdir -p "$HOSTBERRY_DIR"
+    chmod 755 "$HOSTBERRY_DIR"
+    chown root:root "$HOSTBERRY_DIR"
+
+    # Crear directorio de logs y archivos necesarios
+    log "$ANSI_YELLOW" "INFO" "Creando directorio de logs..."
+    mkdir -p "$HOSTBERRY_DIR/logs"
+    chmod 755 "$HOSTBERRY_DIR/logs"
+    touch "$HOSTBERRY_DIR/logs/access.log" "$HOSTBERRY_DIR/logs/error.log"
+    chmod 644 "$HOSTBERRY_DIR/logs/access.log" "$HOSTBERRY_DIR/logs/error.log"
+    chown -R root:root "$HOSTBERRY_DIR/logs"
+    log "$ANSI_GREEN" "INFO" "Directorio de logs creado y configurado"
+
+    # Crear directorio de scripts si no existe
+    mkdir -p "$SCRIPTS_DIR"
+    chmod 755 "$SCRIPTS_DIR"
+    chown root:root "$SCRIPTS_DIR"
+
+    # Configurar Gunicorn
+    configure_gunicorn
+
+    # Instalar dependencias y configurar el entorno
+    install_system_deps
+    setup_python_venv
+    configure_firewall
+    
+    # Verificar el servicio
+    verify_service
+    
+    # Mostrar información de acceso
+    show_access_info
     
     log "$ANSI_GREEN" "INFO" "Script completado exitosamente"
     exit 0
@@ -1165,7 +1109,3 @@ main() {
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
     main "$@"
 fi
-
-# Activar modo estricto
-set -euo pipefail
-main "$@"
