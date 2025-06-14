@@ -1,0 +1,109 @@
+import os
+import json
+from pathlib import Path
+from typing import Dict, Any, Optional
+
+class Config:
+    """Clase base de configuración"""
+    # Configuración general
+    SECRET_KEY = os.getenv('FLASK_SECRET_KEY', 'dev-key-123')
+    
+    # Configuración de la aplicación
+    APP_NAME = "HostBerry"
+    VERSION = "1.0.0"
+    
+    # Rutas
+    BASE_DIR = Path(__file__).parent.parent
+    DATA_DIR = BASE_DIR / 'data'
+    LOGS_DIR = BASE_DIR / 'logs'
+    
+    # Configuración de la base de datos
+    DATABASE_URI = f"sqlite:///{DATA_DIR}/hostberry.db"
+    
+    # Configuración de red
+    DEFAULT_NETWORK_INTERFACE = "wlan0"
+    
+    def __init__(self):
+        # Crear directorios necesarios
+        self.DATA_DIR.mkdir(exist_ok=True)
+        self.LOGS_DIR.mkdir(exist_ok=True)
+
+class DevelopmentConfig(Config):
+    """Configuración para desarrollo"""
+    DEBUG = True
+    TESTING = True
+    
+    # Sobrescribir configuración para desarrollo
+    DATABASE_URI = "sqlite:///:memory:"
+
+class ProductionConfig(Config):
+    """Configuración para producción"""
+    DEBUG = False
+    TESTING = False
+
+# Configuración actual basada en entorno
+env = os.getenv('FLASK_ENV', 'development')
+if env == 'production':
+    config = ProductionConfig()
+else:
+    config = DevelopmentConfig()
+
+# Cargar configuración adicional desde archivo .env si existe
+if (config.BASE_DIR / '.env').exists():
+    from dotenv import load_dotenv
+    load_dotenv()
+    
+    # Actualizar configuración con variables de entorno
+    for key, value in os.environ.items():
+        if hasattr(config, key):
+            setattr(config, key, value)
+        elif key.startswith('FLASK_'):
+            # Convertir FLASK_* a atributos de configuración
+            config_key = key[6:]
+            try:
+                # Intentar convertir a tipos de Python
+                if value.lower() in ('true', 'false'):
+                    value = value.lower() == 'true'
+                elif value.isdigit():
+                    value = int(value)
+                elif value.replace('.', '', 1).isdigit() and value.count('.') < 2:
+                    value = float(value)
+                setattr(config, config_key, value)
+            except (ValueError, AttributeError):
+                setattr(config, config_key, value)
+
+def save_config(key: str, value: Any) -> bool:
+    """Guarda una configuración en el archivo .env"""
+    try:
+        env_path = config.BASE_DIR / '.env'
+        env_lines = []
+        key_found = False
+        
+        if env_path.exists():
+            with open(env_path, 'r') as f:
+                env_lines = f.readlines()
+        
+        # Buscar y actualizar la clave si existe
+        for i, line in enumerate(env_lines):
+            if line.startswith(f"{key}="):
+                env_lines[i] = f"{key}={value}\n"
+                key_found = True
+                break
+        
+        # Si no existe, agregar al final
+        if not key_found:
+            env_lines.append(f"{key}={value}\n")
+        
+        # Escribir de vuelta al archivo
+        with open(env_path, 'w') as f:
+            f.writelines(env_lines)
+        
+        # Actualizar el entorno actual
+        os.environ[key] = str(value)
+        if hasattr(config, key):
+            setattr(config, key, value)
+            
+        return True
+    except Exception as e:
+        print(f"Error al guardar configuración: {e}")
+        return False
