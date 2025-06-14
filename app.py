@@ -225,7 +225,7 @@ def restrict_ip_whitelist():
     if ip_whitelist:
         allowed_ips = [ip.strip() for ip in ip_whitelist.split(',') if ip.strip()]
         if request.remote_addr not in allowed_ips:
-            return render_template('blocked.html', reason=_('Your IP is not allowed.')), 403
+            return render_template('security/blocked.html', reason=_('Your IP is not allowed.')), 403
 
 @app.before_request
 def block_on_failed_attempts():
@@ -233,7 +233,7 @@ def block_on_failed_attempts():
     max_attempts = int(config.get('FAILED_ATTEMPTS_LIMIT', 5))
     ip = request.remote_addr
     if ip in BLOCKED_IPS:
-        return render_template('blocked.html', reason=_('Too many failed attempts.')), 403
+        return render_template('security/blocked.html', reason=_('Too many failed attempts.')), 403
     if request.endpoint == 'security_config' and request.method == 'POST':
         if 'ssh_port' in request.form:
             ssh_port = request.form.get('ssh_port')
@@ -251,7 +251,7 @@ def block_on_failed_attempts():
 @app.route('/blocked')
 def blocked():
     reason = request.args.get('reason', _('Access denied.'))
-    return render_template('blocked.html', reason=reason), 403
+    return render_template('security/blocked.html', reason=reason), 403
 
 # Inicialización al inicio del archivo
 config = HostBerryConfig()
