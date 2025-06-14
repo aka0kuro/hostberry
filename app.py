@@ -1145,13 +1145,6 @@ def wifi_connect():
             save_credentials = data.get('save_credentials', False)
 
             if not ssid:
-                return jsonify({'success': False, 'error': 'No SSID provided'})
-
-            # Guardar la última red conectada
-            save_last_connected_network(ssid, security)
-
-            # Resto del código existente...
-            if not ssid:
                 app.logger.error('SSID no proporcionado')
                 return jsonify({
                     'success': False,
