@@ -346,8 +346,28 @@ install_python_deps() {
         return 1
     fi
     
-    pip install -r "${REQUIREMENTS_FILE}"
-    return $?
+    # Actualizar pip y setuptools primero
+    pip install --upgrade pip setuptools wheel
+    
+    # Instalar dependencias en dos pasos para manejar mejor los errores
+    _install_log "Instalando dependencias desde requirements.txt..."
+    if ! pip install -r "${REQUIREMENTS_FILE}"; then
+        _install_log "Error al instalar dependencias. Reintentando con --no-cache-dir..."
+        if ! pip install --no-cache-dir -r "${REQUIREMENTS_FILE}"; then
+            _install_log "Error crítico: No se pudieron instalar las dependencias"
+            return 1
+        fi
+    fi
+    
+    # Verificar que las dependencias principales estén instaladas
+    _install_log "Verificando instalación de dependencias críticas..."
+    if ! python -c "import flask_sqlalchemy, flask_login, flask_migrate, flask_babel, flask_wtf"; then
+        _install_log "Error: No se pudieron importar todas las dependencias críticas"
+        return 1
+    fi
+    
+    _install_log "Dependencias de Python instaladas correctamente"
+    return 0
 }
 
 # Configurar servicio systemd
