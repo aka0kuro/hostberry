@@ -695,6 +695,148 @@ perform_installation() {
     log "$ANSI_GREEN" "INFO" "Instalación completada exitosamente"
 }
 
+# Función para instalar mkcert
+install_mkcert() {
+    if ! command -v mkcert &> /dev/null; then
+        log "$ANSI_YELLOW" "INFO" "Instalando mkcert..."
+        
+        # Instalar dependencias necesarias
+        if [ -f /etc/debian_version ]; then
+            # Para Debian/Ubuntu
+            run_cmd sudo apt-get update
+            run_cmd sudo apt-get install -y libnss3-tools
+        elif [ -f /etc/redhat-release ]; then
+            # Para RHEL/CentOS
+            run_cmd sudo yum install -y nss-tools
+        fi
+        
+        # Instalar mkcert
+        if ! command -v mkcert &> /dev/null; then
+            run_cmd curl -JLO "https://dl.filippo.io/mkcert/latest?for=linux/amd64"
+            chmod +x mkcert-v*-linux-amd64
+            sudo mv mkcert-v*-linux-amd64 /usr/local/bin/mkcert
+        fi
+    fi
+    
+    # Crear CA local si no existe
+    if [ ! -f "$HOME/.local/share/mkcert/rootCA.pem" ]; then
+        log "$ANSI_YELLOW" "INFO" "Creando CA local..."
+        run_cmd mkcert -install
+    fi
+}
+
+# Función para configurar certificados SSL locales con mkcert
+setup_ssl_certificates() {
+    log "$ANSI_YELLOW" "INFO" "Configurando certificados SSL locales con mkcert..."
+    
+    # Instalar mkcert si no está instalado
+    install_mkcert
+    
+    # Obtener el nombre de dominio
+    local domain
+    domain=$(get_domain_name || echo "localhost")
+    
+    # Directorio para los certificados
+    local certs_dir="/etc/ssl/certs"
+    local key_dir="/etc/ssl/private"
+    
+    # Crear directorios si no existen
+    run_cmd sudo mkdir -p "$certs_dir" "$key_dir"
+    
+    # Generar certificados
+    log "$ANSI_YELLOW" "INFO" "Generando certificados para $domain..."
+    
+    # Generar certificado para el dominio y localhost
+    if mkcert -cert-file /tmp/cert.pem -key-file /tmp/key.pem "$domain" "localhost" 127.0.0.1 ::1; then
+        # Mover certificados a ubicaciones estándar
+        run_cmd sudo mv /tmp/cert.pem "$certs_dir/$domain.crt"
+        run_cmd sudo mv /tmp/key.pem "$key_dir/$domain.key"
+        run_cmd sudo chmod 644 "$certs_dir/$domain.crt"
+        run_cmd sudo chmod 600 "$key_dir/$domain.key"
+        
+        log "$ANSI_GREEN" "INFO" "Certificados generados exitosamente en:"
+        log "$ANSI_GREEN" "INFO" "  - Certificado: $certs_dir/$domain.crt"
+        log "$ANSI_GREEN" "INFO" "  - Clave privada: $key_dir/$domain.key"
+        
+        # Configurar Nginx para usar los certificados
+        configure_nginx_ssl "$domain" "$certs_dir/$domain.crt" "$key_dir/$domain.key"
+        
+        return 0
+    else
+        log "$ANSI_RED" "ERROR" "Error al generar los certificados con mkcert"
+        return 1
+    fi
+}
+
+# Función para configurar Nginx con SSL
+configure_nginx_ssl() {
+    local domain=$1
+    local cert_path=$2
+    local key_path=$3
+    
+    log "$ANSI_YELLOW" "INFO" "Configurando Nginx para usar los certificados SSL..."
+    
+    # Crear configuración de Nginx para SSL
+    local nginx_conf="/etc/nginx/sites-available/$domain"
+    
+    # Crear configuración SSL
+    cat << EOF | sudo tee "$nginx_conf" > /dev/null
+server {
+    listen 80;
+    listen [::]:80;
+    server_name $domain;
+    return 301 https://\$host\$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name $domain;
+    
+    ssl_certificate $cert_path;
+    ssl_certificate_key $key_path;
+    
+    # Configuración SSL recomendada
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256';
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSL:10m;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    
+    # Configuración de la aplicación
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+    
+    # Habilitar el sitio
+    if [ -f "/etc/nginx/sites-enabled/$domain" ]; then
+        run_cmd sudo rm "/etc/nginx/sites-enabled/$domain"
+    fi
+    run_cmd sudo ln -s "$nginx_conf" "/etc/nginx/sites-enabled/"
+    
+    # Verificar configuración de Nginx
+    if sudo nginx -t; then
+        log "$ANSI_GREEN" "INFO" "Configuración de Nginx verificada correctamente"
+        # Reiniciar Nginx
+        if systemctl is-active --quiet nginx; then
+            run_cmd sudo systemctl restart nginx
+        else
+            run_cmd sudo systemctl start nginx
+        fi
+    else
+        log "$ANSI_RED" "ERROR" "Error en la configuración de Nginx"
+        return 1
+    fi
+}
+
 # Función para configurar Gunicorn
 configure_gunicorn() {
     echo "[INFO] Creando configuración de Gunicorn..."
