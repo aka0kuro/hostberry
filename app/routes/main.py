@@ -1,4 +1,7 @@
 from flask import Blueprint, render_template, jsonify
+from app.utils.i18n_utils import get_locale, inject_get_locale, set_language, check_lang
+from app.utils.log_utils import get_logs
+from app.utils.security_utils import FAILED_ATTEMPTS, BLOCKED_IPS
 from flask_login import login_required
 
 main_bp = Blueprint('main', __name__)
