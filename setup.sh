@@ -367,7 +367,10 @@ restore_hostberry_backup() {
 
 # Función para actualizar desde GitHub
 update_from_github() {
-    log "$ANSI_YELLOW" "INFO" "Actualizando desde GitHub..."
+    local backup_dir=""
+    local current_branch=""
+    
+    log "$ANSI_YELLOW" "INFO" "Iniciando proceso de actualización..."
     
     # Verificar si git está instalado
     if ! command -v git &> /dev/null; then
@@ -375,14 +378,57 @@ update_from_github() {
         apt-get install -y git || handle_error "No se pudo instalar git"
     fi
     
-    # Eliminar el directorio existente y clonar de nuevo
-    log "$ANSI_YELLOW" "INFO" "Eliminando directorio existente..."
-    rm -rf "$HOSTBERRY_DIR"
+    # Si el directorio de git ya existe, actualizar en lugar de clonar
+    if [ -d "$HOSTBERRY_DIR/.git" ]; then
+        log "$ANSI_YELLOW" "INFO" "Actualizando repositorio existente..."
+        current_branch=$(git -C "$HOSTBERRY_DIR" rev-parse --abbrev-ref HEAD)
+        
+        # Crear respaldo antes de actualizar
+        backup_dir=$(create_backup)
+        
+        # Limpiar cambios locales
+        git -C "$HOSTBERRY_DIR" reset --hard HEAD || handle_error "Error al limpiar cambios locales"
+        
+        # Obtener cambios remotos
+        if ! git -C "$HOSTBERRY_DIR" fetch origin "$current_branch"; then
+            log "$ANSI_RED" "ERROR" "No se pudieron obtener los cambios remotos"
+            return 1
+        fi
+        
+        # Aplicar cambios
+        if ! git -C "$HOSTBERRY_DIR" reset --hard "origin/$current_branch"; then
+            log "$ANSI_RED" "ERROR" "Error al aplicar los cambios"
+            return 1
+        fi
+        
+        # Limpiar archivos sin seguimiento
+        git -C "$HOSTBERRY_DIR" clean -fd
+        
+        log "$ANSI_GREEN" "INFO" "Repositorio actualizado exitosamente"
+    else
+        # Si no existe el repositorio, clonar
+        log "$ANSI_YELLOW" "INFO" "Clonando repositorio por primera vez..."
+        
+        # Crear directorio si no existe
+        mkdir -p "$(dirname "$HOSTBERRY_DIR")"
+        
+        if ! git clone https://github.com/aka0kuro/hostberry.git "$HOSTBERRY_DIR"; then
+            handle_error "No se pudo clonar el repositorio"
+        fi
+        
+        current_branch=$(git -C "$HOSTBERRY_DIR" rev-parse --abbrev-ref HEAD)
+        log "$ANSI_GREEN" "INFO" "Repositorio clonado exitosamente en la rama $current_branch"
+    fi
     
-    log "$ANSI_YELLOW" "INFO" "Clonando repositorio..."
-    git clone https://github.com/aka0kuro/hostberry.git "$HOSTBERRY_DIR" || handle_error "No se pudo clonar el repositorio"
+    # Actualizar submódulos si existen
+    if [ -f "$HOSTBERRY_DIR/.gitmodules" ]; then
+        log "$ANSI_YELLOW" "INFO" "Actualizando submódulos..."
+        (cd "$HOSTBERRY_DIR" && git submodule update --init --recursive) || \
+            log "$ANSI_YELLOW" "WARN" "No se pudieron actualizar los submódulos"
+    fi
     
     # Actualizar permisos
+    log "$ANSI_YELLOW" "INFO" "Actualizando permisos..."
     chmod -R 755 "$HOSTBERRY_DIR"
     find "$HOSTBERRY_DIR" -type f -exec chmod 644 {} \;
     find "$HOSTBERRY_DIR/scripts" -type f -name "*.sh" -exec chmod +x {} \;
@@ -390,16 +436,46 @@ update_from_github() {
     # Asegurar que el directorio pertenece al usuario correcto
     chown -R root:root "$HOSTBERRY_DIR" || log "$ANSI_YELLOW" "WARN" "No se pudieron cambiar los permisos del directorio"
     
-    log "$ANSI_GREEN" "INFO" "Actualización desde GitHub completada"
+    log "$ANSI_GREEN" "INFO" "Actualización completada exitosamente"
+    
+    # Mostrar información de la versión actualizada
+    local new_version=$(git -C "$HOSTBERRY_DIR" describe --tags 2>/dev/null || echo "desconocida")
+    log "$ANSI_GREEN" "INFO" "Versión actual: $new_version"
+    
+    # Si se creó un respaldo, mostrar información
+    if [ -n "$backup_dir" ]; then
+        log "$ANSI_GREEN" "INFO" "Se creó un respaldo en: $backup_dir"
+    fi
 }
 
 # Actualizar HostBerry
 update_hostberry() {
     log "$ANSI_GREEN" "INFO" "Iniciando actualización de HostBerry..."
     
+    # Verificar si hay actualizaciones disponibles
+    if ! check_for_updates; then
+        log "$ANSI_YELLOW" "INFO" "No hay actualizaciones disponibles."
+        return 0
+    fi
+    
+    # Preguntar confirmación al usuario
+    read -p "¿Desea proceder con la actualización? [s/N] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[SsYy]$ ]]; then
+        log "$ANSI_YELLOW" "INFO" "Actualización cancelada por el usuario"
+        return 0
+    fi
+    
+    # Detener servicios si están en ejecución
+    if systemctl is-active --quiet hostberry-web.service; then
+        log "$ANSI_YELLOW" "INFO" "Deteniendo servicio hostberry-web..."
+        systemctl stop hostberry-web.service || handle_error "No se pudo detener el servicio hostberry-web"
+    fi
+    
     # Crear backup si existe instalación previa
-        if [ -d "$HOSTBERRY_DIR" ]; then
-        systemctl stop hostberry-web.service 2>/dev/null || true
+    if [ -d "$HOSTBERRY_DIR" ]; then
+        local backup_dir=$(create_backup)
+        log "$ANSI_GREEN" "INFO" "Respaldo creado en: $backup_dir"
         
         # Crear directorio de backup si no existe
         mkdir -p "$BACKUP_DIR"
@@ -615,6 +691,86 @@ configure_firewall() {
     fi
     
     log "$ANSI_GREEN" "INFO" "Firewall configurado correctamente"
+}
+
+# Función para verificar actualizaciones disponibles sin autenticación
+check_for_updates() {
+    log "$ANSI_YELLOW" "INFO" "Verificando actualizaciones disponibles..."
+    
+    # Si no hay directorio de git, no se puede verificar actualizaciones
+    if [ ! -d "$HOSTBERRY_DIR/.git" ]; then
+        log "$ANSI_YELLOW" "WARN" "No se encontró repositorio git. No se puede verificar actualizaciones."
+        return 1
+    fi
+    
+    # Obtener información del repositorio remoto
+    local remote_url=$(git -C "$HOSTBERRY_DIR" config --get remote.origin.url)
+    if [ -z "$remote_url" ]; then
+        log "$ANSI_YELLOW" "WARN" "No se pudo determinar la URL del repositorio remoto."
+        return 1
+    fi
+    
+    # Crear un directorio temporal para clonar
+    local temp_dir=$(mktemp -d)
+    local current_branch=$(git -C "$HOSTBERRY_DIR" rev-parse --abbrev-ref HEAD)
+    local current_commit=$(git -C "$HOSTBERRY_DIR" rev-parse HEAD)
+    
+    # Clonar el repositorio en modo shallow para ahorrar ancho de banda
+    log "$ANSI_YELLOW" "INFO" "Obteniendo información de actualizaciones..."
+    if git clone --depth 1 --single-branch --branch "$current_branch" "$remote_url" "$temp_dir" 2>/dev/null; then
+        # Obtener el último commit remoto
+        local remote_commit=$(git -C "$temp_dir" rev-parse HEAD)
+        
+        # Comparar commits
+        if [ "$current_commit" = "$remote_commit" ]; then
+            log "$ANSI_GREEN" "INFO" "No hay actualizaciones disponibles. Ya estás en la última versión."
+            rm -rf "$temp_dir"
+            return 1
+        else
+            # Obtener los cambios entre commits
+            log "$ANSI_YELLOW" "INFO" "¡Hay actualizaciones disponibles!"
+            log "$ANSI_YELLOW" "INFO" "Cambios pendientes de aplicar:"
+            
+            # Usar git log para mostrar los cambios (limitado a los últimos 5 para no saturar)
+            (cd "$HOSTBERRY_DIR" && git fetch --depth 5 && \
+             git log --oneline --graph --decorate --abbrev-commit "$current_commit..origin/$current_branch" 2>/dev/null || \
+             echo "No se pudieron obtener los detalles de los cambios")
+            
+            rm -rf "$temp_dir"
+            return 0
+        fi
+    else
+        log "$ANSI_YELLOW" "WARN" "No se pudo verificar actualizaciones. Verifica tu conexión a internet."
+        [ -d "$temp_dir" ] && rm -rf "$temp_dir"
+        return 1
+    fi
+}
+
+# Función para crear un respaldo antes de actualizar
+create_backup() {
+    local backup_dir="$BACKUP_DIR/$(date +%Y%m%d_%H%M%S)"
+    log "$ANSI_YELLOW" "INFO" "Creando respaldo en $backup_dir..."
+    
+    mkdir -p "$backup_dir"
+    
+    # Copiar directorio de la aplicación
+    cp -r "$HOSTBERRY_DIR" "$backup_dir/" || handle_error "No se pudo crear el respaldo"
+    
+    # Copiar archivos de configuración importantes
+    if [ -d "/etc/hostberry" ]; then
+        cp -r /etc/hostberry "$backup_dir/etc/" || log "$ANSI_YELLOW" "WARN" "No se pudo respaldar /etc/hostberry"
+    fi
+    
+    # Crear un archivo de metadatos del respaldo
+    {
+        echo "Fecha: $(date)"
+        echo "Versión actual: $(git -C "$HOSTBERRY_DIR" describe --tags 2>/dev/null || echo "Desconocida")"
+        echo "Commit: $(git -C "$HOSTBERRY_DIR" rev-parse HEAD 2>/dev/null || echo "Desconocido")"
+        echo "Sistema: $(uname -a)"
+    } > "$backup_dir/backup_info.txt"
+    
+    log "$ANSI_GREEN" "INFO" "Respaldo creado exitosamente en $backup_dir"
+    echo "$backup_dir"  # Devolver la ruta del respaldo
 }
 
 # Función para verificar y reiniciar el servicio
