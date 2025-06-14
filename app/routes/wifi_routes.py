@@ -21,7 +21,7 @@ wifi_service = WiFiService()
 @login_required
 def wifi_scan_page():
     """Página de escaneo de redes WiFi"""
-    return render_template('wifi_scan.html')
+    return render_template('wifi/scan.html')
 
 @wifi_bp.route('/scan', methods=['GET'])
 @login_required
