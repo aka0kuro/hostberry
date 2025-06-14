@@ -13,7 +13,7 @@ import sys
 import threading
 import time
 from base64 import b64decode, b64encode
-from collections import deque, defaultdict
+from collections import deque
 from functools import wraps
 from logging.handlers import RotatingFileHandler
 from cryptography.fernet import Fernet
@@ -29,10 +29,10 @@ from werkzeug.utils import secure_filename
 from wtforms import BooleanField, SelectField
 
 # Local application imports
-from hostberry_config import HostBerryConfig
+
 
 # Global state for update status
-global_adblock_update_status = {'updating': False, 'last_result': None, 'last_error': None}
+
 
 # Configure logging timezone
 logging.Formatter.converter = time.localtime
@@ -132,91 +132,16 @@ except AttributeError:
             return app.config['BABEL_DEFAULT_LOCALE']
 
 # Actual implementation
-def get_locale():
-    try:
-        # First check session (set by /set_language route)
-        if 'language' in session:
-            return session['language']
-            
-        # Fall back to browser preference
-        browser_lang = request.accept_languages.best_match(app.config['BABEL_SUPPORTED_LOCALES'])
-        if browser_lang:
-            return browser_lang
-            
-        # Finally use default locale
-        return app.config['BABEL_DEFAULT_LOCALE']
-    except Exception as e:
-        app.logger.error(f"Locale selection error: {str(e)}")
-        return app.config['BABEL_DEFAULT_LOCALE']
+# (Deprecated, moved to separate module)
 
-def get_logs():
-    """Read and parse application logs from the last 24 hours"""
-    log_file = 'logs/hostberry.log'  # Use relative path to match logging config
-    logs = []
-    try:
-        # Calculate cutoff time (24 hours ago)
-        cutoff_time = datetime.datetime.now() - datetime.timedelta(hours=24)
-        
-        with open(log_file, 'r') as f:
-            for line in f.readlines()[-100:]:  # Check last 100 lines for recent entries
-                line = line.strip()
-                if line:
-                    # Parse timestamp and message
-                    parts = line.split(' ', 3)  # Split into timestamp, level, logger, message
-                    if len(parts) >= 4:
-                        try:
-                            log_time = datetime.datetime.strptime(parts[0] + ' ' + parts[1], 
-                                                               '%Y-%m-%d %H:%M:%S,%f')
-                            if log_time > cutoff_time:
-                                logs.append({
-                                    'timestamp': ' '.join(parts[:2]),
-                                    'message': parts[3]
-                                })
-                        except ValueError:
-                            # Fallback for lines with invalid timestamps
-                            logs.append({
-                                'timestamp': '',
-                                'message': line
-                            })
-                    else:
-                        logs.append({
-                            'timestamp': '',
-                            'message': line
-                        })
-    except FileNotFoundError:
-        pass
-    return list(reversed(logs))  # Show newest first
-
-@app.context_processor
-def inject_get_locale():
-    return dict(get_locale=get_locale)
-
-@app.route('/set_language/<lang>')
-def set_language(lang):
-    if lang in ['en', 'es']:
-        session['language'] = lang
-        # Force client-side refresh by adding cache-control headers
-        response = redirect(request.args.get('next') or request.referrer or url_for('index'))
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        return response
-
-@app.route('/check_lang')
-def check_lang():
-    return {
-        'current_lang': get_locale(),
-        'session': dict(session),
-        'babel_config': app.config['BABEL_SUPPORTED_LOCALES']
-    }
-
+# VPN configuration path
 VPN_CONF_PATH = '/etc/openvpn/client.conf'
 
 # === Seguridad: IP Whitelist y bloqueo por intentos fallidos ===
 from functools import wraps
 from collections import defaultdict
 
-FAILED_ATTEMPTS = defaultdict(int)
-BLOCKED_IPS = set()
+
 
 @app.before_request
 def restrict_ip_whitelist():
