@@ -394,7 +394,7 @@ process_arguments() {
 # Función para verificar requisitos previos de SSL
 check_ssl_prerequisites() {
     # Verificar si ya existen certificados
-    if [ -f "$SSL_DIR/hostberry.crt" ] && [ -f "$SSL_DIR/hostberry.key" ]; then
+    if [ -f "$SSL_DIR/fullchain.pem" ] && [ -f "$SSL_DIR/privkey.pem" ]; then
         log "$ANSI_YELLOW" "WARNING" "Ya existen certificados en $SSL_DIR"
         read -p "¿Desea sobrescribirlos? [s/N] " -n 1 -r
         echo
@@ -413,7 +413,7 @@ generate_ssl_cert() {
     # Verificar requisitos previos
     if ! check_ssl_prerequisites; then
         return 0
-    }
+    fi
 
     # Verificar si ya está instalado mkcert
     if ! command -v mkcert &> /dev/null; then
