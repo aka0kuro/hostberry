@@ -618,10 +618,9 @@ ExecStart=/opt/hostberry/venv/bin/gunicorn \
     --worker-connections 1000 \
     --backlog 2048 \
     --graceful-timeout 30 \
-    app:app
+    app.wsgi:app
 Restart=always
 RestartSec=10
-Environment="FLASK_APP=app.py"
 Environment="FLASK_ENV=production"
 Environment="PYTHONUNBUFFERED=1"
 Environment="GUNICORN_CMD_ARGS=--config /opt/hostberry/gunicorn.conf.py"
@@ -993,10 +992,9 @@ ExecStart=/opt/hostberry/venv/bin/gunicorn \
     --worker-connections 1000 \
     --backlog 2048 \
     --graceful-timeout 30 \
-    app:app
+    app.wsgi:app
 Restart=always
 RestartSec=10
-Environment="FLASK_APP=app.py"
 Environment="FLASK_ENV=production"
 Environment="PYTHONUNBUFFERED=1"
 Environment="GUNICORN_CMD_ARGS=--config /opt/hostberry/gunicorn.conf.py"
