@@ -540,7 +540,8 @@ WorkingDirectory=${INSTALL_DIR}
 Environment="PATH=${INSTALL_DIR}/venv/bin"
 # Usar solo 1 worker en Raspberry Pi 3 para mejor rendimiento
 # Usar sync worker en lugar del predeterminado para mejor compatibilidad
-ExecStart=${INSTALL_DIR}/venv/bin/gunicorn --workers 1 --worker-class sync --bind unix:${INSTALL_DIR}/hostberry.sock -m 007 app:app
+# Usar wsgi:app como punto de entrada de la aplicación
+ExecStart=${INSTALL_DIR}/venv/bin/gunicorn --workers 1 --worker-class sync --bind unix:${INSTALL_DIR}/hostberry.sock -m 007 wsgi:app
 # Configuración de tiempo de espera más generosa para hardware limitado
 TimeoutStartSec=300
 # Asegurar que el servicio se reinicie si falla
