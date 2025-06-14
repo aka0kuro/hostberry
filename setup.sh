@@ -372,10 +372,31 @@ configure_network() {
     run_cmd iptables -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
     run_cmd iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT
     
+    # Asegurarse de que el directorio de iptables exista
+    if [ ! -d "/etc/iptables" ]; then
+        log "$ANSI_YELLOW" "INFO" "Creando directorio /etc/iptables/..."
+        run_cmd mkdir -p /etc/iptables
+    fi
+    
     # Guardar reglas de iptables
-    run_cmd iptables-save > /etc/iptables/rules.v4
+    log "$ANSI_YELLOW" "INFO" "Guardando reglas de iptables..."
+    run_cmd iptables-save > /etc/iptables/rules.v4 || {
+        log "$ANSI_RED" "ERROR" "No se pudo guardar las reglas de iptables"
+        log "$ANSI_YELLOW" "INFO" "Intentando con sudo..."
+        sudo iptables-save | sudo tee /etc/iptables/rules.v4 >/dev/null || {
+            log "$ANSI_RED" "ERROR" "No se pudo guardar las reglas de iptables con sudo"
+            return 1
+        }
+    }
+    
+    # Hacer que las reglas persistan después del reinicio
+    if command -v netfilter-persistent >/dev/null 2>&1; then
+        log "$ANSI_YELLOW" "INFO" "Haciendo que las reglas de iptables persistan..."
+        run_cmd netfilter-persistent save
+    fi
     
     log "$ANSI_GREEN" "INFO" "Red y firewall configurados correctamente"
+    return 0
 }
 
 # Función para restaurar backup de HostBerry
