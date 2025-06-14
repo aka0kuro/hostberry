@@ -17,20 +17,53 @@ HOSTBERRY_DIR="/opt/hostberry"
 SCRIPTS_DIR="$HOSTBERRY_DIR/scripts"
 
 # Dependencias del sistema
-DEPS=(python3 python3-pip python3-venv openvpn resolvconf git curl dnsmasq hostapd isc-dhcp-server iptables nftables libnss3-tools ufw openssl wget wifi-ap-sta)
+DEPS=(python3 python3-pip python3-venv openvpn resolvconf git curl dnsmasq hostapd isc-dhcp-server iptables nftables libnss3-tools ufw openssl wget)
 
-# Función para loguear mensajes
+# Función para loguear mensajes con marca de tiempo
 log() {
     local color="$1"; shift
     local level="$1"; shift
-    echo -e "${color}[$level] $*${ANSI_RESET}"
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    echo -e "${color}[${timestamp}] [${level}] $*${ANSI_RESET}"
 }
 
 # Manejo centralizado de errores
 handle_error() {
-    log "$ANSI_RED" "ERROR" "$*" >&2
+    local error_msg="$*"
+    local error_line="${BASH_LINENO[0]}"
+    local error_func="${FUNCNAME[1]:-main}"
+    
+    log "$ANSI_RED" "ERROR" "Error en $error_func (línea $error_line): $error_msg" >&2
+    
+    # Intentar restaurar servicios si es necesario
+    if [ -x "$SCRIPTS_DIR/restore_services.sh" ]; then
+        "$SCRIPTS_DIR/restore_services.sh" || true
+    fi
+    
     exit 1
 }
+
+# Función para limpieza al salir
+cleanup() {
+    local exit_code=$?
+    
+    # Restaurar cambios si hay un error
+    if [ $exit_code -ne 0 ]; then
+        log "$ANSI_YELLOW" "WARNING" "Error detectado, realizando limpieza..."
+        # Aquí podrías añadir más acciones de limpieza si son necesarias
+    fi
+    
+    # Restaurar el estado de los mensajes de dpkg
+    if [ -f /etc/apt/apt.conf.d/20auto-removals.bak ]; then
+        mv /etc/apt/apt.conf.d/20auto-removals.bak /etc/apt/apt.conf.d/20auto-removals 2>/dev/null || true
+    fi
+    
+    log "$ANSI_GREEN" "INFO" "Limpieza completada. Saliendo con código $exit_code"
+    exit $exit_code
+}
+
+# Configurar trap para manejar la salida del script
+trap cleanup EXIT INT TERM
 
 # Mostrar resumen de acciones
 show_summary() {
@@ -42,10 +75,41 @@ show_summary() {
     echo
 }
 
+# Verificar compatibilidad del sistema
+check_system_compatibility() {
+    log "$ANSI_YELLOW" "INFO" "Verificando compatibilidad del sistema..."
+    
+    # Verificar sistema operativo
+    if [ ! -f /etc/os-release ]; then
+        handle_error "No se pudo determinar el sistema operativo"
+    fi
+    
+    # Obtener información del sistema operativo
+    . /etc/os-release
+    
+    # Verificar si es una distribución compatible
+    if [[ "$ID" != "debian" && "$ID" != "ubuntu" && "$ID_LIKE" != *"debian"* ]]; then
+        handle_error "Este script solo es compatible con distribuciones basadas en Debian/Ubuntu"
+    fi
+    
+    # Verificar arquitectura
+    local arch=$(uname -m)
+    if [[ "$arch" != "aarch64" && "$arch" != "armv7l" && "$arch" != "x86_64" ]]; then
+        handle_error "Arquitectura no soportada: $arch"
+    fi
+    
+    log "$ANSI_GREEN" "INFO" "Sistema compatible detectado: $PRETTY_NAME ($arch)"
+}
+
 # Comprobar si el script se ejecuta como root
 check_root() {
     if [[ $EUID -ne 0 ]]; then
         handle_error "Este script debe ejecutarse como root (sudo)"
+    fi
+    
+    # Verificar si estamos realmente ejecutando con privilegios de root
+    if [ "$(id -u)" -ne 0 ]; then
+        handle_error "No se pudo obtener privilegios de root"
     fi
 }
 
@@ -74,8 +138,27 @@ show_help() {
 # Comprobar e instalar dependencias
 check_and_install_deps() {
     log "$ANSI_YELLOW" "INFO" "Comprobando dependencias del sistema..."
-    apt-get update || handle_error "No se pudo actualizar apt-get"
-    apt-get install -y "${DEPS[@]}" || handle_error "No se pudieron instalar las dependencias del sistema"
+    
+    # Verificar si estamos en un sistema basado en Debian/Ubuntu
+    if ! command -v apt-get &> /dev/null; then
+        handle_error "Este script solo es compatible con sistemas basados en Debian/Ubuntu"
+    fi
+    
+    # Actualizar lista de paquetes
+    if ! apt-get update; then
+        log "$ANSI_YELLOW" "WARNING" "No se pudo actualizar la lista de paquetes, continuando con la instalación..."
+    fi
+    
+    # Instalar dependencias una por una para mejor manejo de errores
+    for dep in "${DEPS[@]}"; do
+        log "$ANSI_YELLOW" "INFO" "Instalando $dep..."
+        if ! apt-get install -y "$dep"; then
+            log "$ANSI_YELLOW" "WARNING" "No se pudo instalar $dep, intentando continuar..."
+            sleep 2
+        fi
+    done
+    
+    log "$ANSI_GREEN" "INFO" "Dependencias del sistema verificadas e instaladas"
 }
 
 # Crear o recrear entorno virtual
@@ -128,9 +211,29 @@ setup_venv() {
     log "$ANSI_GREEN" "INFO" "Entorno virtual configurado correctamente en $VENV_DIR"
 }
 
+# Función para verificar requisitos previos de SSL
+check_ssl_prerequisites() {
+    # Verificar si ya existen certificados
+    if [ -f "$SSL_DIR/hostberry.crt" ] && [ -f "$SSL_DIR/hostberry.key" ]; then
+        log "$ANSI_YELLOW" "WARNING" "Ya existen certificados en $SSL_DIR"
+        read -p "¿Desea sobrescribirlos? [s/N] " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Ss]$ ]]; then
+            log "$ANSI_GREEN" "INFO" "Usando certificados existentes"
+            return 1
+        fi
+    fi
+    return 0
+}
+
 # Función para generar certificados SSL
 generate_ssl_cert() {
     log "$ANSI_YELLOW" "INFO" "Iniciando generación de certificados SSL..."
+    
+    # Verificar requisitos previos
+    if ! check_ssl_prerequisites; then
+        return 0
+    }
 
     # Verificar si ya está instalado mkcert
     if ! command -v mkcert &> /dev/null; then
@@ -543,10 +646,20 @@ verify_service() {
 
 # Procesar argumentos y ejecutar acciones
 main() {
-    UPDATE_MODE=false
-    GENERATE_CERT=false
-    CONFIGURE_NETWORK=false
-    SHOW_HELP=false
+    # Configurar localización para evitar problemas con caracteres especiales
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+    
+    # Procesar argumentos
+    local GENERATE_CERT=false
+    local CONFIGURE_NETWORK=false
+    local UPDATE_MODE=false
+    
+    # Verificar compatibilidad del sistema
+    check_system_compatibility
+    
+    # Crear directorio de scripts si no existe
+    mkdir -p "$SCRIPTS_DIR"
     INSTALL_MODE=false
 
     for arg in "$@"; do
