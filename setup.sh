@@ -248,20 +248,53 @@ check_requirements() {
 install_dependencies() {
     _install_log "Instalando dependencias del sistema"
     
+    # Verificar si estamos ejecutando como root
+    if [ "$(id -u)" -ne 0 ]; then
+        _install_log "Se requieren privilegios de superusuario para instalar dependencias"
+        return 1
+    fi
+    
     if [ -f /etc/debian_version ]; then
         # Distribuciones basadas en Debian
-        apt-get update
-        apt-get install -y \
-            python3-venv \
-            python3-pip \
-            python3-dev \
-            nginx \
-            git \
-            build-essential \
-            libssl-dev \
-            libffi-dev \
-            python3-setuptools \
+        _install_log "Detectado sistema basado en Debian/Ubuntu"
+        
+        # Actualizar lista de paquetes
+        if ! apt-get update; then
+            _install_log "Error al actualizar la lista de paquetes"
+            return 1
+        fi
+        
+        # Instalar paquetes necesarios
+        local deb_pkgs=(
+            python3
+            python3-venv
+            python3-pip
+            python3-dev
+            nginx
+            git
+            build-essential
+            libssl-dev
+            libffi-dev
+            python3-setuptools
             python3-wheel
+            bc
+        )
+        
+        _install_log "Instalando paquetes: ${deb_pkgs[*]}"
+        if ! DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "${deb_pkgs[@]}"; then
+            _install_log "Error al instalar paquetes con apt"
+            return 1
+        fi
+        
+        # Verificar que nginx se haya instalado correctamente
+        if ! command -v nginx &> /dev/null; then
+            _install_log "Intentando instalar nginx desde el repositorio principal..."
+            if ! apt-get install -y nginx; then
+                _install_log "No se pudo instalar nginx"
+                return 1
+            fi
+        fi
+        
     elif [ -f /etc/redhat-release ]; then
         # Distribuciones basadas en RedHat
         dnf install -y \
