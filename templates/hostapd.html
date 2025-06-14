@@ -673,12 +673,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (errorMessage.includes('wlan_ap0')) {
                     errorMessage = '{% trans %}Error managing wireless interface. Please try the following:{% endtrans %}\n' +
                         '1. {% trans %}Enable wireless card:{% endtrans %} `sudo rfkill unblock wifi`\n' +
-                        '2. {% trans %}Check permissions:{% endtrans %} `sudo chown root:root /usr/bin/wifi-ap-sta`\n' +
-                        '3. {% trans %}Check interface status:{% endtrans %} `ip link show wlan_ap0`\n' +
-                        '4. {% trans %}Restart networking:{% endtrans %} `sudo systemctl restart networking`\n' +
-                        '5. {% trans %}Check hostapd status:{% endtrans %} `sudo systemctl status hostapd`\n' +
-                        '6. {% trans %}Check iptables rules:{% endtrans %} `sudo iptables -L -t nat`\n' +
-                        '7. {% trans %}Check routing:{% endtrans %} `ip route show`';
+                        '2. {% trans %}Check interface status:{% endtrans %} `ip link show wlan_ap0`\n' +
+                        '3. {% trans %}Restart networking:{% endtrans %} `sudo systemctl restart networking`\n' +
+                        '4. {% trans %}Check hostapd status:{% endtrans %} `sudo systemctl status hostapd`\n' +
+                        '5. {% trans %}Check iptables rules:{% endtrans %} `sudo iptables -L -t nat`\n' +
+                        '6. {% trans %}Check routing:{% endtrans %} `ip route show`';
                 }
                 
                 showToast('{% trans %}Error{% endtrans %}', errorMessage, 'danger');
