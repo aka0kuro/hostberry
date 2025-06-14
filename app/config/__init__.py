@@ -47,8 +47,8 @@ class Config:
     
     def __init__(self):
         # Crear directorios necesarios
-        self.DATA_DIR.mkdir(exist_ok=True)
-        self.LOGS_DIR.mkdir(exist_ok=True)
+        os.makedirs(self.DATA_DIR, exist_ok=True)
+        os.makedirs(self.LOGS_DIR, exist_ok=True)
 
 class DevelopmentConfig(Config):
     """Configuración para desarrollo"""
@@ -63,22 +63,31 @@ class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
 
+# Configuración disponible
+config = {
+    'development': DevelopmentConfig(),
+    'production': ProductionConfig(),
+    'default': DevelopmentConfig()
+}
+
 # Configuración actual basada en entorno
-env = os.getenv('FLASK_ENV', 'development')
-if env == 'production':
-    config = ProductionConfig()
-else:
-    config = DevelopmentConfig()
+current_env = os.getenv('FLASK_ENV', 'development')
+current_config = config.get(current_env, config['default'])
 
 # Cargar configuración adicional desde archivo .env si existe
-if (config.BASE_DIR / '.env').exists():
+if (current_config.BASE_DIR / '.env').exists():
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv(current_config.BASE_DIR / '.env')
     
+    # Actualizar configuración desde variables de entorno
+    current_config.SECRET_KEY = os.getenv('FLASK_SECRET_KEY', current_config.SECRET_KEY)
+    current_config.SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', current_config.SQLALCHEMY_DATABASE_URI)
+    current_config.DEFAULT_NETWORK_INTERFACE = os.getenv('DEFAULT_NETWORK_INTERFACE', current_config.DEFAULT_NETWORK_INTERFACE)
+
     # Actualizar configuración con variables de entorno
     for key, value in os.environ.items():
-        if hasattr(config, key):
-            setattr(config, key, value)
+        if hasattr(current_config, key):
+            setattr(current_config, key, value)
         elif key.startswith('FLASK_'):
             # Convertir FLASK_* a atributos de configuración
             config_key = key[6:]
@@ -97,7 +106,9 @@ if (config.BASE_DIR / '.env').exists():
 def save_config(key: str, value: Any) -> bool:
     """Guarda una configuración en el archivo .env"""
     try:
-        env_path = config.BASE_DIR / '.env'
+        from app import create_app
+        app = create_app()
+        env_path = app.config['BASE_DIR'] / '.env'
         env_lines = []
         key_found = False
         
@@ -122,8 +133,8 @@ def save_config(key: str, value: Any) -> bool:
         
         # Actualizar el entorno actual
         os.environ[key] = str(value)
-        if hasattr(config, key):
-            setattr(config, key, value)
+        if hasattr(current_config, key):
+            setattr(current_config, key, value)
             
         return True
     except Exception as e:

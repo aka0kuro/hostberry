@@ -618,11 +618,21 @@ install_hostberry() {
     if [ -f "${INSTALL_DIR}/scripts/init_db.py" ]; then
         _install_log "Inicializando base de datos..."
         cd "${INSTALL_DIR}" || return 1
-        python -m scripts.init_db
-        if [ $? -ne 0 ]; then
-            _install_log "Error al inicializar la base de datos"
+        
+        # Configurar variables de entorno para el usuario administrador
+        export FLASK_APP="app"
+        export FLASK_ENV="development"
+        export DEFAULT_ADMIN_USER="admin"
+        export DEFAULT_ADMIN_PASSWORD="admin123"
+        export DEFAULT_ADMIN_EMAIL="admin@localhost.local"
+        
+        # Ejecutar el script de inicialización
+        if ! python -m scripts.init_db; then
+            _install_log "Error al inicializar la base de datos. Revisa los logs para más detalles."
             return 1
         fi
+        
+        _install_log "Base de datos inicializada correctamente"
     else
         _install_log "No se encontró el script de inicialización de la base de datos"
         return 1

@@ -19,9 +19,17 @@ def create_app(config_name='default'):
     app = Flask(__name__)
     
     # Cargar configuración
-    from app.config import config
-    app.config.from_object(config[config_name])
-    config[config_name].init_app(app)
+    from app.config import config, current_config
+    
+    # Usar la configuración solicitada o la predeterminada
+    config_obj = config.get(config_name, config['default'])
+    
+    # Cargar configuración en la aplicación
+    app.config.from_object(config_obj)
+    
+    # Inicializar la configuración
+    if hasattr(config_obj, 'init_app'):
+        config_obj.init_app(app)
     
     # Configurar logging
     if not app.debug and not app.testing:
