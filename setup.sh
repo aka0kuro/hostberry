@@ -1,31 +1,95 @@
 #!/bin/bash
 
+# ============================================
+# Configuración global y constantes
+# ============================================
+
 # Colores para logs
-ANSI_GREEN='\033[0;32m'
-ANSI_YELLOW='\033[0;33m'
-ANSI_RED='\033[0;31m'
-ANSI_RESET='\033[0m'
+readonly ANSI_GREEN='\033[0;32m'
+readonly ANSI_YELLOW='\033[0;33m'
+readonly ANSI_RED='\033[0;31m'
+readonly ANSI_RESET='\033[0m'
 
-# Variables globales
-SSL_DIR="/etc/hostberry/ssl"
-SSL_HOSTNAME="hostberry.local"
-VENV_DIR="/opt/hostberry/venv"
-REQUIREMENTS="requirements.txt"
-SYSTEMD_SERVICE="hostberry-web.service"
-BACKUP_DIR="/opt/hostberry_backups"
-HOSTBERRY_DIR="/opt/hostberry"
-SCRIPTS_DIR="$HOSTBERRY_DIR/scripts"
+# ============================================
+# Configuración de rutas y constantes
+# ============================================
 
-# Dependencias del sistema
-DEPS=(python3 python3-pip python3-venv openvpn resolvconf git curl dnsmasq hostapd isc-dhcp-server iptables nftables libnss3-tools ufw openssl wget)
+# Directorios y rutas principales
+readonly SSL_DIR="/etc/hostberry/ssl"
+readonly SSL_HOSTNAME="hostberry.local"
+readonly VENV_DIR="/opt/hostberry/venv"
+readonly REQUIREMENTS="requirements.txt"
+readonly SYSTEMD_SERVICE="hostberry-web.service"
+readonly BACKUP_DIR="/opt/hostberry_backups"
+readonly HOSTBERRY_DIR="/opt/hostberry"
+readonly SCRIPTS_DIR="$HOSTBERRY_DIR/scripts"
+
+# Dependencias del sistema agrupadas por funcionalidad
+readonly DEPS=(
+    # Python y herramientas básicas
+    python3 python3-pip python3-venv git curl wget
+    
+    # Red y seguridad
+    openvpn resolvconf dnsmasq hostapd isc-dhcp-server 
+    iptables nftables ufw openssl
+    
+    # Herramientas adicionales
+    libnss3-tools
+)
+
+# ============================================
+# Funciones de utilidad
+# ============================================
 
 # Función para loguear mensajes con marca de tiempo
+# Uso: log "color" "nivel" "mensaje"
 log() {
-    local color="$1"; shift
-    local level="$1"; shift
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    echo -e "${color}[${timestamp}] [${level}] $*${ANSI_RESET}"
+    local color="$1"
+    local level="$2"
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    shift 2
+    echo -e "${color}[${timestamp}] [${level}] $*${ANSI_RESET}" >&2
 }
+
+# Función para ejecutar comandos con manejo de errores
+run_cmd() {
+    local cmd=("$@")
+    log "$ANSI_YELLOW" "EXEC" "Ejecutando: ${cmd[*]}"
+    
+    if "${cmd[@]}"; then
+        return 0
+    else
+        local status=$?
+        log "$ANSI_RED" "ERROR" "Comando falló con estado $status: ${cmd[*]}"
+        return $status
+    fi
+}
+
+# Función para verificar si un comando está instalado
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Función para confirmar acción con el usuario
+confirm() {
+    local prompt="${1:-¿Continuar?} [y/N] "
+    local response
+    
+    read -r -p "$prompt" response
+    case "$response" in
+        [yY][eE][sS]|[yY]) 
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+# ============================================
+# Manejo de errores
+# ============================================
 
 # Manejo centralizado de errores
 handle_error() {
@@ -33,27 +97,29 @@ handle_error() {
     local error_line="${BASH_LINENO[0]}"
     local error_func="${FUNCNAME[1]:-main}"
     
-    log "$ANSI_RED" "ERROR" "Error en $error_func (línea $error_line): $error_msg" >&2
+    log "$ANSI_RED" "ERROR" "Error en $error_func (línea $error_line): $error_msg"
     
     # Intentar restaurar servicios si es necesario
     if [ -x "$SCRIPTS_DIR/restore_services.sh" ]; then
+        log "$ANSI_YELLOW" "INFO" "Intentando restaurar servicios..."
         "$SCRIPTS_DIR/restore_services.sh" || true
     fi
     
     exit 1
 }
 
-# Función para limpieza al salir
+# Configurar trap para manejar la salida del script
+trap 'cleanup' EXIT INT TERM
+
+# Función de limpieza al salir
 cleanup() {
     local exit_code=$?
     
-    # Restaurar cambios si hay un error
     if [ $exit_code -ne 0 ]; then
-        log "$ANSI_YELLOW" "WARNING" "Error detectado, realizando limpieza..."
-        # Aquí podrías añadir más acciones de limpieza si son necesarias
+        log "$ANSI_YELLOW" "WARNING" "Error detectado (código $exit_code), realizando limpieza..."
     fi
     
-    # Restaurar el estado de los mensajes de dpkg
+    # Restaurar estado de mensajes de dpkg si es necesario
     if [ -f /etc/apt/apt.conf.d/20auto-removals.bak ]; then
         mv /etc/apt/apt.conf.d/20auto-removals.bak /etc/apt/apt.conf.d/20auto-removals 2>/dev/null || true
     fi
@@ -62,8 +128,7 @@ cleanup() {
     exit $exit_code
 }
 
-# Configurar trap para manejar la salida del script
-trap cleanup EXIT INT TERM
+
 
 # Mostrar resumen de acciones
 show_summary() {
@@ -75,6 +140,10 @@ show_summary() {
     echo
 }
 
+# ============================================
+# Verificación del sistema
+# ============================================
+
 # Verificar compatibilidad del sistema
 check_system_compatibility() {
     log "$ANSI_YELLOW" "INFO" "Verificando compatibilidad del sistema..."
@@ -85,6 +154,7 @@ check_system_compatibility() {
     fi
     
     # Obtener información del sistema operativo
+    # shellcheck source=/dev/null
     . /etc/os-release
     
     # Verificar si es una distribución compatible
@@ -93,29 +163,151 @@ check_system_compatibility() {
     fi
     
     # Verificar arquitectura
-    local arch=$(uname -m)
-    if [[ "$arch" != "aarch64" && "$arch" != "armv7l" && "$arch" != "x86_64" ]]; then
+    local arch
+    arch=$(uname -m)
+    if [[ ! " aarch64 armv7l x86_64 " == *" $arch "* ]]; then
         handle_error "Arquitectura no soportada: $arch"
     fi
     
     log "$ANSI_GREEN" "INFO" "Sistema compatible detectado: $PRETTY_NAME ($arch)"
+    return 0
 }
 
-# Comprobar si el script se ejecuta como root
-check_root() {
-    if [[ $EUID -ne 0 ]]; then
-        handle_error "Este script debe ejecutarse como root (sudo)"
+# ============================================
+# Gestión de dependencias
+# ============================================
+
+# Verificar e instalar dependencias del sistema
+install_system_deps() {
+    log "$ANSI_YELLOW" "INFO" "Verificando e instalando dependencias del sistema..."
+    
+    # Verificar si estamos en un sistema basado en Debian/Ubuntu
+    if ! command_exists apt-get; then
+        handle_error "Este script solo es compatible con sistemas basados en Debian/Ubuntu"
     fi
     
-    # Verificar si estamos realmente ejecutando con privilegios de root
-    if [ "$(id -u)" -ne 0 ]; then
-        handle_error "No se pudo obtener privilegios de root"
+    # Actualizar lista de paquetes
+    log "$ANSI_YELLOW" "INFO" "Actualizando lista de paquetes..."
+    if ! run_cmd apt-get update; then
+        log "$ANSI_YELLOW" "WARNING" "No se pudo actualizar la lista de paquetes"
     fi
+    
+    # Instalar dependencias
+    log "$ANSI_YELLOW" "INFO" "Instalando paquetes requeridos..."
+    for dep in "${DEPS[@]}"; do
+        if ! dpkg -l | grep -q "^ii[[:space:]]*$dep[[:space:]]"; then
+            log "$ANSI_YELLOW" "INFO" "Instalando: $dep"
+            if ! run_cmd apt-get install -y "$dep"; then
+                log "$ANSI_YELLOW" "WARNING" "No se pudo instalar $dep"
+            fi
+        else
+            log "$ANSI_GREEN" "INFO" "$dep ya está instalado"
+        fi
+    done
+    
+    log "$ANSI_GREEN" "INFO" "Dependencias del sistema verificadas e instaladas correctamente"
+    return 0
+}
+
+# ============================================
+# Configuración del entorno virtual
+# ============================================
+
+# Configurar el entorno virtual de Python
+setup_python_venv() {
+    log "$ANSI_YELLOW" "INFO" "Configurando entorno virtual de Python..."
+    
+    # Crear directorio principal si no existe
+    if ! mkdir -p "$HOSTBERRY_DIR"; then
+        handle_error "No se pudo crear el directorio: $HOSTBERRY_DIR"
+    fi
+    
+    # Establecer permisos seguros
+    run_cmd chmod 755 "$HOSTBERRY_DIR"
+    run_cmd chown root:root "$HOSTBERRY_DIR"
+    
+    # Eliminar entorno virtual existente si existe
+    if [ -d "$VENV_DIR" ]; then
+        log "$ANSI_YELLOW" "INFO" "Eliminando entorno virtual existente..."
+        rm -rf "$VENV_DIR" || handle_error "No se pudo eliminar el entorno virtual existente"
+    fi
+    
+    # Crear nuevo entorno virtual
+    log "$ANSI_YELLOW" "INFO" "Creando nuevo entorno virtual en $VENV_DIR..."
+    if ! python3 -m venv "$VENV_DIR"; then
+        handle_error "Error al crear el entorno virtual"
+    fi
+    
+    # Activar el entorno virtual
+    # shellcheck source=/dev/null
+    if ! source "$VENV_DIR/bin/activate"; then
+        handle_error "No se pudo activar el entorno virtual"
+    fi
+    
+    # Actualizar pip
+    log "$ANSI_YELLOW" "INFO" "Actualizando pip..."
+    if ! pip install --upgrade pip; then
+        handle_error "No se pudo actualizar pip"
+    fi
+    
+    # Instalar dependencias básicas primero
+    log "$ANSI_YELLOW" "INFO" "Instalando dependencias básicas..."
+    if ! pip install --no-cache-dir "pytz==2024.1"; then
+        handle_error "No se pudo instalar pytz"
+    fi
+    
+    # Buscar archivo de requisitos
+    local req_file="$REQUIREMENTS"
+    [ ! -f "$req_file" ] && req_file="$HOSTBERRY_DIR/$REQUIREMENTS"
+    [ ! -f "$req_file" ] && req_file="$(dirname "$0")/$REQUIREMENTS"
+    
+    if [ ! -f "$req_file" ]; then
+        handle_error "No se encontró el archivo de requisitos en ninguna ruta esperada"
+    fi
+    
+    # Instalar dependencias desde requirements.txt (excluyendo pytz que ya está instalado)
+    log "$ANSI_YELLOW" "INFO" "Instalando dependencias desde $req_file..."
+    if ! grep -v "^pytz" "$req_file" | pip install --upgrade -r /dev/stdin; then
+        handle_error "Error al instalar las dependencias de Python"
+    fi
+    
+    # Asegurar permisos finales
+    run_cmd chmod -R 755 "$VENV_DIR"
+    run_cmd chown -R root:root "$VENV_DIR"
+    
+    log "$ANSI_GREEN" "INFO" "Entorno virtual configurado correctamente en $VENV_DIR"
+    return 0
+}
+
+# ============================================
+# Funciones auxiliares
+# ============================================
+
+# Verificar si el script se está ejecutando como root
+check_root() {
+    if [ "$(id -u)" -ne 0 ]; then
+        handle_error "Este script debe ejecutarse como usuario root"
+    fi
+}
+
+# Verificar si un comando está disponible
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Obtener la IP del sistema
+get_system_ip() {
+    local ip
+    ip=$(hostname -I | awk '{print $1}' 2>/dev/null)
+    if [ -z "$ip" ]; then
+        ip=$(ip route get 1.1.1.1 | grep -oP 'src \K\S+' 2>/dev/null || echo "127.0.0.1")
+    fi
+    echo "$ip"
 }
 
 # Mostrar ayuda
 show_help() {
-    echo "Uso: ./setup.sh [OPCIONES]"
+    echo "Uso: $0 [OPCIONES]"
     echo
     echo "Opciones:"
     echo "  --help         Mostrar esta ayuda y salir"
@@ -123,92 +315,80 @@ show_help() {
     echo "  --update       Actualizar la instalación de HostBerry"
     echo "  --cert         Generar certificados SSL con mkcert"
     echo "  --network      Configurar firewall y red para Raspberry Pi"
+    echo "  --nginx        Configurar Nginx como proxy inverso"
     echo
     echo "Ejemplos:"
-    echo "  sudo ./setup.sh --install         Instalación limpia recomendada"
-    echo "  sudo ./setup.sh --update          Actualizar HostBerry"
-    echo "  sudo ./setup.sh --cert            Generar certificados SSL"
-    echo "  sudo ./setup.sh --network         Configurar red y firewall"
-    echo "  sudo ./setup.sh --update --cert   Actualizar e instalar certificados"
+    echo "  sudo $0 --install         Instalación limpia recomendada"
+    echo "  sudo $0 --update          Actualizar HostBerry"
+    echo "  sudo $0 --cert            Generar certificados SSL"
+    echo "  sudo $0 --network         Configurar red y firewall"
+    echo "  sudo $0 --nginx           Configurar Nginx"
+    echo "  sudo $0 --update --cert   Actualizar e instalar certificados"
     echo
     echo "Para más información, consulta la documentación de HostBerry."
     exit 0
 }
 
-# Comprobar e instalar dependencias
-check_and_install_deps() {
-    log "$ANSI_YELLOW" "INFO" "Comprobando dependencias del sistema..."
+# Procesar argumentos de línea de comandos
+process_arguments() {
+    local install_flag=0
+    local update_flag=0
+    local cert_flag=0
+    local network_flag=0
+    local nginx_flag=0
     
-    # Verificar si estamos en un sistema basado en Debian/Ubuntu
-    if ! command -v apt-get &> /dev/null; then
-        handle_error "Este script solo es compatible con sistemas basados en Debian/Ubuntu"
+    if [ $# -eq 0 ]; then
+        show_help
     fi
     
-    # Actualizar lista de paquetes
-    if ! apt-get update; then
-        log "$ANSI_YELLOW" "WARNING" "No se pudo actualizar la lista de paquetes, continuando con la instalación..."
-    fi
-    
-    # Instalar dependencias una por una para mejor manejo de errores
-    for dep in "${DEPS[@]}"; do
-        log "$ANSI_YELLOW" "INFO" "Instalando $dep..."
-        if ! apt-get install -y "$dep"; then
-            log "$ANSI_YELLOW" "WARNING" "No se pudo instalar $dep, intentando continuar..."
-            sleep 2
-        fi
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --help)
+                show_help
+                ;;
+            --install)
+                install_flag=1
+                ;;
+            --update)
+                update_flag=1
+                ;;
+            --cert)
+                cert_flag=1
+                ;;
+            --network)
+                network_flag=1
+                ;;
+            --nginx)
+                nginx_flag=1
+                ;;
+            *)
+                log "$ANSI_RED" "ERROR" "Opción no válida: $1"
+                show_help
+                ;;
+        esac
+        shift
     done
     
-    log "$ANSI_GREEN" "INFO" "Dependencias del sistema verificadas e instaladas"
-}
-
-# Crear o recrear entorno virtual
-setup_venv() {
-    log "$ANSI_YELLOW" "INFO" "Configurando entorno virtual en $VENV_DIR..."
-    
-    # Asegurar que el directorio padre existe
-    mkdir -p "$HOSTBERRY_DIR"
-    chmod 755 "$HOSTBERRY_DIR"
-    chown root:root "$HOSTBERRY_DIR"
-    
-    if [ -d "$VENV_DIR" ]; then
-        log "$ANSI_YELLOW" "INFO" "Eliminando entorno virtual anterior..."
-        rm -rf "$VENV_DIR"
+    # Ejecutar acciones según las banderas
+    if [ "$install_flag" -eq 1 ]; then
+        perform_installation
     fi
     
-    log "$ANSI_YELLOW" "INFO" "Creando entorno virtual..."
-    python3 -m venv "$VENV_DIR" || handle_error "No se pudo crear el entorno virtual"
-    
-    # Asegurar permisos correctos
-    chmod 755 "$VENV_DIR"
-    chown -R root:root "$VENV_DIR"
-    
-    source "$VENV_DIR/bin/activate"
-    pip install --upgrade pip || handle_error "No se pudo actualizar pip"
-    
-    # Instalar pytz primero para evitar problemas de normalización
-    log "$ANSI_YELLOW" "INFO" "Instalando pytz..."
-    pip install --no-cache-dir pytz==2024.1 || handle_error "No se pudo instalar pytz"
-    
-    # Verificar si estamos en el directorio correcto
-    if [ ! -f "$REQUIREMENTS" ]; then
-        # Intentar encontrar requirements.txt en el directorio actual o en el directorio padre
-        if [ -f "$HOSTBERRY_DIR/$REQUIREMENTS" ]; then
-            REQUIREMENTS="$HOSTBERRY_DIR/$REQUIREMENTS"
-        elif [ -f "$(dirname "$0")/$REQUIREMENTS" ]; then
-            REQUIREMENTS="$(dirname "$0")/$REQUIREMENTS"
-        else
-            handle_error "No se pudo encontrar el archivo $REQUIREMENTS"
-        fi
+    if [ "$update_flag" -eq 1 ]; then
+        perform_update
     fi
     
-    log "$ANSI_YELLOW" "INFO" "Instalando dependencias desde $REQUIREMENTS..."
-    # Excluir pytz del requirements.txt ya que lo instalamos por separado
-    grep -v "pytz" "$REQUIREMENTS" | pip install --upgrade -r /dev/stdin || handle_error "No se pudieron instalar las dependencias de Python"
+    if [ "$cert_flag" -eq 1 ]; then
+        setup_ssl_certificates
+    fi
     
-    # Asegurar permisos finales
-    chmod -R 755 "$VENV_DIR"
-    chown -R root:root "$VENV_DIR"
-    log "$ANSI_GREEN" "INFO" "Entorno virtual configurado correctamente en $VENV_DIR"
+    if [ "$network_flag" -eq 1 ]; then
+        configure_network
+    fi
+    
+    if [ "$nginx_flag" -eq 1 ]; then
+        configure_nginx
+    fi
 }
 
 # Función para verificar requisitos previos de SSL
@@ -959,64 +1139,33 @@ def worker_int(worker):
 
 def worker_abort(worker):
     worker.log.info("worker received SIGABRT signal")
-
-def worker_exit(server, worker):
-    server.log.info("Worker exited (pid: %s)", worker.pid)
-EOF
-
-        # Crear archivo de servicio systemd
-        log "$ANSI_YELLOW" "INFO" "Creando archivo de servicio systemd..."
-        cat > /etc/systemd/system/hostberry-web.service << 'EOF'
-[Unit]
-Description=HostBerry Web Service
-After=network.target
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/opt/hostberry
-ExecStart=/opt/hostberry/venv/bin/gunicorn \
-    --workers 1 \
-    --bind 0.0.0.0:80 \
-    --access-logfile /opt/hostberry/logs/access.log \
-    --error-logfile /opt/hostberry/logs/error.log \
-    --log-level debug \
-    --access-logformat '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(L)s' \
-    --capture-output \
-    --enable-stdio-inheritance \
-    --timeout 120 \
-    --keep-alive 5 \
-    --max-requests 1000 \
-    --max-requests-jitter 50 \
-    --worker-class sync \
-    --worker-connections 1000 \
-    --backlog 2048 \
-    --graceful-timeout 30 \
-    app.wsgi:app
-Restart=always
-RestartSec=10
-Environment="FLASK_ENV=production"
-Environment="PYTHONUNBUFFERED=1"
-Environment="GUNICORN_CMD_ARGS=--config /opt/hostberry/gunicorn.conf.py"
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-        # Asegurar que gunicorn esté instalado
-        if ! "$VENV_DIR/bin/pip" show gunicorn > /dev/null 2>&1; then
-            log "$ANSI_YELLOW" "INFO" "Instalando Gunicorn..."
-            "$VENV_DIR/bin/pip" install gunicorn || handle_error "No se pudo instalar Gunicorn"
-        fi
-
-        systemctl daemon-reload
-        systemctl enable hostberry-web.service
-        log "$ANSI_GREEN" "INFO" "Servicio systemd creado y habilitado"
     fi
 }
 
+# ============================================
+# Punto de entrada principal
+# ============================================
+
+# Función principal
+main() {
+    # Verificar si se está ejecutando como root
+    check_root
+    
+    # Procesar argumentos de línea de comandos
+    process_arguments "$@"
+    
+    # Mostrar resumen de acciones
+    show_summary
+    
+    log "$ANSI_GREEN" "INFO" "Script completado exitosamente"
+    exit 0
+}
+
+# Ejecutar la función principal
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+    main "$@"
+fi
+
 # Activar modo estricto
 set -euo pipefail
-
-# Ejecutar script principal
 main "$@"
