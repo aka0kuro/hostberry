@@ -3,7 +3,7 @@
 {% block title %}Iniciar Sesión{% endblock %}
 
 {% block auth_title %}
-    <img src="{{ url_for('static', filename='static/img/hostberry.png') }}" alt="HostBerry Logo" class="mb-3" style="max-width: 120px; display: block; margin-left: auto; margin-right: auto;">
+    <img src="/static/img/hostberry.png" alt="HostBerry Logo" class="mb-3" style="max-width: 120px; display: block; margin-left: auto; margin-right: auto;">
     Iniciar Sesión
 {% endblock %}
 
@@ -88,7 +88,7 @@ function setTheme(theme) {
 }
 // Al cargar, aplicar el tema guardado
 window.addEventListener('DOMContentLoaded', function() {
-    const savedTheme = localStorage.getItem('hostberry_theme') || 'light';
+    const savedTheme = localStorage.getItem('hostberry_theme') || 'dark';
     document.body.className = savedTheme;
     // Mostrar/ocultar contraseña
     document.querySelectorAll('.toggle-password').forEach(button => {
