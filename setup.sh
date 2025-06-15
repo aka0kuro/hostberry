@@ -447,7 +447,7 @@ server {
     server_name _;
     
     location / {
-        proxy_pass http://127.0.0.1:8000;
+        proxy_pass http://unix:/opt/hostberry/hostberry.sock;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -641,6 +641,7 @@ install_hostberry() {
     
     # Crear directorio de instalación
     mkdir -p "${INSTALL_DIR}"
+    chown www-data:www-data "${INSTALL_DIR}"
     
     # Clonar repositorio
     if [ ! -d "${INSTALL_DIR}/.git" ]; then
