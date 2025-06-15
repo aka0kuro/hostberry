@@ -7,7 +7,6 @@ import os
 import json
 import datetime
 import pytz
-from app.config import save_config
 
 # Blueprint
 security_bp = Blueprint('security', __name__)
@@ -22,6 +21,8 @@ class SecurityConfigForm(FlaskForm):
 # --- Rutas de Seguridad ---
 @security_bp.route('/security_config', methods=['GET', 'POST'])
 def security_config():
+    from hostberry_config import HostBerryConfig
+    config = HostBerryConfig()
     form = SecurityConfigForm()
     if request.method == 'POST':
         try:
@@ -29,17 +30,20 @@ def security_config():
             block_icmp = request.form.get('block_icmp') == '1'
             timezone = request.form.get('timezone')
             time_format = request.form.get('time_format')
-
-            save_config('FIREWALL_ENABLED', firewall_enabled)
-            save_config('BLOCK_ICMP', block_icmp)
-            save_config('TIMEZONE', timezone)
-            save_config('TIME_FORMAT', time_format)
-
-            flash(_('Configuración guardada correctamente'), 'success')
-            return redirect(url_for('security.security_config'))
+            success = config.update_config({
+                'FIREWALL_ENABLED': firewall_enabled,
+                'BLOCK_ICMP': block_icmp,
+                'TIMEZONE': timezone,
+                'TIME_FORMAT': time_format
+            })
+            if success:
+                flash(_('Configuración guardada correctamente'), 'success')
+                return redirect(url_for('security.security_config'))
+            else:
+                flash(_('Error al guardar la configuración'), 'danger')
         except Exception as e:
             flash(_('Error al procesar el formulario: %(error)s', error=str(e)), 'danger')
-    
+    current_config = config.get_current_config()
     # Get current security status
     try:
         rules_count = int(subprocess.check_output(['iptables', '-L', '-n', '--line-numbers']).decode().count('\n')) - 2
@@ -49,11 +53,10 @@ def security_config():
         rules_count = 0
         blocked_ips = 0
         last_attack = None
-
     return render_template(
         'security.html',
         form=form,
-        config=app.config,
+        config=current_config,
         security_status={
             'rules_count': rules_count,
             'blocked_ips': blocked_ips,
