@@ -1,34 +1,77 @@
 {% extends "security/auth_base.html" %}
 
-{% block auth_title %}Iniciar Sesión{% endblock %}
+{% block auth_title %}<i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión{% endblock %}
 
 {% block auth_content %}
-<form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+<style>
+    /* Estilos personalizados para el formulario de login */
+    .card {
+        border: 1px solid rgba(0,0,0,.125);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-header {
+        background-color: #f8f9fa !important;
+        color: #212529 !important;
+        border-bottom: 1px solid rgba(0,0,0,.125);
+    }
+    
+    .input-group-text {
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+        color: #6c757d;
+    }
+    
+    .form-control, .form-control:focus {
+        border-color: #ced4da;
+        box-shadow: none;
+    }
+    
+    .btn-login {
+        background-color: #6c757d;
+        border: none;
+        padding: 0.5rem 2rem;
+        transition: all 0.3s;
+    }
+    
+    .btn-login:hover {
+        background-color: #5a6268;
+        transform: translateY(-1px);
+    }
+    
+    .forgot-password {
+        color: #6c757d;
+        text-decoration: none;
+        font-size: 0.875rem;
+    }
+    
+    .forgot-password:hover {
+        color: #5a6268;
+        text-decoration: underline;
+    }
+</style>
+
+<form method="POST" action="{{ url_for('auth.login') }}" novalidate class="mt-4">
     {{ form.hidden_tag() }}
     
-    <div class="mb-3">
-        {{ form.username.label(class="form-label") }}
-        <div class="input-group">
+    <div class="mb-4">
+        <div class="input-group mb-3">
             <span class="input-group-text"><i class="fas fa-user"></i></span>
             {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""), 
-                         placeholder=form.username.render_kw.placeholder) }}
+                         placeholder="Nombre de usuario") }}
         </div>
         {% if form.username.errors %}
             <div class="invalid-feedback d-block">
-                {{ form.username.errors[0] }}
+                <small>{{ form.username.errors[0] }}</small>
             </div>
         {% endif %}
     </div>
     
-    <div class="mb-3">
-        <div class="d-flex justify-content-between">
-            {{ form.password.label(class="form-label") }}
-            <a href="#" class="small text-decoration-none">¿Olvidaste tu contraseña?</a>
-        </div>
-        <div class="input-group">
+    <div class="mb-4">
+        <div class="input-group mb-3">
             <span class="input-group-text"><i class="fas fa-lock"></i></span>
             {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""),
-                          id="password",
+                          id="password", placeholder="Contraseña") }}
                           placeholder=form.password.render_kw.placeholder) }}
             <button class="btn btn-outline-secondary toggle-password" type="button" 
                     data-bs-toggle="tooltip" 
