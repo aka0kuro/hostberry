@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="{{ get_locale() }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}HostBerry{% endblock %} - HostBerry</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            background-color: var(--bg-color);
+            transition: background-color 0.3s ease;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        body.light {
+            --primary: #9199a7;
+            --secondary: #e0eaf8;
+            --card-bg: white;
+            --bg-color: white;
+            --text-color: #000000;
+            --border-color: #60a7ee;
+            --input-bg: white;
+        }
+        
+        body.blue {
+            --primary: #001a66;
+            --secondary: #0b5ed7;
+            --card-bg: #000d33;
+            --text-color: #000000;
+            --bg-color: #5e9bf7;
+            --border-color: #002699;
+            --input-bg: #00134d;
+        }
+        
+        body.red {
+            --primary: #400000;
+            --secondary: #bb2d3b;
+            --card-bg: #1a0000;
+            --text-color: #000000;
+            --bg-color: #f35969;
+            --border-color: #800000;
+            --input-bg: #330000;
+        }
+        
+        body.dark {
+            --primary: #2b2c2c;
+            --secondary: #121416;
+            --card-bg: #2c3034;
+            --bg-color: #2a2a2b;
+            --text-color: #ffffff;
+            --border-color: #495057;
+            --input-bg: #2c3034;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .form-control, .form-select, .form-check-input {
+            background-color: var(--input-bg);
+            border-color: var(--border-color);
+        }
+        
+        .alert {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+        }
+        
+        .text-muted {
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow-sm border-0 rounded-lg">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h4 class="mb-0">{% block auth_title %}{% endblock %}</h4>
+                            <a href="{{ url_for('main.index') }}" class="text-decoration-none">
+                                <i class="fas fa-home"></i> Inicio
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        {# Mostrar mensajes flash #}
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        
+                        {# Contenido del formulario #}
+                        {% block auth_content %}
+                        {% endblock %}
+                    </div>
+                    <div class="card-footer bg-transparent text-center py-3">
+                        {% block auth_footer %}
+                            <p class="mb-0">
+                                {% if request.endpoint != 'auth.login' %}
+                                    <a href="{{ url_for('auth.login') }}" class="text-decoration-none">
+                                        <i class="fas fa-sign-in-alt me-1"></i> Iniciar sesión
+                                    </a>
+                                {% endif %}
+                                
+                                {% if request.endpoint != 'auth.register' and config.get('SECURITY_REGISTERABLE', True) %}
+                                    <span class="mx-2">•</span>
+                                    <a href="{{ url_for('auth.register') }}" class="text-decoration-none">
+                                        <i class="fas fa-user-plus me-1"></i> Registrarse
+                                    </a>
+                                {% endif %}
+                            </p>
+                        {% endblock %}
+                    </div>
+                </div>
+                
+                {% block extra_content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html> 
