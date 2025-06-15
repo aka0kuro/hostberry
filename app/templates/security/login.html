@@ -2,9 +2,21 @@
 
 {% block title %}Iniciar Sesión{% endblock %}
 
-{% block auth_title %}Iniciar Sesión{% endblock %}
+{% block auth_title %}
+    <img src="{{ url_for('static', filename='hostberry.png') }}" alt="HostBerry Logo" class="mb-3" style="max-width: 120px; display: block; margin-left: auto; margin-right: auto;">
+    Iniciar Sesión
+{% endblock %}
 
 {% block auth_content %}
+<div class="mb-4 text-center">
+    <span>Selecciona un tema:</span>
+    <div class="d-flex justify-content-center gap-2 mt-2">
+        <button type="button" class="btn btn-sm btn-light border" onclick="setTheme('light')" title="Claro">🌞</button>
+        <button type="button" class="btn btn-sm btn-dark border" onclick="setTheme('dark')" title="Oscuro">🌙</button>
+        <button type="button" class="btn btn-sm btn-primary border" style="background-color:#5e9bf7;" onclick="setTheme('blue')" title="Azul">🔵</button>
+        <button type="button" class="btn btn-sm btn-danger border" onclick="setTheme('red')" title="Rojo">🔴</button>
+    </div>
+</div>
 <form action="{{ url_for('auth.login') }}" method="POST" name="login_user_form">
     {{ form.hidden_tag() }}
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -70,13 +82,20 @@
 {% block scripts %}
 {{ super() }}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+// Selector de tema visual
+function setTheme(theme) {
+    document.body.className = theme;
+    localStorage.setItem('hostberry_theme', theme);
+}
+// Al cargar, aplicar el tema guardado
+window.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('hostberry_theme') || 'light';
+    document.body.className = savedTheme;
     // Mostrar/ocultar contraseña
     document.querySelectorAll('.toggle-password').forEach(button => {
         button.addEventListener('click', function() {
             const password = document.querySelector(this.previousElementSibling);
             const icon = this.querySelector('i');
-            
             if (password.type === 'password') {
                 password.type = 'text';
                 icon.classList.remove('fa-eye');
