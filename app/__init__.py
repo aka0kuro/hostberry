@@ -70,6 +70,7 @@ def create_app(config_name='default'):
     # Configuración de la sesión
     @app.before_request
     def before_request():
+        from flask_login import current_user
         session.permanent = True
         app.permanent_session_lifetime = timedelta(days=1)
         
