@@ -614,11 +614,11 @@ update_from_github() {
     source "${INSTALL_DIR}/venv/bin/activate"
     install_python_deps
     
-    # Aplicar migraciones
-    python manage.py migrate --noinput
+    # [Eliminado] Aplicar migraciones (no aplica en Flask/HostBerry)
+    # python manage.py migrate --noinput
     
-    # Recolectar archivos estáticos
-    python manage.py collectstatic --noinput
+    # [Eliminado] Recolectar archivos estáticos (no aplica en Flask/HostBerry)
+    # python manage.py collectstatic --noinput
     
     # Reiniciar servicios
     systemctl restart hostberry
