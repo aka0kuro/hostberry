@@ -6,4 +6,4 @@ import os
 from app import create_app
 
 # Crear la aplicación Flask para WSGI
-application = create_app()
+app = create_app()
