@@ -641,7 +641,7 @@ install_hostberry() {
     
     # Crear directorio de instalación
     mkdir -p "${INSTALL_DIR}"
-    chown www-data:www-data "${INSTALL_DIR}"
+    chown -R www-data:www-data "${INSTALL_DIR}"
     
     # Clonar repositorio
     if [ ! -d "${INSTALL_DIR}/.git" ]; then
