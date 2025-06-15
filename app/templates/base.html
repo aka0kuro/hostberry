@@ -289,39 +289,39 @@
         </div>
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('index') }}">
+                <a class="nav-link" href="{{ url_for('main.index') }}">
                     <i class="fas fa-tachometer-alt me-2"></i> {% trans %}Dashboard{% endtrans %}
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('security_config') }}">
+                <a class="nav-link" href="{{ url_for('main.security_config') }}">
                     <i class="fas fa-shield-alt me-2 {% if not config.SECURITY_ENABLED %}text-secondary{% endif %}"></i>
                     {% trans %}Security{% endtrans %}
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'wifi_scan_page' %}active{% endif %}" href="{{ url_for('wifi_scan_page') }}">
+                <a class="nav-link {% if request.endpoint == 'wifi.wifi_scan_page' %}active{% endif %}" href="{{ url_for('wifi.wifi_scan_page') }}">
                     <i class="fas fa-wifi me-2"></i>{% trans %}WiFi{% endtrans %}
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'hostapd_page' %}active{% endif %}" href="{{ url_for('hostapd_page') }}">
+                <a class="nav-link {% if request.endpoint == 'wifi.hostapd_page' %}active{% endif %}" href="{{ url_for('wifi.hostapd_page') }}">
                     <i class="fas fa-broadcast-tower me-2"></i>{% trans %}Access Point{% endtrans %}
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'vpn_page' %}active{% endif %}" href="{{ url_for('vpn_page') }}">
+                <a class="nav-link {% if request.endpoint == 'vpn.vpn_page' %}active{% endif %}" href="{{ url_for('vpn.vpn_page') }}">
                     <i class="fas fa-shield-alt me-2"></i>{% trans %}VPN{% endtrans %}
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('monitoring_config') }}">
+                <a class="nav-link" href="{{ url_for('monitoring.monitoring_config') }}">
                     <i class="fas fa-chart-line me-2 {% if not config.MONITORING_ENABLED %}text-secondary{% endif %}"></i>
                     {% trans %}Monitoring{% endtrans %}
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('adblock_config') }}">
+                <a class="nav-link" href="{{ url_for('adblock.adblock_config') }}">
                     <i class="fas fa-stopwatch me-2 {% if not config.ADBLOCK_ENABLED %}text-secondary{% endif %}"></i>
                     {% trans %}AdBlock{% endtrans %}
                 </a>
@@ -347,8 +347,8 @@
                     <span>{% trans %}Language{% endtrans %}</span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') }}?lang_changed=1">English</a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('set_language', lang='es') }}?lang_changed=1">Español</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='en') }}?lang_changed=1">English</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='es') }}?lang_changed=1">Español</a></li>
                 </ul>
             </div>
             <!-- HostBerry Logo -->
