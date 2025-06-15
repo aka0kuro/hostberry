@@ -2,35 +2,51 @@ def register_blueprints(app):
     """
     Registra todos los blueprints de la aplicación
     """
-    # Registrar blueprints principales
-    from .main import main_bp
-    app.register_blueprint(main_bp)
-    
-    # Registrar blueprints de autenticación
+    # Blueprint principal (si existe)
+    try:
+        from .main import main_bp
+        app.register_blueprint(main_bp)
+    except ImportError:
+        pass
+
+    # Blueprint de autenticación
     try:
         from app.auth.routes import auth_bp
         app.register_blueprint(auth_bp, url_prefix='/auth')
-    except ImportError as e:
-        app.logger.warning(f"No se pudo cargar el blueprint de autenticación: {e}")
-    
-    # Registrar blueprints de API
+    except ImportError:
+        pass
+
+    # WiFi
     try:
-        from .wifi import wifi_bp
-        app.register_blueprint(wifi_bp, url_prefix='/api/wifi')
-    except ImportError as e:
-        app.logger.warning(f"No se pudo cargar el blueprint de WiFi: {e}")
-    
-    # Registrar blueprints opcionales
-    optional_blueprints = [
-        ('vpn', '/api/vpn'),
-        ('system', '/api/system'),
-        ('adblock', '/api/adblock')
-    ]
-    
-    for module_name, url_prefix in optional_blueprints:
-        try:
-            module = __import__(f'app.routes.{module_name}', fromlist=[f'{module_name}_bp'])
-            bp = getattr(module, f'{module_name}_bp')
-            app.register_blueprint(bp, url_prefix=url_prefix)
-        except (ImportError, AttributeError) as e:
-            app.logger.warning(f"No se pudo cargar el blueprint {module_name}: {e}")
+        from app.routes.wifi_routes import wifi_bp
+        app.register_blueprint(wifi_bp, url_prefix='/wifi')
+    except ImportError:
+        pass
+
+    # Security
+    try:
+        from app.routes.security_routes import security_bp
+        app.register_blueprint(security_bp, url_prefix='/security')
+    except ImportError:
+        pass
+
+    # VPN
+    try:
+        from app.routes.vpn_routes import vpn_bp
+        app.register_blueprint(vpn_bp, url_prefix='/vpn')
+    except ImportError:
+        pass
+
+    # Adblock
+    try:
+        from app.routes.adblock_routes import adblock_bp
+        app.register_blueprint(adblock_bp, url_prefix='/adblock')
+    except ImportError:
+        pass
+
+    # WireGuard
+    try:
+        from app.routes.wireguard_routes import wireguard_bp
+        app.register_blueprint(wireguard_bp, url_prefix='/wireguard')
+    except ImportError:
+        pass
