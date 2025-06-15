@@ -204,7 +204,7 @@ document.getElementById('vpn-config-form').addEventListener('submit', function(e
     
     const formData = new FormData(form);
     
-    fetch("{{ url_for('vpn_config_api') }}", {
+    fetch("{{ url_for('vpn.vpn_config') }}", {
         method: 'POST',
         headers: {
             'X-CSRFToken': getCSRFToken()
