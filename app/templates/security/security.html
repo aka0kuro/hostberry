@@ -92,7 +92,7 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('security_config') }}">
+                    <form method="POST" action="{{ url_for('security.security_config') }}">
     {{ form.csrf_token }}
                         {{ form.hidden_tag() }}
                         <div class="form-group row mb-3">

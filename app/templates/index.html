@@ -6,7 +6,7 @@
     <div class="row mb-4">
         <div class="col-md-4 mb-4">
             <div class="card h-100">
-                <a href="{{ url_for('adblock_config') }}" class="card-link">
+                <a href="{{ url_for('adblock.adblock_config') }}" class="card-link">
                     <div class="card-body text-center">
                         <i class="bi bi-shield-shaded fs-1 {% if not adblock_enabled %}text-secondary{% endif %}"></i>
                         <h5 class="card-title mt-3">{% trans %}AdBlock{% endtrans %}</h5>
@@ -20,7 +20,7 @@
 
         <div class="col-md-4 mb-4">
             <div class="card h-100">
-                <a href="{{ url_for('vpn_config_api') }}" class="card-link">
+                <a href="{{ url_for('vpn.vpn_config') }}" class="card-link">
                     <div class="card-body text-center">
                         <i class="bi bi-lock fs-1 {% if not vpn_enabled %}text-secondary{% endif %}"></i>
                         <h5 class="card-title mt-3">{% trans %}VPN{% endtrans %}</h5>
@@ -33,7 +33,7 @@
         </div>
         <div class="col-md-4 mb-4">
             <div class="card h-100">
-                <a href="{{ url_for('security_config') }}" class="card-link">
+                <a href="{{ url_for('security.security_config') }}" class="card-link">
                     <div class="card-body text-center">
                         <i class="bi bi-fire fs-1 {% if not firewall_enabled %}text-secondary{% endif %}"></i>
                         <h5 class="card-title mt-3">{% trans %}Firewall{% endtrans %}</h5>
