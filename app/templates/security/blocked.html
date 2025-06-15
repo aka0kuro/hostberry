@@ -10,7 +10,7 @@
         <div class="alert alert-danger">
             <strong><i class="bi bi-x-octagon me-1"></i>{% trans %}{{ reason }}{% endtrans %}</strong>
         </div>
-        <a href="{{ url_for('index') }}" class="btn btn-secondary btn-lg"><i class="bi bi-house"></i> {% trans %}Go to Home{% endtrans %}</a>
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary btn-lg"><i class="bi bi-house"></i> {% trans %}Go to Home{% endtrans %}</a>
     </div>
 </div>
 {% endblock %}
