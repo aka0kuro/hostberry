@@ -45,6 +45,11 @@ class Config:
     # Configuración de red
     DEFAULT_NETWORK_INTERFACE = "wlan0"
     
+    # Configuración de Babel
+    BABEL_DEFAULT_LOCALE = 'es'
+    BABEL_SUPPORTED_LOCALES = ['es', 'en']
+    BABEL_TRANSLATION_DIRECTORIES = os.path.join(BASE_DIR, 'translations')
+    
     def __init__(self):
         # Crear directorios necesarios
         os.makedirs(self.DATA_DIR, exist_ok=True)

@@ -10,6 +10,8 @@ from flask_babel import Babel
 db = SQLAlchemy()
 login_manager = LoginManager()
 csrf = CSRFProtect()
+
+# Configuración de Babel
 babel = Babel()
 
 # Configuración de Flask-Login

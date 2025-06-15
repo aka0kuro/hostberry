@@ -86,6 +86,10 @@ def create_app(config_name='default'):
         flash('Por favor inicia sesión para acceder a esta página.', 'warning')
         return redirect(url_for('auth.login', next=request.url))
     
+    # Registrar función get_locale como global de Jinja
+    from app.utils.i18n_utils import get_locale
+    app.jinja_env.globals['get_locale'] = get_locale
+
     # Configurar contexto de aplicación
     with app.app_context():
         from .services import init_services
