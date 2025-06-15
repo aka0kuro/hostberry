@@ -384,7 +384,8 @@ Description=HostBerry Web Interface
 After=network.target
 
 [Service]
-User=root
+User=www-data
+Group=www-data
 WorkingDirectory=${INSTALL_DIR}
 Environment="PATH=${INSTALL_DIR}/venv/bin"
 # Usar solo 1 worker en Raspberry Pi 3 para mejor rendimiento
@@ -620,9 +621,16 @@ update_from_github() {
     # [Eliminado] Recolectar archivos estáticos (no aplica en Flask/HostBerry)
     # python manage.py collectstatic --noinput
     
+    # Ajustar permisos del socket para Nginx (www-data)
+    if [ -S "/opt/hostberry/hostberry.sock" ]; then
+        chown www-data:www-data /opt/hostberry/hostberry.sock
+        chmod 660 /opt/hostberry/hostberry.sock
+    fi
+
     # Reiniciar servicios
     systemctl restart hostberry
-    
+    systemctl restart nginx
+
     _install_log "Actualización completada"
     return 0
 }
