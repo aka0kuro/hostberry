@@ -588,6 +588,9 @@ update_from_github() {
         return 1
     fi
     
+    # Configurar git safe.directory para evitar advertencias de propiedad
+    git config --global --add safe.directory "${INSTALL_DIR}"
+
     # Guardar cambios locales
     cd "${INSTALL_DIR}" || return 1
     
@@ -597,8 +600,22 @@ update_from_github() {
     # Verificar si hay actualizaciones
     local current_branch
     current_branch=$(git rev-parse --abbrev-ref HEAD)
-    
-    if [ "$(git rev-list HEAD...origin/${current_branch} --count)" -eq 0 ]; then
+
+    # Validar que current_branch no esté vacío
+    if [ -z "$current_branch" ]; then
+        _install_log "No se pudo determinar la rama actual de git."
+        return 1
+    fi
+
+    local rev_count
+    rev_count=$(git rev-list HEAD...origin/${current_branch} --count 2>/dev/null)
+    # Validar que rev_count es un número
+    if ! [[ "$rev_count" =~ ^[0-9]+$ ]]; then
+        _install_log "No se pudo obtener el número de commits para comparar actualizaciones."
+        return 1
+    fi
+
+    if [ "$rev_count" -eq 0 ]; then
         _install_log "No hay actualizaciones disponibles"
         return 0
     fi
