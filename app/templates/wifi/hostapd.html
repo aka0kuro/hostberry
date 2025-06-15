@@ -406,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update status display with more detailed information
     async function updateStatus() {
         try {
-            const response = await fetch('/api/hostapd/status');
+            const response = await fetch("{{ url_for('wifi.ap_status') }}");
             const data = await response.json();
             
             if (data.success) {
@@ -504,7 +504,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Toggle AP
     toggleApBtn.addEventListener('click', async function() {
         try {
-            const response = await fetch('/api/hostapd/toggle', {
+            const response = await fetch("{{ url_for('wifi.toggle_ap') }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -652,7 +652,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
         try {
-            const response = await fetch('/api/hostapd/config', {
+            const response = await fetch("{{ url_for('wifi.ap_config') }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -760,7 +760,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Event listener para el botón de toggle wlan_ap0
     toggleWlanAp0Btn.addEventListener('click', async function() {
         try {
-            const response = await fetch('/api/hostapd/toggle_wlan_ap0', {
+            const response = await fetch("{{ url_for('wifi.toggle_wlan_ap0') }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
