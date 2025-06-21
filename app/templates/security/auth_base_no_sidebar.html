@@ -58,6 +58,29 @@
             --border-color: #495057;
             --input-bg: #2c3034;
             --logo-invert: 1; /* Invierte el logo para mejor visibilidad en tema oscuro */
+            color: #ffffff; /* Asegura que todo el texto sea blanco */
+        }
+        
+        /* Asegura que todos los textos dentro del tema oscuro sean blancos */
+        body.dark,
+        body.dark .form-label,
+        body.dark .form-check-label,
+        body.dark .text-muted,
+        body.dark .form-control::placeholder {
+            color: #ffffff !important;
+        }
+        
+        /* Asegura que los inputs sean legibles */
+        body.dark .form-control,
+        body.dark .form-select {
+            color: #ffffff !important;
+            background-color: var(--input-bg) !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        /* Estilo para los enlaces */
+        body.dark a {
+            color: #5e9bf7;
         }
 
         .card {
