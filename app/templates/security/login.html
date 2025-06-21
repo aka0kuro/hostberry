@@ -4,10 +4,16 @@
 
 {% block auth_title %}
     <div class="text-center mb-4 p-4 rounded-3 theme-header">
+        <!-- Ruta temporal para depuración -->
+        <div class="mb-2" style="font-size: 0.8rem; color: #666;">
+            Ruta de la imagen: {{ url_for('static', filename='img/hostberry.png') }}
+        </div>
         <img src="{{ url_for('static', filename='img/hostberry.png') }}" 
              alt="HostBerry Logo" 
              class="img-fluid" 
-             style="max-height: 100px; width: auto; margin-bottom: 1rem;">
+             style="max-height: 100px; width: auto; margin-bottom: 1rem;
+                    border: 1px solid #ddd; /* Borde para visualizar el área de la imagen */
+                    background-color: #f8f9fa; /* Fondo para ver si la imagen se carga */">
         <h2 class="h4 mb-0">Iniciar Sesión</h2>
     </div>
     
