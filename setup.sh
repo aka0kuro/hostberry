@@ -518,9 +518,27 @@ EOF
         return 1
     fi
     
-    # Reiniciar Nginx
-    systemctl restart nginx
+    # Establecer permisos correctos
+    _install_log "Estableciendo permisos..."
+    chown -R www-data:www-data "${INSTALL_DIR}"
+    find "${INSTALL_DIR}" -type d -exec chmod 755 {} \;
+    find "${INSTALL_DIR}" -type f -exec chmod 644 {} \;
+    chmod +x "${INSTALL_DIR}/setup.sh"
+    chmod +x "${INSTALL_DIR}/scripts/"*.sh
     
+    # Permisos especiales para directorios de escritura
+    chmod -R 775 "${INSTALL_DIR}/app/static"
+    chmod -R 775 "${INSTALL_DIR}/media"
+    
+    # Permisos para el socket
+    chmod 775 "${INSTALL_DIR}"
+    
+    # Reiniciar servicios
+    systemctl daemon-reload
+    systemctl restart nginx
+    systemctl restart hostberry
+    
+    _install_status $? "Configuración de permisos y servicios completada"
     return $?
 }
 
@@ -530,6 +548,7 @@ setup_ssl_certificate() {
     
     if [ ! -d "${CONFIG_DIR}/ssl" ]; then
         mkdir -p "${CONFIG_DIR}/ssl"
+{{ ... }}
     fi
     
     # Generar certificado autofirmado
