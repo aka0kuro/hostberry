@@ -3,13 +3,36 @@
 {% block title %}Iniciar Sesión{% endblock %}
 
 {% block auth_title %}
-    <div class="text-center mb-4">
+    <div class="text-center mb-4 p-4 rounded-3 theme-header">
         <img src="{{ url_for('static', filename='img/hostberry.png') }}" 
              alt="HostBerry Logo" 
              class="img-fluid" 
              style="max-height: 100px; width: auto; margin-bottom: 1rem;">
         <h2 class="h4 mb-0">Iniciar Sesión</h2>
     </div>
+    
+    <style>
+        .theme-header {
+            background-color: var(--bs-light);
+            transition: background-color 0.3s ease;
+        }
+        
+        /* Tema oscuro */
+        .dark .theme-header {
+            background-color: #2c3034;
+            color: #f8f9fa;
+        }
+        
+        /* Tema azul */
+        .blue .theme-header {
+            background-color: #e7f1ff;
+        }
+        
+        /* Tema rojo */
+        .red .theme-header {
+            background-color: #f8d7da;
+        }
+    </style>
 {% endblock %}
 
 {% block auth_content %}
