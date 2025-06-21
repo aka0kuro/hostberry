@@ -425,44 +425,89 @@ EOL
 # Configurar Nginx
 setup_nginx() {
     _install_log "Configurando Nginx"
-
-    if [ ! -d "/etc/nginx/sites-available" ]; then
-        mkdir -p "/etc/nginx/sites-available"
+    
+    # Instalar Nginx si no está instalado
+    if ! command -v nginx &> /dev/null; then
+        _install_log "Instalando Nginx"
+        apt-get install -y nginx
     fi
-
-    if [ ! -d "/etc/nginx/sites-enabled" ]; then
-        mkdir -p "/etc/nginx/sites-enabled"
+    
+    # Detener Nginx temporalmente
+    if systemctl is-active --quiet nginx; then
+        systemctl stop nginx
     fi
-
-    # Deshabilitar el sitio por defecto de Nginx si existe
+    
+    # Eliminar configuración por defecto si existe
     if [ -f "/etc/nginx/sites-enabled/default" ]; then
-        _install_log "Deshabilitando el sitio por defecto de Nginx"
         rm -f "/etc/nginx/sites-enabled/default"
     fi
-
-    # Crear configuración de Nginx
-    cat > "${NGINX_SITE}" << EOL
+    
+    # Crear directorios necesarios
+    _install_log "Creando directorios estáticos"
+    mkdir -p "${INSTALL_DIR}/static/img"
+    mkdir -p "${INSTALL_DIR}/app/static/img"
+    
+    # Configurar permisos
+    chown -R www-data:www-data "${INSTALL_DIR}/static" "${INSTALL_DIR}/app/static"
+    chmod -R 755 "${INSTALL_DIR}/static" "${INSTALL_DIR}/app/static"
+    
+    # Copiar imagen del logo si existe
+    if [ -f "${INSTALL_DIR}/img/hostberry.png" ]; then
+        _install_log "Copiando imagen del logo"
+        cp "${INSTALL_DIR}/img/hostberry.png" "${INSTALL_DIR}/static/img/"
+        cp "${INSTALL_DIR}/img/hostberry.png" "${INSTALL_DIR}/app/static/img/"
+        chown www-data:www-data "${INSTALL_DIR}/static/img/hostberry.png" "${INSTALL_DIR}/app/static/img/hostberry.png"
+        chmod 644 "${INSTALL_DIR}/static/img/hostberry.png" "${INSTALL_DIR}/app/static/img/hostberry.png"
+    fi
+    
+    # Configurar sitio de Nginx
+    cat > "${NGINX_SITE}" << EOF
 server {
     listen 80;
     server_name _;
     
+    # Tamaño máximo de subida de archivos (100MB)
+    client_max_body_size 100M;
+    
+    # Configuración de timeouts
+    proxy_connect_timeout 300s;
+    proxy_send_timeout 300s;
+    proxy_read_timeout 300s;
+    fastcgi_read_timeout 300s;
+    
     location / {
-        proxy_pass http://unix:/opt/hostberry/hostberry.sock;
+        proxy_pass http://unix:${INSTALL_DIR}/hostberry.sock;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
     }
     
+    # Configuración para archivos estáticos
     location /static/ {
         alias ${INSTALL_DIR}/static/;
+        expires 30d;
+        access_log off;
+        add_header Cache-Control "public, no-transform";
     }
     
     location /media/ {
         alias ${INSTALL_DIR}/media/;
+        expires 30d;
+        access_log off;
+    }
+    
+    # Deshabilitar acceso a archivos ocultos
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
     }
 }
-EOL
+EOF
     
     # Habilitar sitio
     ln -sf "${NGINX_SITE}" "${NGINX_SITE_ENABLED}"
