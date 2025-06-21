@@ -8,12 +8,15 @@
         <div class="mb-2" style="font-size: 0.8rem; color: #666;">
             Ruta de la imagen: {{ url_for('static', filename='img/hostberry.png') }}
         </div>
-        <img src="{{ url_for('static', filename='img/hostberry.png') }}" 
+        <img src="/static/img/hostberry.png" 
              alt="HostBerry Logo" 
              class="img-fluid" 
              style="max-height: 100px; width: auto; margin-bottom: 1rem;
-                    border: 1px solid #ddd; /* Borde para visualizar el área de la imagen */
-                    background-color: #f8f9fa; /* Fondo para ver si la imagen se carga */">
+                    border: 1px solid #ddd;
+                    background-color: #f8f9fa;
+                    display: block;
+                    margin-left: auto;
+                    margin-right: auto;">
         <h2 class="h4 mb-0">Iniciar Sesión</h2>
     </div>
     
