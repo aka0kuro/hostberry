@@ -27,7 +27,6 @@ def login_required(f: Callable) -> Callable:
                     'message': 'Se requiere autenticación',
                     'code': 401
                 }), 401
-            flash('Por favor inicia sesión para acceder a esta página.', 'warning')
             return redirect(url_for('auth.login', next=request.url))
         return f(*args, **kwargs)
     return decorated_function
