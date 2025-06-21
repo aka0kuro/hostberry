@@ -447,10 +447,7 @@ setup_nginx() {
     mkdir -p "${INSTALL_DIR}/static/img"
     mkdir -p "${INSTALL_DIR}/app/static/img"
     
-    # Configurar permisos
-    chown -R www-data:www-data "${INSTALL_DIR}/static" "${INSTALL_DIR}/app/static"
-    chmod -R 755 "${INSTALL_DIR}/static" "${INSTALL_DIR}/app/static"
-    
+
     # Copiar imagen del logo si existe
     if [ -f "${INSTALL_DIR}/img/hostberry.png" ]; then
         _install_log "Copiando imagen del logo"
@@ -736,6 +733,10 @@ install_hostberry() {
     fi
     
     cd "${INSTALL_DIR}" || return 1
+    
+    # Configurar permisos
+    chown -R www-data:www-data "${INSTALL_DIR}/static" "${INSTALL_DIR}/app/static"
+    chmod -R 755 "${INSTALL_DIR}/static" "${INSTALL_DIR}/app/static"
     
     # Configurar entorno virtual
     setup_python_venv
