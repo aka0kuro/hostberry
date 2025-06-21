@@ -3,12 +3,14 @@
 {% block title %}Iniciar Sesión{% endblock %}
 
 {% block auth_title %}
-    <div class="card-header bg-transparent border-0 text-center pt-4">
+    <div class="text-center pt-4">
         <div class="mb-3">
-            <img src="{{ url_for('static', filename='img/hostberry.png') }}" 
+            <img src="{{ url_for('static', filename='../img/hostberry.png') }}" 
                  alt="HostBerry" 
                  class="img-fluid" 
-                 style="height: 60px; width: auto;">
+                 style="height: 60px; width: auto;
+                        filter: brightness(0) invert(var(--logo-invert, 0));
+                        transition: filter 0.3s ease;">
         </div>
         <h2 class="h4 mb-0" style="color: var(--text-color);">Iniciar Sesión</h2>
     </div>
