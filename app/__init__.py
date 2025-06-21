@@ -53,11 +53,33 @@ def create_app(config_name='default'):
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
+    
+    # Configurar Babel
+    from app.utils.i18n_utils import get_locale
+    
+    # Inicializar Babel con la aplicación
     babel.init_app(app)
     
-    # Configuración de Babel
-    from app.utils.i18n_utils import get_locale
-    babel.init_app(app, locale_selector=get_locale)
+    # Asegurarse de que la configuración de Babel sea correcta
+    if 'BABEL_DEFAULT_LOCALE' not in app.config:
+        app.config['BABEL_DEFAULT_LOCALE'] = 'es'
+    if 'BABEL_SUPPORTED_LOCALES' not in app.config:
+        app.config['BABEL_SUPPORTED_LOCALES'] = ['es', 'en']
+    
+    # Registrar el selector de idioma para Babel
+    @babel.localeselector
+    def babel_get_locale():
+        try:
+            locale = get_locale()
+            app.logger.debug(f'Babel locale seleccionado: {locale}')
+            return locale
+        except Exception as e:
+            app.logger.error(f'Error al obtener el locale: {str(e)}')
+            return app.config['BABEL_DEFAULT_LOCALE']
+    
+    # Registrar función get_locale como global de Jinja2
+    app.jinja_env.globals['get_locale'] = get_locale
+    app.logger.info('Configuración de internacionalización inicializada correctamente')
     
     # Registrar blueprints
     from .routes import register_blueprints
@@ -86,13 +108,21 @@ def create_app(config_name='default'):
         flash('Por favor inicia sesión para acceder a esta página.', 'warning')
         return redirect(url_for('auth.login', next=request.url))
     
-    # Registrar función get_locale como global de Jinja
-    from app.utils.i18n_utils import get_locale
-    app.jinja_env.globals['get_locale'] = get_locale
+    # La función get_locale ya está registrada como global de Jinja2
 
     # Configurar contexto de aplicación
     with app.app_context():
         from .services import init_services
         init_services(app)
+        
+            # Verificar y registrar la configuración de Babel
+        app.logger.info(f'BABEL_DEFAULT_LOCALE: {app.config.get("BABEL_DEFAULT_LOCALE")}')
+        app.logger.info(f'BABEL_SUPPORTED_LOCALES: {app.config.get("BABEL_SUPPORTED_LOCALES")}')
+        
+        # Verificar que la función get_locale esté disponible en el contexto de Jinja2
+        if 'get_locale' not in app.jinja_env.globals:
+            app.logger.error('get_locale no está disponible en el contexto de Jinja2')
+        else:
+            app.logger.info('get_locale está correctamente registrado en el contexto de Jinja2')
     
     return app
