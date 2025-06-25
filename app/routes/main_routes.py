@@ -3,16 +3,55 @@ from app.utils.i18n_utils import get_locale, inject_get_locale, set_language, ch
 from app.utils.log_utils import get_logs
 from app.utils.security_utils import FAILED_ATTEMPTS, BLOCKED_IPS
 from flask_babel import _
+from flask_login import login_required, current_user
 import psutil
-import datetime
 import os
+import json
+import platform
+import socket
+import time
+import subprocess
+from datetime import datetime, timedelta
+import logging
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def get_cpu_temp():
+    """Obtiene la temperatura de la CPU en grados Celsius"""
+    try:
+        if os.path.exists('/sys/class/thermal/thermal_zone0/temp'):
+            with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
+                temp = int(f.read().strip()) / 1000.0
+                return round(temp, 1)
+        elif os.path.exists('/sys/class/hwmon'):
+            # Intentar encontrar el archivo de temperatura en hwmon
+            for hwmon in os.listdir('/sys/class/hwmon'):
+                hwmon_path = os.path.join('/sys/class/hwmon', hwmon)
+                if os.path.isdir(hwmon_path):
+                    for file in os.listdir(hwmon_path):
+                        if file.startswith('temp') and file.endswith('_input'):
+                            with open(os.path.join(hwmon_path, file), 'r') as f:
+                                temp = int(f.read().strip()) / 1000.0
+                                return round(temp, 1)
+        # Si no se encuentra la temperatura, usar psutil (menos preciso)
+        if hasattr(psutil, 'sensors_temperatures'):
+            temps = psutil.sensors_temperatures()
+            for name, entries in temps.items():
+                for entry in entries:
+                    if 'core' in name.lower() or 'cpu' in name.lower() or 'pch' in name.lower():
+                        return round(entry.current, 1)
+        return 0.0
+    except Exception as e:
+        logger.error(f"Error obteniendo temperatura de CPU: {e}")
+        return 0.0
 
 from app.utils.network_utils import (
     get_network_interface, 
     get_ip_address,
     get_wifi_ssid,
     is_wifi_connected,
-    get_cpu_temp,
     run_command
 )
 from app.auth import login_required
