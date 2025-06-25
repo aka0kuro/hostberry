@@ -9,7 +9,7 @@ class User(UserMixin, db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True, nullable=False)
-    email = db.Column(db.String(120), index=True, unique=True, nullable=False)
+    email = db.Column(db.String(120), index=True, unique=True, nullable=True)  # Hacer el correo opcional
     password_hash = db.Column(db.String(128))
     is_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -17,7 +17,11 @@ class User(UserMixin, db.Model):
     
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
-        if self.email is not None and self.email.lower() == "admin@example.com":
+        # Si no se proporciona un correo, usar un valor por defecto basado en el nombre de usuario
+        if not self.email and self.username:
+            self.email = f"{self.username}@localhost"
+        # Marcar como admin si el correo es admin@example.com
+        if self.email and self.email.lower() == "admin@example.com":
             self.is_admin = True
     
     def set_password(self, password):
