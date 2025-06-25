@@ -375,7 +375,7 @@ setup_systemd_service() {
     _install_log "Configurando servicio systemd"
     
     # Crear directorio de instalación si no existe
-    mkdir -p "${INSTALL_DIR}/install"
+    mkdir -p "${INSTALL_DIR}"
     
     # Crear archivo de servicio optimizado para Raspberry Pi 3
     cat > "/etc/systemd/system/hostberry.service" << EOL
@@ -388,17 +388,30 @@ User=www-data
 Group=www-data
 WorkingDirectory=${INSTALL_DIR}
 Environment="PATH=${INSTALL_DIR}/venv/bin"
+
+# Limpiar el socket antiguo si existe
+ExecStartPre=/bin/rm -f ${INSTALL_DIR}/hostberry.sock
+
 # Usar solo 1 worker en Raspberry Pi 3 para mejor rendimiento
 # Usar sync worker en lugar del predeterminado para mejor compatibilidad
 # Usar wsgi:app como punto de entrada de la aplicación
-ExecStart=${INSTALL_DIR}/venv/bin/gunicorn --workers 1 --worker-class sync --bind unix:${INSTALL_DIR}/hostberry.sock -m 007 wsgi:app
+ExecStart=${INSTALL_DIR}/venv/bin/gunicorn \
+    --workers 1 \
+    --worker-class sync \
+    --bind unix:${INSTALL_DIR}/hostberry.sock \
+    -m 007 \
+    wsgi:app
+
+# Limpiar el socket después de detener el servicio
+ExecStopPost=/bin/rm -f ${INSTALL_DIR}/hostberry.sock
+
 # Configuración de tiempo de espera más generosa para hardware limitado
 TimeoutStartSec=300
 # Asegurar que el servicio se reinicie si falla
 Restart=on-failure
 RestartSec=10s
 # Límites de recursos para evitar sobrecargar la Raspberry Pi
-MemoryLimit=256M
+MemoryMax=256M
 CPUQuota=80%
 
 [Install]
