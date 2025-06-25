@@ -448,21 +448,29 @@ setup_nginx() {
     mkdir -p "${INSTALL_DIR}/app/static/img"
     
 
+    # Crear directorios estáticos si no existen
+    _install_log "Creando directorios estáticos..."
+    mkdir -p "${INSTALL_DIR}/static/img"
+    mkdir -p "${INSTALL_DIR}/media"
+    
     # Copiar imagen del logo si existe
     if [ -f "${INSTALL_DIR}/img/hostberry.png" ]; then
+        _install_log "Copiando imagen del logo..."
+        cp "${INSTALL_DIR}/img/hostberry.png" "${INSTALL_DIR}/static/img/"
+        cp "${INSTALL_DIR}/img/hostberry.png" "${INSTALL_DIR}/app/static/img/"
     fi
     
     # Establecer permisos correctos
     _install_log "Estableciendo permisos..."
-    chown -R www-data:www-data /opt/hostberry
-    find /opt/hostberry -type d -exec chmod 755 {} \;
-    find /opt/hostberry -type f -exec chmod 644 {} \;
-    chmod +x /opt/hostberry/venv/bin/*
+    chown -R www-data:www-data "${INSTALL_DIR}"
+    find "${INSTALL_DIR}" -type d -exec chmod 755 {} \;
+    find "${INSTALL_DIR}" -type f -exec chmod 644 {} \;
+    chmod +x "${INSTALL_DIR}/venv/bin/"*
     
     # Crear configuración de Nginx
     _install_log "Creando configuración de Nginx..."
     
-    cat > /tmp/nginx_hostberry << EOL
+    cat > "${NGINX_SITE}" << EOL
 server {
     listen 80;
     server_name _;
