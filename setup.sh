@@ -450,15 +450,19 @@ setup_nginx() {
 
     # Copiar imagen del logo si existe
     if [ -f "${INSTALL_DIR}/img/hostberry.png" ]; then
-        _install_log "Copiando imagen del logo"
-        cp "${INSTALL_DIR}/img/hostberry.png" "${INSTALL_DIR}/static/img/"
-        cp "${INSTALL_DIR}/img/hostberry.png" "${INSTALL_DIR}/app/static/img/"
-        chown www-data:www-data "${INSTALL_DIR}/static/img/hostberry.png" "${INSTALL_DIR}/app/static/img/hostberry.png"
-        chmod 644 "${INSTALL_DIR}/static/img/hostberry.png" "${INSTALL_DIR}/app/static/img/hostberry.png"
     fi
     
-    # Configurar sitio de Nginx
-    cat > "${NGINX_SITE}" << EOF
+    # Establecer permisos correctos
+    _install_log "Estableciendo permisos..."
+    chown -R www-data:www-data /opt/hostberry
+    find /opt/hostberry -type d -exec chmod 755 {} \;
+    find /opt/hostberry -type f -exec chmod 644 {} \;
+    chmod +x /opt/hostberry/venv/bin/*
+    
+    # Crear configuración de Nginx
+    _install_log "Creando configuración de Nginx..."
+    
+    cat > /tmp/nginx_hostberry << EOL
 server {
     listen 80;
     server_name _;
@@ -473,7 +477,7 @@ server {
     fastcgi_read_timeout 300s;
     
     location / {
-        proxy_pass http://unix:${INSTALL_DIR}/hostberry.sock;
+        proxy_pass http://unix:/opt/hostberry/hostberry.sock;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -485,14 +489,14 @@ server {
     
     # Configuración para archivos estáticos
     location /static/ {
-        alias ${INSTALL_DIR}/static/;
+        alias /opt/hostberry/static/;
         expires 30d;
         access_log off;
         add_header Cache-Control "public, no-transform";
     }
     
     location /media/ {
-        alias ${INSTALL_DIR}/media/;
+        alias /opt/hostberry/media/;
         expires 30d;
         access_log off;
     }
@@ -504,7 +508,7 @@ server {
         log_not_found off;
     }
 }
-EOF
+EOL
     
     # Habilitar sitio
     ln -sf "${NGINX_SITE}" "${NGINX_SITE_ENABLED}"
