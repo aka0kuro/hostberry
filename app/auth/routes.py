@@ -39,7 +39,7 @@ def login():
     return render_template('security/login.html', title='Iniciar Sesión', form=form)
 
 @auth_bp.route('/logout')
-@login_required
+@flask_login_required
 def logout():
     username = current_user.username
     logout_user()
@@ -73,17 +73,15 @@ def register():
     return render_template('security/register.html', title='Registro', form=form)
 
 @auth_bp.route('/account')
-@login_required
+@flask_login_required
 def account():
     """Página de perfil del usuario"""
-    return render_template('security/account.html', title='Mi Cuenta')
+    return render_template('auth/account.html', title='Mi Cuenta')
 
-@auth_bp.route('/change_password', methods=['GET', 'POST'])
-@login_required
+@auth_bp.route('/change-password', methods=['GET', 'POST'])
+@flask_login_required
 def change_password():
     """Permite al usuario cambiar su contraseña"""
-    from .forms import ChangePasswordForm
-    
     form = ChangePasswordForm()
     if form.validate_on_submit():
         if current_user.check_password(form.old_password.data):
@@ -92,6 +90,5 @@ def change_password():
             flash('Tu contraseña ha sido actualizada.', 'success')
             return redirect(url_for('auth.account'))
         else:
-            flash('La contraseña actual no es válida.', 'danger')
-    
-    return render_template('security/change_password.html', title='Cambiar Contraseña', form=form)
+            flash('Contraseña actual incorrecta.', 'danger')
+    return render_template('auth/change_password.html', title='Cambiar Contraseña', form=form)
