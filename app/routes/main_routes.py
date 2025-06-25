@@ -156,38 +156,25 @@ def system_stats():
         
         # Obtener estadísticas de memoria
         memory = psutil.virtual_memory()
-        memory_info = {
-            'total': round(memory.total / (1024 ** 3), 2),  # GB
-            'available': round(memory.available / (1024 ** 3), 2),
-            'percent': memory.percent,
-            'used': round(memory.used / (1024 ** 3), 2),
-            'free': round(memory.free / (1024 ** 3), 2)
-        }
+        memory_percent = memory.percent
         
         # Obtener estadísticas de red
         net_io = psutil.net_io_counters()
-        network_info = {
-            'bytes_sent': net_io.bytes_sent,
-            'bytes_recv': net_io.bytes_recv,
-            'packets_sent': net_io.packets_sent,
-            'packets_recv': net_io.packets_recv
-        }
         
+        # Devolver en el formato esperado por el frontend
         return jsonify({
-            'status': 'success',
-            'data': {
-                'cpu': {
-                    'percent': cpu_percent,
-                    'temp': cpu_temp
-                },
-                'memory': memory_info,
-                'network': network_info
+            'success': True,
+            'stats': {
+                'cpu_usage': cpu_percent,
+                'cpu_temp': cpu_temp,
+                'memory_usage': memory_percent
             }
         })
         
     except Exception as e:
+        logger.error(f"Error en system_stats: {e}")
         return jsonify({
-            'status': 'error',
+            'success': False,
             'message': str(e)
         }), 500
 
