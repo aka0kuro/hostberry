@@ -57,7 +57,7 @@ def register():
         # Crear nuevo usuario
         user = User(
             username=form.username.data,
-            email=form.email.data
+            email=f"{form.username.data}@localhost"  # Usar un correo por defecto
         )
         user.set_password(form.password.data)
         

@@ -25,20 +25,14 @@ class RegistrationForm(FlaskForm):
         Length(min=3, max=64, message='El nombre de usuario debe tener entre 3 y 64 caracteres')
     ], render_kw={"placeholder": "Elige un nombre de usuario"})
     
-    email = StringField('Correo Electrónico', validators=[
-        DataRequired('El correo electrónico es obligatorio'),
-        Email('Ingresa un correo electrónico válido'),
-        Length(max=120, message='El correo electrónico no puede tener más de 120 caracteres')
-    ], render_kw={"placeholder": "tucorreo@ejemplo.com"})
-    
     password = PasswordField('Contraseña', validators=[
-        DataRequired('La contr�na es obligatoria'),
+        DataRequired('La contraseña es obligatoria'),
         Length(min=8, message='La contraseña debe tener al menos 8 caracteres')
     ], render_kw={"placeholder": "Crea una contraseña segura"})
     
     password2 = PasswordField('Repetir Contraseña', validators=[
         DataRequired('Debes confirmar tu contraseña'),
-        Length(min=8, message='La contraseña debe tener al menos 8 caracteres')
+        EqualTo('password', message='Las contraseñas no coinciden')
     ], render_kw={"placeholder": "Repite tu contraseña"})
     
     submit = SubmitField('Registrarse')
@@ -49,13 +43,6 @@ class RegistrationForm(FlaskForm):
         user = User.query.filter_by(username=username.data).first()
         if user is not None:
             raise ValidationError('Por favor usa un nombre de usuario diferente')
-    
-    def validate_email(self, email):
-        """Validar que el correo electrónico no esté en uso"""
-        from app.models.user import User
-        user = User.query.filter_by(email=email.data).first()
-        if user is not None:
-            raise ValidationError('Por favor usa un correo electrónico diferente')
 
 
 class ChangePasswordForm(FlaskForm):
