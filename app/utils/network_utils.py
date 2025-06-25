@@ -53,11 +53,20 @@ def get_network_interface() -> Optional[str]:
     return None
 
 
-def get_ip_address() -> str:
+def get_ip_address(interface: str = None) -> str:
     """
     Obtiene la dirección IP local del dispositivo.
+    
+    Args:
+        interface (str, opcional): Nombre de la interfaz de red. Si no se especifica, 
+                                 se usa la interfaz de red activa.
+    
+    Returns:
+        str: La dirección IP de la interfaz especificada o de la interfaz activa.
     """
-    interface = get_network_interface()
+    if interface is None:
+        interface = get_network_interface()
+        
     if not interface:
         logger.warning("No se pudo obtener la interfaz de red para buscar la IP.")
         return "127.0.0.1"
@@ -68,6 +77,9 @@ def get_ip_address() -> str:
             if addr.family == socket.AF_INET:
                 logger.debug(f"Dirección IP encontrada para {interface}: {addr.address}")
                 return addr.address
+        
+        logger.warning(f"No se encontró una dirección IP para la interfaz {interface}")
+        return "127.0.0.1"
     except Exception as e:
         logger.error(f"Error al obtener IP con psutil para la interfaz {interface}: {e}")
 
