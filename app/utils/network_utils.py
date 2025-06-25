@@ -97,30 +97,50 @@ def get_ip_address(interface: str = None) -> str:
         return '127.0.0.1'
 
 
-def is_wifi_connected() -> bool:
+def is_wifi_connected(interface: str = None) -> bool:
     """
     Verifica si el dispositivo está conectado a una red WiFi.
+    
+    Args:
+        interface (str, opcional): Nombre de la interfaz de red. Si no se especifica,
+                                se usa la interfaz de red activa.
+    
+    Returns:
+        bool: True si la interfaz es una interfaz WiFi y está activa, False en caso contrario.
     """
-    interface = get_network_interface()
+    if interface is None:
+        interface = get_network_interface()
     return interface is not None and interface.startswith(('wlan', 'wlp'))
 
 
-def get_wifi_ssid() -> Optional[str]:
+def get_wifi_ssid(interface: str = None) -> Optional[str]:
     """
     Obtiene el SSID de la red WiFi si está conectado.
+    
+    Args:
+        interface (str, opcional): Nombre de la interfaz de red WiFi. Si no se especifica,
+                                se usa la interfaz de red activa.
+    
+    Returns:
+        Optional[str]: El SSID de la red WiFi si está conectado, o None si no lo está.
     """
-    interface = get_network_interface()
-    if interface and is_wifi_connected():
-        try:
-            # Usamos el nombre de la interfaz para ser más específicos
-            result = subprocess.run(['iwgetid', interface, '-r'], capture_output=True, text=True, check=True)
-            ssid = result.stdout.strip()
-            if ssid:
-                logger.debug(f"SSID de WiFi encontrado: {ssid}")
-                return ssid
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            # FileNotFoundError si iwgetid no está, CalledProcessError si no está conectado
-            logger.warning(f"No se pudo obtener el SSID de WiFi para {interface}: {e}")
+    if interface is None:
+        interface = get_network_interface()
+        
+    if not interface or not is_wifi_connected():
+        return None
+        
+    try:
+        # Usamos el nombre de la interfaz para ser más específicos
+        result = subprocess.run(['iwgetid', interface, '-r'], capture_output=True, text=True, check=True)
+        ssid = result.stdout.strip()
+        if ssid:
+            logger.debug(f"SSID de WiFi encontrado: {ssid}")
+            return ssid
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        # FileNotFoundError si iwgetid no está, CalledProcessError si no está conectado
+        logger.warning(f"No se pudo obtener el SSID de WiFi para {interface}: {e}")
+    
     return None
 
 def get_cpu_temp() -> float:
