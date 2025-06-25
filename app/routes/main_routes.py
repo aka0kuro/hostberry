@@ -205,10 +205,20 @@ def system_stats():
             stats['bytes_sent'] = net_io.bytes_sent
             stats['bytes_recv'] = net_io.bytes_recv
             logger.debug(f"Tráfico de red: Enviados={net_io.bytes_sent}, Recibidos={net_io.bytes_recv}")
+
+            # Obtener información de la interfaz de red
+            stats['network_interface'] = get_network_interface()
+            stats['ip_address'] = get_ip_address()
+            stats['wifi_ssid'] = get_wifi_ssid()
+            logger.debug(f"Info de red: Interfaz={stats['network_interface']}, IP={stats['ip_address']}, SSID={stats['wifi_ssid']}")
+
         except Exception as e:
             logger.error(f"Error al obtener estadísticas de red: {e}")
             stats['bytes_sent'] = 0
             stats['bytes_recv'] = 0
+            stats['network_interface'] = 'N/A'
+            stats['ip_address'] = 'N/A'
+            stats['wifi_ssid'] = 'N/A'
         
         # Devolver en el formato esperado por el frontend
         return jsonify({
