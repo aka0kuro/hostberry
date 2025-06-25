@@ -50,15 +50,6 @@ def wifi_scan():
             'status': 'error',
             'message': str(e)
         }), 500
-    """Endpoint para escanear redes WiFi"""
-    try:
-        networks = wifi_service.scan_networks()
-        return jsonify({
-            'status': 'success',
-            'data': networks
-        })
-    except Exception as e:
-        return jsonify({
 
 @wifi_bp.route('/connect', methods=['POST'])
 @login_required
