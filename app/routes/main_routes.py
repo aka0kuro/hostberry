@@ -4,7 +4,7 @@ from app.utils.log_utils import get_logs
 from app.utils.security_utils import FAILED_ATTEMPTS, BLOCKED_IPS
 from flask_babel import _
 from flask_login import login_required, current_user
-from app.utils.network_utils import get_network_interface, get_ip_address, get_wifi_ssid, get_cpu_temp
+from app.utils.network_utils import get_network_interface, get_ip_address, get_wifi_ssid, get_cpu_temp, is_wifi_connected
 import psutil
 import os
 import json
