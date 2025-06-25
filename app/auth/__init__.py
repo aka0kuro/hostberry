@@ -77,7 +77,7 @@ def authenticate_user(username: str, password: str, remember: bool = False) -> T
     logger.warning(f"Intento de inicio de sesión fallido para el usuario: {username}")
     return False, {'error': 'Usuario o contraseña incorrectos'}
 
-def logout_user() -> None:
+def custom_logout_user() -> None:
     """Cierra la sesión del usuario actual"""
     if current_user.is_authenticated:
         logger.info(f"Usuario desconectado: {current_user.username}")
