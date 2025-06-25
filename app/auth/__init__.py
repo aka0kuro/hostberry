@@ -49,7 +49,7 @@ def admin_required(f: Callable) -> Callable:
         return f(*args, **kwargs)
     return decorated_function
 
-def login_user(username: str, password: str, remember: bool = False) -> Tuple[bool, dict]:
+def authenticate_user(username: str, password: str, remember: bool = False) -> Tuple[bool, dict]:
     """
     Intenta autenticar a un usuario.
     
