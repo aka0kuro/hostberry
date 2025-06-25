@@ -21,30 +21,46 @@ logger = logging.getLogger(__name__)
 def get_cpu_temp():
     """Obtiene la temperatura de la CPU en grados Celsius"""
     try:
+        # Método 1: Leer directamente del sistema de archivos
         if os.path.exists('/sys/class/thermal/thermal_zone0/temp'):
             with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
                 temp = int(f.read().strip()) / 1000.0
                 return round(temp, 1)
-        elif os.path.exists('/sys/class/hwmon'):
-            # Intentar encontrar el archivo de temperatura en hwmon
+                
+        # Método 2: Buscar en /sys/class/hwmon
+        if os.path.exists('/sys/class/hwmon'):
             for hwmon in os.listdir('/sys/class/hwmon'):
                 hwmon_path = os.path.join('/sys/class/hwmon', hwmon)
                 if os.path.isdir(hwmon_path):
+                    # Buscar archivo de temperatura
                     for file in os.listdir(hwmon_path):
                         if file.startswith('temp') and file.endswith('_input'):
-                            with open(os.path.join(hwmon_path, file), 'r') as f:
-                                temp = int(f.read().strip()) / 1000.0
-                                return round(temp, 1)
-        # Si no se encuentra la temperatura, usar psutil (menos preciso)
+                            try:
+                                with open(os.path.join(hwmon_path, file), 'r') as f:
+                                    temp = int(f.read().strip()) / 1000.0
+                                    return round(temp, 1)
+                            except (ValueError, IOError) as e:
+                                logger.warning(f"No se pudo leer el archivo de temperatura {file}: {e}")
+                                continue
+        
+        # Método 3: Usar psutil si está disponible
         if hasattr(psutil, 'sensors_temperatures'):
-            temps = psutil.sensors_temperatures()
-            for name, entries in temps.items():
-                for entry in entries:
-                    if 'core' in name.lower() or 'cpu' in name.lower() or 'pch' in name.lower():
-                        return round(entry.current, 1)
+            try:
+                temps = psutil.sensors_temperatures()
+                for name, entries in temps.items():
+                    for entry in entries:
+                        if any(x in name.lower() for x in ['core', 'cpu', 'pch', 'k10temp']):
+                            if hasattr(entry, 'current') and entry.current > 0:
+                                return round(entry.current, 1)
+            except Exception as e:
+                logger.warning(f"Error al usar psutil para obtener temperatura: {e}")
+        
+        # Si no se pudo obtener la temperatura, devolver un valor por defecto
+        logger.warning("No se pudo obtener la temperatura de la CPU, usando valor por defecto")
         return 0.0
+        
     except Exception as e:
-        logger.error(f"Error obteniendo temperatura de CPU: {e}")
+        logger.error(f"Error inesperado en get_cpu_temp: {e}")
         return 0.0
 
 from app.utils.network_utils import (
@@ -149,33 +165,64 @@ def api_status():
 @login_required
 def system_stats():
     """Obtiene estadísticas del sistema en tiempo real"""
+    stats = {}
     try:
         # Obtener estadísticas de CPU
-        cpu_percent = psutil.cpu_percent(interval=1)
-        cpu_temp = get_cpu_temp()
+        try:
+            cpu_percent = psutil.cpu_percent(interval=1)
+            stats['cpu_usage'] = round(cpu_percent, 1)
+            logger.debug(f"Uso de CPU: {cpu_percent}%")
+        except Exception as e:
+            logger.error(f"Error al obtener uso de CPU: {e}")
+            stats['cpu_usage'] = 0.0
+        
+        # Obtener temperatura de CPU
+        try:
+            cpu_temp = get_cpu_temp()
+            stats['cpu_temp'] = cpu_temp
+            logger.debug(f"Temperatura de CPU: {cpu_temp}°C")
+        except Exception as e:
+            logger.error(f"Error al obtener temperatura de CPU: {e}")
+            stats['cpu_temp'] = 0.0
         
         # Obtener estadísticas de memoria
-        memory = psutil.virtual_memory()
-        memory_percent = memory.percent
+        try:
+            memory = psutil.virtual_memory()
+            memory_percent = memory.percent
+            stats['memory_usage'] = round(memory_percent, 1)
+            stats['memory_total'] = round(memory.total / (1024**3), 2)  # en GB
+            stats['memory_used'] = round(memory.used / (1024**3), 2)     # en GB
+            stats['memory_available'] = round(memory.available / (1024**3), 2)  # en GB
+            logger.debug(f"Uso de memoria: {memory_percent}%")
+        except Exception as e:
+            logger.error(f"Error al obtener estadísticas de memoria: {e}")
+            stats['memory_usage'] = 0.0
         
         # Obtener estadísticas de red
-        net_io = psutil.net_io_counters()
+        try:
+            net_io = psutil.net_io_counters()
+            stats['bytes_sent'] = net_io.bytes_sent
+            stats['bytes_recv'] = net_io.bytes_recv
+            logger.debug(f"Tráfico de red: Enviados={net_io.bytes_sent}, Recibidos={net_io.bytes_recv}")
+        except Exception as e:
+            logger.error(f"Error al obtener estadísticas de red: {e}")
+            stats['bytes_sent'] = 0
+            stats['bytes_recv'] = 0
         
         # Devolver en el formato esperado por el frontend
         return jsonify({
             'success': True,
-            'stats': {
-                'cpu_usage': cpu_percent,
-                'cpu_temp': cpu_temp,
-                'memory_usage': memory_percent
-            }
+            'stats': stats,
+            'timestamp': datetime.utcnow().isoformat()
         })
         
     except Exception as e:
-        logger.error(f"Error en system_stats: {e}")
+        logger.error(f"Error inesperado en system_stats: {e}", exc_info=True)
         return jsonify({
             'success': False,
-            'message': str(e)
+            'message': 'Error al obtener estadísticas del sistema',
+            'error': str(e),
+            'stats': stats  # Devolver las estadísticas que se pudieron obtener
         }), 500
 
 # Registrar las rutas en el Blueprint
