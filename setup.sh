@@ -837,7 +837,7 @@ show_access_info() {
     echo ""
     echo -e "Credenciales por defecto:"
     echo -e "  - Usuario: ${COL_LIGHT_YELLOW}admin${COL_NC}"
-    echo -e "  - Contraseña: ${COL_LIGHT_YELLOW}admin${COL_NC}"
+    echo -e "  - Contraseña: ${COL_LIGHT_YELLOW}admin$123{COL_NC}"
     echo ""
     echo -e "Recuerde cambiar la contraseña después del primer inicio de sesión."
     _install_divider
