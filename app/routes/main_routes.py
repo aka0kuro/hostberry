@@ -13,6 +13,7 @@ import time
 import subprocess
 from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -105,8 +106,8 @@ def index():
         wifi_connected = is_wifi_connected(interface)
         
         # Obtener información del sistema
-        boot_time = datetime.datetime.fromtimestamp(psutil.boot_time())
-        uptime = datetime.datetime.now() - boot_time
+        boot_time = datetime.fromtimestamp(psutil.boot_time())
+        uptime = datetime.now() - boot_time
         
         # Formatear tiempo de actividad
         days = uptime.days
