@@ -1,6 +1,6 @@
 from functools import wraps
 from flask import request, jsonify, session, current_app, flash, redirect, url_for
-from flask_login import current_user, login_user, logout_user, login_required as flask_login_required
+from flask_login import current_user, login_user, logout_user as flask_logout_user, login_required as flask_login_required
 from werkzeug.security import check_password_hash
 import logging
 from typing import Callable, Any, Optional, Union, Tuple
@@ -81,7 +81,7 @@ def custom_logout_user() -> None:
     """Cierra la sesión del usuario actual"""
     if current_user.is_authenticated:
         logger.info(f"Usuario desconectado: {current_user.username}")
-        logout_user()
+        flask_logout_user()
 
 def get_current_user() -> Optional[dict]:
     """Obtiene el usuario actualmente autenticado"""
