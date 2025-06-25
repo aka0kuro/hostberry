@@ -485,7 +485,7 @@ server {
     fastcgi_read_timeout 300s;
     
     location / {
-        proxy_pass http://unix:/opt/hostberry/hostberry.sock;
+        proxy_pass http://unix:${INSTALL_DIR}/hostberry.sock;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -497,14 +497,14 @@ server {
     
     # Configuración para archivos estáticos
     location /static/ {
-        alias /opt/hostberry/static/;
+        alias ${INSTALL_DIR}/static/;
         expires 30d;
         access_log off;
         add_header Cache-Control "public, no-transform";
     }
     
     location /media/ {
-        alias /opt/hostberry/media/;
+        alias ${INSTALL_DIR}/media/;
         expires 30d;
         access_log off;
     }
