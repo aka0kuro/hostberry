@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
-from flask_login import login_user, logout_user, login_required, current_user, login_fresh
+from flask_login import login_user, logout_user, login_required as flask_login_required, current_user, login_fresh
 from werkzeug.urls import url_parse
 from ..extensions import db
 from ..models.user import User
 from .forms import LoginForm, RegistrationForm
-from . import login_required, admin_required
+from .decorators import login_required, admin_required
 
 # Crear Blueprint
 auth_bp = Blueprint('auth', __name__)
