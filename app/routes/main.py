@@ -24,5 +24,8 @@ def status():
 @main_bp.route('/set_language/<lang>')
 def set_language(lang):
     """Establece el idioma de la sesión."""
-    set_language_util(lang)
-    return redirect(request.referrer or url_for('main.index'))
+    response = set_language_util(lang)
+    # Asegurarse de que la respuesta tenga las cabeceras de caché correctas
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    return response

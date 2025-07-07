@@ -40,13 +40,30 @@ def inject_get_locale():
     return dict(get_locale=get_locale)
 
 def set_language(lang):
-    from flask import session, redirect, request, url_for
-    if lang in ['en', 'es']:
-        session['language'] = lang
-        response = redirect(request.args.get('next') or request.referrer or url_for('index'))
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        return response
+    from flask import session, redirect, request, url_for, current_app
+    
+    # Verificar que el idioma sea soportado
+    if lang not in current_app.config.get('BABEL_SUPPORTED_LOCALES', ['es']):
+        lang = current_app.config.get('BABEL_DEFAULT_LOCALE', 'es')
+    
+    # Establecer el idioma en la sesión
+    session['language'] = lang
+    
+    # Obtener la URL de redirección
+    redirect_url = request.args.get('next') or request.referrer or url_for('main.index')
+    
+    # Crear la respuesta de redirección
+    response = redirect(redirect_url)
+    
+    # Configurar cabeceras para prevenir caché
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    
+    # Configurar cookie de idioma
+    response.set_cookie('language', lang, max_age=60*60*24*30)  # 30 días
+    
+    return response
 
 def check_lang():
     from flask import session, current_app as app
