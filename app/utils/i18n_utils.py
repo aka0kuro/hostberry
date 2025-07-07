@@ -4,37 +4,53 @@ import logging
 
 def get_locale():
     """
-    Determina el idioma a utilizar basado en la sesión del usuario o en las preferencias del navegador.
+    Determina el idioma a utilizar basado en este orden de prioridad:
+    1. Idioma guardado en la sesión del usuario
+    2. Cookie de idioma
+    3. Preferencias del navegador
+    4. Idioma por defecto de la configuración
     
     Returns:
         str: Código de idioma (ej: 'es', 'en')
     """
+    from flask import request, session, current_app
+    
     try:
+        app = current_app._get_current_object()
+        supported_langs = app.config.get('BABEL_SUPPORTED_LOCALES', ['es'])
+        default_lang = app.config.get('BABEL_DEFAULT_LOCALE', 'es')
+        
         # 1. Verificar si hay un idioma guardado en la sesión
         if 'language' in session:
             lang = session['language']
-            if lang in app.config.get('BABEL_SUPPORTED_LOCALES', ['es']):
+            if lang in supported_langs:
                 app.logger.debug(f'Idioma obtenido de la sesión: {lang}')
                 return lang
-            app.logger.warning(f'Idioma de sesión no soportado: {lang}')
+            app.logger.warning(f'Idioma de sesión no soportado: {lang}. Idiomas soportados: {supported_langs}')
         
-        # 2. Intentar detectar el idioma del navegador
-        supported_langs = app.config.get('BABEL_SUPPORTED_LOCALES', ['es'])
+        # 2. Verificar cookie de idioma
+        if 'language' in request.cookies:
+            lang = request.cookies.get('language')
+            if lang in supported_langs:
+                app.logger.debug(f'Idioma obtenido de la cookie: {lang}')
+                session['language'] = lang  # Actualizar sesión con el idioma de la cookie
+                return lang
+        
+        # 3. Intentar detectar el idioma del navegador
         browser_lang = request.accept_languages.best_match(supported_langs)
-        
         if browser_lang:
             app.logger.debug(f'Idioma detectado del navegador: {browser_lang}')
+            session['language'] = browser_lang  # Guardar en sesión para futuras peticiones
             return browser_lang
         
-        # 3. Usar el idioma por defecto de la configuración
-        default_lang = app.config.get('BABEL_DEFAULT_LOCALE', 'es')
+        # 4. Usar el idioma por defecto de la configuración
         app.logger.debug(f'Usando idioma por defecto: {default_lang}')
+        session['language'] = default_lang  # Guardar en sesión
         return default_lang
         
     except Exception as e:
-        error_msg = f'Error al determinar el idioma: {str(e)}'
-        app.logger.error(error_msg, exc_info=True)
-        return app.config.get('BABEL_DEFAULT_LOCALE', 'es')
+        app.logger.error(f'Error al determinar el idioma: {str(e)}', exc_info=True)
+        return default_lang if 'default_lang' in locals() else 'es'
 
 def inject_get_locale():
     return dict(get_locale=get_locale)
