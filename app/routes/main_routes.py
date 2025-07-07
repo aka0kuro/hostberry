@@ -4,7 +4,14 @@ from app.utils.log_utils import get_logs
 from app.utils.security_utils import FAILED_ATTEMPTS, BLOCKED_IPS
 from flask_babel import _
 from flask_login import login_required, current_user
-from app.utils.network_utils import get_network_interface, get_ip_address, get_wifi_ssid, get_cpu_temp, is_wifi_connected
+from app.utils.network_utils import (
+    get_network_interface, 
+    get_ip_address,
+    get_wifi_ssid,
+    is_wifi_connected,
+    run_command,
+    get_cpu_temp
+)
 import psutil
 import os
 import json
@@ -14,64 +21,11 @@ import time
 import subprocess
 from datetime import datetime, timedelta
 import logging
-from datetime import datetime, timedelta
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def get_cpu_temp():
-    """Obtiene la temperatura de la CPU en grados Celsius"""
-    try:
-        # Método 1: Leer directamente del sistema de archivos
-        if os.path.exists('/sys/class/thermal/thermal_zone0/temp'):
-            with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
-                temp = int(f.read().strip()) / 1000.0
-                return round(temp, 1)
-                
-        # Método 2: Buscar en /sys/class/hwmon
-        if os.path.exists('/sys/class/hwmon'):
-            for hwmon in os.listdir('/sys/class/hwmon'):
-                hwmon_path = os.path.join('/sys/class/hwmon', hwmon)
-                if os.path.isdir(hwmon_path):
-                    # Buscar archivo de temperatura
-                    for file in os.listdir(hwmon_path):
-                        if file.startswith('temp') and file.endswith('_input'):
-                            try:
-                                with open(os.path.join(hwmon_path, file), 'r') as f:
-                                    temp = int(f.read().strip()) / 1000.0
-                                    return round(temp, 1)
-                            except (ValueError, IOError) as e:
-                                logger.warning(f"No se pudo leer el archivo de temperatura {file}: {e}")
-                                continue
-        
-        # Método 3: Usar psutil si está disponible
-        if hasattr(psutil, 'sensors_temperatures'):
-            try:
-                temps = psutil.sensors_temperatures()
-                for name, entries in temps.items():
-                    for entry in entries:
-                        if any(x in name.lower() for x in ['core', 'cpu', 'pch', 'k10temp']):
-                            if hasattr(entry, 'current') and entry.current > 0:
-                                return round(entry.current, 1)
-            except Exception as e:
-                logger.warning(f"Error al usar psutil para obtener temperatura: {e}")
-        
-        # Si no se pudo obtener la temperatura, devolver un valor por defecto
-        logger.warning("No se pudo obtener la temperatura de la CPU, usando valor por defecto")
-        return 0.0
-        
-    except Exception as e:
-        logger.error(f"Error inesperado en get_cpu_temp: {e}")
-        return 0.0
-
-from app.utils.network_utils import (
-    get_network_interface, 
-    get_ip_address,
-    get_wifi_ssid,
-    is_wifi_connected,
-    run_command
-)
 from app.auth import login_required
 
 # Crear Blueprint

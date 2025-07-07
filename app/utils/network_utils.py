@@ -13,8 +13,15 @@ def get_network_interface() -> Optional[str]:
     Prioritiza interfaces WiFi, luego ethernet.
     """
     try:
+        # Primero verificar si psutil.net_if_stats() devuelve un diccionario
         stats = psutil.net_if_stats()
-        active_interfaces = {iface for iface, stat in stats.items() if stat.isup}
+        
+        # Si no es un diccionario, saltar a la implementación alternativa
+        if not isinstance(stats, dict):
+            logger.warning(f"psutil.net_if_stats() devolvió {type(stats)} en lugar de un diccionario. Usando método alternativo.")
+            raise ValueError("Formato de estadísticas de red no soportado")
+            
+        active_interfaces = {iface for iface, stat in stats.items() if hasattr(stat, 'isup') and stat.isup}
         
         # Prioridad 1: WiFi (wlan, wlp)
         for iface in active_interfaces:
