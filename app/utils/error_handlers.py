@@ -114,9 +114,166 @@ def register_error_handlers(app):
         if request.path.startswith('/api/'):
             return jsonify({
                 'status': 'error',
-            'message': 'Método no permitido',
-            'error': 'El método HTTP utilizado no está permitido para este recurso'
-        }), 405
+                'code': 405,
+                'message': 'Método no permitido',
+                'error': 'El método HTTP utilizado no está permitido para este recurso',
+                'path': request.path
+            }), 405
+            
+        return render_template(
+            'errors/405.html',
+            error=error,
+            title='Método no permitido'
+        ), 405
+    
+    @app.errorhandler(429)
+    def too_many_requests_error(error: HTTPException) -> Tuple[Dict[str, Any], int]:
+        """Maneja errores 429 - Demasiadas solicitudes."""
+        logger.warning('Too many requests: %s', request.path)
+        
+        retry_after = error.retry_after if hasattr(error, 'retry_after') else 60
+        
+        if request.path.startswith('/api/'):
+            return jsonify({
+                'status': 'error',
+                'code': 429,
+                'message': 'Demasiadas solicitudes',
+                'error': 'Has superado el límite de solicitudes permitidas',
+                'retry_after': retry_after,
+                'path': request.path
+            }), 429
+            
+        return render_template(
+            'errors/429.html',
+            error=error,
+            retry_after=retry_after,
+            title='Demasiadas solicitudes'
+        ), 429
+    
+    @app.errorhandler(500)
+    def internal_server_error(error: HTTPException) -> Tuple[Dict[str, Any], int]:
+        """Maneja errores 500 - Error interno del servidor."""
+        error_id = error.error_id if hasattr(error, 'error_id') else None
+        
+        if not error_id:
+            error_id = str(uuid.uuid4())
+            logger.error('Error ID: %s', error_id)
+        
+        logger.error(
+            'Internal server error: %s\nPath: %s\nMethod: %s\nTraceback: %s',
+            str(error),
+            request.path,
+            request.method,
+            traceback.format_exc(),
+            extra={'error_id': error_id}
+        )
+        
+        if request.path.startswith('/api/'):
+            return jsonify({
+                'status': 'error',
+                'code': 500,
+                'message': 'Error interno del servidor',
+                'error': 'Ha ocurrido un error inesperado',
+                'error_id': error_id,
+                'path': request.path
+            }), 500
+            
+        return render_template(
+            'errors/500.html',
+            error_id=error_id,
+            title='Error interno del servidor'
+        ), 500
+    
+    # Manejador de excepciones no controladas
+    @app.errorhandler(Exception)
+    def handle_unexpected_error(error: Exception) -> Tuple[Dict[str, Any], int]:
+        """Maneja excepciones no controladas."""
+        error_id = str(uuid.uuid4())
+        
+        logger.critical(
+            'Unhandled exception: %s\nPath: %s\nMethod: %s\nTraceback: %s',
+            str(error),
+            request.path,
+            request.method,
+            traceback.format_exc(),
+            extra={
+                'error_id': error_id,
+                'stack_trace': traceback.format_exc()
+            }
+        )
+        
+        if request.path.startswith('/api/'):
+            return jsonify({
+                'status': 'error',
+                'code': 500,
+                'message': 'Error inesperado',
+                'error': 'Ha ocurrido un error inesperado',
+                'error_id': error_id,
+                'path': request.path
+            }), 500
+            
+        return render_template(
+            'errors/500.html',
+            error_id=error_id,
+            title='Error inesperado'
+        ), 500
+
+def create_error_response(
+    message: str,
+    status_code: int = 400,
+    error: Optional[str] = None,
+    **kwargs: Any
+) -> Tuple[Dict[str, Any], int]:
+    """Crea una respuesta de error estandarizada.
+    
+    Args:
+        message: Mensaje descriptivo del error
+        status_code: Código de estado HTTP
+        error: Tipo de error (opcional)
+        **kwargs: Datos adicionales para incluir en la respuesta
+        
+    Returns:
+        Tupla con la respuesta JSON y el código de estado
+    """
+    response = {
+        'status': 'error',
+        'code': status_code,
+        'message': message,
+        **kwargs
+    }
+    
+    if error:
+        response['error'] = error
+    
+    return response, status_code
+
+class APIError(Exception):
+    """Excepción base para errores de la API."""
+    
+    def __init__(
+        self,
+        message: str,
+        status_code: int = 400,
+        payload: Optional[Dict[str, Any]] = None,
+        error_id: Optional[str] = None
+    ) -> None:
+        super().__init__()
+        self.message = message
+        self.status_code = status_code
+        self.payload = payload or {}
+        self.error_id = error_id or str(uuid.uuid4())
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convierte el error a un diccionario."""
+        rv = dict(self.payload or {})
+        rv['status'] = 'error'
+        rv['code'] = self.status_code
+        rv['message'] = self.message
+        rv['error_id'] = self.error_id
+        return rv
+    
+    def __str__(self) -> str:
+        return f"{self.status_code}: {self.message}"
     
     @app.errorhandler(409)
     def conflict_error(error):
