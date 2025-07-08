@@ -1,53 +1,169 @@
+"""
+Módulo principal de la aplicación HostBerry.
+
+Este módulo contiene la fábrica de la aplicación Flask y la configuración principal.
+"""
 import os
+import sys
 import logging
-from logging.handlers import RotatingFileHandler
-from datetime import datetime, timedelta
-from flask import Flask, session, redirect, url_for, flash, request, jsonify
+import uuid
+from pathlib import Path
+from typing import Optional, Dict, Any
+
+from flask import Flask, request, current_app
+from werkzeug.middleware.proxy_fix import ProxyFix
 from dotenv import load_dotenv
 
-# Importar extensiones
-from .extensions import db, login_manager, csrf, babel
-
-# Cargar variables de entorno
+# Cargar variables de entorno desde el archivo .env
 load_dotenv()
 
-def create_app(config_name='default'):
-    """
-    Factory function para crear la aplicación Flask con configuración mejorada
+# Importar extensiones después de cargar las variables de entorno
+from .extensions import (
+    db,
+    login_manager,
+    csrf,
+    babel,
+    migrate,
+    limiter,
+    cache,
+    cors
+)
+
+# Importar utilidades
+from .utils.logging_utils import configure_logging
+from .utils.error_handlers import register_error_handlers
+from .middleware.security_headers import SecurityHeadersMiddleware
+
+def create_app(config_name: Optional[str] = None) -> Flask:
+    """Fábrica de la aplicación Flask.
+    
+    Args:
+        config_name: Nombre de la configuración a cargar (development, production, testing).
+                    Si es None, se usará FLASK_ENV o 'development'.
+    
+    Returns:
+        Instancia de la aplicación Flask configurada.
     """
     # Crear instancia de la aplicación
     app = Flask(__name__)
     
+    # Configuración inicial para permitir el acceso a la configuración en las extensiones
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+    
     # Cargar configuración
-    from app.config import config, current_config
+    from app.config import get_config
     
-    # Usar la configuración solicitada o la predeterminada
-    config_obj = config.get(config_name, config['default'])
+    # Obtener la configuración adecuada para el entorno
+    config_obj = get_config(config_name)
     
-    # Cargar configuración en la aplicación
+    # Aplicar configuración
     app.config.from_object(config_obj)
     
-    # Inicializar la configuración
-    if hasattr(config_obj, 'init_app'):
-        config_obj.init_app(app)
+    # Asegurar que los directorios necesarios existan
+    ensure_directories(app)
     
     # Configurar logging
-    if not app.debug and not app.testing:
-        logs_dir = os.path.join(app.root_path, '..', 'logs')
-        if not os.path.exists(logs_dir):
-            os.makedirs(logs_dir)
-            
-        file_handler = RotatingFileHandler(
-            os.path.join(logs_dir, 'hostberry.log'),
-            maxBytes=10240,
-            backupCount=10
+    configure_logging(app)
+    
+    # Inicializar extensiones
+    initialize_extensions(app)
+    
+    # Registrar blueprints
+    register_blueprints(app)
+    
+    # Registrar manejadores de errores
+    register_error_handlers(app)
+    
+    # Configurar middlewares
+    SecurityHeadersMiddleware(app)
+    
+    # Registrar comandos CLI
+    register_commands(app)
+    
+    app.logger.info('Aplicación inicializada en modo: %s', app.config['ENV'])
+    return app
+
+def ensure_directories(app: Flask) -> None:
+    """Asegura que los directorios necesarios existan."""
+    # Directorio para bases de datos
+    db_dir = os.path.join(app.root_path, '..', 'data')
+    os.makedirs(db_dir, exist_ok=True)
+    
+    # Directorio para logs
+    logs_dir = os.path.join(app.root_path, '..', 'logs')
+    os.makedirs(logs_dir, exist_ok=True)
+    
+    # Directorio para subidas de archivos
+    uploads_dir = os.path.join(app.root_path, '..', 'uploads')
+    os.makedirs(uploads_dir, exist_ok=True)
+
+def initialize_extensions(app: Flask) -> None:
+    """Inicializa las extensiones de Flask."""
+    # Inicializar extensiones
+    db.init_app(app)
+    login_manager.init_app(app)
+    csrf.init_app(app)
+    babel.init_app(app)
+    migrate.init_app(app, db)
+    limiter.init_app(app)
+    cache.init_app(app)
+    cors.init_app(app, resources={r"/api/*": {"origins": "*"}})
+    
+    # Configuración específica de extensiones
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message_category = 'info'
+    login_manager.session_protection = 'strong'
+    
+    # Configuración de CORS
+    if app.config.get('CORS_ENABLED', False):
+        cors = CORS(
+            app,
+            resources={
+                r"/api/*": {
+                    "origins": app.config.get('CORS_ORIGINS', '*'),
+                    "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                    "allow_headers": ["Content-Type", "Authorization"],
+                    "supports_credentials": True
+                }
+            },
+            supports_credentials=True
         )
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
-        file_handler.setLevel(logging.INFO)
-        app.logger.addHandler(file_handler)
-        app.logger.setLevel(logging.INFO)
-        app.logger.info('HostBerry iniciando...')
+
+def register_blueprints(app: Flask) -> None:
+    """Registra los blueprints de la aplicación."""
+    from app.routes import register_blueprints as register_app_blueprints
+    register_app_blueprints(app)
+
+def register_commands(app: Flask) -> None:
+    """Registra comandos personalizados de Flask."""
+    @app.cli.command('init-db')
+    def init_db():
+        """Inicializa la base de datos."""
+        with app.app_context():
+            db.create_all()
+            app.logger.info('Base de datos inicializada')
+    
+    @app.cli.command('create-admin')
+    def create_admin():
+        """Crea un usuario administrador."""
+        from app.models.user import User
+        from werkzeug.security import generate_password_hash
+        
+        username = input('Nombre de usuario: ')
+        email = input('Correo electrónico: ')
+        password = input('Contraseña: ')
+        
+        admin = User(
+            username=username,
+            email=email,
+            password=generate_password_hash(password),
+            is_admin=True,
+            is_active=True
+        )
+        
+        db.session.add(admin)
+        db.session.commit()
+        app.logger.info(f'Usuario administrador {username} creado exitosamente')
     
     # Inicializar extensiones
     db.init_app(app)
