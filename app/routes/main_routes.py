@@ -99,7 +99,48 @@ def index():
             }
         }
         
-        return render_template('index.html', system_info=system_info)
+        # Valores por defecto para las características
+        adblock_enabled = False
+        vpn_enabled = False
+        firewall_enabled = False
+        
+        # Obtener estado de los servicios (implementar estas funciones según sea necesario)
+        try:
+            # Ejemplo: verificar si el servicio de adblock está activo
+            # adblock_enabled = check_adblock_status()
+            pass
+        except Exception as e:
+            print(f"Error al verificar estado de adblock: {e}")
+            
+        try:
+            # Ejemplo: verificar si el servicio de VPN está activo
+            # vpn_enabled = check_vpn_status()
+            pass
+        except Exception as e:
+            print(f"Error al verificar estado de VPN: {e}")
+            
+        try:
+            # Ejemplo: verificar si el firewall está activo
+            # firewall_enabled = check_firewall_status()
+            pass
+        except Exception as e:
+            print(f"Error al verificar estado del firewall: {e}")
+        
+        # Obtener logs del sistema
+        logs = get_logs() if hasattr(get_logs, '__call__') else []
+        
+        return render_template(
+            'index.html',
+            system_info=system_info,
+            adblock_enabled=adblock_enabled,
+            vpn_enabled=vpn_enabled,
+            firewall_enabled=firewall_enabled,
+            network_interface=interface,
+            local_ip=ip_address,
+            wifi_ssid=ssid if wifi_connected else None,
+            hostapd_status='Active' if wifi_connected else 'Inactive',
+            logs=logs
+        )
         
     except Exception as e:
         return jsonify({
