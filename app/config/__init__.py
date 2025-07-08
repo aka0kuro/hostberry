@@ -1,13 +1,47 @@
+"""
+Módulo de configuración de la aplicación.
+
+Este módulo maneja la configuración de la aplicación en diferentes entornos
+y proporciona utilidades para cargar y validar configuraciones.
+"""
 import os
 import json
+import secrets
+import warnings
 from datetime import timedelta
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Type, TypeVar, Union
+
+# Tipo genérico para las clases de configuración
+T = TypeVar('T', bound='Config')
+
+# Constantes para entornos
+ENV_DEVELOPMENT = 'development'
+ENV_PRODUCTION = 'production'
+ENV_TESTING = 'testing'
+
+# Validar variables de entorno requeridas
+REQUIRED_ENV_VARS = {
+    ENV_DEVELOPMENT: [],
+    ENV_PRODUCTION: [
+        'FLASK_SECRET_KEY',
+        'SECURITY_PASSWORD_SALT',
+        'DATABASE_URL'
+    ],
+    ENV_TESTING: []
+}
 
 class Config:
-    """Clase base de configuración"""
+    """Clase base de configuración.
+    
+    Esta clase define la configuración predeterminada para la aplicación.
+    Las configuraciones específicas del entorno deben heredar de esta clase.
+    """
+    
     # Configuración general
-    SECRET_KEY = os.getenv('FLASK_SECRET_KEY', 'dev-key-123')
+    DEBUG = False
+    TESTING = False
+    SECRET_KEY = os.getenv('FLASK_SECRET_KEY') or secrets.token_hex(32)
     
     # Configuración de la aplicación
     APP_NAME = "HostBerry"
@@ -68,12 +102,69 @@ class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
 
-# Configuración disponible
-config = {
-    'development': DevelopmentConfig(),
-    'production': ProductionConfig(),
-    'default': DevelopmentConfig()
-}
+def get_config(env: Optional[str] = None) -> Type[Config]:
+    """Obtiene la configuración para el entorno especificado.
+    
+    Args:
+        env: Entorno para el que se desea la configuración.
+             Si es None, se usará FLASK_ENV o 'development'.
+             
+    Returns:
+        Clase de configuración para el entorno especificado.
+        
+    Raises:
+        ValueError: Si el entorno especificado no es válido.
+    """
+    if env is None:
+        env = os.getenv('FLASK_ENV', ENV_DEVELOPMENT).lower()
+    
+    config_map = {
+        ENV_DEVELOPMENT: DevelopmentConfig,
+        ENV_PRODUCTION: ProductionConfig,
+        ENV_TESTING: DevelopmentConfig  # Usamos DevelopmentConfig para testing también
+    }
+    
+    config_class = config_map.get(env)
+    if config_class is None:
+        raise ValueError(f"Entorno no válido: {env}")
+    
+    # Validar variables de entorno requeridas
+    validate_environment(env)
+    
+    return config_class
+
+def validate_environment(env: str) -> None:
+    """Valida que todas las variables de entorno requeridas estén configuradas.
+    
+    Args:
+        env: Entorno a validar.
+        
+    Raises:
+        RuntimeError: Si faltan variables de entorno requeridas.
+    """
+    missing = []
+    for var in REQUIRED_ENV_VARS.get(env, []):
+        if not os.getenv(var):
+            missing.append(var)
+    
+    if missing:
+        raise RuntimeError(
+            f"Faltan variables de entorno requeridas para el entorno '{env}': "
+            f"{', '.join(missing)}"
+        )
+
+# Configuración actual basada en el entorno
+current_env = os.getenv('FLASK_ENV', ENV_DEVELOPMENT).lower()
+ConfigClass = get_config(current_env)
+config = ConfigClass()
+
+# Advertencia si se usa la clave secreta por defecto
+if (ConfigClass.SECRET_KEY == 'dev-key-123' and 
+    current_env == ENV_PRODUCTION):
+    warnings.warn(
+        '¡ADVERTENCIA: Se está utilizando una clave secreta por defecto en producción!',
+        RuntimeWarning
+    )
 
 # Configuración actual basada en entorno
 current_env = os.getenv('FLASK_ENV', 'development')
