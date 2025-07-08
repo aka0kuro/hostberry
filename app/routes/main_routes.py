@@ -127,7 +127,11 @@ def index():
             print(f"Error al verificar estado del firewall: {e}")
         
         # Obtener logs del sistema
-        logs = get_logs() if hasattr(get_logs, '__call__') else []
+        try:
+            logs = get_logs()
+        except Exception as e:
+            logger.error(f"Error al obtener logs: {e}")
+            logs = []
         
         return render_template(
             'index.html',
