@@ -2,12 +2,12 @@ def register_blueprints(app):
     """
     Registra todos los blueprints de la aplicación
     """
-    # Blueprint principal (si existe)
+    # Blueprint principal
     try:
-        from .main_routes import main_bp
-        app.register_blueprint(main_bp)
-    except ImportError:
-        pass
+        from .main_routes import main_routes_bp
+        app.register_blueprint(main_routes_bp)
+    except ImportError as e:
+        app.logger.error(f'Error al registrar el blueprint main_routes: {e}')
 
     # Blueprint de autenticación
     try:
