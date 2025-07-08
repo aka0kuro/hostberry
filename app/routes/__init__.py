@@ -1,52 +1,32 @@
 def register_blueprints(app):
     """
-    Registra todos los blueprints de la aplicación
+    Registra todos los blueprints de la aplicación con manejo de errores consistente.
     """
-    # Blueprint principal
-    try:
-        from .main_routes import main_bp
-        app.register_blueprint(main_bp)
-    except ImportError as e:
-        app.logger.error(f'Error al registrar el blueprint principal: {e}')
-
-    # Blueprint de autenticación
-    try:
-        from app.auth.routes import auth_bp
-        app.register_blueprint(auth_bp, url_prefix='/auth')
-    except ImportError:
-        pass
-
-    # WiFi
-    try:
-        from app.routes.wifi import wifi_bp
-        app.register_blueprint(wifi_bp, url_prefix='/wifi')
-    except ImportError as e:
-        app.logger.error(f'Error al registrar el blueprint WiFi: {e}')
-
-    # Security
-    try:
-        from app.routes.security_routes import security_bp
-        app.register_blueprint(security_bp, url_prefix='/security')
-    except ImportError:
-        pass
-
-    # VPN
-    try:
-        from app.routes.vpn_routes import vpn_bp
-        app.register_blueprint(vpn_bp, url_prefix='/vpn')
-    except ImportError:
-        pass
-
-    # Adblock
-    try:
-        from app.routes.adblock_routes import adblock_bp
-        app.register_blueprint(adblock_bp, url_prefix='/adblock')
-    except ImportError:
-        pass
-
-    # WireGuard
-    try:
-        from app.routes.wireguard_routes import wireguard_bp
-        app.register_blueprint(wireguard_bp, url_prefix='/wireguard')
-    except ImportError:
-        pass
+    blueprints = [
+        # (módulo, nombre_blueprint, prefijo_url)
+        ('.main_routes', 'main_bp', ''),
+        ('app.auth.routes', 'auth_bp', '/auth'),
+        ('app.routes.wifi', 'wifi_bp', '/wifi'),
+        ('app.routes.security_routes', 'security_bp', '/security'),
+        ('app.routes.vpn_routes', 'vpn_bp', '/vpn'),
+        ('app.routes.adblock_routes', 'adblock_bp', '/adblock'),
+        ('app.routes.wireguard_routes', 'wireguard_bp', '/wireguard')
+    ]
+    
+    for module_path, bp_name, url_prefix in blueprints:
+        try:
+            # Importar dinámicamente el módulo
+            module = __import__(module_path, fromlist=[bp_name])
+            # Obtener el blueprint
+            bp = getattr(module, bp_name, None)
+            if bp is not None and hasattr(bp, 'url_prefix'):
+                # Si el blueprint ya tiene un prefijo, usarlo
+                app.register_blueprint(bp)
+            else:
+                # Registrar con el prefijo especificado
+                app.register_blueprint(bp, url_prefix=url_prefix)
+            app.logger.info(f'Blueprint registrado: {bp_name} (prefijo: {url_prefix or "/"})')
+        except ImportError as e:
+            app.logger.error(f'Error al importar el blueprint {bp_name} desde {module_path}: {e}')
+        except Exception as e:
+            app.logger.error(f'Error al registrar el blueprint {bp_name}: {e}')
