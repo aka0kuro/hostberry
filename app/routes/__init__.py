@@ -4,10 +4,10 @@ def register_blueprints(app):
     """
     # Blueprint principal
     try:
-        from .main_routes import main_routes_bp
-        app.register_blueprint(main_routes_bp)
+        from .main_routes import main_bp
+        app.register_blueprint(main_bp)
     except ImportError as e:
-        app.logger.error(f'Error al registrar el blueprint main_routes: {e}')
+        app.logger.error(f'Error al registrar el blueprint principal: {e}')
 
     # Blueprint de autenticación
     try:
@@ -18,10 +18,10 @@ def register_blueprints(app):
 
     # WiFi
     try:
-        from app.routes.wifi_routes import wifi_bp
+        from app.routes.wifi import wifi_bp
         app.register_blueprint(wifi_bp, url_prefix='/wifi')
-    except ImportError:
-        pass
+    except ImportError as e:
+        app.logger.error(f'Error al registrar el blueprint WiFi: {e}')
 
     # Security
     try:

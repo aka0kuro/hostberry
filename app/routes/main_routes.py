@@ -29,9 +29,9 @@ logger = logging.getLogger(__name__)
 from app.auth import login_required
 
 # Crear Blueprint
-main_routes_bp = Blueprint('main_routes', __name__)
+main_bp = Blueprint('main', __name__)
 
-@main_routes_bp.route('/')
+@main_bp.route('/')
 @login_required
 def index():
     """Página principal con estadísticas del sistema"""
@@ -148,7 +148,7 @@ def index():
             'message': str(e)
         }), 500
 
-@main_routes_bp.route('/api/status')
+@main_bp.route('/api/status')
 @login_required
 def api_status():
     """Endpoint de estado de la API"""
@@ -158,7 +158,7 @@ def api_status():
         'version': '1.0.0'
     })
 
-@main_routes_bp.route('/api/system/stats')
+@main_bp.route('/api/system/stats')
 @login_required
 def system_stats():
     """Obtiene estadísticas del sistema en tiempo real"""
@@ -234,4 +234,4 @@ def system_stats():
 
 # Registrar las rutas en el Blueprint
 def init_app(app):
-    app.register_blueprint(main_routes_bp)
+    app.register_blueprint(main_bp)
