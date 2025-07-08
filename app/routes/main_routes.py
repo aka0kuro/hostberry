@@ -1,9 +1,9 @@
-from flask import Blueprint, render_template, jsonify, session
+from flask import Blueprint, render_template, jsonify, session, current_app
 from app.utils.i18n_utils import get_locale, inject_get_locale, set_language, check_lang
 from app.utils.log_utils import get_logs
 from app.utils.security_utils import FAILED_ATTEMPTS, BLOCKED_IPS
 from flask_babel import _
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required as flask_login_required
 from app.utils.network_utils import (
     get_network_interface, 
     get_ip_address,
@@ -20,13 +20,24 @@ import socket
 import time
 import subprocess
 from datetime import datetime, timedelta
-import logging
 
-# Configurar logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Inicializar el blueprint
+main_bp = Blueprint('main', __name__)
 
-from app.auth import login_required
+# Función de ayuda para el decorador login_required
+def login_required(f):
+    return flask_login_required(f)
+
+# Registrar funciones en el contexto de la aplicación
+@main_bp.app_context_processor
+def inject_globals():
+    return {
+        'get_locale': get_locale,
+        'inject_get_locale': inject_get_locale,
+        'set_language': set_language,
+        'check_lang': check_lang,
+        'current_time': datetime.utcnow
+    }
 
 # Crear Blueprint
 main_bp = Blueprint('main', __name__)
@@ -238,4 +249,14 @@ def system_stats():
 
 # Registrar las rutas en el Blueprint
 def init_app(app):
-    app.register_blueprint(main_bp)
+    """Inicializa la aplicación con este blueprint.
+    
+    Args:
+        app: Instancia de la aplicación Flask
+    """
+    try:
+        app.register_blueprint(main_bp)
+        app.logger.info('Blueprint principal registrado correctamente')
+    except Exception as e:
+        app.logger.error(f'Error al registrar el blueprint principal: {e}', exc_info=True)
+        raise
