@@ -555,6 +555,12 @@ EOL
     # Permisos para el socket
     chmod 775 "${INSTALL_DIR}"
     
+    # Permisos para logs
+    _install_log "Ajustando permisos para logs..."
+    mkdir -p "${INSTALL_DIR}/logs"
+    chown -R www-data:www-data "${INSTALL_DIR}/logs"
+    chmod 775 "${INSTALL_DIR}/logs"
+    
     # Reiniciar servicios
     systemctl daemon-reload
     systemctl restart nginx
@@ -570,7 +576,6 @@ setup_ssl_certificate() {
     
     if [ ! -d "${CONFIG_DIR}/ssl" ]; then
         mkdir -p "${CONFIG_DIR}/ssl"
-{{ ... }}
     fi
     
     # Generar certificado autofirmado
