@@ -167,10 +167,7 @@ def register_commands(app: Flask) -> None:
         db.session.commit()
         app.logger.info(f'Usuario administrador {username} creado exitosamente')
     
-    # Inicializar extensiones
-    db.init_app(app)
-    login_manager.init_app(app)
-    csrf.init_app(app)
+    # Eliminar inicialización duplicada de db y otras extensiones
     
     # Configurar Babel
     from app.utils.i18n_utils import get_locale
