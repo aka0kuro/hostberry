@@ -16,11 +16,13 @@ def register_blueprints(app):
     registered_names = set()
     for module_path, bp_name, url_prefix in blueprints:
         try:
+            app.logger.info(f'Intentando importar blueprint {bp_name} desde {module_path}')
             module = __import__(module_path, fromlist=[bp_name])
             bp = getattr(module, bp_name, None)
             if bp is None:
                 app.logger.error(f'Blueprint {bp_name} no encontrado en {module_path}')
                 continue
+            app.logger.info(f'Intentando registrar blueprint {bp.name} (prefijo: {url_prefix})')
             if bp.name in registered_names:
                 app.logger.warning(f'Blueprint {bp_name} ya registrado, se omite para evitar duplicidad')
                 continue
