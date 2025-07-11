@@ -15,7 +15,6 @@ class Config:
     SESSION_COOKIE_SAMESITE = 'Lax'  # Protección CSRF básica
     REMEMBER_COOKIE_SECURE = True
     REMEMBER_COOKIE_HTTPONLY = True
-    # Puedes añadir más variables globales aquí
     # Permitir solo CORS desde la red local (ajusta según tu rango)
     CORS_ORIGINS = [
         "http://localhost",
