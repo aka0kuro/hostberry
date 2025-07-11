@@ -1,4 +1,3 @@
-from functools import wraps
 from flask import request, jsonify, session, current_app, flash, redirect, url_for
 from flask_login import current_user, login_user, logout_user as flask_logout_user, login_required as flask_login_required
 from werkzeug.security import check_password_hash
@@ -14,40 +13,8 @@ except ImportError:
     # Para evitar errores de importación circular
     User = None
 
-def login_required(f: Callable) -> Callable:
-    """
-    Decorador para requerir autenticación en una ruta.
-    """
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated:
-            if request.is_json or request.path.startswith('/api/'):
-                return jsonify({
-                    'status': 'error',
-                    'message': 'Se requiere autenticación',
-                    'code': 401
-                }), 401
-            return redirect(url_for('auth.login', next=request.url))
-        return f(*args, **kwargs)
-    return decorated_function
-
-def admin_required(f: Callable) -> Callable:
-    """
-    Decorador para requerir rol de administrador.
-    """
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_admin:
-            if request.is_json or request.path.startswith('/api/'):
-                return jsonify({
-                    'status': 'error',
-                    'message': 'Acceso denegado: se requieren privilegios de administrador',
-                    'code': 403
-                }), 403
-            flash('Acceso denegado: se requieren privilegios de administrador', 'danger')
-            return redirect(url_for('main.index'))
-        return f(*args, **kwargs)
-    return decorated_function
+# Eliminar decoradores duplicados, importar desde decorators.py
+from .decorators import login_required, admin_required
 
 def authenticate_user(username: str, password: str, remember: bool = False) -> Tuple[bool, dict]:
     """

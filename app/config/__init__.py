@@ -199,7 +199,7 @@ if (current_config.BASE_DIR / '.env').exists():
             except (ValueError, AttributeError):
                 setattr(config, config_key, value)
 
-def save_config(key: str, value: Any) -> bool:
+def save_env_config(key: str, value: Any) -> bool:
     """Guarda una configuración en el archivo .env"""
     try:
         from app import create_app

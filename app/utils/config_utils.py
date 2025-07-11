@@ -24,8 +24,8 @@ class HostBerryConfig:
         """Obtiene la configuración actual"""
         return self.config
 
-    def save_config(self, config):
-        """Guarda la configuración en el archivo"""
+    def save_json_config(self, config):
+        """Guarda la configuración en el archivo JSON"""
         try:
             with open(self.config_path, 'w') as f:
                 json.dump(config, f, indent=4)

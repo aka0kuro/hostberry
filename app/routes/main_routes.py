@@ -3,7 +3,7 @@ from app.utils.i18n_utils import get_locale, inject_get_locale, set_language, ch
 from app.utils.log_utils import get_logs
 from app.utils.security_utils import FAILED_ATTEMPTS, BLOCKED_IPS
 from flask_babel import _
-from flask_login import current_user, login_required as flask_login_required
+from flask_login import current_user, login_required
 from app.utils.network_utils import (
     get_network_interface, 
     get_ip_address,
@@ -23,10 +23,6 @@ from datetime import datetime, timedelta
 
 # Inicializar el blueprint
 main_bp = Blueprint('main', __name__)
-
-# Función de ayuda para el decorador login_required
-def login_required(f):
-    return flask_login_required(f)
 
 # Registrar funciones en el contexto de la aplicación
 @main_bp.app_context_processor
