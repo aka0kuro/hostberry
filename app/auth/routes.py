@@ -5,11 +5,13 @@ from ..extensions import db
 from ..models.user import User
 from .forms import LoginForm, RegistrationForm
 from .decorators import login_required, admin_required
+from app.extensions import limiter
 
 # Crear Blueprint
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("3 per 30 minutes", key_func=lambda: request.form.get('username') or request.remote_addr, error_message="Demasiados intentos fallidos. Intenta de nuevo en 30 minutos.")
 def login():
     # Si el usuario ya está autenticado, redirigir al dashboard
     if current_user.is_authenticated:
