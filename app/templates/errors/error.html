@@ -1,4 +1,7 @@
-{% extends "base.html" %}
+{% extends "security/auth_base_no_sidebar.html" %}
+
+{# Sobrescribe el bloque sidebar para ocultar la barra lateral #}
+{% block sidebar %}{% endblock %}
 
 {% block title %}Error {{ error.code if error else '' }} - {{ super() }}{% endblock %}
 
