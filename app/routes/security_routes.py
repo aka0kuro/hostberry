@@ -21,7 +21,7 @@ class SecurityConfigForm(FlaskForm):
 # --- Rutas de Seguridad ---
 @security_bp.route('/security_config', methods=['GET', 'POST'])
 def security_config():
-    from hostberry_config import HostBerryConfig
+# from hostberry_config import HostBerryConfig  # Eliminado: módulo no encontrado
     config = HostBerryConfig()
     form = SecurityConfigForm()
     if request.method == 'POST':

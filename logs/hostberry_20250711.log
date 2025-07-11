@@ -1,0 +1,29 @@
+2025-07-11 20:39:18 - app - INFO - Sistema de logging configurado correctamente
+2025-07-11 20:39:18 - app.middleware.security_headers - INFO - Middleware de cabeceras de seguridad inicializado
+2025-07-11 20:39:18 - app - INFO - Configuración de internacionalización inicializada correctamente
+2025-07-11 20:39:18 - app - INFO - Intentando importar blueprint main_bp desde app.routes.main_routes
+2025-07-11 20:39:18 - app - INFO - Intentando registrar blueprint main (prefijo: )
+2025-07-11 20:39:18 - app - INFO - Blueprint registrado: main_bp (prefijo: /)
+2025-07-11 20:39:18 - app - INFO - Intentando importar blueprint auth_bp desde app.auth.routes
+2025-07-11 20:39:18 - app - INFO - Intentando registrar blueprint auth (prefijo: /auth)
+2025-07-11 20:39:18 - app - INFO - Blueprint registrado: auth_bp (prefijo: /auth)
+2025-07-11 20:39:18 - app - INFO - Intentando importar blueprint wifi_bp desde app.routes.wifi
+2025-07-11 20:39:18 - app - INFO - Intentando registrar blueprint wifi (prefijo: /wifi)
+2025-07-11 20:39:18 - app - INFO - Blueprint registrado: wifi_bp (prefijo: /wifi)
+2025-07-11 20:39:18 - app - INFO - Intentando importar blueprint security_bp desde app.routes.security_routes
+2025-07-11 20:39:18 - app - INFO - Intentando registrar blueprint security (prefijo: /security)
+2025-07-11 20:39:18 - app - INFO - Blueprint registrado: security_bp (prefijo: /security)
+2025-07-11 20:39:18 - app - INFO - Intentando importar blueprint vpn_bp desde app.routes.vpn_routes
+2025-07-11 20:39:18 - app - INFO - Intentando registrar blueprint vpn (prefijo: /vpn)
+2025-07-11 20:39:18 - app - INFO - Blueprint registrado: vpn_bp (prefijo: /vpn)
+2025-07-11 20:39:18 - app - INFO - Intentando importar blueprint adblock_bp desde app.routes.adblock_routes
+2025-07-11 20:39:18 - app - INFO - Intentando registrar blueprint adblock (prefijo: /adblock)
+2025-07-11 20:39:18 - app - INFO - Blueprint registrado: adblock_bp (prefijo: /adblock)
+2025-07-11 20:39:18 - app - INFO - Intentando importar blueprint wireguard_bp desde app.routes.wireguard_routes
+2025-07-11 20:39:18 - app - INFO - Intentando registrar blueprint wireguard (prefijo: /wireguard)
+2025-07-11 20:39:18 - app - INFO - Blueprint registrado: wireguard_bp (prefijo: /wireguard)
+2025-07-11 20:39:18 - app - INFO - BABEL_DEFAULT_LOCALE: en
+2025-07-11 20:39:18 - app - INFO - BABEL_SUPPORTED_LOCALES: ['es', 'en']
+2025-07-11 20:39:18 - app - INFO - get_locale está correctamente registrado en el contexto de Jinja2
+2025-07-11 20:39:18 - app - INFO - Aplicación inicializada en modo: production
+2025-07-11 20:39:18 - app - INFO - Base de datos inicializada
