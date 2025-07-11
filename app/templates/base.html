@@ -305,7 +305,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'wifi.ap_status' %}active{% endif %}" href="{{ url_for('wifi.ap_status') }}">
+                <a class="nav-link {% if request.endpoint == 'wifi.wifi_status' %}active{% endif %}" href="{{ url_for('wifi.wifi_status') }}">
                     <i class="fas fa-broadcast-tower me-2"></i>{% trans %}Access Point{% endtrans %}
                 </a>
             </li>
