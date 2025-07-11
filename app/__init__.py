@@ -107,7 +107,7 @@ def initialize_extensions(app: Flask) -> None:
     migrate.init_app(app, db)
     limiter.init_app(app)
     cache.init_app(app)
-    cors.init_app(app, resources={r"/api/*": {"origins": "*"}})
+    cors.init_app(app, resources={r"/api/*": {"origins": app.config.get("CORS_ORIGINS", ["http://localhost"])}})
     
     # Configuración específica de extensiones
     login_manager.login_view = 'auth.login'
