@@ -35,9 +35,6 @@ def inject_globals():
         'current_time': datetime.utcnow
     }
 
-# Crear Blueprint
-main_bp = Blueprint('main', __name__)
-
 @main_bp.route('/')
 @login_required
 def index():
@@ -243,16 +240,4 @@ def system_stats():
             'stats': stats  # Devolver las estadísticas que se pudieron obtener
         }), 500
 
-# Registrar las rutas en el Blueprint
-def init_app(app):
-    """Inicializa la aplicación con este blueprint.
-    
-    Args:
-        app: Instancia de la aplicación Flask
-    """
-    try:
-        app.register_blueprint(main_bp)
-        app.logger.info('Blueprint principal registrado correctamente')
-    except Exception as e:
-        app.logger.error(f'Error al registrar el blueprint principal: {e}', exc_info=True)
-        raise
+# (Eliminada función innecesaria de registro de blueprint, el registro es centralizado en app/routes/__init__.py)
