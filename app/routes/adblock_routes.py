@@ -1,4 +1,6 @@
 
+adblock_bp = Blueprint('adblock', __name__)
+
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_babel import _
 import subprocess
@@ -6,13 +8,12 @@ import os
 
 adblock_bp = Blueprint('adblock', __name__)
 
-@adblock_bp.route('/adblock', methods=['GET', 'POST'])
+@adblock_bp.route('/', methods=['GET', 'POST'])
 def adblock_config():
+    """Configuración y activación/desactivación de AdBlock."""
     if request.method == 'POST':
         try:
             adblock_enabled = request.form.get('adblock_enabled') == 'on'
-            # Aquí podrías guardar la configuración en la base de datos o archivo si es necesario
-
             script_path = '/usr/local/bin/adblock.sh'
             if not os.path.exists(script_path):
                 flash(_('Required script not found at %(path)s', path=script_path), 'warning')
@@ -21,7 +22,6 @@ def adblock_config():
             if adblock_enabled:
                 result = subprocess.run(
                     [script_path],
-                    check=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True
@@ -33,7 +33,6 @@ def adblock_config():
             else:
                 result = subprocess.run(
                     [script_path, '--disable'],
-                    check=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True
@@ -42,9 +41,6 @@ def adblock_config():
                     flash(_('AdBlock disabled'), 'success')
                 else:
                     flash(_('AdBlock disable failed: %(error)s', error=result.stderr), 'warning')
-
-        except subprocess.CalledProcessError as e:
-            flash(_('Script execution failed: %(error)s', error=e.stderr), 'danger')
         except Exception as e:
             flash(_('Error configuring AdBlock: %(error)s', error=str(e)), 'danger')
         return redirect(url_for('adblock.adblock_config'))
@@ -55,7 +51,7 @@ def adblock_config():
         with open('/etc/hostberry/adblock/last_updated', 'r') as f:
             last_updated = f.read().strip()
     except FileNotFoundError:
-        pass  # It's okay if the file doesn't exist yet
+        pass
 
     return render_template(
         'adblock/adblock.html',
@@ -63,8 +59,9 @@ def adblock_config():
         last_updated=last_updated
     )
 
-@adblock_bp.route('/adblock/update', methods=['POST'])
+@adblock_bp.route('/update', methods=['POST'])
 def adblock_update():
+    """Actualiza las listas de AdBlock manualmente."""
     try:
         script_path = '/usr/local/bin/adblock_update.sh'
         if not os.path.exists(script_path):
@@ -73,7 +70,6 @@ def adblock_update():
 
         result = subprocess.run(
             [script_path],
-            check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True
@@ -83,9 +79,7 @@ def adblock_update():
         else:
             flash(_('Error updating AdBlock lists: %(error)s', error=result.stderr), 'danger')
 
-    except subprocess.CalledProcessError as e:
-        flash(_('Script execution failed: %(error)s', error=e.stderr), 'danger')
     except Exception as e:
         current_app.logger.error(f"AdBlock update error: {str(e)}")
-        flash(_('Error updating AdBlock lists'), 'danger')
+        flash(_('Error updating AdBlock lists: %(error)s', error=str(e)), 'danger')
     return redirect(url_for('adblock.adblock_config'))
