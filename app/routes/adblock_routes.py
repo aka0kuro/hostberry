@@ -2,7 +2,6 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_babel import _
 import subprocess
 import os
-from app.config import save_env_config
 
 adblock_bp = Blueprint('adblock', __name__)
 
