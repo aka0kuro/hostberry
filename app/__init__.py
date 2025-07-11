@@ -107,6 +107,8 @@ def initialize_extensions(app: Flask) -> None:
     migrate.init_app(app, db)
     limiter.init_app(app)
     cache.init_app(app)
+    # Configurar CORS solo una vez, usando la instancia importada
+    from .extensions import cors
     cors.init_app(app, resources={r"/api/*": {"origins": app.config.get("CORS_ORIGINS", ["http://localhost"])}})
     
     # Configuración específica de extensiones
