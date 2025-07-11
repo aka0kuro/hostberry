@@ -240,4 +240,12 @@ def system_stats():
             'stats': stats  # Devolver las estadísticas que se pudieron obtener
         }), 500
 
-# (Eliminada función innecesaria de registro de blueprint, el registro es centralizado en app/routes/__init__.py)
+@main_bp.route('/set_language/<lang>')
+def set_language(lang):
+    """Cambia el idioma de la sesión y redirige a la página anterior o principal."""
+    from flask import session, request, redirect, url_for
+    supported = current_app.config.get('BABEL_SUPPORTED_LOCALES', ['es', 'en'])
+    if lang in supported:
+        session['lang'] = lang
+    next_url = request.args.get('next') or request.referrer or url_for('main.index')
+    return redirect(next_url)
