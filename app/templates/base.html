@@ -347,9 +347,8 @@
                     <span>{% trans %}Language{% endtrans %}</span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='en') }}?lang_changed=1">English</a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='es') }}?lang_changed=1">Español</a></li>
-                    <!-- Note: The set_language endpoint should be in the main blueprint -->
+                    {# <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='en') }}?lang_changed=1">English</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('main.set_language', lang='es') }}?lang_changed=1">Español</a></li> #}
                 </ul>
             </div>
             <!-- HostBerry Logo -->
