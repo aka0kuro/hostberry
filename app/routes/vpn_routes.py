@@ -1,15 +1,15 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app as app
 from flask_babel import _
-from app.config import save_config
+from app.config import save_env_config
 
 vpn_bp = Blueprint('vpn', __name__)
 
 @vpn_bp.route('/vpn_config', methods=['GET', 'POST'])
 def vpn_config():
     if request.method == 'POST':
-        save_config('VPN_ENABLED', request.form.get('vpn_enabled') == 'on')
-        save_config('VPN_PROVIDER', request.form.get('vpn_provider'))
-        save_config('VPN_COUNTRY', request.form.get('vpn_country'))
+        save_env_config('VPN_ENABLED', request.form.get('vpn_enabled') == 'on')
+        save_env_config('VPN_PROVIDER', request.form.get('vpn_provider'))
+        save_env_config('VPN_COUNTRY', request.form.get('vpn_country'))
         
         flash(_('VPN configuration updated successfully!'), 'success')
         return redirect(url_for('vpn.vpn_config'))
