@@ -4,7 +4,7 @@ def register_blueprints(app):
     """
     blueprints = [
         # (módulo, nombre_blueprint, prefijo_url)
-        ('.main_routes', 'main_bp', ''),
+        ('app.routes.main_routes', 'main_bp', ''),
         ('app.auth.routes', 'auth_bp', '/auth'),
         ('app.routes.wifi', 'wifi_bp', '/wifi'),
         ('app.routes.security_routes', 'security_bp', '/security'),
