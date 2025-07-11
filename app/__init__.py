@@ -68,8 +68,8 @@ def create_app(config_name: Optional[str] = None) -> Flask:
     # Inicializar extensiones
     initialize_extensions(app)
     
-    # Registrar blueprints
-    register_blueprints(app)
+    # Registrar blueprints SOLO desde el bloque de internacionalización (más abajo)
+    # register_blueprints(app)  # Eliminado duplicado
     
     # Registrar manejadores de errores
     register_error_handlers(app)
