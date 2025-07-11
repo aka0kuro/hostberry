@@ -10,7 +10,7 @@ import uuid
 from pathlib import Path
 from typing import Optional, Dict, Any
 
-from flask import Flask, request, current_app
+from flask import Flask, request, current_app, session
 from werkzeug.middleware.proxy_fix import ProxyFix
 from dotenv import load_dotenv
 
