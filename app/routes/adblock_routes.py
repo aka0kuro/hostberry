@@ -1,5 +1,4 @@
 
-adblock_bp = Blueprint('adblock', __name__)
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_babel import _
