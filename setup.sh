@@ -556,10 +556,10 @@ EOL
     chmod 775 "${INSTALL_DIR}"
     
     # Permisos para logs
-    _install_log "Ajustando permisos para logs..."
+    _install_log "Ajustando permisos para logs (carpeta y archivos)..."
     mkdir -p "${INSTALL_DIR}/logs"
     chown -R www-data:www-data "${INSTALL_DIR}/logs"
-    chmod 775 "${INSTALL_DIR}/logs"
+    chmod -R 775 "${INSTALL_DIR}/logs"
     
     # Reiniciar servicios
     systemctl daemon-reload
