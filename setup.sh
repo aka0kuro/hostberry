@@ -765,14 +765,28 @@ install_hostberry() {
     cd "${INSTALL_DIR}" || return 1
     
     # Configurar permisos
-    chown -R www-data:www-data "${INSTALL_DIR}/static" "${INSTALL_DIR}/app/static"
-    chmod -R 755 "${INSTALL_DIR}/static" "${INSTALL_DIR}/app/static"
+    chown -R www-data:www-data "${INSTALL_DIR}"
+    find "${INSTALL_DIR}" -type d -exec chmod 750 {} \;
+    find "${INSTALL_DIR}" -type f -exec chmod 640 {} \;
     
-    # Configurar entorno virtual
+    # Hacer ejecutables los scripts necesarios
+    chmod +x "${INSTALL_DIR}/wsgi.py"
+    chmod +x "${INSTALL_DIR}/venv/bin/"*
+    
+    # Permisos especiales para directorios de carga
+    chmod 770 "${INSTALL_DIR}/uploads" "${INSTALL_DIR}/logs" "${INSTALL_DIR}/data"
+    
+    # Permisos para el socket
+    chmod 770 "${INSTALL_DIR}"
+    
+    # Configurar entorno virtual de Python
     setup_python_venv
     
     # Instalar dependencias de Python
     install_python_deps
+    
+    # Asegurar permisos de ejecución para Gunicorn
+    chmod +x "${INSTALL_DIR}/venv/bin/gunicorn"
     
     # Verificar si existe el script de inicialización de la base de datos
     if [ -f "${INSTALL_DIR}/scripts/init_db.py" ]; then
@@ -800,10 +814,13 @@ install_hostberry() {
     
     # Recolectar archivos estáticos si existe el directorio
     if [ -d "${INSTALL_DIR}/app/static" ]; then
-        _install_log "Recolectando archivos estáticos..."
+        _install_log "Configurando archivos estáticos..."
         mkdir -p "${INSTALL_DIR}/app/static"
         # Crear archivos estáticos necesarios si no existen
         touch "${INSTALL_DIR}/app/static/.keep"
+        # Asegurar permisos para archivos estáticos
+        chmod -R 750 "${INSTALL_DIR}/app/static"
+        chown -R www-data:www-data "${INSTALL_DIR}/app/static"
     fi
     
     # Configurar servicio systemd
@@ -817,8 +834,16 @@ install_hostberry() {
         setup_ssl_certificate
     fi
     
-    # Iniciar servicio
-    systemctl start hostberry
+    # Recargar systemd y reiniciar el servicio
+    systemctl daemon-reload
+    systemctl restart hostberry
+    
+    # Verificar que el servicio se esté ejecutando
+    if ! systemctl is-active --quiet hostberry; then
+        _install_log "Error al iniciar el servicio hostberry"
+        journalctl -u hostberry -n 30 --no-pager
+        return 1
+    fi
     
     _install_log "Instalación completada"
     return 0
