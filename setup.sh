@@ -743,6 +743,17 @@ update_from_github() {
     return 0
 }
 
+# Asegurar permisos de ejecución para Gunicorn y Python en el entorno virtual
+ensure_gunicorn_permissions() {
+    _install_log "Asegurando permisos de ejecución para Gunicorn y Python en el entorno virtual"
+    if [ -f "${INSTALL_DIR}/venv/bin/gunicorn" ]; then
+        chmod +x "${INSTALL_DIR}/venv/bin/gunicorn"
+    fi
+    if [ -f "${INSTALL_DIR}/venv/bin/python" ]; then
+        chmod +x "${INSTALL_DIR}/venv/bin/python"
+    fi
+}
+
 # Instalar HostBerry
 install_hostberry() {
     _install_log "Instalando HostBerry"
@@ -785,8 +796,8 @@ install_hostberry() {
     # Instalar dependencias de Python
     install_python_deps
     
-    # Asegurar permisos de ejecución para Gunicorn
-    chmod +x "${INSTALL_DIR}/venv/bin/gunicorn"
+    # Asegurar permisos de ejecución para Gunicorn y Python
+    ensure_gunicorn_permissions
     
     # Verificar si existe el script de inicialización de la base de datos
     if [ -f "${INSTALL_DIR}/scripts/init_db.py" ]; then
