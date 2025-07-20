@@ -746,11 +746,24 @@ update_from_github() {
 # Asegurar permisos de ejecución para Gunicorn y Python en el entorno virtual
 ensure_gunicorn_permissions() {
     _install_log "Asegurando permisos de ejecución para Gunicorn y Python en el entorno virtual"
-    if [ -f "${INSTALL_DIR}/venv/bin/gunicorn" ]; then
-        chmod +x "${INSTALL_DIR}/venv/bin/gunicorn"
+    # Asegurar permisos de ejecución para binarios de Python
+    if [ -d "${INSTALL_DIR}/venv/bin" ]; then
+        find "${INSTALL_DIR}/venv/bin" -type f -exec chmod +x {} \;
     fi
-    if [ -f "${INSTALL_DIR}/venv/bin/python" ]; then
-        chmod +x "${INSTALL_DIR}/venv/bin/python"
+    
+    # Asegurar permisos de escritura en directorios necesarios
+    local dirs=("${INSTALL_DIR}/data" "${INSTALL_DIR}/logs" "${CONFIG_DIR}")
+    for dir in "${dirs[@]}"; do
+        if [ -d "$dir" ]; then
+            chmod 775 "$dir"
+            chown -R ${CURRENT_USER}:www-data "$dir"
+        fi
+    done
+    
+    # Asegurar que los archivos de configuración tengan los permisos correctos
+    if [ -f "${INSTALL_DIR}/config.py" ]; then
+        chmod 664 "${INSTALL_DIR}/config.py"
+        chown ${CURRENT_USER}:www-data "${INSTALL_DIR}/config.py"
     fi
 }
 
@@ -878,7 +891,7 @@ show_access_info() {
     echo ""
     echo -e "Credenciales por defecto:"
     echo -e "  - Usuario: ${COL_LIGHT_YELLOW}admin${COL_NC}"
-    echo -e "  - Contraseña: ${COL_LIGHT_YELLOW}admin$123{COL_NC}"
+    echo -e "  - Contraseña: ${COL_LIGHT_YELLOW}admin$123${COL_NC}"
     echo ""
     echo -e "Recuerde cambiar la contraseña después del primer inicio de sesión."
     _install_divider
