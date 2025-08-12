@@ -33,6 +33,30 @@ body { background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); min-height
 .mb-3 .input-group { width: 100%; }
 .mb-3 .input-group .form-control { width: 100%; }
 
+/* Igualar altura y estilo entre input + addon/botón para usuario y contraseña */
+.input-group .form-control,
+.input-group .input-group-text,
+.input-group .btn {
+  height: 48px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+/* Botón mostrar/ocultar contraseña con estilo coherente al input/addon */
+#toggle-password.btn {
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.2);
+  color: #fff;
+  border-radius: 10px;
+}
+
+/* Variante en tema claro */
+body.light-theme #toggle-password.btn {
+  background: #fff;
+  border: 1px solid #ced4da;
+  color: #212529;
+}
+
 /* Ajustar el tamaño del emoji del tema para que sea proporcional */
 .theme-toggle #theme-emoji { font-size:28px; line-height:1; }
 
