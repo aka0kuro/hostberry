@@ -730,6 +730,7 @@ download_application_from_github() {
     local UPDATE_MODE="${1:-false}"
     local GITHUB_REPO="https://github.com/aka0kuro/hostberry.git"
     local TEMP_DIR="/tmp/hostberry_download_$$"
+    local VENV_BACKUP=""
 
     if [ "$UPDATE_MODE" = "true" ]; then
         log "$ANSI_YELLOW" "INFO" "$(get_text "updating_app" "Actualizando aplicación desde GitHub...")"
@@ -753,12 +754,20 @@ download_application_from_github() {
             rm -rf "/tmp/hostberry_config_backup_$$" 2>/dev/null || true
         )
     else
-        # Clonación limpia
-        rm -rf "$PROD_DIR" && mkdir -p "$PROD_DIR"
-        mkdir -p "$TEMP_DIR"
+        # Clonación limpia preservando venv en UPDATE
+        if [ "$UPDATE_MODE" = "true" ] && [ -d "$VENV_DIR" ]; then
+            VENV_BACKUP="/tmp/hostberry_venv_backup_$$"
+            mv "$VENV_DIR" "$VENV_BACKUP"
+        fi
+        rm -rf "$PROD_DIR"
+        mkdir -p "$PROD_DIR" "$TEMP_DIR"
         git clone --depth 1 --branch main "$GITHUB_REPO" "$TEMP_DIR/hostberry" || handle_error "$(get_text 'git_clone_failed' 'No se pudo clonar el repositorio desde GitHub')"
-        cp -r "$TEMP_DIR/hostberry"/* "$PROD_DIR/" || handle_error "$(get_text 'copy_failed' 'No se pudo copiar archivos al directorio de producción')"
+        rsync -a --delete --exclude='venv' "$TEMP_DIR/hostberry"/ "$PROD_DIR"/ || handle_error "$(get_text 'copy_failed' 'No se pudo copiar archivos al directorio de producción')"
         rm -rf "$TEMP_DIR"
+        # Restaurar venv si se había respaldado
+        if [ -n "$VENV_BACKUP" ] && [ -d "$VENV_BACKUP" ]; then
+            mv "$VENV_BACKUP" "$VENV_DIR"
+        fi
     fi
 
     # Verificar config
@@ -1154,7 +1163,7 @@ Environment=PYTHONPATH=$PROD_DIR
 Environment=UVICORN_NO_UVLOOP=1
 Environment=UVICORN_NO_HTTPTOOLS=1
 Environment=HOSTBERRY_SKIP_RUNTIME_OPTIMIZE=1
-ExecStart=$VENV_DIR/bin/uvicorn --app-dir $PROD_DIR main:app --host 127.0.0.1 --port $PROD_PORT --workers $WORKERS --loop asyncio --http h11 --log-level $(echo "$LOG_LEVEL" | tr '[:upper:]' '[:lower:]')
+ExecStart=$VENV_DIR/bin/python -m uvicorn --app-dir $PROD_DIR main:app --host 127.0.0.1 --port $PROD_PORT --workers $WORKERS --loop asyncio --http h11 --log-level $(echo "$LOG_LEVEL" | tr '[:upper:]' '[:lower:]')
 Restart=always
 RestartSec=3
 StandardOutput=journal
