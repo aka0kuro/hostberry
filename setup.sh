@@ -1957,7 +1957,8 @@ EOF
     
     # Optimizaciones para RPi
     if [ -f "/proc/device-tree/model" ]; then
-        local MODEL=$(cat /proc/device-tree/model)
+        local MODEL
+        MODEL=$(tr -d '\0' < /proc/device-tree/model 2>/dev/null || true)
         if [[ "$MODEL" =~ "Raspberry Pi" ]]; then
             log "$ANSI_GREEN" "INFO" "$(get_text 'rpi_optimizations' 'Aplicando optimizaciones específicas para RPi')"
             
