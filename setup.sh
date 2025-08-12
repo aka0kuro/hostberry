@@ -689,7 +689,7 @@ install_system_deps() {
 
 # Limpiar instalación anterior completamente
 clean_previous_installation() {
-    log "$ANSI_YELLOW" "INFO" "🧹 Limpiando instalación anterior de HostBerry..."
+    log "$ANSI_YELLOW" "INFO" "$(get_text 'cleaning_previous_installation' '🧹 Limpiando instalación anterior de HostBerry...')"
 
     # Detener servicio si está activo
     if systemctl is-active --quiet hostberry 2>/dev/null; then
@@ -722,7 +722,7 @@ clean_previous_installation() {
     [ -f "/etc/logrotate.d/hostberry" ] && rm -f "/etc/logrotate.d/hostberry"
     [ -f "/etc/fail2ban/jail.local" ] && rm -f "/etc/fail2ban/jail.local"
 
-    log "$ANSI_GREEN" "INFO" "✅ Limpieza completa realizada"
+    log "$ANSI_GREEN" "INFO" "$(get_text 'cleanup_done' '✅ Limpieza completa realizada')"
 }
 
 # Descargar/actualizar aplicación desde GitHub (repo oficial)
