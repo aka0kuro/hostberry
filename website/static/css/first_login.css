@@ -1,0 +1,17 @@
+/* Estilos específicos de la página first-login */
+body { margin:0; padding:2rem 1rem; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial; background:#f5f6f8; }
+.container { max-width: 960px; margin: 0 auto; }
+.row { display:flex; justify-content:center; }
+.col-md-6 { width:100%; max-width:600px; }
+.card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; box-shadow: 0 6px 20px rgba(0,0,0,.06); }
+.card-header { padding: .85rem 1rem; background:#0d6efd; color:#fff; font-weight:600; }
+.card-body { padding: 1rem; }
+.form-label { display:block; margin-bottom:.35rem; font-weight:600; color:#374151; }
+.form-control { width:100%; padding:.6rem .9rem; border-radius:.5rem; border:1px solid #d1d5db; background:#fff; color:#111827; }
+.form-control:focus { outline:none; border-color:#0d6efd; box-shadow:0 0 0 .2rem rgba(13,110,253,.15); }
+.btn-primary { display:block; width:100%; padding:.6rem .9rem; border-radius:.5rem; border:1px solid transparent; background:#0d6efd; color:#fff; font-weight:700; cursor:pointer; }
+.btn-primary:hover { background:#0b5ed7; }
+.input-group { display:flex; }
+.input-group .form-control { border-top-right-radius:0; border-bottom-right-radius:0; }
+.input-group .btn { border-top-left-radius:0; border-bottom-left-radius:0; border:1px solid #d1d5db; background:#fff; color:#374151; }
+.alert { margin-bottom:1rem; }

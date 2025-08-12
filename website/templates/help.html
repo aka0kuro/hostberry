@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <!-- Preguntas Frecuentes -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-question-circle"></i>
+                    {{ t('help.faq') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                {{ t('help.faq_question_1') }}
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                {{ t('help.faq_answer_1') }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                {{ t('help.faq_question_2') }}
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                {{ t('help.faq_answer_2') }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                {{ t('help.faq_question_3') }}
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                {{ t('help.faq_answer_3') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enlaces de Ayuda -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-link-45deg"></i>
+                    {{ t('help.useful_links') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <a href="/documentation" class="list-group-item list-group-item-action">
+                        <i class="bi bi-book"></i>
+                        {{ t('help.documentation') }}
+                    </a>
+                    <a href="/api/docs" class="list-group-item list-group-item-action">
+                        <i class="bi bi-code-slash"></i>
+                        {{ t('help.api_documentation') }}
+                    </a>
+                    <a href="/troubleshooting" class="list-group-item list-group-item-action">
+                        <i class="bi bi-tools"></i>
+                        {{ t('help.troubleshooting') }}
+                    </a>
+                    <a href="/support" class="list-group-item list-group-item-action">
+                        <i class="bi bi-headset"></i>
+                        {{ t('help.support') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guías de Usuario -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-journal-text"></i>
+                    {{ t('help.user_guides') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-speedometer2 text-primary" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">{{ t('help.getting_started') }}</h6>
+                                <p class="text-muted">{{ t('help.getting_started_desc') }}</p>
+                                <a href="/guide/getting-started" class="btn btn-outline-primary btn-sm">
+                                    {{ t('help.read_guide') }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-wifi text-success" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">{{ t('help.wifi_setup') }}</h6>
+                                <p class="text-muted">{{ t('help.wifi_setup_desc') }}</p>
+                                <a href="/guide/wifi-setup" class="btn btn-outline-success btn-sm">
+                                    {{ t('help.read_guide') }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-shield-check text-warning" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">{{ t('help.security_setup') }}</h6>
+                                <p class="text-muted">{{ t('help.security_setup_desc') }}</p>
+                                <a href="/guide/security-setup" class="btn btn-outline-warning btn-sm">
+                                    {{ t('help.read_guide') }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-gear text-info" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">{{ t('help.advanced_config') }}</h6>
+                                <p class="text-muted">{{ t('help.advanced_config_desc') }}</p>
+                                <a href="/guide/advanced-config" class="btn btn-outline-info btn-sm">
+                                    {{ t('help.read_guide') }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contacto y Soporte -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-envelope"></i>
+                    {{ t('help.contact') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="contactForm">
+                    <div class="mb-3">
+                        <label for="contact_name" class="form-label">{{ t('help.your_name') }}</label>
+                        <input type="text" class="form-control" id="contact_name" name="contact_name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="contact_email" class="form-label">{{ t('help.your_email') }}</label>
+                        <input type="email" class="form-control" id="contact_email" name="contact_email" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="contact_subject" class="form-label">{{ t('help.subject') }}</label>
+                        <select class="form-select" id="contact_subject" name="contact_subject" required>
+                            <option value="">{{ t('help.select_subject') }}</option>
+                            <option value="general">{{ t('help.general_inquiry') }}</option>
+                            <option value="technical">{{ t('help.technical_support') }}</option>
+                            <option value="bug">{{ t('help.bug_report') }}</option>
+                            <option value="feature">{{ t('help.feature_request') }}</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="contact_message" class="form-label">{{ t('help.message') }}</label>
+                        <textarea class="form-control" id="contact_message" name="contact_message" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i>
+                            {{ t('help.send_message') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información de Contacto -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    {{ t('help.contact_info') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6><i class="bi bi-envelope text-primary"></i> {{ t('help.email') }}</h6>
+                    <p class="text-muted">support@hostberry.com</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="bi bi-globe text-success"></i> {{ t('help.website') }}</h6>
+                    <p class="text-muted">https://hostberry.com</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="bi bi-github text-dark"></i> {{ t('help.github') }}</h6>
+                    <p class="text-muted">https://github.com/hostberry</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="bi bi-discord text-info"></i> {{ t('help.discord') }}</h6>
+                    <p class="text-muted">https://discord.gg/hostberry</p>
+                </div>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <h6>{{ t('help.response_time') }}</h6>
+                    <p class="text-muted">{{ t('help.response_time_desc') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="/static/js/help.js?v={{ last_update }}"></script>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4"><i class="fas fa-chart-line me-2"></i>{{ _('System Monitoring') }}</h1>
+    
+    <!-- Uptime Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0"><i class="fas fa-clock me-2"></i>{{ _('System Uptime') }}</h5>
+        </div>
+        <div class="card-body">
+            <p class="mb-0"><i class="fas fa-hourglass-half me-2"></i><strong>{{ _('Uptime') }}:</strong> <span id="uptime">0 days, 0 hours, 0 minutes</span></p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- CPU Stats -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-microchip me-2"></i>{{ _('CPU Information') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p><i class="fas fa-tachometer-alt me-2"></i><strong>{{ _('Usage') }}:</strong> <span id="cpu-usage">0%</span></p>
+                            <p><i class="fas fa-thermometer-half me-2"></i><strong>{{ _('Temperature') }}:</strong> <span id="cpu-temp">0°C</span></p>
+                        </div>
+                        <div class="col-6">
+                            <p><i class="fas fa-microchip me-2"></i><strong>{{ _('Cores') }}:</strong> <span id="cpu-cores">0</span></p>
+                            <p><i class="fas fa-bolt me-2"></i><strong>{{ _('Frequency') }}:</strong> <span id="cpu-freq">0 MHz</span></p>
+                        </div>
+                    </div>
+                    <div class="progress">
+                        <div id="cpu-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Memory Stats -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-memory me-2"></i>{{ _('Memory Information') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p><i class="fas fa-database me-2"></i><strong>{{ _('Total') }}:</strong> <span id="mem-total">0 GB</span></p>
+                            <p><i class="fas fa-hdd me-2"></i><strong>{{ _('Used') }}:</strong> <span id="mem-used">0 GB</span></p>
+                        </div>
+                        <div class="col-6">
+                            <p><i class="fas fa-hdd me-2"></i><strong>{{ _('Free') }}:</strong> <span id="mem-free">0 GB</span></p>
+                            <p><i class="fas fa-percentage me-2"></i><strong>{{ _('Usage') }}:</strong> <span id="mem-usage">0%</span></p>
+                        </div>
+                    </div>
+                    <div class="progress">
+                        <div id="mem-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Disk Stats -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-hdd me-2"></i>{{ _('Disk Information') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p><i class="fas fa-database me-2"></i><strong>{{ _('Total') }}:</strong> <span id="disk-total">0 GB</span></p>
+                            <p><i class="fas fa-hdd me-2"></i><strong>{{ _('Used') }}:</strong> <span id="disk-used">0 GB</span></p>
+                        </div>
+                        <div class="col-6">
+                            <p><i class="fas fa-hdd me-2"></i><strong>{{ _('Free') }}:</strong> <span id="disk-free">0 GB</span></p>
+                            <p><i class="fas fa-percentage me-2"></i><strong>{{ _('Usage') }}:</strong> <span id="disk-usage">0%</span></p>
+                        </div>
+                    </div>
+                    <div class="progress">
+                        <div id="disk-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Stats -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-network-wired me-2"></i>{{ _('Network Information') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p><i class="fas fa-globe me-2"></i><strong>{{ _('IP Address') }}:</strong> <span id="net-ip">-</span></p>
+                            <p><i class="fas fa-upload me-2"></i><strong>{{ _('Upload') }}:</strong> <span id="net-upload">0 KB/s</span></p>
+                        </div>
+                        <div class="col-6">
+                            <p><i class="fas fa-ethernet me-2"></i><strong>{{ _('Interface') }}:</strong> <span id="net-interface">-</span></p>
+                            <p><i class="fas fa-download me-2"></i><strong>{{ _('Download') }}:</strong> <span id="net-download">0 KB/s</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="/static/js/monitoring.js?v={{ last_update }}"></script>
+{% endblock %}

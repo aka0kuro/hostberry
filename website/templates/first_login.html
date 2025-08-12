@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Primer inicio de sesión</title>
+  <link href="/static/css/hostberry.css" rel="stylesheet">
+  <link href="/static/css/first_login.css" rel="stylesheet">
+</head>
+<body class="container py-5">
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">Cambia tus credenciales</div>
+        <div class="card-body">
+          <div id="alert" class="alert d-none" role="alert"></div>
+          <form id="firstLoginForm">
+            <div class="mb-3">
+              <label class="form-label">Nuevo usuario</label>
+              <input type="text" class="form-control" name="new_username" required minlength="3" maxlength="50">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Nueva contraseña</label>
+              <div class="input-group">
+                <input type="password" class="form-control" name="new_password" id="new_password" required minlength="8" maxlength="100">
+                <button class="btn btn-outline-secondary" type="button" id="toggle-new-password" aria-label="Mostrar/Ocultar contraseña">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Confirmar contraseña</label>
+              <div class="input-group">
+                <input type="password" class="form-control" name="confirm_password" id="confirm_password" required minlength="8" maxlength="100">
+                <button class="btn btn-outline-secondary" type="button" id="toggle-confirm-password" aria-label="Mostrar/Ocultar contraseña">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar y salir</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <script src="/static/js/first_login.js?v={{ last_update }}"></script>
+</body>
+</html>
+

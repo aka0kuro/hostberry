@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <!-- Configuración General -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-gear"></i>
+                    {{ t('settings.general') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="generalConfigForm">
+                    <div class="mb-3">
+                        <label for="language" class="form-label">{{ t('settings.language') }}</label>
+                        <select class="form-select" id="language" name="language">
+                            <option value="es" {{ 'selected' if settings.language == 'es' else '' }}>Español</option>
+                            <option value="en" {{ 'selected' if settings.language == 'en' else '' }}>English</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="theme" class="form-label">{{ t('settings.theme') }}</label>
+                        <select class="form-select" id="theme" name="theme">
+                            <option value="light" {{ 'selected' if settings.theme == 'light' else '' }}>Light</option>
+                            <option value="dark" {{ 'selected' if settings.theme == 'dark' else '' }}>Dark</option>
+                            <option value="auto" {{ 'selected' if settings.theme == 'auto' else '' }}>Auto</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="timezone" class="form-label">{{ t('settings.timezone') }}</label>
+                        <select class="form-select" id="timezone" name="timezone">
+                            <option value="UTC" {{ 'selected' if settings.timezone == 'UTC' else '' }}>UTC</option>
+                            <option value="Europe/Madrid" {{ 'selected' if settings.timezone == 'Europe/Madrid' else '' }}>Europe/Madrid</option>
+                            <option value="America/New_York" {{ 'selected' if settings.timezone == 'America/New_York' else '' }}>America/New_York</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            {{ t('common.save') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuración del Sistema -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-cpu"></i>
+                    {{ t('settings.system') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="systemConfigForm">
+                    <div class="mb-3">
+                        <label for="log_level" class="form-label">{{ t('system.log_level') }}</label>
+                        <select class="form-select" id="log_level" name="log_level">
+                            <option value="DEBUG" {{ 'selected' if system_config.log_level == 'DEBUG' else '' }}>DEBUG</option>
+                            <option value="INFO" {{ 'selected' if system_config.log_level == 'INFO' else '' }}>INFO</option>
+                            <option value="WARNING" {{ 'selected' if system_config.log_level == 'WARNING' else '' }}>WARNING</option>
+                            <option value="ERROR" {{ 'selected' if system_config.log_level == 'ERROR' else '' }}>ERROR</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="auto_backup" class="form-label">{{ t('settings.auto_backup') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="auto_backup" name="auto_backup" {{ 'checked' if system_config.auto_backup else '' }}>
+                            <label class="form-check-label" for="auto_backup">
+                                {{ t('settings.enable_auto_backup') }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="backup_interval" class="form-label">{{ t('settings.backup_interval') }}</label>
+                        <select class="form-select" id="backup_interval" name="backup_interval">
+                            <option value="daily" {{ 'selected' if system_config.backup_interval == 'daily' else '' }}>Daily</option>
+                            <option value="weekly" {{ 'selected' if system_config.backup_interval == 'weekly' else '' }}>Weekly</option>
+                            <option value="monthly" {{ 'selected' if system_config.backup_interval == 'monthly' else '' }}>Monthly</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            {{ t('common.save') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuración de Red -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-wifi"></i>
+                    {{ t('settings.network') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="networkConfigForm">
+                    <div class="mb-3">
+                        <label for="dhcp_enabled" class="form-label">{{ t('settings.dhcp_server') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="dhcp_enabled" name="dhcp_enabled" {{ 'checked' if network_config.dhcp_enabled else '' }}>
+                            <label class="form-check-label" for="dhcp_enabled">
+                                {{ t('settings.enable_dhcp') }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="dns_server" class="form-label">{{ t('settings.dns_server') }}</label>
+                        <input type="text" class="form-control" id="dns_server" name="dns_server" value="{{ network_config.dns_server | default('8.8.8.8') }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="firewall_enabled" class="form-label">{{ t('settings.firewall') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="firewall_enabled" name="firewall_enabled" {{ 'checked' if network_config.firewall_enabled else '' }}>
+                            <label class="form-check-label" for="firewall_enabled">
+                                {{ t('settings.enable_firewall') }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            {{ t('common.save') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuración de Seguridad -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-shield-check"></i>
+                    {{ t('settings.security') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="securityConfigForm">
+                    <div class="mb-3">
+                        <label for="ssl_enabled" class="form-label">{{ t('settings.ssl') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="ssl_enabled" name="ssl_enabled" {{ 'checked' if security_config.ssl_enabled else '' }}>
+                            <label class="form-check-label" for="ssl_enabled">
+                                {{ t('settings.enable_ssl') }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="max_login_attempts" class="form-label">{{ t('settings.max_login_attempts') }}</label>
+                        <input type="number" class="form-control" id="max_login_attempts" name="max_login_attempts" value="{{ security_config.max_login_attempts | default(3) }}" min="1" max="10">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="session_timeout" class="form-label">{{ t('settings.session_timeout') }}</label>
+                        <input type="number" class="form-control" id="session_timeout" name="session_timeout" value="{{ security_config.session_timeout | default(30) }}" min="5" max="1440">
+                        <small class="text-muted">{{ t('settings.minutes') }}</small>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            {{ t('common.save') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuración de Rendimiento -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-speedometer2"></i>
+                    {{ t('settings.performance') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="performanceConfigForm">
+                    <div class="mb-3">
+                        <label for="cache_enabled" class="form-label">{{ t('settings.cache') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="cache_enabled" name="cache_enabled" {{ 'checked' if performance_config.cache_enabled else '' }}>
+                            <label class="form-check-label" for="cache_enabled">
+                                {{ t('settings.enable_cache') }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="cache_size" class="form-label">{{ t('settings.cache_size') }}</label>
+                        <input type="number" class="form-control" id="cache_size" name="cache_size" value="{{ performance_config.cache_size | default(50) }}" min="10" max="500">
+                        <small class="text-muted">{{ t('settings.mb') }}</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="compression_enabled" class="form-label">{{ t('settings.compression') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="compression_enabled" name="compression_enabled" {{ 'checked' if performance_config.compression_enabled else '' }}>
+                            <label class="form-check-label" for="compression_enabled">
+                                {{ t('settings.enable_compression') }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            {{ t('common.save') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuración de Notificaciones -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-bell"></i>
+                    {{ t('settings.notifications') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="notificationConfigForm">
+                    <div class="mb-3">
+                        <label for="email_notifications" class="form-label">{{ t('settings.email_notifications') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {{ 'checked' if notification_config.email_enabled else '' }}>
+                            <label class="form-check-label" for="email_notifications">
+                                {{ t('settings.enable_email_notifications') }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email_address" class="form-label">{{ t('settings.email_address') }}</label>
+                        <input type="email" class="form-control" id="email_address" name="email_address" value="{{ notification_config.email_address | default('') }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="system_alerts" class="form-label">{{ t('settings.system_alerts') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="system_alerts" name="system_alerts" {{ 'checked' if notification_config.system_alerts else '' }}>
+                            <label class="form-check-label" for="system_alerts">
+                                {{ t('settings.enable_system_alerts') }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            {{ t('common.save') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información del Sistema -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    {{ t('settings.about') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>{{ t('settings.version') }}</h6>
+                        <p class="text-muted">{{ system_info.version | default('1.0.0') }}</p>
+                        
+                        <h6>{{ t('settings.build') }}</h6>
+                        <p class="text-muted">{{ system_info.build | default('2023.10.27') }}</p>
+                        
+                        <h6>{{ t('settings.release_date') }}</h6>
+                        <p class="text-muted">{{ system_info.release_date | default('2023-10-27') }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>{{ t('settings.license') }}</h6>
+                        <p class="text-muted">{{ system_info.license | default('MIT License') }}</p>
+                        
+                        <h6>{{ t('settings.author') }}</h6>
+                        <p class="text-muted">{{ system_info.author | default('HostBerry Team') }}</p>
+                        
+                        <h6>{{ t('settings.website') }}</h6>
+                        <p class="text-muted">{{ system_info.website | default('https://hostberry.com') }}</p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <a href="/help" class="btn btn-outline-info me-2">
+                        <i class="bi bi-question-circle"></i>
+                        {{ t('settings.help') }}
+                    </a>
+                    <a href="/documentation" class="btn btn-outline-secondary me-2">
+                        <i class="bi bi-book"></i>
+                        {{ t('settings.documentation') }}
+                    </a>
+                    <a href="/support" class="btn btn-outline-primary">
+                        <i class="bi bi-headset"></i>
+                        {{ t('settings.support') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="/static/js/settings.js?v={{ last_update }}"></script>
+{% endblock %}
+{% endblock %}

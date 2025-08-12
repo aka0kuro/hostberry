@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <!-- Tarjeta de Bienvenida -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">
+                    <i class="bi bi-house-heart"></i>
+                    {{ t('dashboard.welcome') }}
+                </h2>
+                <p class="card-text">{{ t('dashboard.welcome_message', 'Bienvenido al panel de control de HostBerry') }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas Rápidas -->
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="bi bi-cpu text-primary" style="font-size: 2rem;"></i>
+                <h5 class="mt-2">{{ t('dashboard.cpu_usage') }}</h5>
+                <h4 class="text-primary" data-stat="cpu">{{ system_stats.cpu_percent | default(25) }}%</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="bi bi-memory text-success" style="font-size: 2rem;"></i>
+                <h5 class="mt-2">{{ t('dashboard.memory_usage') }}</h5>
+                <h4 class="text-success" data-stat="memory">{{ system_stats.memory_percent | default(45) }}%</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="bi bi-hdd text-warning" style="font-size: 2rem;"></i>
+                <h5 class="mt-2">{{ t('dashboard.disk_usage') }}</h5>
+                <h4 class="text-warning" data-stat="disk">{{ system_stats.disk_percent | default(60) }}%</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="bi bi-thermometer-half text-danger" style="font-size: 2rem;"></i>
+                <h5 class="mt-2">{{ t('dashboard.temperature') }}</h5>
+                <h4 class="text-danger" data-stat="temperature">{{ system_stats.temperature | default(45) }}°C</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estado del Sistema -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-heart-pulse"></i>
+                    {{ t('dashboard.system_health') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="status-indicator status-{{ 'online' if system_health.overall == 'healthy' else 'offline' }}"></span>
+                            <span>{{ t('dashboard.overall') }}: {{ t('dashboard.healthy' if system_health.overall == 'healthy' else 'dashboard.unhealthy') }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="status-indicator status-{{ 'online' if system_health.cpu == 'healthy' else 'warning' }}"></span>
+                            <span>{{ t('dashboard.cpu') }}: {{ t('dashboard.healthy' if system_health.cpu == 'healthy' else 'dashboard.warning') }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="status-indicator status-{{ 'online' if system_health.memory == 'healthy' else 'warning' }}"></span>
+                            <span>{{ t('dashboard.memory') }}: {{ t('dashboard.healthy' if system_health.memory == 'healthy' else 'dashboard.warning') }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="status-indicator status-{{ 'online' if system_health.disk == 'healthy' else 'warning' }}"></span>
+                            <span>{{ t('dashboard.storage') }}: {{ t('dashboard.healthy' if system_health.disk == 'healthy' else 'dashboard.warning') }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="status-indicator status-{{ 'online' if system_health.network == 'healthy' else 'warning' }}"></span>
+                            <span>{{ t('dashboard.network') }}: {{ t('dashboard.healthy' if system_health.network == 'healthy' else 'dashboard.warning') }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="status-indicator status-{{ 'online' if system_health.temperature == 'healthy' else 'warning' }}"></span>
+                            <span>{{ t('dashboard.temperature') }}: {{ t('dashboard.healthy' if system_health.temperature == 'healthy' else 'dashboard.warning') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estado de Servicios -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-server"></i>
+                    {{ t('dashboard.service_status') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-{{ 'online' if services.hostberry == 'running' else 'offline' }}"></span>
+                    <span>{{ t('common.app_name') }}: {{ t('dashboard.running' if services.hostberry == 'running' else 'dashboard.stopped') }}</span>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-{{ 'online' if services.nginx == 'running' else 'offline' }}"></span>
+                    <span>Nginx: {{ t('dashboard.running' if services.nginx == 'running' else 'dashboard.stopped') }}</span>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-{{ 'online' if services.ssh == 'running' else 'offline' }}"></span>
+                    <span>SSH: {{ t('dashboard.running' if services.ssh == 'running' else 'dashboard.stopped') }}</span>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-{{ 'online' if services.ufw == 'running' else 'offline' }}"></span>
+                    <span>UFW: {{ t('dashboard.running' if services.ufw == 'running' else 'dashboard.stopped') }}</span>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-{{ 'online' if services.fail2ban == 'running' else 'offline' }}"></span>
+                    <span>Fail2ban: {{ t('dashboard.running' if services.fail2ban == 'running' else 'dashboard.stopped') }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actividad Reciente -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clock-history"></i>
+                    {{ t('dashboard.recent_activity') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for activity in recent_activities %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ activity.title }}</h6>
+                            <small class="text-muted">{{ activity.timestamp }}</small>
+                        </div>
+                        <p class="mb-1">{{ activity.description }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones Rápidas -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-lightning"></i>
+                    {{ t('dashboard.quick_actions') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <a href="/system" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-gear"></i>
+                            {{ t('navigation.system') }}
+                        </a>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <a href="/network" class="btn btn-outline-success w-100">
+                            <i class="bi bi-wifi"></i>
+                            {{ t('navigation.network') }}
+                        </a>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <a href="/wifi" class="btn btn-outline-info w-100">
+                            <i class="bi bi-wifi-1"></i>
+                            {{ t('navigation.wifi') }}
+                        </a>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <a href="/vpn" class="btn btn-outline-warning w-100">
+                            <i class="bi bi-shield-lock"></i>
+                            {{ t('navigation.vpn') }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

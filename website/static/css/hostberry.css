@@ -1,0 +1,71 @@
+/* HostBerry minimal CSS (offline) emulando estilos usados de Bootstrap */
+:root {
+  --hb-primary: #0d6efd;
+  --hb-primary-dark: #0b5ed7;
+  --hb-danger: #dc3545;
+  --hb-danger-dark: #8b0000;
+  --hb-bg-dark: #212529;
+  --hb-text-light: #f8f9fa;
+  --hb-text-muted: #6c757d;
+}
+
+/* Tipografía base */
+html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+
+/* Navbar */
+.navbar { display:flex; align-items:center; padding: .5rem 1rem; }
+.navbar-dark { color: var(--hb-text-light); }
+.bg-primary { background-color: var(--hb-primary); }
+.navbar .container-fluid { width:100%; display:flex; align-items:center; justify-content:space-between; }
+.navbar-brand { color:#fff; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:.5rem; }
+.navbar-toggler { display:none; }
+.navbar-nav { display:flex; gap:.5rem; list-style:none; padding:0; margin:0; }
+.nav-item { }
+.nav-link { color:#fff; text-decoration:none; padding:.25rem .5rem; border-radius:.25rem; display:inline-flex; align-items:center; gap:.35rem; }
+.nav-link:hover { background: rgba(255,255,255,.15); }
+
+/* Dropdown */
+.dropdown { position:relative; }
+.dropdown-toggle { cursor:pointer; }
+.dropdown-menu { position:absolute; top:100%; right:0; min-width: 12rem; background:#fff; color:#212529; border:1px solid rgba(0,0,0,.15); border-radius:.5rem; padding:.25rem 0; display:none; z-index:1000; }
+.dropdown.show .dropdown-menu { display:block; }
+.dropdown-item { display:block; padding:.5rem 1rem; color:#212529; text-decoration:none; }
+.dropdown-item:hover { background:#f2f2f2; }
+.dropdown-divider { height:1px; background:#e5e5e5; margin:.25rem 0; }
+
+/* Botones */
+.btn { display:inline-block; padding:.375rem .75rem; border-radius:.5rem; border:1px solid transparent; font-weight:600; cursor:pointer; transition:all .2s ease; }
+.btn-primary { background: var(--hb-primary); color:#fff; }
+.btn-primary:hover { background: var(--hb-primary-dark); }
+.btn-outline-secondary { background: transparent; border-color:#6c757d; color:#6c757d; }
+.btn-outline-secondary:hover { background:#6c757d; color:#fff; }
+
+/* Formularios */
+.form-label { display:block; margin-bottom:.25rem; font-weight:500; }
+.form-control { width:100%; padding:.6rem .9rem; border-radius:.5rem; border:1px solid rgba(0,0,0,.2); background:#fff; color:#212529; }
+.form-control:focus { outline:none; border-color: var(--hb-primary); box-shadow: 0 0 0 .2rem rgba(13,110,253,.25); }
+.form-check { display:flex; align-items:center; gap:.5rem; }
+.form-check-input { width:1.1rem; height:1.1rem; }
+.form-check-label { }
+.input-group { display:flex; align-items:stretch; }
+.input-group .form-control { border-top-right-radius:0; border-bottom-right-radius:0; }
+.input-group .btn { border-top-left-radius:0; border-bottom-left-radius:0; }
+
+/* Contenedores */
+.container-fluid { width:100%; padding-left:1rem; padding-right:1rem; }
+
+/* Alerts */
+.alert { padding:.75rem 1rem; border-radius:.5rem; border:1px solid transparent; }
+.alert-success { background:#d1e7dd; color:#0f5132; border-color:#badbcc; }
+.alert-danger { background:#f8d7da; color:#842029; border-color:#f5c2c7; }
+.alert-warning { background:#fff3cd; color:#664d03; border-color:#ffecb5; }
+
+/* Utilidades */
+.position-fixed { position:fixed; }
+.bg-primary-gradient { background: linear-gradient(135deg, var(--hb-primary) 0%, var(--hb-primary-dark) 100%); }
+
+/* Iconos de Bootstrap (fallback vacío para que no rompa el layout) */
+[class^="bi"]::before, [class*=" bi-"]::before { content: ""; display:inline-block; width:1em; }
+
+/* Tema oscuro opcional por clases existentes */
+body.dark-theme { background-color: #1a1a1a; color: #f1f1f1; }

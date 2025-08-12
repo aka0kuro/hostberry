@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t('common.app_name', 'HostBerry') }}</title>
+    <meta name="description" content="{{ t('common.app_description', 'HostBerry - Sistema de gestión de red para Raspberry Pi') }}">
+    <link rel="icon" type="image/png" href="/static/hostberry.png">
+    <link rel="shortcut icon" type="image/png" href="/static/hostberry.png">
+    <link rel="apple-touch-icon" href="/static/hostberry.png">
+    
+    <!-- CSS offline HostBerry -->
+    <link href="/static/css/hostberry.css" rel="stylesheet">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% block navbar %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-router"></i>
+                {{ t('common.app_name', 'HostBerry') }}
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="bi bi-speedometer2"></i>
+                            {{ t('navigation.dashboard') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/system">
+                            <i class="bi bi-gear"></i>
+                            {{ t('navigation.system') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/network">
+                            <i class="bi bi-wifi"></i>
+                            {{ t('navigation.network') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/wifi">
+                            <i class="bi bi-wifi-1"></i>
+                            {{ t('navigation.wifi') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/vpn">
+                            <i class="bi bi-shield-lock"></i>
+                            {{ t('navigation.vpn') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/wireguard">
+                            <i class="bi bi-shield-check"></i>
+                            {{ t('navigation.wireguard') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/adblock">
+                            <i class="bi bi-shield-x"></i>
+                            {{ t('navigation.adblock') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/hostapd">
+                            <i class="bi bi-router"></i>
+                            {{ t('navigation.hostapd') }}
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-globe"></i>
+                            {{ t('navigation.language') }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="?lang=es">Español</a></li>
+                            <li><a class="dropdown-item" href="?lang=en">English</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i>
+                            {{ current_user.username if current_user else t('navigation.profile') }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/profile">
+                                <i class="bi bi-person"></i>
+                                {{ t('navigation.profile') }}
+                            </a></li>
+                            <li><a class="dropdown-item" href="/settings">
+                                <i class="bi bi-gear"></i>
+                                {{ t('navigation.settings') }}
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/help">
+                                <i class="bi bi-question-circle"></i>
+                                {{ t('navigation.help') }}
+                            </a></li>
+                            <li><a class="dropdown-item" href="/about">
+                                <i class="bi bi-info-circle"></i>
+                                {{ t('navigation.about') }}
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" data-action="logout">
+                                <i class="bi bi-box-arrow-right"></i>
+                                {{ t('navigation.logout') }}
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% endblock %}
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Botón flotante de cambio de tema -->
+    <button id="theme-toggle" class="theme-toggle light" type="button" title="Cambiar tema" aria-label="Cambiar tema" onclick="toggleTheme()">
+        <i class="bi bi-moon"></i>
+    </button>
+
+    
+
+    <script src="/static/js/common.js"></script>
+    
+    <!-- Exponer traducciones para JavaScript (JSON de forma segura si hace falta)-->
+    <script id="i18n-json" type="application/json">{{ translations | tojson }}</script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <!-- Interfaces de Red -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-hdd-network"></i>
+                    {{ t('network.interfaces') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="interfacesContainer">
+                    <!-- Las interfaces se cargarán dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estado de Red -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-wifi"></i>
+                    {{ t('network.status') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-online"></span>
+                    <span>{{ t('network.connected') }}</span>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-online"></span>
+                    <span>{{ t('network.internet_available') }}</span>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-online"></span>
+                    <span>{{ t('network.firewall_active') }}</span>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-warning"></span>
+                    <span>{{ t('network.dhcp_running') }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Enrutamiento -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-diagram-3"></i>
+                    {{ t('network.routing_table') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>{{ t('network.destination') }}</th>
+                                <th>{{ t('network.gateway') }}</th>
+                                <th>{{ t('network.interface') }}</th>
+                                <th>{{ t('network.metric') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="routingTable">
+                            <!-- La tabla de enrutamiento se cargará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firewall -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-shield-check"></i>
+                    {{ t('network.firewall') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-online"></span>
+                    <span>{{ t('network.firewall_enabled') }}</span>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-online"></span>
+                    <span>{{ t('network.ssh_allowed') }}</span>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-online"></span>
+                    <span>{{ t('network.http_allowed') }}</span>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-offline"></span>
+                    <span>{{ t('network.https_allowed') }}</span>
+                </div>
+                
+                <hr>
+                
+                <button class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="toggleFirewall()">
+                    <i class="bi bi-shield"></i>
+                    {{ t('network.toggle_firewall') }}
+                </button>
+                
+                <button class="btn btn-outline-secondary btn-sm w-100" onclick="viewFirewallRules()">
+                    <i class="bi bi-list"></i>
+                    {{ t('network.view_rules') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuración de Red -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-gear"></i>
+                    {{ t('network.configuration') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="networkConfigForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="hostname" class="form-label">{{ t('network.hostname') }}</label>
+                                <input type="text" class="form-control" id="hostname" name="hostname" value="hostberry">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="gateway" class="form-label">{{ t('network.gateway') }}</label>
+                                <input type="text" class="form-control" id="gateway" name="gateway" value="192.168.1.1">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="dns1" class="form-label">{{ t('network.primary_dns') }}</label>
+                                <input type="text" class="form-control" id="dns1" name="dns1" value="8.8.8.8">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="dns2" class="form-label">{{ t('network.secondary_dns') }}</label>
+                                <input type="text" class="form-control" id="dns2" name="dns2" value="8.8.4.4">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check"></i>
+                        {{ t('network.save_configuration') }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/network.js?v={{ last_update }}"></script>
+{% endblock %}

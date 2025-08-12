@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <!-- Información del Perfil -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-person-circle"></i>
+                    {{ t('auth.profile') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="profileForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">{{ t('auth.username') }}</label>
+                            <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">{{ t('auth.email') }}</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ user.email | default('') }}">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">{{ t('profile.first_name') }}</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name | default('') }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">{{ t('profile.last_name') }}</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name | default('') }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="role" class="form-label">{{ t('profile.role') }}</label>
+                        <input type="text" class="form-control" id="role" name="role" value="{{ user.role | default('admin') }}" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="timezone" class="form-label">{{ t('settings.timezone') }}</label>
+                        <select class="form-select" id="timezone" name="timezone">
+                            <option value="UTC" {{ 'selected' if user.timezone == 'UTC' else '' }}>UTC</option>
+                            <option value="Europe/Madrid" {{ 'selected' if user.timezone == 'Europe/Madrid' else '' }}>Europe/Madrid</option>
+                            <option value="America/New_York" {{ 'selected' if user.timezone == 'America/New_York' else '' }}>America/New_York</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            {{ t('common.save') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cambiar Contraseña -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-key"></i>
+                    {{ t('auth.change_password') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="passwordForm">
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">{{ t('auth.current_password') }}</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">{{ t('auth.new_password') }}</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">{{ t('auth.confirm_password') }}</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-key"></i>
+                            {{ t('auth.change_password') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas del Usuario -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-graph-up"></i>
+                    {{ t('profile.statistics') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <h6>{{ t('profile.last_login') }}</h6>
+                            <h4 class="text-primary">{{ user.last_login | default('Nunca') }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <h6>{{ t('profile.login_count') }}</h6>
+                            <h4 class="text-success">{{ user.login_count | default(0) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <h6>{{ t('profile.failed_attempts') }}</h6>
+                            <h4 class="text-warning">{{ user.failed_attempts | default(0) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <h6>{{ t('profile.account_age') }}</h6>
+                            <h4 class="text-info">{{ user.account_age | default('0 días') }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actividad Reciente -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clock-history"></i>
+                    {{ t('profile.recent_activity') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for activity in recent_activities %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ activity.action }}</h6>
+                            <small class="text-muted">{{ activity.timestamp }}</small>
+                        </div>
+                        <p class="mb-1">{{ activity.description }}</p>
+                        <small class="text-muted">{{ activity.ip_address }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuración de Notificaciones -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-bell"></i>
+                    {{ t('profile.notifications') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="notificationForm">
+                    <div class="mb-3">
+                        <label for="email_notifications" class="form-label">{{ t('profile.email_notifications') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {{ 'checked' if user.email_notifications else '' }}>
+                            <label class="form-check-label" for="email_notifications">
+                                {{ t('profile.enable_email_notifications') }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="system_alerts" class="form-label">{{ t('profile.system_alerts') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="system_alerts" name="system_alerts" {{ 'checked' if user.system_alerts else '' }}>
+                            <label class="form-check-label" for="system_alerts">
+                                {{ t('profile.enable_system_alerts') }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="security_alerts" class="form-label">{{ t('profile.security_alerts') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="security_alerts" name="security_alerts" {{ 'checked' if user.security_alerts else '' }}>
+                            <label class="form-check-label" for="security_alerts">
+                                {{ t('profile.enable_security_alerts') }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            {{ t('common.save') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuración de Privacidad -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-shield-lock"></i>
+                    {{ t('profile.privacy') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="privacyForm">
+                    <div class="mb-3">
+                        <label for="show_activity" class="form-label">{{ t('profile.show_activity') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="show_activity" name="show_activity" {{ 'checked' if user.show_activity else '' }}>
+                            <label class="form-check-label" for="show_activity">
+                                {{ t('profile.enable_activity_visibility') }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="data_collection" class="form-label">{{ t('profile.data_collection') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="data_collection" name="data_collection" {{ 'checked' if user.data_collection else '' }}>
+                            <label class="form-check-label" for="data_collection">
+                                {{ t('profile.enable_data_collection') }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="analytics" class="form-label">{{ t('profile.analytics') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="analytics" name="analytics" {{ 'checked' if user.analytics else '' }}>
+                            <label class="form-check-label" for="analytics">
+                                {{ t('profile.enable_analytics') }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            {{ t('common.save') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="/static/js/profile.js?v={{ last_update }}"></script>
+{% endblock %}
+{% endblock %} 

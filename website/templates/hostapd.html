@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <!-- Vista General de HostAPD -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-router"></i>
+                    {{ t('hostapd.overview') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <i class="bi bi-wifi text-primary" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">{{ t('hostapd.access_points') }}</h6>
+                            <h4 class="text-primary">{{ hostapd_stats.access_points_count | default(2) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <i class="bi bi-people text-success" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">{{ t('hostapd.clients') }}</h6>
+                            <h4 class="text-success">{{ hostapd_stats.clients_count | default(8) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <i class="bi bi-speedometer2 text-warning" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">{{ t('hostapd.bandwidth') }}</h6>
+                            <h4 class="text-warning">{{ hostapd_stats.total_bandwidth | default('150 Mbps') }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <i class="bi bi-shield-check text-info" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">{{ t('hostapd.security') }}</h6>
+                            <h4 class="text-info">{{ t('hostapd.active') }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estado de HostAPD -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-heart-pulse"></i>
+                    {{ t('hostapd.status') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-{{ 'online' if hostapd_status.enabled else 'offline' }}"></span>
+                    <span>{{ t('hostapd.hostapd_enabled' if hostapd_status.enabled else 'hostapd.hostapd_disabled') }}</span>
+                </div>
+                
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-{{ 'online' if hostapd_status.running else 'offline' }}"></span>
+                    <span>{{ t('hostapd.hostapd_running' if hostapd_status.running else 'hostapd.hostapd_stopped') }}</span>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">{{ t('hostapd.active_access_points') }}</label>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-wifi text-primary me-2"></i>
+                        <span class="h6 mb-0">{{ hostapd_status.active_aps | default(2) }}</span>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">{{ t('hostapd.connected_clients') }}</label>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-people text-success me-2"></i>
+                        <span class="h6 mb-0">{{ hostapd_status.connected_clients | default(8) }}</span>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-success" onclick="toggleHostAPD()">
+                        <i class="bi bi-router"></i>
+                        {{ t('hostapd.enable_hostapd') if not hostapd_status.enabled else t('hostapd.disable_hostapd') }}
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="restartHostAPD()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                        {{ t('hostapd.restart_hostapd') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Puntos de Acceso -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-wifi"></i>
+                    {{ t('hostapd.access_points') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>{{ t('hostapd.access_point_name') }}</th>
+                                <th>{{ t('hostapd.access_point_ssid') }}</th>
+                                <th>{{ t('hostapd.access_point_status') }}</th>
+                                <th>{{ t('hostapd.access_point_clients') }}</th>
+                                <th>{{ t('common.actions') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accessPointsTable">
+                            <!-- Los puntos de acceso se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clientes Conectados -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-people"></i>
+                    {{ t('hostapd.clients') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>{{ t('hostapd.client_mac') }}</th>
+                                <th>{{ t('hostapd.client_ip') }}</th>
+                                <th>{{ t('hostapd.client_signal') }}</th>
+                                <th>{{ t('hostapd.client_uptime') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientsTable">
+                            <!-- Los clientes se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuración de HostAPD -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-gear"></i>
+                    {{ t('hostapd.configuration') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="hostapdConfigForm">
+                    <div class="mb-3">
+                        <label for="interface" class="form-label">{{ t('hostapd.interface') }}</label>
+                        <select class="form-select" id="interface" name="interface">
+                            <option value="wlan0" {{ 'selected' if hostapd_config.interface == 'wlan0' else '' }}>wlan0</option>
+                            <option value="wlan1" {{ 'selected' if hostapd_config.interface == 'wlan1' else '' }}>wlan1</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="ssid" class="form-label">{{ t('hostapd.access_point_ssid') }}</label>
+                        <input type="text" class="form-control" id="ssid" name="ssid" value="{{ hostapd_config.ssid | default('HostBerry-AP') }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">{{ t('hostapd.access_point_password') }}</label>
+                        <input type="password" class="form-control" id="password" name="password" value="{{ hostapd_config.password | default('') }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="channel" class="form-label">{{ t('hostapd.access_point_channel') }}</label>
+                        <select class="form-select" id="channel" name="channel">
+                            {% for i in range(1, 14) %}
+                            <option value="{{ i }}" {{ 'selected' if hostapd_config.channel == i else '' }}>{{ i }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="security" class="form-label">{{ t('hostapd.access_point_security') }}</label>
+                        <select class="form-select" id="security" name="security">
+                            <option value="wpa2" {{ 'selected' if hostapd_config.security == 'wpa2' else '' }}>WPA2</option>
+                            <option value="wpa3" {{ 'selected' if hostapd_config.security == 'wpa3' else '' }}>WPA3</option>
+                            <option value="open" {{ 'selected' if hostapd_config.security == 'open' else '' }}>Open</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            {{ t('common.save') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas de HostAPD -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-graph-up"></i>
+                    {{ t('hostapd.statistics') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <h6>{{ t('hostapd.total_traffic') }}</h6>
+                            <h4 class="text-primary">{{ hostapd_stats.total_traffic | default('2.8 GB') }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <h6>{{ t('hostapd.active_clients') }}</h6>
+                            <h4 class="text-success">{{ hostapd_stats.active_clients | default(8) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <h6>{{ t('hostapd.peak_bandwidth') }}</h6>
+                            <h4 class="text-warning">{{ hostapd_stats.peak_bandwidth | default('75 Mbps') }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <h6>{{ t('hostapd.uptime') }}</h6>
+                            <h4 class="text-info">{{ hostapd_stats.uptime | default('5 días') }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="/static/js/hostapd.js?v={{ last_update }}"></script>
+{% endblock %}
