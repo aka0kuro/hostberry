@@ -1146,6 +1146,10 @@ User=$USER
 Group=$GROUP
 WorkingDirectory=$PROD_DIR
 EnvironmentFile=-/etc/hostberry/app.env
+Environment=DATABASE_URL=sqlite:///var/lib/hostberry/hostberry.db
+Environment=DB_PATH=/var/lib/hostberry/hostberry.db
+Environment=ENVIRONMENT=production
+Environment=LOG_LEVEL=$LOG_LEVEL
 Environment=PYTHONPATH=$PROD_DIR
 Environment=UVICORN_NO_UVLOOP=1
 Environment=UVICORN_NO_HTTPTOOLS=1
