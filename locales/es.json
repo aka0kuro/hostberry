@@ -863,6 +863,16 @@
     "monitor_script": "Script de monitoreo: {prod_dir}/monitor.sh",
     "logs_dir": "Logs: {log_dir}/",
     "backups_dir": "Backups: {backup_dir}/",
-    "ready_message": "🚀 ¡HostBerry está listo para producción!"
+    "ready_message": "🚀 ¡HostBerry está listo para producción!",
+    "cleaning_previous_installation": "🧹 Limpiando instalación anterior de HostBerry...",
+    "cleanup_done": "✅ Limpieza completa realizada",
+    "downloading_app": "Descargando aplicación desde GitHub...",
+    "moving_files": "Moviendo archivos al directorio de producción...",
+    "download_permissions_set": "Permisos y propietarios configurados correctamente",
+    "git_clone_failed": "No se pudo clonar el repositorio desde GitHub",
+    "git_fetch_failed": "No se pudo actualizar desde GitHub",
+    "git_reset_failed": "No se pudo resetear a la versión más reciente",
+    "config_corrupted_download": "El directorio config se corrompió durante la descarga",
+    "config_verification_failed": "La verificación de integridad del config falló después de la descarga"
   }
 } 
