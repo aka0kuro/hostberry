@@ -687,6 +687,107 @@ install_system_deps() {
     log "$ANSI_GREEN" "INFO" "$(get_text "deps_installed" "Dependencias del sistema instaladas")"
 }
 
+# Limpiar instalación anterior completamente
+clean_previous_installation() {
+    log "$ANSI_YELLOW" "INFO" "🧹 Limpiando instalación anterior de HostBerry..."
+
+    # Detener servicio si está activo
+    if systemctl is-active --quiet hostberry 2>/dev/null; then
+        systemctl stop hostberry 2>/dev/null || true
+        systemctl disable hostberry 2>/dev/null || true
+    fi
+
+    # Eliminar unit de systemd
+    if [ -f "/etc/systemd/system/hostberry.service" ]; then
+        rm -f "/etc/systemd/system/hostberry.service"
+        systemctl daemon-reload 2>/dev/null || true
+    fi
+
+    # Eliminar directorios de la app y datos
+    for dir in "/opt/hostberry" "/var/log/hostberry" "/var/lib/hostberry" "/etc/hostberry"; do
+        [ -e "$dir" ] && rm -rf "$dir"
+    done
+
+    # Nginx sites
+    for f in "/etc/nginx/sites-available/hostberry" "/etc/nginx/sites-available/hostberry-ssl" "/etc/nginx/sites-enabled/hostberry" "/etc/nginx/sites-enabled/hostberry-ssl"; do
+        [ -e "$f" ] && rm -f "$f"
+    done
+
+    # Logs de nginx relacionados
+    for lf in "/var/log/nginx/hostberry_access.log" "/var/log/nginx/hostberry_error.log" "/var/log/nginx/hostberry_ssl_access.log" "/var/log/nginx/hostberry_ssl_error.log"; do
+        [ -e "$lf" ] && rm -f "$lf"
+    done
+
+    # logrotate/fail2ban reglas
+    [ -f "/etc/logrotate.d/hostberry" ] && rm -f "/etc/logrotate.d/hostberry"
+    [ -f "/etc/fail2ban/jail.local" ] && rm -f "/etc/fail2ban/jail.local"
+
+    log "$ANSI_GREEN" "INFO" "✅ Limpieza completa realizada"
+}
+
+# Descargar/actualizar aplicación desde GitHub (repo oficial)
+download_application_from_github() {
+    local UPDATE_MODE="${1:-false}"
+    local GITHUB_REPO="https://github.com/aka0kuro/hostberry.git"
+    local TEMP_DIR="/tmp/hostberry_download_$$"
+
+    if [ "$UPDATE_MODE" = "true" ]; then
+        log "$ANSI_YELLOW" "INFO" "$(get_text "updating_app" "Actualizando aplicación desde GitHub...")"
+    else
+        log "$ANSI_YELLOW" "INFO" "$(get_text "downloading_app" "Descargando aplicación desde GitHub...")"
+    fi
+
+    mkdir -p "$PROD_DIR"
+
+    if [ "$UPDATE_MODE" = "true" ] && [ -d "$PROD_DIR/.git" ]; then
+        # Actualizar repo existente en /opt/hostberry
+        (
+            cd "$PROD_DIR"
+            # Backup de config (por seguridad)
+            [ -d config ] && cp -r config "/tmp/hostberry_config_backup_$$" 2>/dev/null || true
+            git fetch origin main || handle_error "$(get_text 'git_fetch_failed' 'No se pudo actualizar desde GitHub')"
+            git reset --hard origin/main || handle_error "$(get_text 'git_reset_failed' 'No se pudo resetear a la versión más reciente')"
+            if [ -d "/tmp/hostberry_config_backup_$$" ] && [ ! -f config/settings.py ]; then
+                rm -rf config && cp -r "/tmp/hostberry_config_backup_$$" config
+            fi
+            rm -rf "/tmp/hostberry_config_backup_$$" 2>/dev/null || true
+        )
+    else
+        # Clonación limpia
+        rm -rf "$PROD_DIR" && mkdir -p "$PROD_DIR"
+        mkdir -p "$TEMP_DIR"
+        git clone --depth 1 --branch main "$GITHUB_REPO" "$TEMP_DIR/hostberry" || handle_error "$(get_text 'git_clone_failed' 'No se pudo clonar el repositorio desde GitHub')"
+        cp -r "$TEMP_DIR/hostberry"/* "$PROD_DIR/" || handle_error "$(get_text 'copy_failed' 'No se pudo copiar archivos al directorio de producción')"
+        rm -rf "$TEMP_DIR"
+    fi
+
+    # Verificar config
+    if ! verify_config_integrity "$PROD_DIR" "descarga"; then
+        handle_error "$(get_text 'config_corrupted_download' 'El directorio config se corrompió durante la descarga')"
+    fi
+
+    # Permisos básicos
+    chmod 755 "$PROD_DIR"
+    [ -d "$PROD_DIR/config" ] && chmod 755 "$PROD_DIR/config" && chmod 644 "$PROD_DIR/config"/*.py 2>/dev/null || true
+    chown -R "$USER:$GROUP" "$PROD_DIR" 2>/dev/null || true
+
+    # .env por defecto si falta
+    if [ ! -f "$PROD_DIR/.env" ]; then
+        cat > "$PROD_DIR/.env" << EOF
+# Configuración de producción para HostBerry
+ENVIRONMENT=production
+HOST=0.0.0.0
+PORT=8000
+LOG_LEVEL=WARNING
+WORKERS=1
+EOF
+        chown "$USER:$GROUP" "$PROD_DIR/.env" 2>/dev/null || true
+        chmod 600 "$PROD_DIR/.env" 2>/dev/null || true
+    fi
+
+    log "$ANSI_GREEN" "INFO" "$(get_text "download_permissions_set" "Permisos y propietarios configurados correctamente")"
+}
+
 # Copiar aplicación a directorio de producción
 copy_application_to_production() {
     local UPDATE_MODE="${1:-false}"
@@ -2068,14 +2169,16 @@ main() {
     if [ "$INSTALL_MODE" = true ]; then
         log "$ANSI_GREEN" "INFO" "$(get_text 'starting_installation' '🚀 Iniciando instalación de producción...')"
         
+        # Limpieza completa y descarga desde GitHub
+        clean_previous_installation
         setup_user_permissions
         check_required_ports
         install_system_deps
-        copy_application_to_production false
+        download_application_from_github false
         
-        # Verificar integridad después de la copia
-        if ! verify_config_integrity "$PROD_DIR" "post-copia"; then
-            log "$ANSI_RED" "ERROR" "$(get_text 'config_verification_failed' 'La verificación de integridad del config falló después de la copia')"
+        # Verificar integridad después de la descarga
+        if ! verify_config_integrity "$PROD_DIR" "post-descarga"; then
+            log "$ANSI_RED" "ERROR" "$(get_text 'config_verification_failed' 'La verificación de integridad del config falló después de la descarga')"
             return 1
         fi
         
@@ -2111,7 +2214,8 @@ main() {
             create_backup
         fi
         
-        copy_application_to_production true
+        # Actualización desde GitHub (no limpiar ni tocar venv en update)
+        download_application_from_github true
         # NO llamar a setup_production_venv en modo update
         
         write_app_env
