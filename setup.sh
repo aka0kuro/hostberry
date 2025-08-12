@@ -1414,13 +1414,19 @@ server {
 EOF"
     fi
     
-    # Habilitar sitio
+    # Habilitar sitio y crear placeholder SSL para evitar fallos de include
     if [[ $EUID -eq 0 ]]; then
         ln -sf /etc/nginx/sites-available/hostberry /etc/nginx/sites-enabled/
         rm -f /etc/nginx/sites-enabled/default
+
+        # Placeholder de hostberry-ssl si falta
+        if [ ! -f /etc/nginx/sites-available/hostberry-ssl ]; then
+            echo "# placeholder hostberry-ssl" > /etc/nginx/sites-available/hostberry-ssl
+        fi
+        ln -sf /etc/nginx/sites-available/hostberry-ssl /etc/nginx/sites-enabled/hostberry-ssl
         
         # Verificar configuración
-nginx -t || handle_error "$(get_text 'nginx_invalid' 'Configuración de Nginx inválida')"
+        nginx -t || handle_error "$(get_text 'nginx_invalid' 'Configuración de Nginx inválida')"
         
         # Reiniciar Nginx
         systemctl restart nginx
@@ -1428,9 +1434,15 @@ nginx -t || handle_error "$(get_text 'nginx_invalid' 'Configuración de Nginx in
     else
         sudo ln -sf /etc/nginx/sites-available/hostberry /etc/nginx/sites-enabled/
         sudo rm -f /etc/nginx/sites-enabled/default
+
+        # Placeholder de hostberry-ssl si falta
+        if [ ! -f /etc/nginx/sites-available/hostberry-ssl ]; then
+            echo "# placeholder hostberry-ssl" | sudo tee /etc/nginx/sites-available/hostberry-ssl >/dev/null
+        fi
+        sudo ln -sf /etc/nginx/sites-available/hostberry-ssl /etc/nginx/sites-enabled/hostberry-ssl
         
         # Verificar configuración
-sudo nginx -t || handle_error "$(get_text 'nginx_invalid' 'Configuración de Nginx inválida')"
+        sudo nginx -t || handle_error "$(get_text 'nginx_invalid' 'Configuración de Nginx inválida')"
         
         # Reiniciar Nginx
         sudo systemctl restart nginx
