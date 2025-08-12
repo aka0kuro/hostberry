@@ -690,13 +690,13 @@ install_system_deps() {
 # Limpiar instalación anterior completamente
 clean_previous_installation() {
     log "$ANSI_YELLOW" "INFO" "$(get_text 'cleaning_previous_installation' '🧹 Limpiando instalación anterior de HostBerry...')"
-
+    
     # Detener servicio si está activo
     if systemctl is-active --quiet hostberry 2>/dev/null; then
         systemctl stop hostberry 2>/dev/null || true
         systemctl disable hostberry 2>/dev/null || true
     fi
-
+    
     # Eliminar unit de systemd
     if [ -f "/etc/systemd/system/hostberry.service" ]; then
         rm -f "/etc/systemd/system/hostberry.service"
@@ -1426,7 +1426,7 @@ EOF"
         ln -sf /etc/nginx/sites-available/hostberry-ssl /etc/nginx/sites-enabled/hostberry-ssl
         
         # Verificar configuración
-        nginx -t || handle_error "$(get_text 'nginx_invalid' 'Configuración de Nginx inválida')"
+nginx -t || handle_error "$(get_text 'nginx_invalid' 'Configuración de Nginx inválida')"
         
         # Reiniciar Nginx
         systemctl restart nginx
@@ -1442,7 +1442,7 @@ EOF"
         sudo ln -sf /etc/nginx/sites-available/hostberry-ssl /etc/nginx/sites-enabled/hostberry-ssl
         
         # Verificar configuración
-        sudo nginx -t || handle_error "$(get_text 'nginx_invalid' 'Configuración de Nginx inválida')"
+sudo nginx -t || handle_error "$(get_text 'nginx_invalid' 'Configuración de Nginx inválida')"
         
         # Reiniciar Nginx
         sudo systemctl restart nginx
@@ -2265,6 +2265,7 @@ main() {
 
 # Activar modo estricto
 set -eo pipefail
+
 
 # Ejecutar script principal
 main "$@" 
