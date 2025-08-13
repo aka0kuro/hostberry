@@ -29,12 +29,12 @@
 
   // Función para mostrar notificaciones toast
   function showToast(title, message, type = 'info') {
-    const toastContainer = document.querySelector('.toast-container');
+    let toastContainer = document.querySelector('.toast-container');
     if (!toastContainer) {
-      const container = document.createElement('div');
-      container.className = 'toast-container position-fixed top-0 end-0 p-3';
-      container.style.zIndex = '9999';
-      document.body.appendChild(container);
+      toastContainer = document.createElement('div');
+      toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+      toastContainer.style.zIndex = '9999';
+      document.body.appendChild(toastContainer);
     }
     
     const toastId = 'toast-' + Date.now();
