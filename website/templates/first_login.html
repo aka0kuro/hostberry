@@ -14,6 +14,19 @@
     <link href="/static/css/login.css" rel="stylesheet">
 </head>
 <body class="dark-theme">
+    <!-- Textos i18n para notificaciones -->
+    <div id="i18n-data" style="display:none"
+         data-passwords-dont-match="{{ t('auth.passwords_dont_match') }}"
+         data-credentials-updated="{{ t('auth.credentials_updated') }}"
+         data-validation-error="{{ t('errors.validation_error') }}"
+         data-connection-error="{{ t('errors.connection_error') }}"
+         data-password-special-char="{{ t('errors.password_special_char') }}"
+         data-password-length="{{ t('errors.password_length') }}"
+         data-password-uppercase="{{ t('errors.password_uppercase') }}"
+         data-password-lowercase="{{ t('errors.password_lowercase') }}"
+         data-password-number="{{ t('errors.password_number') }}"
+    ></div>
+    
     <!-- Selector de idioma -->
     <div class="dropdown lang-dropdown">
         <button class="btn lang-toggle dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">

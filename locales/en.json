@@ -162,7 +162,9 @@
     "incorrect_password": "Incorrect password",
     "too_many_attempts": "Too many attempts. Try later",
     "connection_error": "Connection error",
-    "login_generic_error": "Login error"
+    "login_generic_error": "Login error",
+    "passwords_dont_match": "Passwords do not match",
+    "credentials_updated": "Credentials updated. Please log in again."
   },
   "system": {
     "title": "System",
@@ -628,6 +630,11 @@
     "authentication_error": "Authentication error",
     "authorization_error": "Authorization error",
     "validation_error": "Validation error",
+    "password_special_char": "Password must contain at least one special character",
+    "password_length": "Password must be at least 8 characters long",
+    "password_uppercase": "Password must contain at least one uppercase letter",
+    "password_lowercase": "Password must contain at least one lowercase letter",
+    "password_number": "Password must contain at least one number",
     "server_error": "Server error",
     "client_error": "Client error",
     "timeout_error": "Timeout error",

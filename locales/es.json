@@ -162,7 +162,9 @@
     "incorrect_password": "Contraseña incorrecta",
     "too_many_attempts": "Demasiados intentos. Intenta más tarde",
     "connection_error": "Error de conexión",
-    "login_generic_error": "Error en el inicio de sesión"
+    "login_generic_error": "Error en el inicio de sesión",
+    "passwords_dont_match": "Las contraseñas no coinciden",
+    "credentials_updated": "Credenciales actualizadas. Vuelve a iniciar sesión."
   },
   "system": {
     "title": "Sistema",
@@ -628,6 +630,11 @@
     "authentication_error": "Error de autenticación",
     "authorization_error": "Error de autorización",
     "validation_error": "Error de validación",
+    "password_special_char": "La contraseña debe contener al menos un carácter especial",
+    "password_length": "La contraseña debe tener al menos 8 caracteres",
+    "password_uppercase": "La contraseña debe contener al menos una mayúscula",
+    "password_lowercase": "La contraseña debe contener al menos una minúscula",
+    "password_number": "La contraseña debe contener al menos un número",
     "server_error": "Error del servidor",
     "client_error": "Error del cliente",
     "timeout_error": "Error de tiempo de espera",
