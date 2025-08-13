@@ -8,7 +8,8 @@ import logging
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from passlib.context import CryptContext
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWTError as JWTError
 from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
@@ -32,6 +33,9 @@ security_optional = HTTPBearer(auto_error=False)
 FAILED_LOGIN_ATTEMPTS: Dict[str, int] = {}
 LOGIN_BLOCKED: Dict[str, float] = {}
 
+# SECRET_KEY generada automáticamente
+_AUTO_SECRET_KEY = None
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifica una contraseña"""
     return pwd_context.verify(plain_password, hashed_password)
@@ -42,6 +46,10 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """Crea un token de acceso JWT"""
+    global _AUTO_SECRET_KEY
+    
+    logger.info("🔑 Función create_access_token ejecutándose")
+    
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -49,13 +57,36 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         expire = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
     
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+    
+    # Usar SECRET_KEY configurada o generar una automáticamente
+    secret_key = settings.secret_key
+    if not secret_key:
+        if _AUTO_SECRET_KEY is None:
+            import secrets
+            _AUTO_SECRET_KEY = secrets.token_urlsafe(32)
+            logger.info(f"🔑 SECRET_KEY generada automáticamente: {_AUTO_SECRET_KEY[:10]}...")
+        secret_key = _AUTO_SECRET_KEY
+    
+    logger.info(f"🔑 Usando SECRET_KEY: {secret_key[:10]}...")
+    
+    encoded_jwt = jwt.encode(to_encode, secret_key, algorithm=settings.algorithm)
     return encoded_jwt
 
 def verify_token(token: str) -> Optional[Dict[str, Any]]:
     """Verifica un token JWT"""
+    global _AUTO_SECRET_KEY
+    
     try:
-        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        # Usar la misma SECRET_KEY que create_access_token
+        secret_key = settings.secret_key
+        if not secret_key:
+            if _AUTO_SECRET_KEY is None:
+                import secrets
+                _AUTO_SECRET_KEY = secrets.token_urlsafe(32)
+                logger.info(f"🔑 SECRET_KEY generada automáticamente: {_AUTO_SECRET_KEY[:10]}...")
+            secret_key = _AUTO_SECRET_KEY
+        
+        payload = jwt.decode(token, secret_key, algorithms=[settings.algorithm])
         username: str = payload.get("sub")
         if username is None:
             return None
@@ -65,6 +96,8 @@ def verify_token(token: str) -> Optional[Dict[str, Any]]:
 
 async def authenticate_user(username: str, password: str) -> Optional[Dict[str, Any]]:
     """Autentica un usuario"""
+    logger.info(f"🔑 Autenticando usuario: {username}")
+    
     # Verificar si el usuario está bloqueado
     if username in LOGIN_BLOCKED:
         if time.time() < LOGIN_BLOCKED[username]:
@@ -84,13 +117,17 @@ async def authenticate_user(username: str, password: str) -> Optional[Dict[str, 
         # Obtener usuario de la base de datos
         user = await db.get_user_by_username(username)
         if not user:
+            logger.info(f"🔑 Usuario no encontrado: {username}")
             # Usuario no existe (404 para diferenciar en el cliente)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Usuario no existe"
             )
         
+        logger.info(f"🔑 Usuario encontrado: {username}, verificando contraseña")
+        
         if not verify_password(password, user["password_hash"]):
+            logger.info(f"🔑 Contraseña incorrecta para usuario: {username}")
             # Incrementar contador de intentos fallidos
             FAILED_LOGIN_ATTEMPTS[username] = FAILED_LOGIN_ATTEMPTS.get(username, 0) + 1
             
@@ -110,6 +147,8 @@ async def authenticate_user(username: str, password: str) -> Optional[Dict[str, 
         
         # Resetear contador de intentos fallidos
         FAILED_LOGIN_ATTEMPTS[username] = 0
+        
+        logger.info(f"🔑 Usuario autenticado exitosamente: {username}")
         
         return {
             "username": user["username"],

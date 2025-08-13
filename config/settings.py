@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60  # Aumentado para reducir regeneración de tokens
     
+
+    
     # Configuraciones de seguridad adicionales
     password_min_length: int = Field(default=8, env="PASSWORD_MIN_LENGTH")
     password_require_uppercase: bool = Field(default=True, env="PASSWORD_REQUIRE_UPPERCASE")

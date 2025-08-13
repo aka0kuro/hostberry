@@ -21,7 +21,9 @@ class BackupManager:
     """Gestor de backups automáticos con encriptación"""
     
     def __init__(self):
-        self.backup_dir = Path("backups")
+        # Usar ruta absoluta del directorio de la aplicación
+        app_dir = Path(__file__).parent.parent
+        self.backup_dir = app_dir / "backups"
         self.backup_dir.mkdir(exist_ok=True)
         
         # Generar clave de encriptación si no existe

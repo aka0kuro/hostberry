@@ -13,9 +13,8 @@ typing-extensions==4.14.1
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 cryptography==41.0.7
-
-# Fijado por compatibilidad con passlib y Raspberry Pi
 bcrypt==3.2.2
+PyJWT==2.8.0
 
 # Base de datos
 sqlalchemy==2.0.42
@@ -39,3 +38,7 @@ structlog==23.2.0
 
 # Configuración
 python-dotenv==1.0.0
+
+# Dependencias adicionales para compatibilidad
+setuptools>=65.0.0
+wheel>=0.38.0
