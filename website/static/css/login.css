@@ -24,15 +24,15 @@ body { background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); min-height
 .theme-toggle.dark { background: linear-gradient(135deg, #dc3545 0%, #8b0000 100%); }
 
 /* Hacer que los campos de input tengan el mismo ancho y sean más estrechos */
-.input-group { width: 100%; max-width: 180px; margin: 0 auto; }
-.login-container .input-group { width: 100%; max-width: 180px; margin: 0 auto; }
+.input-group { width: 100%; max-width: 180px; margin: 0 auto; display: flex; }
+.login-container .input-group { width: 100%; max-width: 180px; margin: 0 auto; display: flex; }
 .input-group .form-control { flex: 1; min-width: 0; width: 100%; }
 .input-group .btn { flex-shrink: 0; }
 .input-group .input-group-text { flex-shrink: 0; }
 
 /* Password wrapper: botón dentro del input, misma longitud */
-.password-wrapper { position: relative; width: 100%; max-width: 180px; margin: 0 auto; }
-.password-wrapper .form-control { padding-right: 44px; }
+.password-wrapper { position: relative; width: 100%; max-width: 180px; margin: 0 auto; display: block; }
+.password-wrapper .form-control { padding-right: 44px; width: 100%; }
 .password-wrapper .password-toggle { position: absolute; right: 0; top: 0; height: 100%; width: 44px; border: 0; background: rgba(255,255,255,.1); color: #fff; border-left: 1px solid rgba(255,255,255,.2); border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
 body.light-theme .password-wrapper .password-toggle { background: #fff; color: #212529; border-left: 1px solid #ced4da; }
 
@@ -41,8 +41,9 @@ body.light-theme .password-wrapper .password-toggle { background: #fff; color: #
 #toggle-password.btn { width: 44px; display: inline-flex; align-items: center; justify-content: center; }
 
 /* Asegurar que ambos campos tengan exactamente el mismo ancho */
-.mb-3 .input-group { width: 100%; max-width: 180px; margin: 0 auto; }
+.mb-3 .input-group { width: 100%; max-width: 180px; margin: 0 auto; display: flex; }
 .mb-3 .input-group .form-control { width: 100%; }
+.mb-3 .password-wrapper { width: 100%; max-width: 180px; margin: 0 auto; display: block; }
 
 /* Igualar altura y estilo entre input + addon/botón para usuario y contraseña */
 .input-group .form-control,

@@ -23,29 +23,50 @@ from core.logging import logger, log_auth_event, log_user_action, log_security_e
 
 router = APIRouter()
 @router.post("/first-login/change")
-async def first_login_change(data: FirstLoginChange, current_user: dict = Depends(get_current_active_user)):
+async def first_login_change(data: FirstLoginChange):
     """Cambiar usuario/contraseña en primer login y eliminar admin por defecto"""
     try:
         from config.settings import settings
         from core.security import get_password_hash
-        # Solo permitir si el usuario actual es el admin por defecto
-        if current_user.get('username') != settings.default_username:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Operación no permitida")
+        
+        # Verificar que el usuario admin por defecto existe
+        admin_user = await db.execute_query(
+            "SELECT username FROM users WHERE username = ?", 
+            (settings.default_username,)
+        )
+        
+        if not admin_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail="El usuario admin por defecto ya no existe"
+            )
 
         # Validaciones básicas
         if data.new_username == settings.default_username:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El nuevo usuario no puede ser 'admin'")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail="El nuevo usuario no puede ser 'admin'"
+            )
 
         # Verificar que no exista ya el nuevo usuario
-        existing = await db.execute_query("SELECT username FROM users WHERE username = ?", (data.new_username,))
+        existing = await db.execute_query(
+            "SELECT username FROM users WHERE username = ?", 
+            (data.new_username,)
+        )
         if existing:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El usuario ya existe")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail="El usuario ya existe"
+            )
 
         # Crear nuevo usuario con la nueva contraseña
         await db.insert_user(username=data.new_username, password_hash=data.new_password)
 
         # Eliminar usuario admin por defecto
-        await db.execute_update("DELETE FROM users WHERE username = ?", (settings.default_username,))
+        await db.execute_update(
+            "DELETE FROM users WHERE username = ?", 
+            (settings.default_username,)
+        )
 
         # Log opcional
         await db.insert_log("INFO", f"Usuario por defecto reemplazado por: {data.new_username}")
@@ -56,7 +77,10 @@ async def first_login_change(data: FirstLoginChange, current_user: dict = Depend
         raise
     except Exception as e:
         logger.error('first_login_change_error', error=str(e))
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error interno del servidor")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail="Error interno del servidor"
+        )
 
 security = HTTPBearer()
 

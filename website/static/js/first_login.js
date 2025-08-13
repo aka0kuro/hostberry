@@ -186,7 +186,6 @@
       themeToggle.addEventListener('click', toggleTheme);
     }
     
-    const token = localStorage.getItem('access_token');
     const form = document.getElementById('firstLoginForm');
     
     if(!form) return;
@@ -203,13 +202,12 @@
       
       try{
         const resp = await fetch('/api/v1/auth/first-login/change', {
-          method:'POST', 
-          headers:{ 
-            'Content-Type':'application/json', 
-            'Authorization': `Bearer ${token}` 
-          }, 
-          body: JSON.stringify(payload)
-        });
+                    method:'POST', 
+                    headers:{ 
+                        'Content-Type':'application/json'
+                    }, 
+                    body: JSON.stringify(payload)
+                });
         
         const data = await resp.json();
         if(resp.ok){
