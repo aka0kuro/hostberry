@@ -18,13 +18,6 @@ from config.settings import settings
 # Configurar logger
 logger = logging.getLogger(__name__)
 
-# Configuración de encriptación (ajustada para RPi 3)
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-    bcrypt__rounds=getattr(settings, "bcrypt_rounds", 12)
-)
-
 # Configuración de seguridad
 security = HTTPBearer()
 security_optional = HTTPBearer(auto_error=False)
@@ -36,12 +29,27 @@ LOGIN_BLOCKED: Dict[str, float] = {}
 # SECRET_KEY generada automáticamente
 _AUTO_SECRET_KEY = None
 
+def get_pwd_context():
+    """Obtiene el contexto de contraseñas con la configuración correcta"""
+    return CryptContext(
+        schemes=["bcrypt"],
+        deprecated="auto",
+        bcrypt__rounds=12  # Valor fijo para evitar problemas con settings
+    )
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifica una contraseña"""
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        pwd_context = get_pwd_context()
+        result = pwd_context.verify(plain_password, hashed_password)
+        return result
+    except Exception as e:
+        print(f"Error en verify_password: {e}")
+        return False
 
 def get_password_hash(password: str) -> str:
     """Genera hash de contraseña"""
+    pwd_context = get_pwd_context()
     return pwd_context.hash(password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:

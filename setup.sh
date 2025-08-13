@@ -149,7 +149,7 @@ UPLOADS_DIR="/var/lib/hostberry/uploads"
 PROD_HOST="0.0.0.0"
 PROD_PORT="8000"
 WORKERS="1"
-LOG_LEVEL="WARNING"
+LOG_LEVEL="INFO"
 ENVIRONMENT="production"
 
 # Función para loguear mensajes (añade iconos según el nivel)
@@ -1163,7 +1163,7 @@ Environment=PYTHONPATH=$PROD_DIR
 Environment=UVICORN_NO_UVLOOP=1
 Environment=UVICORN_NO_HTTPTOOLS=1
 Environment=HOSTBERRY_SKIP_RUNTIME_OPTIMIZE=1
-ExecStart=$VENV_DIR/bin/python -m uvicorn --app-dir $PROD_DIR main:app --host 127.0.0.1 --port $PROD_PORT --workers $WORKERS --loop asyncio --http h11 --log-level $(echo "$LOG_LEVEL" | tr '[:upper:]' '[:lower:]')
+ExecStart=$VENV_DIR/bin/python -m uvicorn --app-dir $PROD_DIR main:app --host 127.0.0.1 --port $PROD_PORT --workers $WORKERS --loop asyncio --http h11 --log-level info
 Restart=always
 RestartSec=3
 StandardOutput=journal
