@@ -37,9 +37,9 @@ body { background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); min-height
 .input-group .form-control,
 .input-group .input-group-text,
 .input-group .btn {
-  height: 48px;
-  padding-top: 12px;
-  padding-bottom: 12px;
+  height: 40px;
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 /* Botón mostrar/ocultar contraseña con estilo coherente al input/addon */
