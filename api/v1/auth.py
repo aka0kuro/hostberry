@@ -114,7 +114,12 @@ async def login(user_credentials: UserLogin):
         log_user_action("login", user_id=user["username"], details=f"response_time={response_time:.3f}s")
         
         from config.settings import settings
-        password_change_required = (user["username"] == settings.default_username)
+        # Solo requerir cambio de contraseña si es admin por defecto Y las credenciales son las originales
+        password_change_required = (
+            user["username"] == settings.default_username and 
+            user_credentials.username == settings.default_username and
+            user_credentials.password == settings.default_password
+        )
         return TokenResponse(
             access_token=access_token,
             token_type="bearer",
