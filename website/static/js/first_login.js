@@ -112,12 +112,26 @@
           }, 1500);
         } else {
           alertBox.className = 'alert alert-danger';
-          alertBox.textContent = data.detail || 'Error actualizando credenciales';
+          // Manejar diferentes tipos de respuesta de error
+          let errorMessage = 'Error actualizando credenciales';
+          if (data.detail) {
+            if (typeof data.detail === 'string') {
+              errorMessage = data.detail;
+            } else if (typeof data.detail === 'object') {
+              errorMessage = data.detail.message || data.detail.error || JSON.stringify(data.detail);
+            }
+          } else if (data.message) {
+            errorMessage = data.message;
+          } else if (data.error) {
+            errorMessage = data.error;
+          }
+          alertBox.textContent = errorMessage;
           alertBox.classList.remove('d-none');
         }
       }catch(_e){
+        console.error('Error en first-login:', _e);
         alertBox.className = 'alert alert-danger';
-        alertBox.textContent = 'Error de conexión';
+        alertBox.textContent = 'Error de conexión: ' + (_e.message || 'Error desconocido');
         alertBox.classList.remove('d-none');
       }
     });
