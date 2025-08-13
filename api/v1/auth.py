@@ -87,7 +87,7 @@ async def login(user_credentials: UserLogin):
         
         # Log de autenticación exitosa
         log_auth_event("login_success", user_id=user["username"], success=True)
-        log_user_action("login", user_id=user["username"], response_time=response_time)
+        log_user_action("login", user_id=user["username"], details=f"response_time={response_time:.3f}s")
         
         from config.settings import settings
         password_change_required = (user["username"] == settings.default_username)
@@ -137,7 +137,7 @@ async def register(user_data: UserCreate):
         
         # Log de registro exitoso
         log_auth_event("register_success", username=user_data.username, success=True)
-        log_user_action("register", user_id=user_data.username, response_time=response_time)
+        log_user_action("register", user_id=user_data.username, details=f"response_time={response_time:.3f}s")
         
         return UserResponse(
             username=user_data.username,
@@ -264,7 +264,7 @@ async def change_password(
         
         response_time = time.time() - start_time
         log_auth_event("change_password_success", user_id=current_user.get('username'), success=True)
-        log_user_action("change_password", user_id=current_user.get('username'), response_time=response_time)
+        log_user_action("change_password", user_id=current_user.get('username'), details=f"response_time={response_time:.3f}s")
         
         return {"message": "Contraseña cambiada exitosamente"}
         
