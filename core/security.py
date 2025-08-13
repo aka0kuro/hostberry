@@ -40,8 +40,9 @@ def get_pwd_context():
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifica una contraseña"""
     try:
-        pwd_context = get_pwd_context()
-        result = pwd_context.verify(plain_password, hashed_password)
+        import bcrypt
+        # Usar bcrypt directamente en lugar de passlib
+        result = bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
         return result
     except Exception as e:
         print(f"Error en verify_password: {e}")
@@ -49,8 +50,14 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def get_password_hash(password: str) -> str:
     """Genera hash de contraseña"""
-    pwd_context = get_pwd_context()
-    return pwd_context.hash(password)
+    try:
+        import bcrypt
+        # Usar bcrypt directamente en lugar de passlib
+        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(12))
+        return hashed.decode('utf-8')
+    except Exception as e:
+        print(f"Error en get_password_hash: {e}")
+        return ""
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """Crea un token de acceso JWT"""
