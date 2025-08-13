@@ -53,10 +53,7 @@
                     <i class="bi bi-person"></i>
                     {{ t('auth.username') }}
                 </label>
-                <div class="input-group">
-                    <input type="text" class="form-control" id="username" name="username" required placeholder="{{ t('auth.username', 'Usuario') }}">
-                    <span class="input-group-text"><i class="bi bi-person"></i></span>
-                </div>
+                <input type="text" class="form-control" id="username" name="username" required placeholder="{{ t('auth.username', 'Usuario') }}">
             </div>
             
             <div class="mb-3">
@@ -64,9 +61,9 @@
                     <i class="bi bi-lock"></i>
                     {{ t('auth.password') }}
                 </label>
-                <div class="input-group">
+                <div class="password-wrapper">
                     <input type="password" class="form-control" id="password" name="password" required placeholder="{{ t('auth.password', 'Contraseña') }}">
-                    <button class="btn btn-outline-secondary" type="button" id="toggle-password" aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                    <button class="password-toggle" type="button" id="toggle-password" aria-label="Mostrar contraseña" title="Mostrar contraseña">
                         <span id="eye-emoji" style="font-size:18px; line-height:1" aria-hidden="true">👁️</span>
                     </button>
                 </div>

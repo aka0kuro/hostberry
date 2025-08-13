@@ -30,6 +30,12 @@ body { background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); min-height
 .input-group .btn { flex-shrink: 0; }
 .input-group .input-group-text { flex-shrink: 0; }
 
+/* Password wrapper: botón dentro del input, misma longitud */
+.password-wrapper { position: relative; max-width: 220px; margin: 0 auto; }
+.password-wrapper .form-control { padding-right: 44px; }
+.password-wrapper .password-toggle { position: absolute; right: 0; top: 0; height: 100%; width: 44px; border: 0; background: rgba(255,255,255,.1); color: #fff; border-left: 1px solid rgba(255,255,255,.2); border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+body.light-theme .password-wrapper .password-toggle { background: #fff; color: #212529; border-left: 1px solid #ced4da; }
+
 /* Igualar ancho de addon y botón para que ambos campos tengan misma longitud visual */
 .input-group .input-group-text,
 #toggle-password.btn { width: 44px; display: inline-flex; align-items: center; justify-content: center; }
