@@ -63,7 +63,33 @@ async def login_page(request: Request, response: Response, lang: str | None = Qu
     translations = _load_translations(resolved_lang)
     # Actualizar función t del entorno
     templates.env.globals["t"] = _make_t(translations)
-    context = {"request": request, "language": resolved_lang}
+    context = {"request": request, "language": resolved_lang,
+        "system_stats": {
+            "cpu_percent": 25,
+            "memory_percent": 45,
+            "disk_percent": 60,
+            "temperature": 45
+        },
+        "system_health": {
+            "overall": "healthy",
+            "cpu": "healthy",
+            "memory": "healthy",
+            "disk": "healthy",
+            "network": "healthy",
+            "temperature": "healthy"
+        },
+        "services": {
+            "hostberry": "running",
+            "nginx": "running",
+            "ssh": "running",
+            "ufw": "running",
+            "fail2ban": "running"
+        },
+        "recent_activities": [
+            {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
+            {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
+        ],
+        "translations": translations}
     resp = templates.TemplateResponse("login.html", context)
     if lang:
         resp.set_cookie("lang", resolved_lang, max_age=60*60*24*365)
@@ -79,7 +105,33 @@ async def first_login_page(request: Request, response: Response, lang: str | Non
     translations = _load_translations(resolved_lang)
     # Actualizar función t del entorno
     templates.env.globals["t"] = _make_t(translations)
-    context = {"request": request, "language": resolved_lang}
+    context = {"request": request, "language": resolved_lang,
+        "system_stats": {
+            "cpu_percent": 25,
+            "memory_percent": 45,
+            "disk_percent": 60,
+            "temperature": 45
+        },
+        "system_health": {
+            "overall": "healthy",
+            "cpu": "healthy",
+            "memory": "healthy",
+            "disk": "healthy",
+            "network": "healthy",
+            "temperature": "healthy"
+        },
+        "services": {
+            "hostberry": "running",
+            "nginx": "running",
+            "ssh": "running",
+            "ufw": "running",
+            "fail2ban": "running"
+        },
+        "recent_activities": [
+            {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
+            {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
+        ],
+        "translations": translations}
     resp = templates.TemplateResponse("first_login.html", context)
     if lang:
         resp.set_cookie("lang", resolved_lang, max_age=60*60*24*365)
@@ -100,7 +152,33 @@ async def dashboard_page(request: Request, response: Response, lang: str | None 
     # Contexto simple para el dashboard
     context = {
         "request": request, 
-        "language": resolved_lang
+        "language": resolved_lang,
+        "system_stats": {
+            "cpu_percent": 25,
+            "memory_percent": 45,
+            "disk_percent": 60,
+            "temperature": 45
+        },
+        "system_health": {
+            "overall": "healthy",
+            "cpu": "healthy",
+            "memory": "healthy",
+            "disk": "healthy",
+            "network": "healthy",
+            "temperature": "healthy"
+        },
+        "services": {
+            "hostberry": "running",
+            "nginx": "running",
+            "ssh": "running",
+            "ufw": "running",
+            "fail2ban": "running"
+        },
+        "recent_activities": [
+            {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
+            {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
+        ],
+        "translations": translations
     }
     
     # Usar TemplateResponse con el template dashboard.html
