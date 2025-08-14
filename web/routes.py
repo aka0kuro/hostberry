@@ -4,6 +4,7 @@ Router web mínimo para asegurar arranque del backend.
 
 from fastapi import APIRouter, Request, Response, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 from pathlib import Path
 import json
 
@@ -37,8 +38,8 @@ def _make_t(translations: dict):
         return cur
     return t
 
-# Importar templates desde main.py
-from main import templates
+# Crear objeto templates local
+templates = Jinja2Templates(directory="website/templates")
 
 
 @router.get("/")
@@ -93,37 +94,16 @@ async def dashboard_page(request: Request, response: Response, lang: str | None 
         response.set_cookie("lang", resolved_lang, max_age=60*60*24*365)
     translations = _load_translations(resolved_lang)
     
-    # Proporcionar datos por defecto para el dashboard
-    context = {
-        "request": request, 
-        "language": resolved_lang,
-        "system_stats": {
-            "cpu_percent": 0,
-            "memory_percent": 0,
-            "disk_percent": 0,
-            "temperature": 0
-        },
-        "system_health": {
-            "overall": "healthy",
-            "cpu": "healthy",
-            "memory": "healthy",
-            "disk": "healthy",
-            "network": "healthy",
-            "temperature": "healthy"
-        },
-        "services": {
-            "hostberry": "running",
-            "nginx": "running",
-            "ssh": "running",
-            "ufw": "running",
-            "fail2ban": "running"
-        },
-        "recent_activities": []
-    }
-    
     # Actualizar función t del entorno
     templates.env.globals["t"] = _make_t(translations)
     
+    # Contexto simple para el dashboard
+    context = {
+        "request": request, 
+        "language": resolved_lang
+    }
+    
+    # Usar TemplateResponse con el template dashboard.html
     resp = templates.TemplateResponse("dashboard.html", context)
     if lang:
         resp.set_cookie("lang", resolved_lang, max_age=60*60*24*365)
