@@ -108,3 +108,8 @@ async def dashboard_page(request: Request, response: Response, lang: str | None 
     if lang:
         resp.set_cookie("lang", resolved_lang, max_age=60*60*24*365)
     return resp
+
+
+@router.get("/test-dashboard")
+async def test_dashboard():
+    return "TEST DASHBOARD FUNCIONANDO - OK"
