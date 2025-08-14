@@ -4,8 +4,6 @@ Router web mínimo para asegurar arranque del backend.
 
 from fastapi import APIRouter, Request, Response, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
-from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pathlib import Path
 import json
 
@@ -39,8 +37,8 @@ def _make_t(translations: dict):
         return cur
     return t
 
-# Usar el entorno de templates global desde main.py
-templates = Jinja2Templates(directory="website/templates")
+# Importar templates desde main.py
+from main import templates
 
 
 @router.get("/")
