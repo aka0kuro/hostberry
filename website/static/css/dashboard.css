@@ -73,27 +73,28 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    min-height: 120px;
 }
 
 .stats-card .card-body {
-    padding: 1.5rem 1rem;
+    padding: 1rem 0.5rem;
 }
 
 .stats-card i {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
     opacity: 0.9;
 }
 
 .stats-card h5 {
     color: rgba(255,255,255,.9);
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 500;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3rem;
 }
 
 .stats-card h4 {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 600;
     margin: 0;
 }
@@ -287,15 +288,19 @@ body.light-theme .btn-outline-warning:hover {
     }
     
     .stats-card .card-body {
-        padding: 1rem 0.5rem;
+        padding: 0.8rem 0.3rem;
     }
     
     .stats-card i {
-        font-size: 2rem;
+        font-size: 1.5rem;
     }
     
     .stats-card h4 {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
+    }
+    
+    .stats-card h5 {
+        font-size: 0.7rem;
     }
 }
 
@@ -306,6 +311,26 @@ body.light-theme .btn-outline-warning:hover {
     
     .card {
         margin-bottom: 1rem;
+    }
+    
+    .stats-card {
+        min-height: 100px;
+    }
+    
+    .stats-card .card-body {
+        padding: 0.6rem 0.2rem;
+    }
+    
+    .stats-card i {
+        font-size: 1.3rem;
+    }
+    
+    .stats-card h4 {
+        font-size: 1.1rem;
+    }
+    
+    .stats-card h5 {
+        font-size: 0.65rem;
     }
     
     .btn-outline-primary, .btn-outline-success, .btn-outline-info, .btn-outline-warning {
