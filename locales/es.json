@@ -880,6 +880,10 @@
     "git_fetch_failed": "No se pudo actualizar desde GitHub",
     "git_reset_failed": "No se pudo resetear a la versión más reciente",
     "config_corrupted_download": "El directorio config se corrompió durante la descarga",
-    "config_verification_failed": "La verificación de integridad del config falló después de la descarga"
+    "config_verification_failed": "La verificación de integridad del config falló después de la descarga",
+    "verifying_config": "Verificando integridad del directorio config ({operation})...",
+    "config_dir_missing": "El directorio config no existe en {path}",
+    "config_file_missing": "Archivo crítico {file} no existe en {path}",
+    "config_integrity_ok": "✅ Integridad del directorio config verificada"
   }
 } 

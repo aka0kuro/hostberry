@@ -247,7 +247,8 @@ show_help() {
 
 # Verificar integridad del directorio config (simplificada para RPi 3)
 verify_config_integrity() {
-    local base_dir="$1" operation="$2" config_dir="$base_dir/config"
+    local base_dir="$1" operation="$2"
+    local config_dir="$base_dir/config"
     
     log "$ANSI_YELLOW" "INFO" "$(format_text "$(get_text 'verifying_config' 'Verificando integridad del directorio config ({operation})...')" "operation=$operation")"
     
