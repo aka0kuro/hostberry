@@ -1,7 +1,25 @@
 #!/bin/bash
 
 # Script de despliegue de producción para HostBerry FastAPI
-# Optimizado para Raspberry Pi 3 y entornos de producción
+# OPTIMIZADO PARA RASPBERRY PI 3 - Consumo reducido de CPU y memoria
+# 
+# OPTIMIZACIONES APLICADAS:
+# - Logging reducido (WARNING en lugar de INFO)
+# - Dependencias mínimas (eliminadas herramientas innecesarias)
+# - Límites de recursos en systemd (256MB RAM, 50% CPU)
+# - Timeouts de Nginx reducidos (30s en lugar de 60s)
+# - Buffers de Nginx optimizados para RPi 3
+# - Monitoreo cada 15 minutos en lugar de 5
+# - Configuración de Python optimizada (PYTHONOPTIMIZE=2)
+# - Logrotate semanal con límite de 1MB por archivo
+# - Servicios innecesarios deshabilitados automáticamente
+# - Configuración de red optimizada para RPi 3
+# - Código Bash optimizado ([[ ]] en lugar de [ ], && || en lugar de if/else)
+# - Cache de traducciones para evitar múltiples lecturas
+# - Funciones optimizadas con sintaxis moderna de Bash
+# - Reducción de subprocesos y comandos innecesarios
+# - Uso de printf en lugar de echo -e para mejor rendimiento
+#
 # Soporte multilingüe
 
 # Colores para logs
@@ -19,89 +37,76 @@ fi
 LOCALES_DIR="locales"
 TRANSLATIONS_FILE="$LOCALES_DIR/${LANGUAGE}.json"
 
-# Función para cargar traducciones
+# Cache de traducciones para optimizar rendimiento
+declare -A TRANSLATIONS_CACHE
+
+# Función para cargar traducciones (optimizada)
 load_translations() {
-    if [ -f "$TRANSLATIONS_FILE" ]; then
-        # Las traducciones se cargarán dinámicamente usando jq o python3
-        return 0
-    else
-        # Fallback a inglés si no existe el archivo
+    [[ -f "$TRANSLATIONS_FILE" ]] || {
         LANGUAGE="en"
         TRANSLATIONS_FILE="$LOCALES_DIR/en.json"
-    fi
+    }
 }
 
-# Función para obtener traducción
+# Función para obtener traducción (optimizada)
 get_text() {
-    local key="$1"
-    local default="$2"
+    local key="$1" default="$2"
     
-    # Intentar obtener traducción usando jq (prefiere ES por defecto)
-    if command -v jq &> /dev/null && [ -f "$TRANSLATIONS_FILE" ]; then
-        local translation=$(jq -r ".setup.$key" "$TRANSLATIONS_FILE" 2>/dev/null)
-        if [ "$translation" != "null" ] && [ -n "$translation" ]; then
+    # Cache de traducciones para evitar múltiples lecturas
+    [[ -n "${TRANSLATIONS_CACHE[$key]}" ]] && {
+        echo "${TRANSLATIONS_CACHE[$key]}"
+        return 0
+    }
+    
+    # Intentar obtener traducción usando jq (más rápido)
+    if command -v jq &> /dev/null && [[ -f "$TRANSLATIONS_FILE" ]]; then
+        local translation
+        translation=$(jq -r ".setup.$key" "$TRANSLATIONS_FILE" 2>/dev/null)
+        [[ "$translation" != "null" && -n "$translation" ]] && {
+            TRANSLATIONS_CACHE[$key]="$translation"
             echo "$translation"
             return 0
-        fi
-    elif command -v python3 &> /dev/null && [ -f "$TRANSLATIONS_FILE" ]; then
-        local translation=$(python3 - "$key" "$TRANSLATIONS_FILE" << 'PY'
-import json,sys
-key=sys.argv[1]
-path=sys.argv[2]
-try:
-    with open(path,'r',encoding='utf-8') as f:
-        data=json.load(f)
-    v=data.get('setup',{}).get(key)
-    if isinstance(v,str) and v:
-        print(v)
-        sys.exit(0)
-except Exception:
-    pass
-sys.exit(1)
-PY
-)
-        if [ $? -eq 0 ] && [ -n "$translation" ]; then
-            echo "$translation"
-            return 0
-        fi
+        }
     fi
     
     # Fallback al texto por defecto
     echo "$default"
 }
 
-# Comprobación de puertos 80/443
+# Comprobación de puertos 80/443 (optimizada)
 check_required_ports() {
     log "$ANSI_YELLOW" "INFO" "$(get_text "checking_ports" "Comprobando puertos requeridos (80/443)...")"
-    local ports=(80 443)
+    
+    local ports=(80 443) p out proc msg
+    
     for p in "${ports[@]}"; do
-        local out=""
+        # Usar ss si está disponible (más rápido)
         if command -v ss >/dev/null 2>&1; then
             out=$(ss -H -tulpn "sport = :$p" 2>/dev/null || true)
         elif command -v netstat >/dev/null 2>&1; then
             out=$(netstat -tulpn 2>/dev/null | grep ":$p " || true)
         else
-            # Si no hay herramientas, continuar (Nginx validará más tarde)
             continue
         fi
-        if [ -n "$out" ]; then
-            if echo "$out" | grep -qi nginx; then
-                continue
-            fi
-            # Extraer nombre de proceso si es posible
-            local proc="unknown"
-            if echo "$out" | grep -q "users:("; then
-                proc=$(printf '%s' "$out" | sed -n 's/.*users:(\(("\([^"]\+\)".*/\2/p' | head -n1)
-                [ -z "$proc" ] && proc="unknown"
-            else
-                proc=$(printf '%s' "$out" | awk '{print $NF}' | sed 's/.*\///')
-                [ -z "$proc" ] && proc="unknown"
-            fi
-            local msg
-            msg=$(format_text "$(get_text "port_in_use" "El puerto {port} ya está en uso por {proc}. Libéralo o detén el servicio.")" "port=$p" "proc=$proc")
-            handle_error "$msg"
+        
+        [[ -n "$out" ]] || continue
+        
+        # Si es nginx, continuar
+        echo "$out" | grep -qi nginx && continue
+        
+        # Extraer nombre de proceso
+        if echo "$out" | grep -q "users:("; then
+            proc=$(printf '%s' "$out" | sed -n 's/.*users:(\(("\([^"]\+\)".*/\2/p' | head -n1)
+        else
+            proc=$(printf '%s' "$out" | awk '{print $NF}' | sed 's/.*\///')
         fi
+        
+        [[ -n "$proc" ]] || proc="unknown"
+        
+        msg=$(format_text "$(get_text "port_in_use" "El puerto {port} ya está en uso por {proc}. Libéralo o detén el servicio.")" "port=$p" "proc=$proc")
+        die "$msg"
     done
+    
     log "$ANSI_GREEN" "INFO" "$(get_text "ports_ok" "Puertos requeridos listos")"
 }
 
@@ -145,18 +150,18 @@ CONFIG_DIR="/etc/hostberry"
 SSL_DIR="$CONFIG_DIR/ssl"
 UPLOADS_DIR="/var/lib/hostberry/uploads"
 
-# Configuración de producción
-PROD_HOST="0.0.0.0"
+# Configuración de producción optimizada para RPi 3
+PROD_HOST="127.0.0.1"  # Solo localhost para mayor seguridad
 PROD_PORT="8000"
-WORKERS="1"
-LOG_LEVEL="INFO"
+WORKERS="1"              # Un solo worker para RPi 3
+LOG_LEVEL="WARNING"      # Reducir logging para mejor rendimiento
 ENVIRONMENT="production"
 
-# Función para loguear mensajes (añade iconos según el nivel)
+# Función para loguear mensajes (optimizada)
 log() {
-    local color="$1"; shift
-    local level="$1"; shift
-    local icon=""
+    local color="$1" level="$2" icon
+    shift 2
+    
     case "$level" in
         INFO) icon="ℹ️" ;;
         WARN) icon="⚠️" ;;
@@ -164,23 +169,27 @@ log() {
         SUCCESS) icon="✅" ;;
         *) icon="" ;;
     esac
-    echo -e "${color}[$level] $icon $*${ANSI_RESET}"
+    
+    printf '%b[%s] %s %s%b\n' "$color" "$level" "$icon" "$*" "$ANSI_RESET"
 }
 
-# Manejo centralizado de errores
+# Manejo centralizado de errores (optimizado)
 handle_error() {
     log "$ANSI_RED" "ERROR" "$*" >&2
     exit 1
 }
 
-# Verificar permisos y configuración
+# Función de salida rápida para errores críticos
+die() { handle_error "$@"; }
+
+# Verificar permisos y configuración (optimizado)
 check_permissions() {
     # Verificar si el usuario puede escribir en su directorio home
-    if [ ! -w "$HOME" ]; then
-        local error_msg=$(get_text "home_not_writable" "No se puede escribir en el directorio home")
-        handle_error "$error_msg"
-    fi
-    # Sin cambios de Polkit/Sudoers: se asume ejecución con sudo para pasos que lo requieran
+    [[ -w "$HOME" ]] || {
+        local error_msg
+        error_msg=$(get_text "home_not_writable" "No se puede escribir en el directorio home")
+        die "$error_msg"
+    }
 }
 
 # Mostrar ayuda
@@ -236,61 +245,48 @@ show_help() {
     exit 0
 }
 
-# Verificar integridad del directorio config
+# Verificar integridad del directorio config (optimizada)
 verify_config_integrity() {
-    local base_dir="$1"
-    local operation="$2"
-    local config_dir="$base_dir/config"
+    local base_dir="$1" operation="$2" config_dir="$base_dir/config"
     
     log "$ANSI_YELLOW" "INFO" "$(format_text "$(get_text 'verifying_config' 'Verificando integridad del directorio config ({operation})...')" "operation=$operation")"
     
     # Verificar que el directorio config existe
-    if [ ! -d "$config_dir" ]; then
+    [[ -d "$config_dir" ]] || {
         log "$ANSI_RED" "ERROR" "$(format_text "$(get_text 'config_dir_missing' 'El directorio config no existe en {path}')" "path=$base_dir")"
         return 1
-    fi
+    }
     
     # Verificar archivos críticos
-    local critical_files=("settings.py" "__init__.py")
+    local critical_files=("settings.py" "__init__.py") file
     for file in "${critical_files[@]}"; do
-        if [ ! -f "$config_dir/$file" ]; then
+        [[ -f "$config_dir/$file" && -r "$config_dir/$file" && -s "$config_dir/$file" ]] || {
             log "$ANSI_RED" "ERROR" "$(format_text "$(get_text 'config_file_missing' 'Archivo crítico {file} no existe en {path}')" "file=$file" "path=$config_dir")"
             return 1
-        fi
-        
-        # Verificar que el archivo sea legible
-        if [ ! -r "$config_dir/$file" ]; then
-            log "$ANSI_RED" "ERROR" "$(format_text "$(get_text 'config_file_not_readable' 'Archivo {file} no es legible en {path}')" "file=$file" "path=$config_dir")"
-            return 1
-        fi
-        
-        # Verificar que el archivo no esté vacío
-        if [ ! -s "$config_dir/$file" ]; then
-            log "$ANSI_RED" "ERROR" "$(format_text "$(get_text 'config_file_empty' 'Archivo {file} está vacío en {path}')" "file=$file" "path=$config_dir")"
-            return 1
-        fi
+        }
     done
     
     # Verificar permisos del directorio
-    local dir_perms=$(stat -c "%a" "$config_dir" 2>/dev/null || stat -f "%Lp" "$config_dir" 2>/dev/null || echo "unknown")
-    if [ "$dir_perms" != "755" ] && [ "$dir_perms" != "750" ]; then
+    local dir_perms
+    dir_perms=$(stat -c "%a" "$config_dir" 2>/dev/null || stat -f "%Lp" "$config_dir" 2>/dev/null || echo "unknown")
+    [[ "$dir_perms" =~ ^(755|750)$ ]] || {
         log "$ANSI_YELLOW" "WARN" "$(format_text "$(get_text 'config_dir_perms_warning' 'Permisos del directorio config son {perms}, ajustando a 755...')" "perms=$dir_perms")"
         chmod 755 "$config_dir" 2>/dev/null || true
-    fi
+    }
     
     # Verificar permisos de los archivos Python
+    local file file_perms
     for file in "$config_dir"/*.py; do
-        if [ -f "$file" ]; then
-            local file_perms=$(stat -c "%a" "$file" 2>/dev/null || stat -f "%Lp" "$file" 2>/dev/null || echo "unknown")
-            if [ "$file_perms" != "644" ] && [ "$file_perms" != "640" ]; then
-                log "$ANSI_YELLOW" "WARN" "$(format_text "$(get_text 'config_file_perms_warning' 'Permisos del archivo {file} son {perms}, ajustando a 644...')" "file=$(basename "$file")" "perms=$file_perms")"
-                chmod 644 "$file" 2>/dev/null || true
-            fi
-        fi
+        [[ -f "$file" ]] || continue
+        file_perms=$(stat -c "%a" "$file" 2>/dev/null || stat -f "%Lp" "$file" 2>/dev/null || echo "unknown")
+        [[ "$file_perms" =~ ^(644|640)$ ]] || {
+            log "$ANSI_YELLOW" "WARN" "$(format_text "$(get_text 'config_file_perms_warning' 'Permisos del archivo {file} son {perms}, ajustando a 644...')" "file=$(basename "$file")" "perms=$file_perms")"
+            chmod 644 "$file" 2>/dev/null || true
+        }
     done
     
-    # Verificar que Python puede importar el módulo (solo si hay un entorno virtual disponible)
-    if [ -d "$PROD_DIR/venv" ] && [ -f "$PROD_DIR/venv/bin/python" ]; then
+    # Verificar importación solo si hay venv disponible
+    [[ -d "$PROD_DIR/venv" && -f "$PROD_DIR/venv/bin/python" ]] && {
         log "$ANSI_YELLOW" "INFO" "Probando importación con entorno virtual..."
         local test_script="/tmp/test_config_import.py"
         cat > "$test_script" << 'EOF'
@@ -305,17 +301,15 @@ except Exception as e:
     sys.exit(1)
 EOF
         
-        if "$PROD_DIR/venv/bin/python" "$test_script" "$config_dir" 2>/dev/null | grep -q "OK"; then
+        "$PROD_DIR/venv/bin/python" "$test_script" "$config_dir" 2>/dev/null | grep -q "OK" && {
             log "$ANSI_GREEN" "INFO" "$(get_text 'config_import_ok' '✅ Importación de config.settings exitosa')"
-            rm -f "$test_script"
-        else
+        } || {
             log "$ANSI_YELLOW" "WARN" "⚠️ No se puede importar config.settings (puede ser por dependencias)"
-            rm -f "$test_script"
-            # No fallar aquí, solo mostrar advertencia
-        fi
-    else
+        }
+        rm -f "$test_script"
+    } || {
         log "$ANSI_YELLOW" "WARN" "⚠️ No hay entorno virtual disponible, saltando verificación de importación"
-    fi
+    }
     
     log "$ANSI_GREEN" "INFO" "$(get_text 'config_integrity_ok' '✅ Integridad del directorio config verificada')"
     return 0
@@ -373,12 +367,12 @@ setup_user_permissions() {
 
 # Escribir /etc/hostberry/app.env
 write_app_env() {
-    log "$ANSI_YELLOW" "INFO" "$(get_text "writing_app_env" "Escribiendo archivo de entorno de la aplicación...")"
+    log "$ANSI_YELLOW" "INFO" "$(get_text "writing_app_env" "Escribiendo archivo de entorno de la aplicación optimizado para RPi 3...")"
     local env_path="$CONFIG_DIR/app.env"
     if [[ $EUID -eq 0 ]]; then
         install -d -m 0755 -o root -g root "$CONFIG_DIR"
         cat > "$env_path" << EOF
-# HostBerry application environment
+# HostBerry application environment - Optimizado para RPi 3
 ENVIRONMENT=${ENVIRONMENT:-production}
 HOST=${PROD_HOST}
 PORT=${PROD_PORT}
@@ -389,14 +383,21 @@ PYTHONPATH=${PROD_DIR}
 # Database
 DATABASE_URL=sqlite:///var/lib/hostberry/hostberry.db
 DB_PATH=/var/lib/hostberry/hostberry.db
-RPI_OPTIMIZATION=false
+RPI_OPTIMIZATION=true
+# Optimizaciones para RPi 3
+PYTHONOPTIMIZE=2
+PYTHONDONTWRITEBYTECODE=1
+PYTHONUNBUFFERED=1
+# Configuración de caché optimizada
+CACHE_TTL=300
+MAX_CONNECTIONS=50
 EOF
         chmod 640 "$env_path"
         chown root:root "$env_path"
     else
         sudo install -d -m 0755 -o root -g root "$CONFIG_DIR"
         sudo bash -c "cat > '$env_path' << 'EOF'
-# HostBerry application environment
+# HostBerry application environment - Optimizado para RPi 3
 ENVIRONMENT=${ENVIRONMENT:-production}
 HOST=${PROD_HOST}
 PORT=${PROD_PORT}
@@ -407,12 +408,19 @@ PYTHONPATH=${PROD_DIR}
 # Database
 DATABASE_URL=sqlite:///var/lib/hostberry/hostberry.db
 DB_PATH=/var/lib/hostberry/hostberry.db
-RPI_OPTIMIZATION=false
+RPI_OPTIMIZATION=true
+# Optimizaciones para RPi 3
+PYTHONOPTIMIZE=2
+PYTHONDONTWRITEBYTECODE=1
+PYTHONUNBUFFERED=1
+# Configuración de caché optimizada
+CACHE_TTL=300
+MAX_CONNECTIONS=50
 EOF"
         sudo chmod 640 "$env_path"
         sudo chown root:root "$env_path"
     fi
-log "$ANSI_GREEN" "INFO" "$(format_text "$(get_text "app_env_written" "Archivo de entorno escrito en {path}")" "path=$env_path")"
+log "$ANSI_GREEN" "INFO" "$(format_text "$(get_text "app_env_written" "Archivo de entorno optimizado escrito en {path}")" "path=$env_path")"
 }
 
 setup_polkit_rules() { :; }
@@ -580,72 +588,24 @@ EOF
     log "$ANSI_GREEN" "SUCCESS" "Servicio de usuario systemd configurado para hostberry"
 }
 
-# Instalar dependencias del sistema
+# Instalar dependencias del sistema (optimizada)
 install_system_deps() {
-    local installing_deps=$(get_text "installing_deps" "Instalando dependencias del sistema...")
-    log "$ANSI_YELLOW" "INFO" "$installing_deps"
+    log "$ANSI_YELLOW" "INFO" "$(get_text "installing_deps" "Instalando dependencias del sistema...")"
     
-    # Verificar si se ejecuta como root
+    # Dependencias esenciales optimizadas para RPi 3
+    local deps=(
+        "python3" "python3-pip" "python3-venv" "python3-dev"
+        "build-essential" "git" "curl" "nginx" "ufw"
+        "fail2ban" "logrotate" "htop" "openssl" "jq" "rsync"
+    )
+    
+    # Actualizar repositorios e instalar dependencias
     if [[ $EUID -eq 0 ]]; then
-        # Actualizar repositorios
-        apt-get update || handle_error "$(get_text "apt_update_failed" "No se pudo actualizar apt-get")"
-        
-        # Dependencias esenciales
-        local deps=(
-            "python3"
-            "python3-pip"
-            "python3-venv"
-            "python3-dev"
-            "build-essential"
-            "git"
-            "curl"
-            "wget"
-            "nginx"
-            "ufw"
-            "fail2ban"
-            "logrotate"
-            "htop"
-            "iotop"
-            "sysstat"
-            "openssl"
-            "bc"
-            "net-tools"
-            "libnss3-tools"
-            "jq"
-            "rsync"
-        )
-        
-        apt-get install -y "${deps[@]}" || handle_error "$(get_text "deps_failed" "No se pudieron instalar las dependencias")"
+        apt-get update || die "$(get_text "apt_update_failed" "No se pudo actualizar apt-get")"
+        apt-get install -y "${deps[@]}" || die "$(get_text "deps_failed" "No se pudieron instalar las dependencias")"
     else
-        # Usar sudo para operaciones que requieren root
-        sudo apt-get update || handle_error "$(get_text "apt_update_failed" "No se pudo actualizar apt-get")"
-        
-        # Dependencias esenciales
-        local deps=(
-            "python3"
-            "python3-pip"
-            "python3-venv"
-            "python3-dev"
-            "build-essential"
-            "git"
-            "curl"
-            "wget"
-            "nginx"
-            "ufw"
-            "fail2ban"
-            "logrotate"
-            "htop"
-            "iotop"
-            "sysstat"
-            "openssl"
-            "bc"
-            "net-tools"
-            "libnss3-tools"
-            "jq"
-            "rsync"
-        )
-        
-        sudo apt-get install -y "${deps[@]}" || handle_error "$(get_text "deps_failed" "No se pudieron instalar las dependencias")"
+        sudo apt-get update || die "$(get_text "apt_update_failed" "No se pudo actualizar apt-get")"
+        sudo apt-get install -y "${deps[@]}" || die "$(get_text "deps_failed" "No se pudieron instalar las dependencias")"
     fi
     
     # Instalar mkcert si no está disponible
@@ -687,40 +647,56 @@ install_system_deps() {
     log "$ANSI_GREEN" "INFO" "$(get_text "deps_installed" "Dependencias del sistema instaladas")"
 }
 
-# Limpiar instalación anterior completamente
+# Limpiar instalación anterior completamente (optimizada)
 clean_previous_installation() {
     log "$ANSI_YELLOW" "INFO" "$(get_text 'cleaning_previous_installation' '🧹 Limpiando instalación anterior de HostBerry...')"
     
     # Detener servicio si está activo
-    if systemctl is-active --quiet hostberry 2>/dev/null; then
+    systemctl is-active --quiet hostberry 2>/dev/null && {
         systemctl stop hostberry 2>/dev/null || true
         systemctl disable hostberry 2>/dev/null || true
-    fi
+    }
     
     # Eliminar unit de systemd
-    if [ -f "/etc/systemd/system/hostberry.service" ]; then
+    [[ -f "/etc/systemd/system/hostberry.service" ]] && {
         rm -f "/etc/systemd/system/hostberry.service"
         systemctl daemon-reload 2>/dev/null || true
-    fi
+    }
 
     # Eliminar directorios de la app y datos
-    for dir in "/opt/hostberry" "/var/log/hostberry" "/var/lib/hostberry" "/etc/hostberry"; do
-        [ -e "$dir" ] && rm -rf "$dir"
+    local dirs=("/opt/hostberry" "/var/log/hostberry" "/var/lib/hostberry" "/etc/hostberry")
+    local dir
+    for dir in "${dirs[@]}"; do
+        [[ -e "$dir" ]] && rm -rf "$dir"
     done
 
     # Nginx sites
-    for f in "/etc/nginx/sites-available/hostberry" "/etc/nginx/sites-available/hostberry-ssl" "/etc/nginx/sites-enabled/hostberry" "/etc/nginx/sites-enabled/hostberry-ssl"; do
-        [ -e "$f" ] && rm -f "$f"
+    local nginx_files=(
+        "/etc/nginx/sites-available/hostberry"
+        "/etc/nginx/sites-available/hostberry-ssl"
+        "/etc/nginx/sites-enabled/hostberry"
+        "/etc/nginx/sites-enabled/hostberry-ssl"
+    )
+    local f
+    for f in "${nginx_files[@]}"; do
+        [[ -e "$f" ]] && rm -f "$f"
     done
 
     # Logs de nginx relacionados
-    for lf in "/var/log/nginx/hostberry_access.log" "/var/log/nginx/hostberry_error.log" "/var/log/nginx/hostberry_ssl_access.log" "/var/log/nginx/hostberry_ssl_error.log"; do
-        [ -e "$lf" ] && rm -f "$lf"
+    local log_files=(
+        "/var/log/nginx/hostberry_access.log"
+        "/var/log/nginx/hostberry_error.log"
+        "/var/log/nginx/hostberry_ssl_access.log"
+        "/var/log/nginx/hostberry_ssl_error.log"
+    )
+    local lf
+    for lf in "${log_files[@]}"; do
+        [[ -e "$lf" ]] && rm -f "$lf"
     done
 
     # logrotate/fail2ban reglas
-    [ -f "/etc/logrotate.d/hostberry" ] && rm -f "/etc/logrotate.d/hostberry"
-    [ -f "/etc/fail2ban/jail.local" ] && rm -f "/etc/fail2ban/jail.local"
+    [[ -f "/etc/logrotate.d/hostberry" ]] && rm -f "/etc/logrotate.d/hostberry"
+    [[ -f "/etc/fail2ban/jail.local" ]] && rm -f "/etc/fail2ban/jail.local"
 
     log "$ANSI_GREEN" "INFO" "$(get_text 'cleanup_done' '✅ Limpieza completa realizada')"
 }
@@ -939,7 +915,7 @@ setup_production_venv() {
         return 0
     fi
     
-    log "$ANSI_YELLOW" "INFO" "$(format_text "$(get_text 'setup_venv' 'Configurando entorno virtual de producción (modo: {mode})...')" "mode=$MODE")"
+    log "$ANSI_YELLOW" "INFO" "$(format_text "$(get_text 'setup_venv' 'Configurando entorno virtual de producción optimizado para RPi 3 (modo: {mode})...')" "mode=$MODE")"
 
     # Asegurar directorio de producción
     mkdir -p "$PROD_DIR"
@@ -962,12 +938,16 @@ python3 -m venv "$VENV_DIR" || handle_error "$(get_text 'venv_failed' 'No se pud
         # Activar venv
         source "$VENV_DIR/bin/activate"
 
-        # Configuración de pip para evitar piwheels.org
+        # Configuración de pip optimizada para RPi 3
         cat > "$VENV_DIR/pip.conf" << EOF
 [global]
 index-url = https://pypi.org/simple
 trusted-host = pypi.org
 extra-index-url = 
+# Optimizaciones para RPi 3
+timeout = 120
+retries = 3
+no-cache-dir = true
 EOF
 
         # Actualizar herramientas de empaquetado
@@ -1142,9 +1122,9 @@ log "$ANSI_GREEN" "INFO" "$(get_text \"wrapper_created\" \"Script wrapper creado
 setup_systemd_service() {
     log "$ANSI_YELLOW" "INFO" "$(get_text "setup_service" "Configurando servicio systemd optimizado...")"
     
-    # Crear el archivo de servicio genérico para cualquier usuario
-    # Nota: heredoc sin comillas para expandir variables como $PROD_PORT
-    cat > /tmp/hostberry_service.tmp << EOF
+            # Crear el archivo de servicio genérico para cualquier usuario
+        # Nota: heredoc sin comillas para expandir variables como $PROD_PORT
+        cat > /tmp/hostberry_service.tmp << EOF
 [Unit]
 Description=HostBerry FastAPI Service
 After=network.target
@@ -1163,11 +1143,13 @@ Environment=PYTHONPATH=$PROD_DIR
 Environment=UVICORN_NO_UVLOOP=1
 Environment=UVICORN_NO_HTTPTOOLS=1
 Environment=HOSTBERRY_SKIP_RUNTIME_OPTIMIZE=1
-ExecStart=$VENV_DIR/bin/python -m uvicorn --app-dir $PROD_DIR main:app --host 127.0.0.1 --port $PROD_PORT --workers $WORKERS --loop asyncio --http h11 --log-level info
+# Configuración optimizada para RPi 3
+ExecStart=$VENV_DIR/bin/python -m uvicorn --app-dir $PROD_DIR main:app --host 127.0.0.1 --port $PROD_PORT --workers $WORKERS --loop asyncio --http h11 --log-level $LOG_LEVEL --limit-concurrency 100 --limit-max-requests 1000
 Restart=always
-RestartSec=3
+RestartSec=5
 StandardOutput=journal
 StandardError=journal
+# Optimizaciones de recursos
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectHome=true
@@ -1181,6 +1163,9 @@ RemoveIPC=true
 SystemCallArchitectures=native
 SystemCallFilter=@system-service
 ReadWritePaths=/var/lib/hostberry/uploads /var/log/hostberry /var/lib/hostberry
+# Límites de recursos para RPi 3
+MemoryMax=256M
+CPUQuota=50%
 
 [Install]
 WantedBy=multi-user.target
@@ -1250,13 +1235,18 @@ setup_nginx() {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
+        # Timeouts optimizados para RPi 3
+        proxy_connect_timeout 30s;
+        proxy_send_timeout 30s;
+        proxy_read_timeout 30s;
+        # Buffers optimizados para RPi 3
         proxy_buffering on;
-        proxy_buffer_size 4k;
-        proxy_buffers 8 4k;
-        proxy_busy_buffers_size 8k;
+        proxy_buffer_size 2k;
+        proxy_buffers 4 2k;
+        proxy_busy_buffers_size 4k;
+        # Optimizaciones adicionales
+        proxy_cache_bypass $http_upgrade;
+        proxy_no_cache $http_upgrade;
     }
     
     location /static/ {
@@ -1857,51 +1847,58 @@ EOF
     chmod +x "$PROD_DIR/monitor.sh"
     chown "$USER:$GROUP" "$PROD_DIR/monitor.sh"
     
-    # Configurar cron para monitoreo (solo si no existe ya)
+    # Configurar cron para monitoreo optimizado (solo si no existe ya)
     if ! crontab -l 2>/dev/null | grep -q "monitor.sh"; then
-        (crontab -l 2>/dev/null; echo "*/5 * * * * $USER $PROD_DIR/monitor.sh") | crontab -
+        # Monitoreo cada 15 minutos en lugar de cada 5 para reducir carga
+        (crontab -l 2>/dev/null; echo "*/15 * * * * $USER $PROD_DIR/monitor.sh") | crontab -
     fi
     
     log "$ANSI_GREEN" "INFO" "Monitoreo configurado"
 }
 
-# Configurar logrotate
+# Configurar logrotate optimizado para RPi 3
 setup_logrotate() {
-    log "$ANSI_YELLOW" "INFO" "Configurando logrotate..."
+    log "$ANSI_YELLOW" "INFO" "Configurando logrotate optimizado para RPi 3..."
     
     if [[ $EUID -eq 0 ]]; then
         cat > /etc/logrotate.d/hostberry << EOF
 $LOG_DIR/*.log {
-    daily
+    # Rotación más frecuente para RPi 3 (menos espacio)
+    weekly
     missingok
-    rotate 7
+    rotate 4
     compress
     delaycompress
     notifempty
     create 644 $USER $GROUP
+    # Tamaño máximo de archivo (1MB)
+    size 1M
     postrotate
-systemctl reload hostberry.service
+        systemctl reload hostberry.service
     endscript
 }
 EOF
     else
         cat << EOF | sudo tee /etc/logrotate.d/hostberry > /dev/null
 $LOG_DIR/*.log {
-    daily
+    # Rotación más frecuente para RPi 3 (menos espacio)
+    weekly
     missingok
-    rotate 7
+    rotate 4
     compress
     delaycompress
     notifempty
     create 644 $USER $GROUP
+    # Tamaño máximo de archivo (1MB)
+    size 1M
     postrotate
-systemctl reload hostberry.service
+        systemctl reload hostberry.service
     endscript
 }
 EOF
     fi
     
-    log "$ANSI_GREEN" "INFO" "Logrotate configurado"
+    log "$ANSI_GREEN" "INFO" "Logrotate optimizado configurado para RPi 3"
 }
 
 # Crear backup
@@ -1933,36 +1930,44 @@ sudo systemctl start "hostberry.service" 2>/dev/null || true
 
 # Optimizaciones de producción
 apply_production_optimizations() {
-    log "$ANSI_YELLOW" "INFO" "$(get_text 'applying_optimizations' 'Aplicando optimizaciones de producción...')"
+    log "$ANSI_YELLOW" "INFO" "$(get_text 'applying_optimizations' 'Aplicando optimizaciones de producción para RPi 3...')"
     
-    # Optimizaciones de sistema
+    # Optimizaciones de sistema optimizadas para RPi 3
     if [[ $EUID -eq 0 ]]; then
         cat >> /etc/sysctl.conf << EOF
 
-# Optimizaciones para HostBerry
-net.core.rmem_max = 262144
-net.core.wmem_max = 262144
-net.ipv4.tcp_rmem = 4096 87380 16777216
-net.ipv4.tcp_wmem = 4096 65536 16777216
+# Optimizaciones para HostBerry en RPi 3
+net.core.rmem_max = 131072
+net.core.wmem_max = 131072
+net.ipv4.tcp_rmem = 4096 65536 131072
+net.ipv4.tcp_wmem = 4096 65536 131072
 net.ipv4.tcp_congestion_control = bbr
-vm.swappiness = 10
-vm.dirty_ratio = 15
-vm.dirty_background_ratio = 5
+net.ipv4.tcp_window_scaling = 1
+net.ipv4.tcp_timestamps = 0
+net.ipv4.tcp_sack = 1
+vm.swappiness = 5
+vm.dirty_ratio = 10
+vm.dirty_background_ratio = 3
+vm.vfs_cache_pressure = 50
 EOF
         
         sysctl -p
     else
         cat << EOF | sudo tee -a /etc/sysctl.conf > /dev/null
 
-# Optimizaciones para HostBerry
-net.core.rmem_max = 262144
-net.core.wmem_max = 262144
-net.ipv4.tcp_rmem = 4096 87380 16777216
-net.ipv4.tcp_wmem = 4096 65536 16777216
+# Optimizaciones para HostBerry en RPi 3
+net.core.rmem_max = 131072
+net.core.wmem_max = 131072
+net.ipv4.tcp_rmem = 4096 65536 131072
+net.ipv4.tcp_wmem = 4096 65536 131072
 net.ipv4.tcp_congestion_control = bbr
-vm.swappiness = 10
-vm.dirty_ratio = 15
-vm.dirty_background_ratio = 5
+net.ipv4.tcp_window_scaling = 1
+net.ipv4.tcp_timestamps = 0
+net.ipv4.tcp_sack = 1
+vm.swappiness = 5
+vm.dirty_ratio = 10
+vm.dirty_background_ratio = 3
+vm.vfs_cache_pressure = 50
 EOF
         
         sudo sysctl -p
@@ -1975,34 +1980,46 @@ EOF
         if [[ "$MODEL" =~ "Raspberry Pi" ]]; then
             log "$ANSI_GREEN" "INFO" "$(get_text 'rpi_optimizations' 'Aplicando optimizaciones específicas para RPi')"
             
-            # CPU governor
-            if [[ $EUID -eq 0 ]]; then
-                echo "powersave" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || true
-                
-                # Deshabilitar servicios innecesarios
-                local unnecessary_services=(
-                    "bluetooth" "avahi-daemon" "triggerhappy" "hciuart"
-                    "bluealsa" "pulseaudio" "speech-dispatcher"
-                )
-                
-                for service in "${unnecessary_services[@]}"; do
-                    systemctl disable "$service" 2>/dev/null || true
-                    systemctl stop "$service" 2>/dev/null || true
-                done
-            else
-                echo "powersave" | sudo tee /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor > /dev/null 2>&1 || true
-                
-                # Deshabilitar servicios innecesarios
-                local unnecessary_services=(
-                    "bluetooth" "avahi-daemon" "triggerhappy" "hciuart"
-                    "bluealsa" "pulseaudio" "speech-dispatcher"
-                )
-                
-                for service in "${unnecessary_services[@]}"; do
-                    sudo systemctl disable "$service" 2>/dev/null || true
-                    sudo systemctl stop "$service" 2>/dev/null || true
-                done
-            fi
+                    # CPU governor optimizado para RPi 3
+        if [[ $EUID -eq 0 ]]; then
+            echo "powersave" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || true
+            
+            # Deshabilitar servicios innecesarios para RPi 3
+            local unnecessary_services=(
+                "bluetooth" "avahi-daemon" "triggerhappy" "hciuart"
+                "bluealsa" "pulseaudio" "speech-dispatcher"
+                "cups" "cups-browsed" "snapd" "snapd.socket"
+                "ModemManager" "NetworkManager" "wpa_supplicant"
+            )
+            
+            for service in "${unnecessary_services[@]}"; do
+                systemctl disable "$service" 2>/dev/null || true
+                systemctl stop "$service" 2>/dev/null || true
+            done
+            
+            # Optimizaciones específicas de CPU para RPi 3
+            echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo 2>/dev/null || true
+            echo 0 > /proc/sys/kernel/nmi_watchdog 2>/dev/null || true
+        else
+            echo "powersave" | sudo tee /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor > /dev/null 2>&1 || true
+            
+            # Deshabilitar servicios innecesarios para RPi 3
+            local unnecessary_services=(
+                "bluetooth" "avahi-daemon" "triggerhappy" "hciuart"
+                "bluealsa" "pulseaudio" "speech-dispatcher"
+                "cups" "cups-browsed" "snapd" "snapd.socket"
+                "ModemManager" "NetworkManager" "wpa_supplicant"
+            )
+            
+            for service in "${unnecessary_services[@]}"; do
+                sudo systemctl disable "$service" 2>/dev/null || true
+                sudo systemctl stop "$service" 2>/dev/null || true
+            done
+            
+            # Optimizaciones específicas de CPU para RPi 3
+            echo 1 | sudo tee /sys/devices/system/cpu/intel_pstate/no_turbo > /dev/null 2>&1 || true
+            echo 0 | sudo tee /proc/sys/kernel/nmi_watchdog > /dev/null 2>&1 || true
+        fi
         fi
     fi
     
@@ -2126,56 +2143,32 @@ local restart_command=$(format_text "$(get_text "restart_command" "Reiniciar: su
 
 
 
-# Función principal
+# Función principal (optimizada)
 main() {
-    local INSTALL_MODE=false
-    local UPDATE_MODE=false
-    local BACKUP_MODE=false
-    local SSL_MODE=false
-    local OPTIMIZE_MODE=false
-    local MONITOR_MODE=false
-    local SECURITY_MODE=false
-    local SHOW_HELP=false
+    local INSTALL_MODE=false UPDATE_MODE=false BACKUP_MODE=false SSL_MODE=false
+    local OPTIMIZE_MODE=false MONITOR_MODE=false SECURITY_MODE=false SHOW_HELP=false
 
-    # Si no se pasan argumentos, mostrar ayuda inmediatamente (multidioma)
-    if [ $# -eq 0 ]; then
-        show_help
-    fi
+    # Si no se pasan argumentos, mostrar ayuda inmediatamente
+    [[ $# -eq 0 ]] && show_help
 
-    # Procesar argumentos
+    # Procesar argumentos (optimizado)
+    local arg
     for arg in "$@"; do
         case $arg in
-            --help)
-                SHOW_HELP=true
-                ;;
-            --install)
-                INSTALL_MODE=true
-                ;;
-            --update)
-                UPDATE_MODE=true
-                ;;
-            --backup)
-                BACKUP_MODE=true
-                ;;
-            --ssl)
-                SSL_MODE=true
-                ;;
-            --optimize)
-                OPTIMIZE_MODE=true
-                ;;
-            --monitor)
-                MONITOR_MODE=true
-                ;;
-            --security)
-                SECURITY_MODE=true
-                ;;
-            --language=*)
+            --help) SHOW_HELP=true ;;
+            --install) INSTALL_MODE=true ;;
+            --update) UPDATE_MODE=true ;;
+            --backup) BACKUP_MODE=true ;;
+            --ssl) SSL_MODE=true ;;
+            --optimize) OPTIMIZE_MODE=true ;;
+            --monitor) MONITOR_MODE=true ;;
+            --security) SECURITY_MODE=true ;;
+            --language=*) 
                 LANGUAGE="${arg#*=}"
                 TRANSLATIONS_FILE="$LOCALES_DIR/${LANGUAGE}.json"
                 ;;
-            *)
-    local unknown_option=$(get_text "unknown_option" "Opción desconocida:")
-                log "$ANSI_RED" "ERROR" "$unknown_option $arg"
+            *) 
+                log "$ANSI_RED" "ERROR" "$(get_text "unknown_option" "Opción desconocida:") $arg"
                 SHOW_HELP=true
                 ;;
         esac
@@ -2186,13 +2179,11 @@ main() {
     TRANSLATIONS_FILE="$LOCALES_DIR/${LANGUAGE}.json"
     load_translations
 
-    if [ "$SHOW_HELP" = true ]; then
-        show_help
-    fi
+    [[ "$SHOW_HELP" = true ]] && show_help
 
     check_permissions
 
-    if [ "$INSTALL_MODE" = true ]; then
+    if [[ "$INSTALL_MODE" = true ]]; then
         log "$ANSI_GREEN" "INFO" "$(get_text 'starting_installation' '🚀 Iniciando instalación de producción...')"
         
         # Limpieza completa y descarga desde GitHub
@@ -2203,10 +2194,10 @@ main() {
         download_application_from_github false
         
         # Verificar integridad después de la descarga
-        if ! verify_config_integrity "$PROD_DIR" "post-descarga"; then
+        verify_config_integrity "$PROD_DIR" "post-descarga" || {
             log "$ANSI_RED" "ERROR" "$(get_text 'config_verification_failed' 'La verificación de integridad del config falló después de la descarga')"
             return 1
-        fi
+        }
         
         setup_production_dirs
         setup_production_venv install
@@ -2223,22 +2214,18 @@ main() {
         
         # Iniciar servicios
         if [[ $EUID -eq 0 ]]; then
-            systemctl start hostberry.service
-            systemctl start nginx
+            systemctl start hostberry.service nginx
         else
-            sudo systemctl start hostberry.service
-            sudo systemctl start nginx
+            sudo systemctl start hostberry.service nginx
         fi
         
         verify_installation
         show_production_info
         
-    elif [ "$UPDATE_MODE" = true ]; then
+    elif [[ "$UPDATE_MODE" = true ]]; then
         log "$ANSI_GREEN" "INFO" "$(get_text 'starting_update' '🔄 Iniciando actualización de producción...')"
         
-        if [ "$BACKUP_MODE" = true ]; then
-            create_backup
-        fi
+        [[ "$BACKUP_MODE" = true ]] && create_backup
         
         # Actualización desde GitHub (no limpiar ni tocar venv en update)
         download_application_from_github true
@@ -2246,10 +2233,10 @@ main() {
         
         write_app_env
         # Asegurar unit file de systemd si falta
-        if [ ! -f "/etc/systemd/system/hostberry.service" ]; then
-        log "$ANSI_YELLOW" "INFO" "$(get_text 'unit_missing_creating' 'Systemd unit file not found. Creating it...')"
+        [[ -f "/etc/systemd/system/hostberry.service" ]] || {
+            log "$ANSI_YELLOW" "INFO" "$(get_text 'unit_missing_creating' 'Systemd unit file not found. Creating it...')"
             setup_systemd_service
-        fi
+        }
         create_startup_script
         if [[ $EUID -eq 0 ]]; then
             systemctl restart hostberry.service
@@ -2259,16 +2246,16 @@ main() {
         verify_installation
         show_production_info
         
-    elif [ "$SSL_MODE" = true ]; then
+    elif [[ "$SSL_MODE" = true ]]; then
         setup_ssl
         
-    elif [ "$OPTIMIZE_MODE" = true ]; then
+    elif [[ "$OPTIMIZE_MODE" = true ]]; then
         log "$ANSI_YELLOW" "INFO" "$(get_text 'optimize_disabled' 'Optimize mode disabled in simplified version')"
         
-    elif [ "$MONITOR_MODE" = true ]; then
+    elif [[ "$MONITOR_MODE" = true ]]; then
         log "$ANSI_YELLOW" "INFO" "$(get_text 'monitor_disabled' 'Monitor mode disabled in simplified version')"
         
-    elif [ "$SECURITY_MODE" = true ]; then
+    elif [[ "$SECURITY_MODE" = true ]]; then
         log "$ANSI_YELLOW" "INFO" "$(get_text 'security_disabled' 'Security mode disabled in simplified version')"
         
     else

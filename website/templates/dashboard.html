@@ -276,34 +276,57 @@ function addLog(level, message) {
     logsContainer.scrollTop = logsContainer.scrollHeight;
 }
 
-// Actualizar estadísticas cada 5 segundos
-setInterval(updateSystemStats, 5000);
+// Variables para los intervalos
+let statsInterval, servicesInterval, logsInterval;
 
-// Verificar estado de servicios cada 10 segundos
-setInterval(checkServiceStatus, 10000);
+// Función para iniciar los intervalos
+function startIntervals() {
+    statsInterval = setInterval(updateSystemStats, 30000);
+    servicesInterval = setInterval(checkServiceStatus, 60000);
+    logsInterval = setInterval(() => {
+        const levels = ['info', 'success', 'warning'];
+        const messages = [
+            'Sistema funcionando correctamente',
+            'Monitoreo de recursos activo',
+            'Verificación de servicios completada',
+            'Backup automático programado',
+            'Actualización de seguridad disponible'
+        ];
+        
+        const randomLevel = levels[Math.floor(Math.random() * levels.length)];
+        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+        
+        addLog(randomLevel, randomMessage);
+    }, 120000);
+}
 
-// Agregar logs de ejemplo cada 15 segundos
-setInterval(() => {
-    const levels = ['info', 'success', 'warning'];
-    const messages = [
-        'Sistema funcionando correctamente',
-        'Monitoreo de recursos activo',
-        'Verificación de servicios completada',
-        'Backup automático programado',
-        'Actualización de seguridad disponible'
-    ];
-    
-    const randomLevel = levels[Math.floor(Math.random() * levels.length)];
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-    
-    addLog(randomLevel, randomMessage);
-}, 15000);
+// Función para detener los intervalos
+function stopIntervals() {
+    if (statsInterval) clearInterval(statsInterval);
+    if (servicesInterval) clearInterval(servicesInterval);
+    if (logsInterval) clearInterval(logsInterval);
+}
 
 // Inicializar al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
+    // Cargar datos iniciales
     updateSystemStats();
     checkServiceStatus();
+    
+    // Agregar algunos logs iniciales
     addLog('info', 'Dashboard inicializado');
+    
+    // Iniciar intervalos
+    startIntervals();
+    
+    // Optimización: detener intervalos cuando la página no esté visible
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            stopIntervals();
+        } else {
+            startIntervals();
+        }
+    });
 });
 </script>
 {% endblock %} 
