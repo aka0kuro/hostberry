@@ -69,6 +69,10 @@ body {
     text-align: center;
     background: rgba(255,255,255,.08);
     border: 1px solid rgba(255,255,255,.15);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .stats-card .card-body {
@@ -258,6 +262,18 @@ body.light-theme .btn-outline-warning:hover {
     background: #f8f9fa;
     border-color: #0d6efd;
     color: #212529;
+}
+
+/* Fila de estadísticas */
+.stats-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.stats-row .col-md-3 {
+    display: flex;
+    margin-bottom: 1rem;
 }
 
 /* Responsive */
