@@ -154,7 +154,6 @@ class Settings(BaseSettings):
     
     # Configuración de caché optimizada
     cache_enabled: bool = Field(default=True, env="CACHE_ENABLED")
-    cache_ttl: int = Field(default=300, env="CACHE_TTL")  # 5 minutos
     cache_max_size: int = Field(default=50, env="CACHE_MAX_SIZE")  # 50 elementos
     
     # Configuración de compresión

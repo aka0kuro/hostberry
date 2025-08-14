@@ -8,8 +8,9 @@ Aplicación web para gestionar servicios de red en Raspberry Pi
 
 # Imports optimizados - solo lo necesario
 import time  # Necesario para cache de system_info
+import uuid  # Necesario para request_id
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -129,16 +130,11 @@ app.add_middleware(
     max_age=3600,  # Cache CORS por 1 hora
 )
 
-# Configurar middleware de seguridad
-# if settings.security_headers_enabled:
-#     from core.security_middleware import create_security_middleware
-#     app.add_middleware(create_security_middleware())
+# Configurar middleware de seguridad (deshabilitado para optimización RPi 3)
 
-# Configurar compresión GZip
+# Configurar compresión GZip optimizada para RPi 3
 if settings.compression_enabled:
-    # aumentar tamaño mínimo para reducir CPU en Pi 3
-    # Configurar GZip optimizado para RPi 3
-app.add_middleware(
+    app.add_middleware(
     GZipMiddleware, 
     minimum_size=500,   # Comprimir archivos > 500B (más eficiente para RPi)
     compresslevel=6     # Nivel de compresión balanceado (velocidad vs tamaño)

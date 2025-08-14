@@ -245,7 +245,7 @@ show_help() {
     exit 0
 }
 
-# Verificar integridad del directorio config (optimizada)
+# Verificar integridad del directorio config (simplificada para RPi 3)
 verify_config_integrity() {
     local base_dir="$1" operation="$2" config_dir="$base_dir/config"
     
@@ -266,50 +266,11 @@ verify_config_integrity() {
         }
     done
     
-    # Verificar permisos del directorio
-    local dir_perms
-    dir_perms=$(stat -c "%a" "$config_dir" 2>/dev/null || stat -f "%Lp" "$config_dir" 2>/dev/null || echo "unknown")
-    [[ "$dir_perms" =~ ^(755|750)$ ]] || {
-        log "$ANSI_YELLOW" "WARN" "$(format_text "$(get_text 'config_dir_perms_warning' 'Permisos del directorio config son {perms}, ajustando a 755...')" "perms=$dir_perms")"
-        chmod 755 "$config_dir" 2>/dev/null || true
-    }
+    # Verificar permisos del directorio (simplificado)
+    chmod 755 "$config_dir" 2>/dev/null || true
     
-    # Verificar permisos de los archivos Python
-    local file file_perms
-    for file in "$config_dir"/*.py; do
-        [[ -f "$file" ]] || continue
-        file_perms=$(stat -c "%a" "$file" 2>/dev/null || stat -f "%Lp" "$file" 2>/dev/null || echo "unknown")
-        [[ "$file_perms" =~ ^(644|640)$ ]] || {
-            log "$ANSI_YELLOW" "WARN" "$(format_text "$(get_text 'config_file_perms_warning' 'Permisos del archivo {file} son {perms}, ajustando a 644...')" "file=$(basename "$file")" "perms=$file_perms")"
-            chmod 644 "$file" 2>/dev/null || true
-        }
-    done
-    
-    # Verificar importación solo si hay venv disponible
-    [[ -d "$PROD_DIR/venv" && -f "$PROD_DIR/venv/bin/python" ]] && {
-        log "$ANSI_YELLOW" "INFO" "Probando importación con entorno virtual..."
-        local test_script="/tmp/test_config_import.py"
-        cat > "$test_script" << 'EOF'
-import sys
-import os
-sys.path.insert(0, os.path.dirname(sys.argv[1]))
-try:
-    import config.settings
-    print("OK")
-except Exception as e:
-    print(f"ERROR: {e}")
-    sys.exit(1)
-EOF
-        
-        "$PROD_DIR/venv/bin/python" "$test_script" "$config_dir" 2>/dev/null | grep -q "OK" && {
-            log "$ANSI_GREEN" "INFO" "$(get_text 'config_import_ok' '✅ Importación de config.settings exitosa')"
-        } || {
-            log "$ANSI_YELLOW" "WARN" "⚠️ No se puede importar config.settings (puede ser por dependencias)"
-        }
-        rm -f "$test_script"
-    } || {
-        log "$ANSI_YELLOW" "WARN" "⚠️ No hay entorno virtual disponible, saltando verificación de importación"
-    }
+    # Verificar permisos de los archivos Python (simplificado)
+    chmod 644 "$config_dir"/*.py 2>/dev/null || true
     
     log "$ANSI_GREEN" "INFO" "$(get_text 'config_integrity_ok' '✅ Integridad del directorio config verificada')"
     return 0
@@ -724,8 +685,13 @@ download_application_from_github() {
             [ -d config ] && cp -r config "/tmp/hostberry_config_backup_$$" 2>/dev/null || true
             git fetch origin main || handle_error "$(get_text 'git_fetch_failed' 'No se pudo actualizar desde GitHub')"
             git reset --hard origin/main || handle_error "$(get_text 'git_reset_failed' 'No se pudo resetear a la versión más reciente')"
-            if [ -d "/tmp/hostberry_config_backup_$$" ] && [ ! -f config/settings.py ]; then
-                rm -rf config && cp -r "/tmp/hostberry_config_backup_$$" config
+            # Restaurar config si se corrompió
+            if [ ! -d config ] || [ ! -f config/settings.py ]; then
+                if [ -d "/tmp/hostberry_config_backup_$$" ]; then
+                    rm -rf config 2>/dev/null || true
+                    cp -r "/tmp/hostberry_config_backup_$$" config
+                    log "$ANSI_YELLOW" "WARN" "Config restaurado desde backup"
+                fi
             fi
             rm -rf "/tmp/hostberry_config_backup_$$" 2>/dev/null || true
         )
