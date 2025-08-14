@@ -96,7 +96,7 @@
             if(result.password_change_required){
               window.location.href = '/first-login';
             } else {
-              window.location.href = '/';
+              window.location.href = '/dashboard';
             }
           }, 800);
         } else {

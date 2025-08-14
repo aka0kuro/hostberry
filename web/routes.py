@@ -52,7 +52,7 @@ templates.env = _env
 
 @router.get("/")
 async def root_redirect():
-    return RedirectResponse("/login", status_code=302)
+    return RedirectResponse("/dashboard", status_code=302)
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -82,6 +82,22 @@ async def first_login_page(request: Request, response: Response, lang: str | Non
     templates.env.globals["t"] = _make_t(translations)
     context = {"request": request, "language": resolved_lang}
     resp = templates.TemplateResponse("first_login.html", context)
+    if lang:
+        resp.set_cookie("lang", resolved_lang, max_age=60*60*24*365)
+    return resp
+
+
+@router.get("/dashboard", response_class=HTMLResponse)
+async def dashboard_page(request: Request, response: Response, lang: str | None = Query(default=None)) -> HTMLResponse:
+    # Resolver idioma desde query, cookie o por defecto 'es'
+    resolved_lang = lang or request.cookies.get("lang") or "es"
+    if lang:
+        response.set_cookie("lang", resolved_lang, max_age=60*60*24*365)
+    translations = _load_translations(resolved_lang)
+    # Actualizar función t del entorno
+    templates.env.globals["t"] = _make_t(translations)
+    context = {"request": request, "language": resolved_lang}
+    resp = templates.TemplateResponse("dashboard.html", context)
     if lang:
         resp.set_cookie("lang", resolved_lang, max_age=60*60*24*365)
     return resp
