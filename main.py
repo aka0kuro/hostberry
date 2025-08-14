@@ -2,13 +2,12 @@
 # -*- coding: utf-8 -*-
 
 """
-HostBerry - FastAPI Application optimizada para Raspberry Pi 3
+HostBerry - FastAPI Application OPTIMIZADA para Raspberry Pi 3
 Aplicación web para gestionar servicios de red en Raspberry Pi
 """
 
-import asyncio
-import time
-import uuid
+# Imports optimizados - solo lo necesario
+import time  # Necesario para cache de system_info
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,14 +17,13 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jinja2.bccache import FileSystemBytecodeCache
-import uvicorn
 
+# Imports locales optimizados
 from config.settings import settings
-from core.database import db, init_db
+from core.database import db
 from core.logging import (
-    setup_logging, log_system_info, log_performance_metrics, 
-    logger, log_api_request, log_api_response, log_system_event,
-    cleanup_old_logs
+    setup_logging, log_system_info, logger, 
+    log_system_event, cleanup_old_logs
 )
 from core.cache import cache
 from system.system_utils import optimize_system_for_rpi
@@ -34,21 +32,30 @@ from system.system_utils import optimize_system_for_rpi
 from api.v1 import auth, system, wifi, vpn, wireguard, adblock, hostapd
 from web import routes as web_routes
 
-# Configurar templates con caché (Jinja2)
+# Configurar templates con caché optimizada para RPi 3
 def create_templates():
     env = Environment(
         loader=FileSystemLoader("website/templates"),
         autoescape=select_autoescape(["html", "xml"]),
-        cache_size=200  # caché moderada para RPi 3
+        cache_size=100,  # caché reducida para RPi 3 (menos memoria)
+        auto_reload=False,  # deshabilitar auto-reload en producción
+        trim_blocks=True,  # optimizar espacios en blanco
+        lstrip_blocks=True  # optimizar bloques
     )
+    
     # Cacheo persistente de bytecode para plantillas (acelera arranque)
     try:
-        env.bytecode_cache = FileSystemBytecodeCache(directory="instance/jinja_cache", pattern="%s.cache")
+        env.bytecode_cache = FileSystemBytecodeCache(
+            directory="instance/jinja_cache", 
+            pattern="%s.cache"
+        )
     except Exception:
         pass
-    # Proveer función de traducción segura para templates
+    
+    # Función de traducción optimizada
     env.globals["t"] = lambda key, default=None: default or key
-    # Compatibilidad con versiones de Starlette sin soporte de parámetro env
+    
+    # Compatibilidad con versiones de Starlette
     templates = Jinja2Templates(directory="website/templates")
     templates.env = env
     return templates
@@ -57,47 +64,69 @@ templates = create_templates()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Gestión del ciclo de vida de la aplicación"""
-    # Inicio de la aplicación
-    log_system_event("app_startup", "Iniciando HostBerry FastAPI")
-    setup_logging()
-    log_system_info()
-    
-    # Optimizaciones para RPi
-    if settings.rpi_optimization:
-        optimize_system_for_rpi()
-        log_system_event("rpi_optimization", "Optimizaciones RPi aplicadas")
-    
-    # Inicializar base de datos
-    await db.init_database()
-    log_system_event("database_initialized", "Base de datos inicializada")
-    
-    # Limpiar logs antiguos
-    cleanup_old_logs()
+    """Gestión del ciclo de vida de la aplicación optimizada para RPi 3"""
+    try:
+        # Inicio de la aplicación
+        log_system_event("app_startup", "Iniciando HostBerry FastAPI")
+        setup_logging()
+        
+        # Solo log_system_info si está en modo debug
+        if settings.debug:
+            log_system_info()
+        
+        # Optimizaciones para RPi (solo si está habilitado)
+        if getattr(settings, 'rpi_optimization', False):
+            optimize_system_for_rpi()
+            log_system_event("rpi_optimization", "Optimizaciones RPi aplicadas")
+        
+        # Inicializar base de datos
+        await db.init_database()
+        log_system_event("database_initialized", "Base de datos inicializada")
+        
+        # Limpiar logs antiguos solo si es necesario
+        if getattr(settings, 'auto_cleanup_logs', True):
+            cleanup_old_logs()
+        
+    except Exception as e:
+        logger.error(f"Error durante el inicio: {e}")
+        raise
     
     yield
     
-    # Cierre de la aplicación
-    log_system_event("app_shutdown", "Deteniendo HostBerry FastAPI")
-    cache.clear()
-    await db.vacuum_database()
+    try:
+        # Cierre de la aplicación
+        log_system_event("app_shutdown", "Deteniendo HostBerry FastAPI")
+        cache.clear()
+        
+        # Vacuum de base de datos solo si es necesario
+        if getattr(settings, 'auto_vacuum_db', True):
+            await db.vacuum_database()
+            
+    except Exception as e:
+        logger.error(f"Error durante el cierre: {e}")
 
-# Crear aplicación FastAPI
+# Crear aplicación FastAPI optimizada para RPi 3
 app = FastAPI(
     title="HostBerry FastAPI",
     description="API optimizada para Raspberry Pi 3",
     version="2.0.0",
     lifespan=lifespan,
-    default_response_class=JSONResponse
+    default_response_class=JSONResponse,
+    # Optimizaciones para RPi 3
+    docs_url="/api/docs" if settings.debug else None,  # Solo docs en debug
+    redoc_url="/api/redoc" if settings.debug else None,  # Solo redoc en debug
+    openapi_url="/api/openapi.json" if settings.debug else None,  # Solo openapi en debug
 )
 
-# Configurar CORS
+# Configurar CORS optimizado para RPi 3
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    # Optimizaciones para RPi 3
+    max_age=3600,  # Cache CORS por 1 hora
 )
 
 # Configurar middleware de seguridad
@@ -108,7 +137,12 @@ app.add_middleware(
 # Configurar compresión GZip
 if settings.compression_enabled:
     # aumentar tamaño mínimo para reducir CPU en Pi 3
-    app.add_middleware(GZipMiddleware, minimum_size=4096)
+    # Configurar GZip optimizado para RPi 3
+app.add_middleware(
+    GZipMiddleware, 
+    minimum_size=500,   # Comprimir archivos > 500B (más eficiente para RPi)
+    compresslevel=6     # Nivel de compresión balanceado (velocidad vs tamaño)
+)
 
 # Middleware de logging de requests
 @app.middleware("http")
@@ -199,27 +233,34 @@ app.include_router(web_routes.router, tags=["web"])
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint (ligero, sin dependencia de BD)"""
+    """Health check endpoint optimizado para RPi 3"""
     return {
         "status": "healthy",
-        "timestamp": time.time(),
         "version": "2.0.0"
     }
 
 @app.get("/system/info")
 async def system_info():
-    """Información del sistema"""
+    """Información del sistema optimizada para RPi 3"""
     try:
         import psutil
         
-        return {
-            "hostname": psutil.os.uname().nodename,
-            "platform": psutil.os.uname().sysname,
-            "python_version": f"{psutil.os.uname().release}",
-            "cpu_count": psutil.cpu_count(),
-            "memory_total": psutil.virtual_memory().total,
-            "disk_usage": psutil.disk_usage('/').percent
-        }
+        # Cache de información del sistema para evitar cálculos repetidos
+        if not hasattr(system_info, '_cache') or not getattr(system_info, '_cache_time', 0):
+            system_info._cache = {
+                "hostname": psutil.os.uname().nodename,
+                "platform": psutil.os.uname().sysname,
+                "cpu_count": psutil.cpu_count(),
+                "memory_total": psutil.virtual_memory().total
+            }
+            system_info._cache_time = time.time()
+        
+        # Solo actualizar información dinámica
+        current_info = system_info._cache.copy()
+        current_info["disk_usage"] = psutil.disk_usage('/').percent
+        
+        return current_info
+        
     except Exception as e:
         logger.error(f"System info error: {e}")
         return {"error": "No se pudo obtener información del sistema"}
@@ -245,14 +286,20 @@ async def clear_cache():
         return {"error": "No se pudo limpiar el caché"}
 
 def run_app():
-    """Función para ejecutar la aplicación"""
+    """Función para ejecutar la aplicación optimizada para RPi 3"""
     uvicorn.run(
         "main:app",
         host=settings.host,
         port=settings.port,
         reload=settings.debug,
-        access_log=True if settings.debug else False,
-        log_level=settings.log_level.lower()
+        access_log=settings.debug,  # Solo logs de acceso en debug
+        log_level=settings.log_level.lower(),
+        # Optimizaciones para RPi 3
+        loop="asyncio",  # Loop más eficiente para RPi 3
+        http="h11",      # Protocolo HTTP más ligero
+        limit_concurrency=100,  # Limitar conexiones concurrentes
+        limit_max_requests=1000,  # Reiniciar worker después de 1000 requests
+        timeout_keep_alive=30,  # Timeout de keep-alive reducido
     )
 
 if __name__ == "__main__":

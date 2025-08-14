@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     environment: str = Field(default="development", env="ENVIRONMENT")
     
     # Configuración del servidor optimizada para RPi 3
-    host: str = Field(default="0.0.0.0", env="HOST")
+    host: str = Field(default="127.0.0.1", env="HOST")  # Solo localhost para mayor seguridad
     port: int = Field(default=8000, env="PORT")
     workers: int = Field(default=1, env="WORKERS")  # RPi 3: 1 worker para ahorrar memoria
     
@@ -85,16 +85,27 @@ class Settings(BaseSettings):
     max_request_size: int = Field(default=10 * 1024 * 1024, env="MAX_REQUEST_SIZE")  # 10MB
     max_upload_files: int = Field(default=5, env="MAX_UPLOAD_FILES")
     
-    # Configuración de base de datos optimizada
+    # Configuración de base de datos optimizada para RPi 3
     database_url: str = Field(default="sqlite:///./hostberry.db", env="DATABASE_URL")
-    database_pool_size: int = Field(default=5, env="DB_POOL_SIZE")  # Pool reducido para RPi
-    database_max_overflow: int = Field(default=10, env="DB_MAX_OVERFLOW")
+    database_pool_size: int = Field(default=3, env="DB_POOL_SIZE")  # Pool muy reducido para RPi 3
+    database_max_overflow: int = Field(default=5, env="DB_MAX_OVERFLOW")  # Overflow reducido para RPi 3
+    database_echo: bool = Field(default=False, env="DB_ECHO")  # No mostrar SQL en logs
+    database_pool_pre_ping: bool = Field(default=False, env="DB_POOL_PRE_PING")  # Deshabilitar pre-ping
     
-    # Configuración de logging optimizada
+    # Configuración de logging optimizada para RPi 3
     log_level: str = Field(default="WARNING", env="LOG_LEVEL")  # Reducido para ahorrar I/O
     log_file: str = Field(default="", env="LOG_FILE")  # Se construirá dinámicamente
-    log_max_size: int = Field(default=5 * 1024 * 1024, env="LOG_MAX_SIZE")  # 5MB máximo
-    log_backup_count: int = Field(default=3, env="LOG_BACKUP_COUNT")  # Solo 3 backups
+    log_max_size: int = Field(default=2 * 1024 * 1024, env="LOG_MAX_SIZE")  # 2MB máximo para RPi 3
+    log_backup_count: int = Field(default=2, env="LOG_BACKUP_COUNT")  # Solo 2 backups para RPi 3
+    
+    # Optimizaciones específicas para RPi 3
+    rpi_optimization: bool = Field(default=True, env="RPI_OPTIMIZATION")
+    auto_cleanup_logs: bool = Field(default=True, env="AUTO_CLEANUP_LOGS")
+    auto_vacuum_db: bool = Field(default=True, env="AUTO_VACUUM_DB")
+    compression_enabled: bool = Field(default=True, env="COMPRESSION_ENABLED")
+    cache_enabled: bool = Field(default=True, env="CACHE_ENABLED")
+    cache_ttl: int = Field(default=300, env="CACHE_TTL")  # 5 minutos
+    max_connections: int = Field(default=50, env="MAX_CONNECTIONS")  # Limitado para RPi 3
     
     # Configuración de CORS
     cors_origins: List[str] = Field(default=["*"], env="CORS_ORIGINS")
