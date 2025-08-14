@@ -51,8 +51,15 @@ templates.env = _env
 
 
 @router.get("/")
-async def root_redirect():
-    return RedirectResponse("/dashboard", status_code=302)
+async def root_redirect(request: Request):
+    # Verificar si hay un token en el header Authorization
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        # Si hay un token, redirigir al dashboard
+        return RedirectResponse("/dashboard", status_code=302)
+    else:
+        # Si no hay token, redirigir al login
+        return RedirectResponse("/login", status_code=302)
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -96,7 +103,35 @@ async def dashboard_page(request: Request, response: Response, lang: str | None 
     translations = _load_translations(resolved_lang)
     # Actualizar función t del entorno
     templates.env.globals["t"] = _make_t(translations)
-    context = {"request": request, "language": resolved_lang}
+    
+    # Proporcionar datos por defecto para el dashboard
+    context = {
+        "request": request, 
+        "language": resolved_lang,
+        "system_stats": {
+            "cpu_percent": 0,
+            "memory_percent": 0,
+            "disk_percent": 0,
+            "temperature": 0
+        },
+        "system_health": {
+            "overall": "healthy",
+            "cpu": "healthy",
+            "memory": "healthy",
+            "disk": "healthy",
+            "network": "healthy",
+            "temperature": "healthy"
+        },
+        "services": {
+            "hostberry": "running",
+            "nginx": "running",
+            "ssh": "running",
+            "ufw": "running",
+            "fail2ban": "running"
+        },
+        "recent_activities": []
+    }
+    
     resp = templates.TemplateResponse("dashboard.html", context)
     if lang:
         resp.set_cookie("lang", resolved_lang, max_age=60*60*24*365)
