@@ -11,13 +11,6 @@ import json
 
 router = APIRouter()
 
-# Configurar Jinja2 local y proveer función t por defecto
-_env = Environment(
-    loader=FileSystemLoader("website/templates"),
-    autoescape=select_autoescape(["html", "xml"]),
-    cache_size=200,
-)
-
 # Carga simple de traducciones desde locales/{lang}.json
 def _load_translations(lang: str) -> dict:
     lang = (lang or "es").lower()
@@ -46,8 +39,8 @@ def _make_t(translations: dict):
         return cur
     return t
 
+# Usar el entorno de templates global desde main.py
 templates = Jinja2Templates(directory="website/templates")
-templates.env = _env
 
 
 @router.get("/")
@@ -101,8 +94,6 @@ async def dashboard_page(request: Request, response: Response, lang: str | None 
     if lang:
         response.set_cookie("lang", resolved_lang, max_age=60*60*24*365)
     translations = _load_translations(resolved_lang)
-    # Actualizar función t del entorno
-    templates.env.globals["t"] = _make_t(translations)
     
     # Proporcionar datos por defecto para el dashboard
     context = {
@@ -131,6 +122,9 @@ async def dashboard_page(request: Request, response: Response, lang: str | None 
         },
         "recent_activities": []
     }
+    
+    # Actualizar función t del entorno
+    templates.env.globals["t"] = _make_t(translations)
     
     resp = templates.TemplateResponse("dashboard.html", context)
     if lang:
