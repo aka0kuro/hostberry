@@ -2022,7 +2022,7 @@ EOF
                 "bluetooth" "avahi-daemon" "triggerhappy" "hciuart"
                 "bluealsa" "pulseaudio" "speech-dispatcher"
                 "cups" "cups-browsed" "snapd" "snapd.socket"
-                "ModemManager" "NetworkManager" "wpa_supplicant"
+                "ModemManager"
             )
             
             for service in "${unnecessary_services[@]}"; do
@@ -2041,7 +2041,7 @@ EOF
                 "bluetooth" "avahi-daemon" "triggerhappy" "hciuart"
                 "bluealsa" "pulseaudio" "speech-dispatcher"
                 "cups" "cups-browsed" "snapd" "snapd.socket"
-                "ModemManager" "NetworkManager" "wpa_supplicant"
+                "ModemManager"
             )
             
             for service in "${unnecessary_services[@]}"; do
@@ -2340,7 +2340,7 @@ EOF
         log "$ANSI_GREEN" "INFO" "Iniciando actualización de HostBerry..."
         
         # Pull updates
-        download_application_from_github "true"
+        download_application_from_github
         
         # Actualizar deps
         if [[ $EUID -eq 0 ]]; then
