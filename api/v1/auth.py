@@ -80,7 +80,7 @@ async def first_login_change(data: FirstLoginChange):
         logger.error('first_login_change_error', error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-            detail=get_text("errors.server_error", default="Error interno del servidor")
+            detail=get_text("errors.internal_server_error", default="Error interno del servidor")
         )
 
 security = HTTPBearer()
@@ -96,7 +96,7 @@ async def login(user_credentials: UserLogin):
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Credenciales inválidas"
+                detail=get_text("auth.invalid_credentials", default="Credenciales inválidas")
             )
         
         # Crear token de acceso
@@ -131,7 +131,7 @@ async def login(user_credentials: UserLogin):
         logger.error('login_error', error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error interno del servidor"
+            detail=get_text("errors.internal_server_error", default="Error interno del servidor")
         )
 
 @router.post("/register", response_model=UserResponse)
@@ -151,7 +151,7 @@ async def register(user_data: UserCreate):
                           details="Usuario ya existe", success=False)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="El usuario ya existe"
+                detail=get_text("auth.user_already_exists", default="El usuario ya existe")
             )
         
         # Crear nuevo usuario
@@ -178,7 +178,7 @@ async def register(user_data: UserCreate):
         logger.error('register_error', error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error interno del servidor"
+            detail=get_text("errors.internal_server_error", default="Error interno del servidor")
         )
 
 @router.get("/me", response_model=UserResponse)
@@ -197,7 +197,7 @@ async def get_current_user_info(current_user: dict = Depends(get_current_active_
         logger.error('get_user_info_error', error=str(e), user_id=current_user.get('username'))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error interno del servidor"
+            detail=get_text("errors.internal_server_error", default="Error interno del servidor")
         )
 
 @router.post("/logout")
@@ -213,7 +213,7 @@ async def logout(current_user: dict = Depends(get_current_active_user)):
         logger.error('logout_error', error=str(e), user_id=current_user.get('username'))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error interno del servidor"
+            detail=get_text("errors.internal_server_error", default="Error interno del servidor")
         )
 
 @router.post("/refresh")
@@ -240,7 +240,7 @@ async def refresh_token(current_user: dict = Depends(get_current_active_user)):
         logger.error('refresh_token_error', error=str(e), user_id=current_user.get('username'))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error interno del servidor"
+            detail=get_text("errors.internal_server_error", default="Error interno del servidor")
         )
 
 @router.post("/change-password")
@@ -259,7 +259,7 @@ async def change_password(
                           details="Contraseña actual incorrecta", success=False)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Contraseña actual incorrecta"
+                detail=get_text("auth.current_password_incorrect", default="Contraseña actual incorrecta")
             )
         
         # Verificar que no sea la contraseña por defecto
@@ -268,7 +268,7 @@ async def change_password(
                           details="No puedes usar la contraseña por defecto", success=False)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No puedes usar la contraseña por defecto"
+                detail=get_text("auth.default_password_not_allowed", default="No puedes usar la contraseña por defecto")
             )
         
         # Cambiar contraseña
@@ -281,7 +281,7 @@ async def change_password(
                           details="Error al cambiar la contraseña", success=False)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Error al cambiar la contraseña"
+                detail=get_text("auth.password_change_error", default="Error al cambiar la contraseña")
             )
         
         # Log del cambio de contraseña
@@ -290,6 +290,7 @@ async def change_password(
         logger.info(f"Contraseña cambiada para usuario: {current_user['username']}")
         
         response_time = time.time() - start_time
+        
         log_auth_event("change_password_success", user_id=current_user.get('username'), success=True)
         log_user_action("change_password", user_id=current_user.get('username'), details=f"response_time={response_time:.3f}s")
         
@@ -301,7 +302,7 @@ async def change_password(
         logger.error('change_password_error', error=str(e), user_id=current_user.get('username'))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error interno del servidor"
+            detail=get_text("errors.internal_server_error", default="Error interno del servidor")
         )
 
 @router.get("/users", response_model=list[UserResponse])
@@ -314,7 +315,7 @@ async def get_users(current_user: dict = Depends(get_current_active_user)):
                              endpoint="/users", details="Acceso no autorizado")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Acceso denegado"
+                detail=get_text("auth.access_denied", default="Acceso denegado")
             )
         
         # Obtener usuarios
@@ -339,5 +340,5 @@ async def get_users(current_user: dict = Depends(get_current_active_user)):
         logger.error('get_users_error', error=str(e), user_id=current_user.get('username'))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error interno del servidor"
+            detail=get_text("errors.internal_server_error", default="Error interno del servidor")
         ) 
