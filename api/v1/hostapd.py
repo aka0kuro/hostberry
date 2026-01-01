@@ -88,7 +88,7 @@ async def get_access_points(
     
     except Exception as e:
         logger.error('get_access_points_error', error=str(e))
-        raise HTTPException(status_code=500, detail="Error getting access points")
+        raise HTTPException(status_code=500, detail=get_text("hostapd.get_access_points_error", default="Error getting access points"))
 
 @router.get("/clients")
 async def get_clients(
@@ -129,7 +129,7 @@ async def get_clients(
     
     except Exception as e:
         logger.error('get_clients_error', error=str(e))
-        raise HTTPException(status_code=500, detail="Error getting clients")
+        raise HTTPException(status_code=500, detail=get_text("hostapd.get_clients_error", default="Error getting clients"))
 
 @router.post("/toggle")
 async def toggle_hostapd(
@@ -160,7 +160,7 @@ async def toggle_hostapd(
     
     except Exception as e:
         logger.error('toggle_hostapd_error', error=str(e))
-        raise HTTPException(status_code=500, detail="Error toggling HostAPD")
+        raise HTTPException(status_code=500, detail=get_text("hostapd.toggle_error", default="Error toggling HostAPD"))
 
 @router.post("/restart")
 async def restart_hostapd(
@@ -184,7 +184,7 @@ async def restart_hostapd(
     
     except Exception as e:
         logger.error('restart_hostapd_error', error=str(e))
-        raise HTTPException(status_code=500, detail="Error restarting HostAPD")
+        raise HTTPException(status_code=500, detail=get_text("hostapd.restart_error", default="Error restarting HostAPD"))
 
 @router.get("/config")
 async def get_hostapd_config(
@@ -229,7 +229,7 @@ async def get_hostapd_config(
     
     except Exception as e:
         logger.error('get_hostapd_config_error', error=str(e))
-        raise HTTPException(status_code=500, detail="Error getting HostAPD config")
+        raise HTTPException(status_code=500, detail=get_text("hostapd.get_config_error", default="Error getting HostAPD config"))
 
 @router.post("/config")
 async def update_hostapd_config(
@@ -248,13 +248,13 @@ async def update_hostapd_config(
             with open(settings.hostapd_config_path, "w") as f:
                 f.write(config_content)
         except PermissionError:
-            raise HTTPException(status_code=403, detail="Permission denied to write HostAPD config")
+            raise HTTPException(status_code=403, detail=get_text("hostapd.permission_denied", default="Permission denied to write HostAPD config"))
         
         # Reiniciar servicio
         try:
             subprocess.run(["systemctl", "restart", "hostapd"], check=True)
         except subprocess.CalledProcessError:
-            raise HTTPException(status_code=500, detail="Error restarting HostAPD service")
+            raise HTTPException(status_code=500, detail=get_text("hostapd.restart_service_error", default="Error restarting HostAPD service"))
         
         logger.info('update_hostapd_config', config_keys=list(config.keys()))
         return {
@@ -266,4 +266,4 @@ async def update_hostapd_config(
         raise
     except Exception as e:
         logger.error('update_hostapd_config_error', error=str(e))
-        raise HTTPException(status_code=500, detail="Error updating HostAPD config") 
+        raise HTTPException(status_code=500, detail=get_text("hostapd.update_config_error", default="Error updating HostAPD config")) 
