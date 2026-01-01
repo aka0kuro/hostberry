@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="{{ language }}" class="dark-theme">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hostberry</title>
+    <meta name="description" content="{{ t('common.app_description', 'HostBerry - Sistema de gestión de red para Raspberry Pi') }}">
+    <link rel="icon" type="image/png" href="/static/hostberry.png?v={{ last_update }}">
+    <link rel="shortcut icon" type="image/png" href="/static/hostberry.png?v={{ last_update }}">
+    <link rel="apple-touch-icon" href="/static/hostberry.png?v={{ last_update }}">
+    
+    <!-- CSS offline HostBerry -->
+    <link href="/static/css/hostberry.css" rel="stylesheet">
+    <link href="/static/css/login.css" rel="stylesheet">
+
+    <!-- estilos inline eliminados; usar /static/css/login.css -->
+</head>
+<body class="dark-theme">
+    <!-- Textos i18n para notificaciones -->
+    <div id="i18n-data" style="display:none"
+         data-user-not-found="{{ t('auth.user_not_found') }}"
+         data-incorrect-password="{{ t('auth.incorrect_password') }}"
+         data-too-many-attempts="{{ t('auth.too_many_attempts') }}"
+         data-connection-error="{{ t('auth.connection_error') }}"
+         data-login-generic-error="{{ t('auth.login_generic_error') }}"
+         data-login-success="{{ t('auth.login_success') }}"
+    ></div>
+    <!-- Selector de idioma -->
+    <div class="dropdown lang-dropdown">
+        <button class="btn lang-toggle dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            {{ 'ES' if language == 'es' else 'EN' }}
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="/login?lang=es">Español</a></li>
+            <li><a class="dropdown-item" href="/login?lang=en">English</a></li>
+        </ul>
+    </div>
+    <!-- Botón flotante de cambio de tema (emoji del sistema: sol/luna) -->
+    <button id="theme-toggle" class="theme-toggle dark" type="button" title="Cambiar tema" aria-label="Cambiar tema" onclick="toggleTheme()">
+        <span id="theme-emoji" style="font-size:28px; line-height:1" aria-hidden="true">☀️</span>
+    </button>
+
+    <div class="login-container">
+        <div class="login-header">
+            <img src="/static/hostberry.png?v={{ last_update }}" alt="hostberry" class="logo-image" />
+            <h1>Hostberry</h1>
+            <p>{{ t('auth.login_info', 'Inicia sesión para continuar') }}</p>
+        </div>
+        
+        <form id="loginForm" method="POST" action="/api/v1/auth/login">
+            <div class="mb-3">
+                <label for="username" class="form-label">
+                    <i class="bi bi-person"></i>
+                    {{ t('auth.username') }}
+                </label>
+                <input type="text" class="form-control" id="username" name="username" required placeholder="{{ t('auth.username', 'Usuario') }}">
+            </div>
+            
+            <div class="mb-3">
+                <label for="password" class="form-label">
+                    <i class="bi bi-lock"></i>
+                    {{ t('auth.password') }}
+                </label>
+                <div class="password-wrapper">
+                    <input type="password" class="form-control" id="password" name="password" required placeholder="{{ t('auth.password', 'Contraseña') }}">
+                    <button class="password-toggle" type="button" id="toggle-password" aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                        <span id="eye-emoji" style="font-size:18px; line-height:1" aria-hidden="true">👁️</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                <label class="form-check-label" for="remember">
+                    {{ t('auth.remember_me') }}
+                </label>
+            </div>
+            
+            <button type="submit" class="btn btn-login">
+                <i class="bi bi-box-arrow-in-right"></i>
+                {{ t('auth.login') }}
+            </button>
+        </form>
+        
+        
+    </div>
+
+    <script src="/static/js/common.js"></script>
+    <script src="/static/js/login.js"></script>
+</body>
+</html>

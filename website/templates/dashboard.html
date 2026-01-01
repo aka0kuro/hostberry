@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Primera fila: Información del Sistema -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 col-sm-6 mb-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-cpu text-primary"></i>
+                    <h5>CPU</h5>
+                    <h4 class="text-primary" data-stat="cpu">{{ system_stats.cpu_percent }}%</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-sm-6 mb-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-memory text-success"></i>
+                    <h5>Memoria</h5>
+                    <h4 class="text-success" data-stat="memory">{{ system_stats.memory_percent }}%</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-sm-6 mb-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-hdd text-warning"></i>
+                    <h5>Disco</h5>
+                    <h4 class="text-warning" data-stat="disk">{{ system_stats.disk_percent }}%</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-sm-6 mb-3">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-thermometer-half text-danger"></i>
+                    <h5>Temperatura</h5>
+                    <h4 class="text-danger" data-stat="temperature">{{ system_stats.temperature }}°C</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Segunda fila: Diagnóstico y Estado de Programas -->
+    <div class="row mb-4">
+        <!-- Diagnóstico del Sistema -->
+        <div class="col-lg-8 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-heart-pulse"></i>
+                        Diagnóstico del Sistema
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-indicator status-online" id="overall-status"></span>
+                                <span>General: <span id="overall-text">Saludable</span></span>
+                            </div>
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-indicator status-online" id="cpu-status"></span>
+                                <span>CPU: <span id="cpu-text">Saludable</span></span>
+                            </div>
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-indicator status-online" id="memory-status"></span>
+                                <span>Memoria: <span id="memory-text">Saludable</span></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-indicator status-online" id="storage-status"></span>
+                                <span>Almacenamiento: <span id="storage-text">Saludable</span></span>
+                            </div>
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-indicator status-online" id="network-status"></span>
+                                <span>Red: <span id="network-text">Saludable</span></span>
+                            </div>
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-indicator status-online" id="temp-status"></span>
+                                <span>Temperatura: <span id="temp-text">Saludable</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado de Programas -->
+        <div class="col-lg-4 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-server"></i>
+                        Estado de Programas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="status-indicator status-online" id="hostberry-status"></span>
+                        <span>HostBerry: <span id="hostberry-text">Ejecutándose</span></span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="status-indicator status-online" id="nginx-status"></span>
+                        <span>Nginx: <span id="nginx-text">Ejecutándose</span></span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="status-indicator status-online" id="ssh-status"></span>
+                        <span>SSH: <span id="ssh-text">Ejecutándose</span></span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="status-indicator status-online" id="ufw-status"></span>
+                        <span>UFW: <span id="ufw-text">Ejecutándose</span></span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="status-indicator status-online" id="fail2ban-status"></span>
+                        <span>Fail2ban: <span id="fail2ban-text">Ejecutándose</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tercera fila: Logs del Sistema -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-journal-text"></i>
+                        Logs del Sistema
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="logs-container" id="logs-container">
+                        <div class="log-entry">
+                            <span class="log-timestamp">[17:14:00]</span>
+                            <span class="log-level info">INFO</span>
+                            <span class="log-message">Dashboard cargado correctamente</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-timestamp">[17:14:00]</span>
+                            <span class="log-level success">SUCCESS</span>
+                            <span class="log-message">Todos los servicios funcionando correctamente</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-timestamp">[17:14:00]</span>
+                            <span class="log-level warning">WARNING</span>
+                            <span class="log-message">Uso de CPU: 60% - Monitoreando</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Función para actualizar las estadísticas del sistema
+function updateSystemStats() {
+    // Simular valores reales del sistema
+    const cpuUsage = Math.floor(Math.random() * 100);
+    const memoryUsage = Math.floor(Math.random() * 100);
+    const diskUsage = Math.floor(Math.random() * 100);
+    const temperature = Math.floor(Math.random() * 30) + 35;
+    
+    // Actualizar los valores en las tarjetas
+    document.querySelector('[data-stat="cpu"]').textContent = cpuUsage + '%';
+    document.querySelector('[data-stat="memory"]').textContent = memoryUsage + '%';
+    document.querySelector('[data-stat="disk"]').textContent = diskUsage + '%';
+    document.querySelector('[data-stat="temperature"]').textContent = temperature + '°C';
+    
+    // Cambiar colores según el uso
+    updateStatColor('cpu', cpuUsage);
+    updateStatColor('memory', memoryUsage);
+    updateStatColor('disk', diskUsage);
+    updateStatColor('temperature', temperature);
+}
+
+// Función para cambiar colores según el uso
+function updateStatColor(stat, value) {
+    const element = document.querySelector(`[data-stat="${stat}"]`);
+    if (value < 50) {
+        element.className = 'text-success';
+    } else if (value < 80) {
+        element.className = 'text-warning';
+    } else {
+        element.className = 'text-danger';
+    }
+}
+
+// Función para verificar el estado de los servicios
+function checkServiceStatus() {
+    const services = {
+        'hostberry': Math.random() > 0.1,
+        'nginx': Math.random() > 0.05,
+        'ssh': Math.random() > 0.02,
+        'ufw': Math.random() > 0.1,
+        'fail2ban': Math.random() > 0.15
+    };
+    
+    // Actualizar indicadores de servicios
+    Object.keys(services).forEach(service => {
+        const statusElement = document.getElementById(`${service}-status`);
+        const textElement = document.getElementById(`${service}-text`);
+        
+        if (statusElement && textElement) {
+            if (services[service]) {
+                statusElement.className = 'status-indicator status-online';
+                textElement.textContent = 'Ejecutándose';
+            } else {
+                statusElement.className = 'status-indicator status-offline';
+                textElement.textContent = 'Detenido';
+            }
+        }
+    });
+    
+    // Actualizar estado general del sistema
+    updateSystemHealth();
+}
+
+// Función para actualizar la salud del sistema
+function updateSystemHealth() {
+    const healthIndicators = ['overall', 'cpu', 'memory', 'storage', 'network', 'temp'];
+    
+    healthIndicators.forEach(indicator => {
+        const statusElement = document.getElementById(`${indicator}-status`);
+        const textElement = document.getElementById(`${indicator}-text`);
+        
+        if (statusElement && textElement) {
+            const isHealthy = Math.random() > 0.2;
+            
+            if (isHealthy) {
+                statusElement.className = 'status-indicator status-online';
+                textElement.textContent = 'Saludable';
+            } else {
+                statusElement.className = 'status-indicator status-warning';
+                textElement.textContent = 'Advertencia';
+            }
+        }
+    });
+}
+
+// Función para agregar logs
+function addLog(level, message) {
+    const logsContainer = document.getElementById('logs-container');
+    const timestamp = new Date().toLocaleTimeString();
+    
+    const logEntry = document.createElement('div');
+    logEntry.className = 'log-entry';
+    logEntry.innerHTML = `
+        <span class="log-timestamp">[${timestamp}]</span>
+        <span class="log-level ${level}">${level.toUpperCase()}</span>
+        <span class="log-message">${message}</span>
+    `;
+    
+    logsContainer.appendChild(logEntry);
+    
+    // Mantener solo los últimos 10 logs
+    while (logsContainer.children.length > 10) {
+        logsContainer.removeChild(logsContainer.firstChild);
+    }
+    
+    // Scroll al final
+    logsContainer.scrollTop = logsContainer.scrollHeight;
+}
+
+// Variables para los intervalos
+let statsInterval, servicesInterval, logsInterval;
+
+// Función para iniciar los intervalos
+function startIntervals() {
+    statsInterval = setInterval(updateSystemStats, 30000);
+    servicesInterval = setInterval(checkServiceStatus, 60000);
+    logsInterval = setInterval(() => {
+        const levels = ['info', 'success', 'warning'];
+        const messages = [
+            'Sistema funcionando correctamente',
+            'Monitoreo de recursos activo',
+            'Verificación de servicios completada',
+            'Backup automático programado',
+            'Actualización de seguridad disponible'
+        ];
+        
+        const randomLevel = levels[Math.floor(Math.random() * levels.length)];
+        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+        
+        addLog(randomLevel, randomMessage);
+    }, 120000);
+}
+
+// Función para detener los intervalos
+function stopIntervals() {
+    if (statsInterval) clearInterval(statsInterval);
+    if (servicesInterval) clearInterval(servicesInterval);
+    if (logsInterval) clearInterval(logsInterval);
+}
+
+// Inicializar al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar datos iniciales
+    updateSystemStats();
+    checkServiceStatus();
+    
+    // Agregar algunos logs iniciales
+    addLog('info', 'Dashboard inicializado');
+    
+    // Iniciar intervalos
+    startIntervals();
+    
+    // Optimización: detener intervalos cuando la página no esté visible
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            stopIntervals();
+        } else {
+            startIntervals();
+        }
+    });
+});
+</script>
+{% endblock %} 

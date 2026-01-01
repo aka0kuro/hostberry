@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <!-- Información del Proyecto -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    {{ t('about.project_info') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <h4>{{ t('about.welcome_title') }}</h4>
+                <p class="lead">{{ t('about.welcome_message') }}</p>
+                
+                <h5>{{ t('about.features') }}</h5>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="bi bi-wifi text-primary"></i>
+                        {{ t('about.wifi_management') }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-shield-check text-success"></i>
+                        {{ t('about.vpn_support') }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-shield-x text-warning"></i>
+                        {{ t('about.adblocking') }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-router text-info"></i>
+                        {{ t('about.access_point') }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-graph-up text-danger"></i>
+                        {{ t('about.monitoring') }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información de Versión -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-tag"></i>
+                    {{ t('about.version_info') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>{{ t('about.version') }}</h6>
+                    <p class="text-muted">{{ app_info.version | default('1.0.0') }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>{{ t('about.build') }}</h6>
+                    <p class="text-muted">{{ app_info.build | default('2023.10.27') }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>{{ t('about.release_date') }}</h6>
+                    <p class="text-muted">{{ app_info.release_date | default('2023-10-27') }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>{{ t('about.license') }}</h6>
+                    <p class="text-muted">{{ app_info.license | default('MIT License') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Equipo de Desarrollo -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-people"></i>
+                    {{ t('about.development_team') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <i class="bi bi-person-circle text-primary" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">{{ t('about.lead_developer') }}</h6>
+                            <p class="text-muted">{{ t('about.lead_developer_name') }}</p>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <i class="bi bi-person-circle text-success" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">{{ t('about.ui_designer') }}</h6>
+                            <p class="text-muted">{{ t('about.ui_designer_name') }}</p>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <i class="bi bi-person-circle text-warning" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">{{ t('about.security_expert') }}</h6>
+                            <p class="text-muted">{{ t('about.security_expert_name') }}</p>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <i class="bi bi-person-circle text-info" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">{{ t('about.testing_lead') }}</h6>
+                            <p class="text-muted">{{ t('about.testing_lead_name') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tecnologías Utilizadas -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-gear"></i>
+                    {{ t('about.technologies') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <i class="bi bi-python text-primary" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">Python</h6>
+                            <p class="text-muted">3.9+</p>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <i class="bi bi-lightning text-warning" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">FastAPI</h6>
+                            <p class="text-muted">0.100+</p>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <i class="bi bi-bootstrap text-primary" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">Bootstrap</h6>
+                            <p class="text-muted">5.3+</p>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <i class="bi bi-database text-success" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">SQLite</h6>
+                            <p class="text-muted">3.35+</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de Cambios -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clock-history"></i>
+                    {{ t('about.changelog') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6>v1.0.0 - {{ t('about.release_date') }}</h6>
+                            <ul>
+                                <li>{{ t('about.changelog_1_0_0_1') }}</li>
+                                <li>{{ t('about.changelog_1_0_0_2') }}</li>
+                                <li>{{ t('about.changelog_1_0_0_3') }}</li>
+                                <li>{{ t('about.changelog_1_0_0_4') }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6>v0.9.0 - {{ t('about.beta_release') }}</h6>
+                            <ul>
+                                <li>{{ t('about.changelog_0_9_0_1') }}</li>
+                                <li>{{ t('about.changelog_0_9_0_2') }}</li>
+                                <li>{{ t('about.changelog_0_9_0_3') }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-warning"></div>
+                        <div class="timeline-content">
+                            <h6>v0.8.0 - {{ t('about.alpha_release') }}</h6>
+                            <ul>
+                                <li>{{ t('about.changelog_0_8_0_1') }}</li>
+                                <li>{{ t('about.changelog_0_8_0_2') }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enlaces Útiles -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-link-45deg"></i>
+                    {{ t('about.useful_links') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <a href="https://github.com/hostberry" class="btn btn-outline-dark w-100">
+                                <i class="bi bi-github"></i>
+                                GitHub
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <a href="https://hostberry.com" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-globe"></i>
+                                {{ t('about.website') }}
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <a href="https://docs.hostberry.com" class="btn btn-outline-info w-100">
+                                <i class="bi bi-book"></i>
+                                {{ t('about.documentation') }}
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <a href="https://discord.gg/hostberry" class="btn btn-outline-success w-100">
+                                <i class="bi bi-discord"></i>
+                                Discord
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/about.css?v={{ last_update }}">
+{% endblock %}
+
+{% block extra_js %}
+{# usar t() global de common.js, no inline script #}
+{% endblock %}
+{% endblock %} 

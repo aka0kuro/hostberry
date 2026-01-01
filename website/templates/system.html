@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <!-- Información del Sistema -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-gear"></i>
+                    {{ t('system.information') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>{{ t('system.hostname') }}</h6>
+                        <p class="text-muted">{{ system_info.hostname | default('hostberry') }}</p>
+                        
+                        <h6>{{ t('system.os_version') }}</h6>
+                        <p class="text-muted">{{ system_info.os_version | default('Raspberry Pi OS') }}</p>
+                        
+                        <h6>{{ t('system.kernel_version') }}</h6>
+                        <p class="text-muted">{{ system_info.kernel_version | default('Linux 6.8.0') }}</p>
+                        
+                        <h6>{{ t('system.architecture') }}</h6>
+                        <p class="text-muted">{{ system_info.architecture | default('armv7l') }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>{{ t('system.processor') }}</h6>
+                        <p class="text-muted">{{ system_info.processor | default('ARM Cortex-A53') }}</p>
+                        
+                        <h6>{{ t('system.uptime') }}</h6>
+                        <p class="text-muted">{{ system_info.uptime | default('2 días, 5 horas') }}</p>
+                        
+                        <h6>{{ t('system.load_average') }}</h6>
+                        <p class="text-muted">{{ system_info.load_average | default('0.25, 0.30, 0.35') }}</p>
+                        
+                        <h6>{{ t('system.cpu_cores') }}</h6>
+                        <p class="text-muted">{{ system_info.cpu_cores | default('4') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Salud del Sistema -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-heart-pulse"></i>
+                    {{ t('system.health') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-{{ 'online' if system_health.overall == 'healthy' else 'offline' }}"></span>
+                    <span>{{ t('system.overall') }}: {{ t('system.healthy' if system_health.overall == 'healthy' else 'system.unhealthy') }}</span>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-{{ 'online' if system_health.cpu == 'healthy' else 'warning' }}"></span>
+                    <span>{{ t('system.cpu') }}: {{ t('system.healthy' if system_health.cpu == 'healthy' else 'system.warning') }}</span>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-{{ 'online' if system_health.memory == 'healthy' else 'warning' }}"></span>
+                    <span>{{ t('system.memory') }}: {{ t('system.healthy' if system_health.memory == 'healthy' else 'system.warning') }}</span>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-{{ 'online' if system_health.disk == 'healthy' else 'warning' }}"></span>
+                    <span>{{ t('system.storage') }}: {{ t('system.healthy' if system_health.disk == 'healthy' else 'system.warning') }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recursos del Sistema -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-cpu"></i>
+                    {{ t('system.resources') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">{{ t('system.cpu_usage') }}</label>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: {{ system_stats.cpu_percent | default(25) }}%">
+                            {{ system_stats.cpu_percent | default(25) }}%
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">{{ t('system.memory_usage') }}</label>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ system_stats.memory_percent | default(45) }}%">
+                            {{ system_stats.memory_percent | default(45) }}%
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">{{ t('system.disk_usage') }}</label>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ system_stats.disk_percent | default(60) }}%">
+                            {{ system_stats.disk_percent | default(60) }}%
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">{{ t('system.temperature') }}</label>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-thermometer-half text-danger me-2"></i>
+                        <span class="h5 mb-0">{{ system_stats.temperature | default(45) }}°C</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Servicios del Sistema -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-server"></i>
+                    {{ t('system.services') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="status-indicator status-{{ 'online' if services.hostberry == 'running' else 'offline' }}"></span>
+                            <span>{{ t('common.app_name') }}: {{ t('system.running' if services.hostberry == 'running' else 'system.stopped') }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="status-indicator status-{{ 'online' if services.nginx == 'running' else 'offline' }}"></span>
+                            <span>Nginx: {{ t('system.running' if services.nginx == 'running' else 'system.stopped') }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="status-indicator status-{{ 'online' if services.ssh == 'running' else 'offline' }}"></span>
+                            <span>SSH: {{ t('system.running' if services.ssh == 'running' else 'system.stopped') }}</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="status-indicator status-{{ 'online' if services.ufw == 'running' else 'offline' }}"></span>
+                            <span>UFW: {{ t('system.running' if services.ufw == 'running' else 'system.stopped') }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="status-indicator status-{{ 'online' if services.fail2ban == 'running' else 'offline' }}"></span>
+                            <span>Fail2ban: {{ t('system.running' if services.fail2ban == 'running' else 'system.stopped') }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="status-indicator status-{{ 'online' if services.wifi == 'running' else 'offline' }}"></span>
+                            <span>{{ t('navigation.wifi') }}: {{ t('system.running' if services.wifi == 'running' else 'system.stopped') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones del Sistema -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-tools"></i>
+                    {{ t('system.actions') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-primary w-100" onclick="restartSystem()">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            {{ t('system.restart') }}
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-danger w-100" onclick="shutdownSystem()">
+                            <i class="bi bi-power"></i>
+                            {{ t('system.shutdown') }}
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-success w-100" onclick="backupSystem()">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            {{ t('system.backup') }}
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-info w-100" onclick="checkUpdates()">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            {{ t('system.updates') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs del Sistema -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-journal-text"></i>
+                    {{ t('system.logs') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>{{ t('common.time') }}</th>
+                                <th>{{ t('common.level') }}</th>
+                                <th>{{ t('common.message') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTable">
+                            <!-- Los logs se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="refreshLogs()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                        {{ t('common.refresh') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/system.js?v={{ last_update }}"></script>
+{% endblock %}

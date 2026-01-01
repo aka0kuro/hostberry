@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}{% trans %}Security Center{% endtrans %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{% trans %}Security Center{% endtrans %}</h1>
+        <div>
+            <a href="/security" class="btn btn-primary btn-sm">
+                <i class="bi bi-journal-text me-1"></i> {% trans %}View Logs{% endtrans %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <!-- Firewall Status -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-{% if config.FIREWALL_ENABLED %}success{% else %}danger{% endif %} shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">
+                                {% trans %}Firewall{% endtrans %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% if config.FIREWALL_ENABLED %}{% trans %}Active{% endtrans %}{% else %}{% trans %}Inactive{% endtrans %}{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-shield-{% if config.FIREWALL_ENABLED %}check{% else %}x{% endif %} fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Blocked IPs -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                {% trans %}Blocked IPs{% endtrans %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ security_status.blocked_ips }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-ban fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Last Attack -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-{% if security_status.last_attack %}danger{% else %}success{% endif %} shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">
+                                {% trans %}Last Incident{% endtrans %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% if security_status.last_attack %}
+                                    {{ security_status.last_attack|datetimeformat }}
+                                {% else %}
+                                    {% trans %}None{% endtrans %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-{% if security_status.last_attack %}exclamation-triangle{% else %}shield{% endif %} fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration Section -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-gear me-1"></i> {% trans %}Security Settings{% endtrans %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/security">
+    {{ form.csrf_token }}
+                        {{ form.hidden_tag() }}
+                        <div class="form-group row mb-3">
+                            <label class="col-sm-4 col-form-label">{% trans %}Firewall Status{% endtrans %}</label>
+                            <div class="col-sm-8">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="enable_firewall" name="enable_firewall" {% if config.FIREWALL_ENABLED %}checked{% endif %}>
+                                    <label class="form-check-label" for="enable_firewall"></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group row mb-3">
+                            <label class="col-sm-4 col-form-label" for="block_icmp">{% trans %}ICMP Protection{% endtrans %}</label>
+                            <div class="col-sm-8">
+                                <select class="form-control" id="block_icmp" name="block_icmp">
+                                    <option value="1" {% if config.BLOCK_ICMP %}selected{% endif %}>{% trans %}Block Ping Requests{% endtrans %}</option>
+                                    <option value="0" {% if not config.BLOCK_ICMP %}selected{% endif %}>{% trans %}Allow Ping Requests{% endtrans %}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group row mb-3">
+                            <label class="col-sm-4 col-form-label" for="timezone">{% trans %}Timezone{% endtrans %}</label>
+                            <div class="col-sm-8">
+                                <select class="form-control" id="timezone" name="timezone">
+                                    {% for tz in timezones %}
+                                    <option value="{{ tz }}" {% if config.TIMEZONE == tz %}selected{% endif %}>{{ tz }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group row mb-3">
+                            <label class="col-sm-4 col-form-label" for="time_format">{% trans %}Time Format{% endtrans %}</label>
+                            <div class="col-sm-8">
+                                <select class="form-control" id="time_format" name="time_format">
+                                    {% for fmt in time_formats %}
+                                    <option value="{{ fmt }}" {% if config.TIME_FORMAT == fmt %}selected{% endif %}>
+                                        {{ current_time|datetimeformat(fmt) if current_time else fmt }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="text-right">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> {% trans %}Save Changes{% endtrans %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-clock-history me-1"></i> {% trans %}Recent Activity{% endtrans %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="activity-feed">
+                        {% if security_status.last_attack %}
+                        <div class="activity-item">
+                            <div class="activity-badge danger">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="font-weight-bold">{% trans %}Security Alert{% endtrans %}</div>
+                                <div class="text-muted small">{{ security_status.last_attack|datetimeformat }}</div>
+                                <div>{% trans %}Potential attack detected from external network{% endtrans %}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="activity-item">
+                            <div class="activity-badge success">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="font-weight-bold">{% trans %}System Check{% endtrans %}</div>
+                                <div class="text-muted small">
+                                    {{ security_status.last_check.astimezone(pytz.timezone(config.TIMEZONE))|datetimeformat if security_status.last_check and config.TIMEZONE else '' }}
+                                </div>
+                                <div>{% trans %}All security systems operational{% endtrans %}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
