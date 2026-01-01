@@ -114,7 +114,8 @@
     "hardware_info": "Hardware Information",
     "software_info": "Software Information",
     "network_info": "Network Information",
-    "storage_info": "Storage Information"
+    "storage_info": "Storage Information",
+    "test_dashboard_working": "TEST DASHBOARD WORKING - OK"
   },
   "auth": {
     "login_info": "Sign in to continue",

@@ -114,7 +114,8 @@
     "hardware_info": "Información de Hardware",
     "software_info": "Información de Software",
     "network_info": "Información de Red",
-    "storage_info": "Información de Almacenamiento"
+    "storage_info": "Información de Almacenamiento",
+    "test_dashboard_working": "TEST DASHBOARD FUNCIONANDO - OK"
   },
   "auth": {
     "login_info": "Inicia sesión para continuar",
