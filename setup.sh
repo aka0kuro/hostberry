@@ -2025,6 +2025,13 @@ EOF
                 "ModemManager"
             )
             
+            # Preserve NetworkManager if active
+            if systemctl is-active --quiet NetworkManager; then
+                log "$ANSI_YELLOW" "INFO" "NetworkManager is active - preserving service"
+            else
+                unnecessary_services+=("NetworkManager")
+            fi
+            
             for service in "${unnecessary_services[@]}"; do
                 systemctl disable "$service" 2>/dev/null || true
                 systemctl stop "$service" 2>/dev/null || true
