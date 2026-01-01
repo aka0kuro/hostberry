@@ -1000,7 +1000,7 @@ EOF
 
         # Solo actualizar pip (si está desactualizado, pip hará la actualización; si no, no cambia nada)
         log "$ANSI_YELLOW" "INFO" "$(get_text 'pip_updating' 'Actualizando pip dentro del entorno virtual...')"
-        python -m pip install --upgrade "pip<25.3" \
+        python -m pip install --upgrade "pip<25.0" \
             --index-url https://pypi.org/simple \
             --retries 5 \
             --timeout 60 || handle_error "$(get_text 'pip_update_failed' 'No se pudo actualizar pip')"
