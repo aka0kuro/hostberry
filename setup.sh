@@ -2287,7 +2287,7 @@ main() {
         chown -R "$USER:$GROUP" "$VENV_DIR"
         
         # Actualizar pip con opciones optimizadas
-        "$VENV_DIR/bin/pip" install --upgrade "pip<25.3" \
+        "$VENV_DIR/bin/pip" install --upgrade "pip<25.0" \
             --index-url https://pypi.org/simple \
             --retries 3 \
             --timeout 120 \
