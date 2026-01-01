@@ -172,4 +172,4 @@ async def dashboard_page(request: Request, response: Response, lang: str | None 
 
 @router.get("/test-dashboard")
 async def test_dashboard():
-    return "TEST DASHBOARD FUNCIONANDO - OK"
+    return get_text("test_dashboard_working", default="TEST DASHBOARD FUNCIONANDO - OK")
