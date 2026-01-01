@@ -4,13 +4,13 @@ uvicorn==0.24.0
 python-multipart==0.0.6
 
 # Validación y serialización
-pydantic==2.5.0
-pydantic-settings==2.1.0
+pydantic==2.0.3
+pydantic-settings==2.0.3
 annotated-types==0.7.0
 typing-extensions==4.14.1
 
 # Seguridad y autenticación
-cryptography==41.0.7
+cryptography==39.0.1
 bcrypt==3.2.2
 PyJWT==2.8.0
 
@@ -22,7 +22,7 @@ aiosqlite==0.19.0
 pytz==2023.3
 
 # Internacionalización
-babel==2.13.1
+babel==2.12.1
 
 # Utilidades web
 jinja2==3.1.2
@@ -31,7 +31,7 @@ starlette==0.27.0
 anyio==3.7.1
 
 # Logging
-structlog==23.2.0
+structlog==22.3.0
 
 # Configuración
 python-dotenv==1.0.0

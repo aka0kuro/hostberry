@@ -6,7 +6,7 @@
 # OPTIMIZACIONES APLICADAS:
 # - Logging reducido (WARNING en lugar de INFO)
 # - Dependencias mínimas (eliminadas herramientas innecesarias)
-# - Límites de recursos en systemd (256MB RAM, 50% CPU)
+# - Límites de recursos en systemd (300MB RAM, 50% CPU)
 # - Timeouts de Nginx reducidos (30s en lugar de 60s)
 # - Buffers de Nginx optimizados para RPi 3
 # - Monitoreo cada 15 minutos en lugar de 5
@@ -19,6 +19,9 @@
 # - Funciones optimizadas con sintaxis moderna de Bash
 # - Reducción de subprocesos y comandos innecesarios
 # - Uso de printf en lugar de echo -e para mejor rendimiento
+# - Requiere sudo/root obligatoriamente
+# - Crea backup automático antes de limpiar
+# - Dependencias del sistema preinstaladas para acelerar compilación
 #
 # Soporte multilingüe
 
@@ -579,6 +582,7 @@ install_system_deps() {
         "python3" "python3-pip" "python3-venv" "python3-dev"
         "build-essential" "git" "curl" "nginx" "ufw"
         "fail2ban" "logrotate" "htop" "openssl" "jq" "rsync" "libnss3-tools"
+        "libffi-dev" "libssl-dev"
     )
     
     # Actualizar repositorios e instalar dependencias
@@ -2279,15 +2283,22 @@ main() {
         
         # Configurar venv e instalar dependencias python
         log "$ANSI_YELLOW" "INFO" "Configurando entorno Python..."
-        if [[ $EUID -eq 0 ]]; then
-            python3 -m venv "$VENV_DIR"
-            $VENV_DIR/bin/pip install --upgrade pip
-            $VENV_DIR/bin/pip install -r "$PROD_DIR/requirements.txt"
-        else
-            python3 -m venv "$VENV_DIR"
-            $VENV_DIR/bin/pip install --upgrade pip
-            $VENV_DIR/bin/pip install -r "$PROD_DIR/requirements.txt"
-        fi
+        python3 -m venv "$VENV_DIR" || handle_error "$(get_text 'venv_failed' 'No se pudo crear el entorno virtual')"
+        chown -R "$USER:$GROUP" "$VENV_DIR"
+        
+        # Actualizar pip con opciones optimizadas
+        "$VENV_DIR/bin/pip" install --upgrade "pip<25.3" \
+            --index-url https://pypi.org/simple \
+            --retries 3 \
+            --timeout 120 \
+            --prefer-binary || handle_error "$(get_text 'pip_update_failed' 'No se pudo actualizar pip')"
+        
+        # Instalar dependencias con preferencia a binarios
+        "$VENV_DIR/bin/pip" install -r "$PROD_DIR/requirements.txt" \
+            --index-url https://pypi.org/simple \
+            --retries 3 \
+            --timeout 120 \
+            --prefer-binary || handle_error "$(get_text 'deps_failed' 'No se pudieron instalar las dependencias')"
         
         write_app_env
         setup_firewall
@@ -2365,16 +2376,13 @@ EOF
         log "$ANSI_GREEN" "INFO" "Iniciando actualización de HostBerry..."
         
         # Pull updates
-        download_application_from_github
+        download_application_from_github "true"
         
-        # Actualizar deps
-        if [[ $EUID -eq 0 ]]; then
-            $VENV_DIR/bin/pip install -r "$PROD_DIR/requirements.txt"
-            systemctl restart hostberry.service
-        else
-            $VENV_DIR/bin/pip install -r "$PROD_DIR/requirements.txt"
-            sudo systemctl restart hostberry.service
-        fi
+        # Configurar venv en modo update (instalar/verificar deps)
+        setup_production_venv "update"
+        
+        # Reiniciar servicio
+        systemctl restart hostberry.service
         
         log "$ANSI_GREEN" "SUCCESS" "Actualización completada"
         
