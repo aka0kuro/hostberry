@@ -946,7 +946,7 @@ no-cache-dir = true
 EOF
 
         # Actualizar herramientas de empaquetado
-        python -m pip install --upgrade "pip<25.3" setuptools wheel \
+        python -m pip install --upgrade "pip<25.0" setuptools wheel \
             --index-url https://pypi.org/simple \
             --retries 5 \
             --timeout 60 || handle_error "$(get_text 'pip_update_failed' 'Could not update pip')"
