@@ -896,12 +896,7 @@ EOF
 # Configurar entorno virtual de producción
 setup_production_venv() {
     local MODE="${1:-install}"
-    
-    if [ "$MODE" = "update" ]; then
-        log "$ANSI_YELLOW" "INFO" "$(get_text 'venv_update_skip' 'Modo update: saltando configuración del entorno virtual')"
-        return 0
-    fi
-    
+
     log "$ANSI_YELLOW" "INFO" "$(format_text "$(get_text 'setup_venv' 'Configurando entorno virtual de producción optimizado para RPi 3 (modo: {mode})...')" "mode=$MODE")"
 
     # Asegurar directorio de producción
@@ -996,6 +991,23 @@ EOF
             --index-url https://pypi.org/simple \
             --retries 5 \
             --timeout 60 || handle_error "$(get_text 'pip_update_failed' 'No se pudo actualizar pip')"
+
+        if [ -f "$PROD_DIR/requirements.txt" ]; then
+            log "$ANSI_YELLOW" "INFO" "$(get_text 'installing_prod_deps' 'Instalando dependencias de producción...')"
+            python -m pip install -r "$PROD_DIR/requirements.txt" \
+                --index-url https://pypi.org/simple \
+                --retries 5 \
+                --timeout 60 \
+                --prefer-binary || handle_error "$(get_text 'deps_failed' 'No se pudieron instalar las dependencias')"
+        fi
+
+        python -c "import uvicorn" 2>/dev/null || {
+            python -m pip install uvicorn==0.24.0 \
+                --index-url https://pypi.org/simple \
+                --retries 5 \
+                --timeout 60 \
+                --prefer-binary || handle_error "$(get_text 'deps_failed' 'No se pudieron instalar las dependencias')"
+        }
 
         log "$ANSI_GREEN" "INFO" "$(get_text 'venv_updated' 'Entorno virtual actualizado (pip verificado)')"
     fi
@@ -2300,7 +2312,7 @@ Group=$GROUP
 WorkingDirectory=$PROD_DIR
 Environment="PATH=$VENV_DIR/bin:/usr/local/bin:/usr/bin:/bin"
 EnvironmentFile=$CONFIG_DIR/app.env
-ExecStart=$VENV_DIR/bin/uvicorn main:app --host $PROD_HOST --port $PROD_PORT --workers $WORKERS --log-level $LOG_LEVEL
+ExecStart=$VENV_DIR/bin/python -m uvicorn --app-dir $PROD_DIR main:app --host $PROD_HOST --port $PROD_PORT --workers $WORKERS --log-level $LOG_LEVEL
 Restart=always
 RestartSec=5
 # Limits for RPi 3
@@ -2325,7 +2337,7 @@ Group=$GROUP
 WorkingDirectory=$PROD_DIR
 Environment="PATH=$VENV_DIR/bin:/usr/local/bin:/usr/bin:/bin"
 EnvironmentFile=$CONFIG_DIR/app.env
-ExecStart=$VENV_DIR/bin/uvicorn main:app --host $PROD_HOST --port $PROD_PORT --workers $WORKERS --log-level $LOG_LEVEL
+ExecStart=$VENV_DIR/bin/python -m uvicorn --app-dir $PROD_DIR main:app --host $PROD_HOST --port $PROD_PORT --workers $WORKERS --log-level $LOG_LEVEL
 Restart=always
 RestartSec=5
 # Limits for RPi 3
