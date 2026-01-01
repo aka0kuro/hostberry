@@ -633,6 +633,15 @@ install_system_deps() {
 clean_previous_installation() {
     log "$ANSI_YELLOW" "INFO" "$(get_text 'cleaning_previous_installation' '🧹 Limpiando instalación anterior de HostBerry...')"
     
+    # Crear backup de /opt/hostberry si existe
+    if [[ -d "/opt/hostberry" ]]; then
+        local backup_dir="$REAL_HOME/hostberry_backup_$(date +%Y%m%d_%H%M%S)"
+        log "$ANSI_YELLOW" "INFO" "Creando backup en $backup_dir"
+        cp -r "/opt/hostberry" "$backup_dir" || {
+            log "$ANSI_YELLOW" "WARN" "No se pudo crear backup, continuando sin él"
+        }
+    fi
+    
     # Detener servicio si está activo
     systemctl is-active --quiet hostberry 2>/dev/null && {
         systemctl stop hostberry 2>/dev/null || true
@@ -2210,10 +2219,7 @@ show_production_info() {
 main() {
     # Verificar usuario root o sudo
     if [[ $EUID -ne 0 ]]; then
-        # Verificar si tenemos sudo
-        if ! command -v sudo &> /dev/null; then
-            die "$(get_text 'root_required' 'Este script requiere privilegios de root o sudo')"
-        fi
+        die "$(get_text 'root_required' 'Este script requiere ejecutarse con sudo o como root')"
     fi
 
     # Cargar traducciones
