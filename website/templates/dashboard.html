@@ -39,7 +39,7 @@
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
                     <h5 class="card-title mb-0 fw-bold text-white">
-                        {{ t('dashboard.system_diagnostics', 'System Diagnostics') }}
+                        {{ t('dashboard.system_diagnostics', 'Diagnóstico del Sistema') }}
                     </h5>
                     <button class="btn btn-sm btn-outline-light rounded-circle p-2" onclick="updateSystemHealth()">
                         <i class="bi bi-arrow-clockwise"></i>
@@ -50,10 +50,10 @@
                         <div class="col-sm-6">
                             <div class="status-item p-3 rounded-3 bg-dark bg-opacity-25">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <span class="text-muted small">{{ t('dashboard.general', 'Overall') }}</span>
+                                    <span class="text-muted small">{{ t('dashboard.general', 'General') }}</span>
                                     <span class="status-indicator status-online" id="overall-status"></span>
                                 </div>
-                                <span class="fw-bold text-white" id="overall-text">{{ t('dashboard.healthy', 'Healthy') }}</span>
+                                <span class="fw-bold text-white" id="overall-text">{{ t('dashboard.healthy', 'Saludable') }}</span>
                             </div>
                         </div>
                         <div class="col-sm-6">
@@ -62,16 +62,16 @@
                                     <span class="text-muted small">{{ t('dashboard.cpu', 'CPU') }}</span>
                                     <span class="status-indicator status-online" id="cpu-status"></span>
                                 </div>
-                                <span class="fw-bold text-white" id="cpu-text">{{ t('dashboard.healthy', 'Healthy') }}</span>
+                                <span class="fw-bold text-white" id="cpu-text">{{ t('dashboard.healthy', 'Saludable') }}</span>
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="status-item p-3 rounded-3 bg-dark bg-opacity-25">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <span class="text-muted small">{{ t('dashboard.memory', 'Memory') }}</span>
+                                    <span class="text-muted small">{{ t('dashboard.memory', 'Memoria') }}</span>
                                     <span class="status-indicator status-online" id="memory-status"></span>
                                 </div>
-                                <span class="fw-bold text-white" id="memory-text">{{ t('dashboard.healthy', 'Healthy') }}</span>
+                                <span class="fw-bold text-white" id="memory-text">{{ t('dashboard.healthy', 'Saludable') }}</span>
                             </div>
                         </div>
                         <div class="col-sm-6">
@@ -80,7 +80,7 @@
                                     <span class="text-muted small">{{ t('dashboard.storage', 'Storage') }}</span>
                                     <span class="status-indicator status-online" id="storage-status"></span>
                                 </div>
-                                <span class="fw-bold text-white" id="storage-text">{{ t('dashboard.healthy', 'Healthy') }}</span>
+                                <span class="fw-bold text-white" id="storage-text">{{ t('dashboard.healthy', 'Saludable') }}</span>
                             </div>
                         </div>
                     </div>
@@ -93,7 +93,7 @@
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
                     <h5 class="card-title mb-0 fw-bold text-white">
-                        {{ t('dashboard.programs_status', 'Service Status') }}
+                        {{ t('dashboard.programs_status', 'Estado de Programas') }}
                     </h5>
                     <button class="btn btn-sm btn-outline-light rounded-circle p-2" onclick="checkServiceStatus()">
                         <i class="bi bi-arrow-clockwise"></i>
@@ -106,7 +106,7 @@
                                 <span class="fw-medium text-white">HostBerry</span>
                             </div>
                             <div class="d-flex align-items-center">
-                                <span class="status-text me-2 small text-muted" id="hostberry-text">{{ t('dashboard.running', 'Running') }}</span>
+                                <span class="status-text me-2 small text-muted" id="hostberry-text">{{ t('dashboard.running', 'Ejecutándose') }}</span>
                                 <span class="status-indicator status-online" id="hostberry-status"></span>
                             </div>
                         </div>
@@ -115,7 +115,7 @@
                                 <span class="fw-medium text-white">Nginx</span>
                             </div>
                             <div class="d-flex align-items-center">
-                                <span class="status-text me-2 small text-muted" id="nginx-text">{{ t('dashboard.running', 'Running') }}</span>
+                                <span class="status-text me-2 small text-muted" id="nginx-text">{{ t('dashboard.running', 'Ejecutándose') }}</span>
                                 <span class="status-indicator status-online" id="nginx-status"></span>
                             </div>
                         </div>
@@ -124,7 +124,7 @@
                                 <span class="fw-medium text-white">SSH</span>
                             </div>
                             <div class="d-flex align-items-center">
-                                <span class="status-text me-2 small text-muted" id="ssh-text">{{ t('dashboard.running', 'Running') }}</span>
+                                <span class="status-text me-2 small text-muted" id="ssh-text">{{ t('dashboard.running', 'Ejecutándose') }}</span>
                                 <span class="status-indicator status-online" id="ssh-status"></span>
                             </div>
                         </div>
@@ -141,7 +141,7 @@
                 <div class="card-header">
                     <h5 class="card-title mb-0">
                         <i class="bi bi-journal-text"></i>
-                        {{ t('dashboard.system_logs', 'System Logs') }}
+                        {{ t('dashboard.system_logs', 'Logs del Sistema') }}
                     </h5>
                 </div>
                 <div class="card-body">
@@ -149,17 +149,17 @@
                         <div class="log-entry">
                             <span class="log-timestamp">[17:14:00]</span>
                             <span class="log-level info">INFO</span>
-                            <span class="log-message">{{ t('dashboard.log_loaded', 'Dashboard loaded successfully') }}</span>
+                            <span class="log-message">{{ t('dashboard.log_loaded', 'Dashboard cargado correctamente') }}</span>
                         </div>
                         <div class="log-entry">
                             <span class="log-timestamp">[17:14:00]</span>
                             <span class="log-level success">SUCCESS</span>
-                            <span class="log-message">{{ t('dashboard.log_services_ok', 'All services running correctly') }}</span>
+                            <span class="log-message">{{ t('dashboard.log_services_ok', 'Todos los servicios funcionando correctamente') }}</span>
                         </div>
                         <div class="log-entry">
                             <span class="log-timestamp">[17:14:00]</span>
                             <span class="log-level warning">WARNING</span>
-                            <span class="log-message">{{ t('dashboard.log_cpu_warning', 'CPU Usage: 60% - Monitoring') }}</span>
+                            <span class="log-message">{{ t('dashboard.log_cpu_warning', 'Uso de CPU: 60% - Monitoreando') }}</span>
                         </div>
                     </div>
                 </div>
@@ -289,23 +289,20 @@ function startIntervals() {
     statsInterval = setInterval(updateSystemStats, 30000);
     servicesInterval = setInterval(checkServiceStatus, 60000);
     logsInterval = setInterval(() => {
-        const levels = ['info', 'success', 'warning', 'error'];
+        const levels = ['info', 'success', 'warning'];
         const messages = [
-            { level: 'success', text: "{{ t('dashboard.log_system_ok', 'System operating normally') }}" },
-            { level: 'info', text: "{{ t('dashboard.log_monitoring_active', 'Resource monitoring active') }}" },
-            { level: 'success', text: "{{ t('dashboard.log_services_verified', 'Service check completed') }}" },
-            { level: 'info', text: "{{ t('dashboard.log_backup_scheduled', 'Automatic backup scheduled') }}" },
-            { level: 'warning', text: "{{ t('dashboard.log_security_update', 'Security update available') }}" },
-            { level: 'info', text: "{{ t('dashboard.log_network_stable', 'Network connection stable') }}" },
-            { level: 'warning', text: "{{ t('dashboard.log_disk_space', 'Disk space usage above 70%') }}" },
-            { level: 'error', text: "{{ t('dashboard.log_auth_failure', 'Failed login attempt detected from 192.168.1.105') }}" },
-            { level: 'success', text: "{{ t('dashboard.log_update_check', 'Update check completed: No new updates') }}" },
-            { level: 'info', text: "{{ t('dashboard.log_cron_job', 'Scheduled task maintenance_daily executed') }}" }
+            "{{ t('dashboard.log_system_ok', 'System operating normally') }}",
+            "{{ t('dashboard.log_monitoring_active', 'Resource monitoring active') }}",
+            "{{ t('dashboard.log_services_verified', 'Service check completed') }}",
+            "{{ t('dashboard.log_backup_scheduled', 'Automatic backup scheduled') }}",
+            "{{ t('dashboard.log_security_update', 'Security update available') }}"
         ];
         
-        const randomLog = messages[Math.floor(Math.random() * messages.length)];
-        addLog(randomLog.level, randomLog.text);
-    }, 15000);
+        const randomLevel = levels[Math.floor(Math.random() * levels.length)];
+        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+        
+        addLog(randomLevel, randomMessage);
+    }, 120000);
 }
 
 // Función para detener los intervalos
