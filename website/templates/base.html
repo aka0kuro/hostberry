@@ -18,12 +18,12 @@
     {% block navbar %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i class="bi bi-router"></i>
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <i class="bi bi-router me-2"></i>
                 {{ t('common.app_name', 'HostBerry') }}
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
@@ -80,42 +80,56 @@
                 </ul>
                 
                 <ul class="navbar-nav">
+                    <!-- Theme Toggle Button -->
+                    <li class="nav-item">
+                        <button id="theme-toggle" class="btn btn-outline-light btn-sm me-2" type="button" title="{{ t('common.change_theme', 'Change theme') }}" aria-label="{{ t('common.change_theme', 'Change theme') }}" onclick="toggleTheme()">
+                            <i class="bi bi-moon-fill"></i>
+                        </button>
+                    </li>
+                    
+                    <!-- Language Selector -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-globe"></i>
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-globe me-1"></i>
                             {{ t('navigation.language') }}
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?lang=es">Español</a></li>
-                            <li><a class="dropdown-item" href="?lang=en">English</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="?lang=es">
+                                <i class="bi bi-flag me-2"></i>Español
+                            </a></li>
+                            <li><a class="dropdown-item" href="?lang=en">
+                                <i class="bi bi-flag-fill me-2"></i>English
+                            </a></li>
                         </ul>
                     </li>
+                    
+                    <!-- User Profile Dropdown -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i>
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle me-1"></i>
                             {{ current_user.username if current_user else t('navigation.profile') }}
                         </a>
-                        <ul class="dropdown-menu">
+                        <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="/profile">
-                                <i class="bi bi-person"></i>
+                                <i class="bi bi-person me-2"></i>
                                 {{ t('navigation.profile') }}
                             </a></li>
                             <li><a class="dropdown-item" href="/settings">
-                                <i class="bi bi-gear"></i>
+                                <i class="bi bi-gear me-2"></i>
                                 {{ t('navigation.settings') }}
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="/help">
-                                <i class="bi bi-question-circle"></i>
+                                <i class="bi bi-question-circle me-2"></i>
                                 {{ t('navigation.help') }}
                             </a></li>
                             <li><a class="dropdown-item" href="/about">
-                                <i class="bi bi-info-circle"></i>
+                                <i class="bi bi-info-circle me-2"></i>
                                 {{ t('navigation.about') }}
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="#" data-action="logout">
-                                <i class="bi bi-box-arrow-right"></i>
+                                <i class="bi bi-box-arrow-right me-2"></i>
                                 {{ t('navigation.logout') }}
                             </a></li>
                         </ul>
