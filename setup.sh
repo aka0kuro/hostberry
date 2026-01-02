@@ -973,7 +973,8 @@ EOF
             python -m pip install fastapi uvicorn python-multipart \
                 --index-url https://pypi.org/simple \
                 --retries 5 \
-                --timeout 60 || handle_error "$(get_text 'basic_deps_failed' 'No se pudieron instalar las dependencias básicas')"
+                --timeout 60 \
+                --prefer-binary || handle_error "$(get_text 'basic_deps_failed' 'No se pudieron instalar las dependencias básicas')"
         fi
     else
         # Modo actualización: NO borrar venv, solo actualizar pip si existe; crear si falta
