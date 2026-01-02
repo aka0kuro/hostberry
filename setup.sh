@@ -3,26 +3,6 @@
 # Script de despliegue de producción para HostBerry FastAPI
 # OPTIMIZADO PARA RASPBERRY PI 3 - Consumo reducido de CPU y memoria
 # 
-# OPTIMIZACIONES APLICADAS:
-# - Logging reducido (WARNING en lugar de INFO)
-# - Dependencias mínimas (eliminadas herramientas innecesarias)
-# - Límites de recursos en systemd (300MB RAM, 50% CPU)
-# - Timeouts de Nginx reducidos (30s en lugar de 60s)
-# - Buffers de Nginx optimizados para RPi 3
-# - Monitoreo cada 15 minutos en lugar de 5
-# - Configuración de Python optimizada (PYTHONOPTIMIZE=2)
-# - Logrotate semanal con límite de 1MB por archivo
-# - Servicios innecesarios deshabilitados automáticamente
-# - Configuración de red optimizada para RPi 3
-# - Código Bash optimizado ([[ ]] en lugar de [ ], && || en lugar de if/else)
-# - Cache de traducciones para evitar múltiples lecturas
-# - Funciones optimizadas con sintaxis moderna de Bash
-# - Reducción de subprocesos y comandos innecesarios
-# - Uso de printf en lugar de echo -e para mejor rendimiento
-# - Requiere sudo/root obligatoriamente
-# - Crea backup automático antes de limpiar
-# - Dependencias del sistema preinstaladas para acelerar compilación
-#
 # Soporte multilingüe
 
 # Colores para logs
