@@ -32,35 +32,35 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/dashboard">
                             <i class="bi bi-speedometer2 me-1"></i>
-                            {{ t('navigation.dashboard') }}
+                            {{ t('navigation.dashboard', 'Dashboard') }}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/system">
                             <i class="bi bi-cpu me-1"></i>
-                            {{ t('navigation.system') }}
+                            {{ t('navigation.system', 'System') }}
                         </a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="networkDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-hdd-network me-1"></i>
-                            {{ t('navigation.network') }}
+                            {{ t('navigation.network', 'Network') }}
                         </a>
                         <ul class="dropdown-menu border-0 shadow-sm rounded-3">
-                            <li><a class="dropdown-item" href="/network"><i class="bi bi-ethernet me-2"></i>{{ t('navigation.network') }}</a></li>
-                            <li><a class="dropdown-item" href="/wifi"><i class="bi bi-wifi me-2"></i>{{ t('navigation.wifi') }}</a></li>
-                            <li><a class="dropdown-item" href="/hostapd"><i class="bi bi-router me-2"></i>{{ t('navigation.hostapd') }}</a></li>
+                            <li><a class="dropdown-item" href="/network"><i class="bi bi-ethernet me-2"></i>{{ t('navigation.network', 'Network') }}</a></li>
+                            <li><a class="dropdown-item" href="/wifi"><i class="bi bi-wifi me-2"></i>{{ t('navigation.wifi', 'WiFi') }}</a></li>
+                            <li><a class="dropdown-item" href="/hostapd"><i class="bi bi-router me-2"></i>{{ t('navigation.hostapd', 'Hotspot') }}</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="securityDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-shield-lock me-1"></i>
-                            {{ t('navigation.security') }}
+                            {{ t('navigation.security', 'Security') }}
                         </a>
                         <ul class="dropdown-menu border-0 shadow-sm rounded-3">
-                            <li><a class="dropdown-item" href="/vpn"><i class="bi bi-shield-lock me-2"></i>{{ t('navigation.vpn') }}</a></li>
-                            <li><a class="dropdown-item" href="/wireguard"><i class="bi bi-shield-check me-2"></i>{{ t('navigation.wireguard') }}</a></li>
-                            <li><a class="dropdown-item" href="/adblock"><i class="bi bi-shield-x me-2"></i>{{ t('navigation.adblock') }}</a></li>
+                            <li><a class="dropdown-item" href="/vpn"><i class="bi bi-shield-lock me-2"></i>{{ t('navigation.vpn', 'VPN') }}</a></li>
+                            <li><a class="dropdown-item" href="/wireguard"><i class="bi bi-shield-check me-2"></i>{{ t('navigation.wireguard', 'WireGuard') }}</a></li>
+                            <li><a class="dropdown-item" href="/adblock"><i class="bi bi-shield-x me-2"></i>{{ t('navigation.adblock', 'AdBlock') }}</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -78,20 +78,20 @@
                             <li><div class="dropdown-header text-muted">{{ t('navigation.account', 'Account') }}</div></li>
                             <li><a class="dropdown-item" href="/profile">
                                 <i class="bi bi-person me-2"></i>
-                                {{ t('navigation.profile') }}
+                                {{ t('navigation.profile', 'Profile') }}
                             </a></li>
                             <li><a class="dropdown-item" href="/settings">
                                 <i class="bi bi-gear me-2"></i>
-                                {{ t('navigation.settings') }}
+                                {{ t('navigation.settings', 'Settings') }}
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="/help">
                                 <i class="bi bi-question-circle me-2"></i>
-                                {{ t('navigation.help') }}
+                                {{ t('navigation.help', 'Help') }}
                             </a></li>
                             <li><a class="dropdown-item text-danger" href="#" data-action="logout">
                                 <i class="bi bi-box-arrow-right me-2"></i>
-                                {{ t('navigation.logout') }}
+                                {{ t('navigation.logout', 'Logout') }}
                             </a></li>
                         </ul>
                     </div>
