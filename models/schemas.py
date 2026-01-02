@@ -33,7 +33,8 @@ class UserCreate(BaseModel):
     email: Optional[str] = None
     password: str = Field(..., min_length=8, max_length=100)
     
-    @validator('password')
+    @field_validator('password')
+    @classmethod
     def validate_password_strength(cls, v):
         from core.security_middleware import validate_password_strength
         is_valid, message = validate_password_strength(v)
@@ -46,7 +47,8 @@ class PasswordChange(BaseModel):
     new_password: str = Field(..., min_length=8, max_length=100)
     confirm_password: str = Field(..., min_length=8, max_length=100)
     
-    @validator('new_password')
+    @field_validator('new_password')
+    @classmethod
     def validate_password_strength(cls, v):
         from core.security_middleware import validate_password_strength
         is_valid, message = validate_password_strength(v)
@@ -54,9 +56,10 @@ class PasswordChange(BaseModel):
             raise ValueError(message)
         return v
     
-    @validator('confirm_password')
-    def passwords_match(cls, v, values):
-        if 'new_password' in values and v != values['new_password']:
+    @field_validator('confirm_password')
+    @classmethod
+    def passwords_match(cls, v, info):
+        if 'new_password' in info.data and v != info.data['new_password']:
             raise ValueError(get_text("auth.passwords_dont_match", default="Las contraseñas no coinciden"))
         return v
 
@@ -65,7 +68,8 @@ class FirstLoginChange(BaseModel):
     new_password: str = Field(..., min_length=8, max_length=100)
     confirm_password: str = Field(..., min_length=8, max_length=100)
 
-    @validator('new_password')
+    @field_validator('new_password')
+    @classmethod
     def validate_password_strength_first(cls, v):
         from core.security_middleware import validate_password_strength
         is_valid, message = validate_password_strength(v)
@@ -73,9 +77,10 @@ class FirstLoginChange(BaseModel):
             raise ValueError(message)
         return v
 
-    @validator('confirm_password')
-    def passwords_match_first(cls, v, values):
-        if 'new_password' in values and v != values['new_password']:
+    @field_validator('confirm_password')
+    @classmethod
+    def passwords_match_first(cls, v, info):
+        if 'new_password' in info.data and v != info.data['new_password']:
             raise ValueError(get_text("auth.passwords_dont_match", default="Las contraseñas no coinciden"))
         return v
 
