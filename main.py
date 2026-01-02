@@ -145,12 +145,15 @@ async def language_middleware(request: Request, call_next):
     # Lógica: Español predeterminado, pero si detecta otro idioma -> Inglés
     if "es" in accept_language:
         i18n.set_context_language("es")
+        request.state.language = "es"
     elif accept_language:
         # Si hay header pero no es español, usar inglés
         i18n.set_context_language("en")
+        request.state.language = "en"
     else:
         # Por defecto español
         i18n.set_context_language("es")
+        request.state.language = "es"
         
     response = await call_next(request)
     return response
