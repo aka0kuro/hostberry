@@ -1,4 +1,4 @@
-/* HostBerry minimal CSS (offline) emulando estilos usados de Bootstrap */
+/* HostBerry minimal CSS (offline) mimicking Bootstrap styles */
 :root {
   --hb-primary: #0d6efd;
   --hb-primary-dark: #0b5ed7;
@@ -9,7 +9,7 @@
   --hb-text-muted: #6c757d;
 }
 
-/* Tipografía base */
+/* Base typography */
 html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
 
 /* Navbar */
@@ -33,14 +33,14 @@ html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe
 .dropdown-item:hover { background:#f2f2f2; }
 .dropdown-divider { height:1px; background:#e5e5e5; margin:.25rem 0; }
 
-/* Botones */
+/* Buttons */
 .btn { display:inline-block; padding:.375rem .75rem; border-radius:.5rem; border:1px solid transparent; font-weight:600; cursor:pointer; transition:all .2s ease; }
 .btn-primary { background: var(--hb-primary); color:#fff; }
 .btn-primary:hover { background: var(--hb-primary-dark); }
 .btn-outline-secondary { background: transparent; border-color:#6c757d; color:#6c757d; }
 .btn-outline-secondary:hover { background:#6c757d; color:#fff; }
 
-/* Formularios */
+/* Forms */
 .form-label { display:block; margin-bottom:.25rem; font-weight:500; }
 .form-control { width:100%; padding:.6rem .9rem; border-radius:.5rem; border:1px solid rgba(0,0,0,.2); background:#fff; color:#212529; }
 .form-control:focus { outline:none; border-color: var(--hb-primary); box-shadow: 0 0 0 .2rem rgba(13,110,253,.25); }
@@ -51,7 +51,7 @@ html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe
 .input-group .form-control { border-top-right-radius:0; border-bottom-right-radius:0; }
 .input-group .btn { border-top-left-radius:0; border-bottom-left-radius:0; }
 
-/* Contenedores */
+/* Containers */
 .container-fluid { width:100%; padding-left:1rem; padding-right:1rem; }
 
 /* Alerts */
@@ -60,11 +60,11 @@ html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe
 .alert-danger { background:#f8d7da; color:#842029; border-color:#f5c2c7; }
 .alert-warning { background:#fff3cd; color:#664d03; border-color:#ffecb5; }
 
-/* Utilidades */
+/* Utilities */
 .position-fixed { position:fixed; }
 .bg-primary-gradient { background: linear-gradient(135deg, var(--hb-primary) 0%, var(--hb-primary-dark) 100%); }
 
-/* Iconos de Bootstrap (fallback vacío para que no rompa el layout) */
+/* Bootstrap Icons (empty fallback to avoid breaking layout) */
 [class^="bi"]::before, [class*=" bi-"]::before { content: ""; display:inline-block; width:1em; }
 
 .glass-navbar { background: rgba(31, 41, 55, 0.92); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,.1); }
