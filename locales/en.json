@@ -85,7 +85,8 @@
     "logout": "Logout",
     "profile": "Profile",
     "language": "Language",
-    "theme": "Theme"
+    "theme": "Theme",
+    "account": "Account"
   },
   "dashboard": {
     "title": "Control Panel",
