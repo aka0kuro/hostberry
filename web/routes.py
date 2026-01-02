@@ -136,6 +136,7 @@ async def dashboard_page(request: Request, response: Response, lang: str | None 
     context = {
         "request": request, 
         "language": current_lang,
+        "translations": get_html_translations(current_lang),
         "system_stats": {
             "cpu_percent": 25,
             "memory_percent": 45,
