@@ -141,7 +141,11 @@
     <script src="/static/js/common.js"></script>
     
     <!-- Exponer traducciones para JavaScript (JSON de forma segura si hace falta)-->
+    {% if translations %}
     <script id="i18n-json" type="application/json">{{ translations | tojson }}</script>
+    {% else %}
+    <script id="i18n-json" type="application/json">{}</script>
+    {% endif %}
     
     {% block extra_js %}{% endblock %}
 </body>
