@@ -24,7 +24,8 @@ from config.settings import settings
 from core.database import db
 from core.logging import (
     setup_logging, log_system_info, logger, 
-    log_system_event, cleanup_old_logs
+    log_system_event, cleanup_old_logs,
+    log_api_request, log_api_response
 )
 from core.cache import cache
 from core.i18n import i18n, get_text
