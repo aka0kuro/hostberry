@@ -5,146 +5,93 @@
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-wrapper">
-    <!-- Primera fila: Información del Sistema -->
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <h4 class="mb-0 fw-bold text-white section-title">
-            <i class="bi bi-speedometer2 me-2"></i>Dashboard
-        </h4>
-        <span class="badge bg-primary rounded-pill px-3 py-2 bg-opacity-25 text-white border border-primary border-opacity-25">
-            <i class="bi bi-circle-fill text-success small me-1"></i> Sistema Activo
-        </span>
+<div class="dashboard-container">
+    <div class="dashboard-header mb-3">
+        <h4 class="mb-0">Dashboard</h4>
     </div>
 
-    <!-- Stats Row with Horizontal Scroll -->
-    <div class="stats-scroll-container mb-4">
-        <div class="stats-card-wrapper">
-            <div class="card stats-card glass-card">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <div class="stats-icon bg-primary bg-opacity-10 text-primary">
-                            <i class="bi bi-cpu"></i>
-                        </div>
-                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill">Core</span>
-                    </div>
-                    <h6 class="text-muted mb-1">{{ t('dashboard.cpu', 'CPU') }}</h6>
-                    <h3 class="fw-bold mb-0 text-white" data-stat="cpu">{{ system_stats.cpu_percent }}%</h3>
-                    <div class="progress mt-2" style="height: 4px;">
-                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ system_stats.cpu_percent }}%"></div>
-                    </div>
-                </div>
+    <!-- Monitor del sistema: 4 elementos en una línea -->
+    <div class="system-monitor mb-4">
+        <div class="system-monitor-item">
+            <div class="monitor-icon text-primary">
+                <i class="bi bi-cpu"></i>
+            </div>
+            <div class="monitor-meta">
+                <div class="monitor-label">{{ t('dashboard.cpu', 'CPU') }}</div>
+                <div class="monitor-value" data-stat="cpu">{{ system_stats.cpu_percent }}%</div>
             </div>
         </div>
 
-        <div class="stats-card-wrapper">
-            <div class="card stats-card glass-card">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <div class="stats-icon bg-success bg-opacity-10 text-success">
-                            <i class="bi bi-memory"></i>
-                        </div>
-                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill">RAM</span>
-                    </div>
-                    <h6 class="text-muted mb-1">{{ t('dashboard.memory', 'Memoria') }}</h6>
-                    <h3 class="fw-bold mb-0 text-white" data-stat="memory">{{ system_stats.memory_percent }}%</h3>
-                    <div class="progress mt-2" style="height: 4px;">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ system_stats.memory_percent }}%"></div>
-                    </div>
-                </div>
+        <div class="system-monitor-item">
+            <div class="monitor-icon text-success">
+                <i class="bi bi-memory"></i>
+            </div>
+            <div class="monitor-meta">
+                <div class="monitor-label">{{ t('dashboard.memory', 'Memoria') }}</div>
+                <div class="monitor-value" data-stat="memory">{{ system_stats.memory_percent }}%</div>
             </div>
         </div>
 
-        <div class="stats-card-wrapper">
-            <div class="card stats-card glass-card">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <div class="stats-icon bg-warning bg-opacity-10 text-warning">
-                            <i class="bi bi-hdd"></i>
-                        </div>
-                        <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill">Disk</span>
-                    </div>
-                    <h6 class="text-muted mb-1">{{ t('dashboard.storage', 'Almacenamiento') }}</h6>
-                    <h3 class="fw-bold mb-0 text-white" data-stat="disk">{{ system_stats.disk_percent }}%</h3>
-                    <div class="progress mt-2" style="height: 4px;">
-                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ system_stats.disk_percent }}%"></div>
-                    </div>
-                </div>
+        <div class="system-monitor-item">
+            <div class="monitor-icon text-warning">
+                <i class="bi bi-hdd"></i>
+            </div>
+            <div class="monitor-meta">
+                <div class="monitor-label">{{ t('dashboard.storage', 'Almacenamiento') }}</div>
+                <div class="monitor-value" data-stat="disk">{{ system_stats.disk_percent }}%</div>
             </div>
         </div>
 
-        <div class="stats-card-wrapper">
-            <div class="card stats-card glass-card">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <div class="stats-icon bg-danger bg-opacity-10 text-danger">
-                            <i class="bi bi-thermometer-half"></i>
-                        </div>
-                        <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill">Temp</span>
-                    </div>
-                    <h6 class="text-muted mb-1">{{ t('dashboard.temperature', 'Temperatura') }}</h6>
-                    <h3 class="fw-bold mb-0 text-white" data-stat="temperature">{{ system_stats.temperature }}°C</h3>
-                    <div class="progress mt-2" style="height: 4px;">
-                        <div class="progress-bar bg-danger" role="progressbar" style="width: 45%"></div>
-                    </div>
-                </div>
+        <div class="system-monitor-item">
+            <div class="monitor-icon text-danger">
+                <i class="bi bi-thermometer-half"></i>
+            </div>
+            <div class="monitor-meta">
+                <div class="monitor-label">{{ t('dashboard.temperature', 'Temperatura') }}</div>
+                <div class="monitor-value" data-stat="temperature">{{ system_stats.temperature }}°C</div>
             </div>
         </div>
     </div>
 
-    <!-- Segunda fila: Diagnóstico y Estado de Programas -->
+    <!-- Diagnóstico y Estado de Programas: 2 elementos en una línea -->
     <div class="row g-4 mb-4">
         <!-- Diagnóstico del Sistema -->
         <div class="col-md-6">
-            <div class="card h-100 glass-card border-0">
-                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
-                    <h5 class="card-title mb-0 fw-bold text-white">
-                        <div class="d-flex align-items-center">
-                            <span class="icon-square bg-primary bg-opacity-10 text-primary me-3 rounded-3">
-                                <i class="bi bi-heart-pulse"></i>
-                            </span>
-                            {{ t('dashboard.system_diagnostics', 'Diagnóstico del Sistema') }}
-                        </div>
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-heart-pulse"></i>
+                        {{ t('dashboard.system_diagnostics', 'Diagnóstico del Sistema') }}
                     </h5>
-                    <button class="btn btn-sm btn-outline-light rounded-circle p-2" onclick="updateSystemHealth()">
-                        <i class="bi bi-arrow-clockwise"></i>
-                    </button>
                 </div>
-                <div class="card-body p-4">
-                    <div class="row g-3">
-                        <div class="col-sm-6">
-                            <div class="status-item p-3 rounded-3 bg-dark bg-opacity-25">
-                                <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <span class="text-muted small">{{ t('dashboard.general', 'General') }}</span>
-                                    <span class="status-indicator status-online" id="overall-status"></span>
-                                </div>
-                                <span class="fw-bold text-white" id="overall-text">{{ t('dashboard.healthy', 'Saludable') }}</span>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-indicator status-online" id="overall-status"></span>
+                                <span>{{ t('dashboard.general', 'General') }}: <span id="overall-text">{{ t('dashboard.healthy', 'Saludable') }}</span></span>
+                            </div>
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-indicator status-online" id="cpu-status"></span>
+                                <span>{{ t('dashboard.cpu', 'CPU') }}: <span id="cpu-text">{{ t('dashboard.healthy', 'Saludable') }}</span></span>
+                            </div>
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-indicator status-online" id="memory-status"></span>
+                                <span>{{ t('dashboard.memory', 'Memoria') }}: <span id="memory-text">{{ t('dashboard.healthy', 'Saludable') }}</span></span>
                             </div>
                         </div>
-                        <div class="col-sm-6">
-                            <div class="status-item p-3 rounded-3 bg-dark bg-opacity-25">
-                                <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <span class="text-muted small">{{ t('dashboard.cpu', 'CPU') }}</span>
-                                    <span class="status-indicator status-online" id="cpu-status"></span>
-                                </div>
-                                <span class="fw-bold text-white" id="cpu-text">{{ t('dashboard.healthy', 'Saludable') }}</span>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-indicator status-online" id="storage-status"></span>
+                                <span>{{ t('dashboard.storage', 'Almacenamiento') }}: <span id="storage-text">{{ t('dashboard.healthy', 'Saludable') }}</span></span>
                             </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="status-item p-3 rounded-3 bg-dark bg-opacity-25">
-                                <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <span class="text-muted small">{{ t('dashboard.memory', 'Memoria') }}</span>
-                                    <span class="status-indicator status-online" id="memory-status"></span>
-                                </div>
-                                <span class="fw-bold text-white" id="memory-text">{{ t('dashboard.healthy', 'Saludable') }}</span>
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-indicator status-online" id="network-status"></span>
+                                <span>{{ t('dashboard.network', 'Red') }}: <span id="network-text">{{ t('dashboard.healthy', 'Saludable') }}</span></span>
                             </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="status-item p-3 rounded-3 bg-dark bg-opacity-25">
-                                <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <span class="text-muted small">{{ t('dashboard.storage', 'Disk') }}</span>
-                                    <span class="status-indicator status-online" id="storage-status"></span>
-                                </div>
-                                <span class="fw-bold text-white" id="storage-text">{{ t('dashboard.healthy', 'Saludable') }}</span>
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-indicator status-online" id="temp-status"></span>
+                                <span>{{ t('dashboard.temperature', 'Temperatura') }}: <span id="temp-text">{{ t('dashboard.healthy', 'Saludable') }}</span></span>
                             </div>
                         </div>
                     </div>
@@ -154,56 +101,37 @@
 
         <!-- Estado de Programas -->
         <div class="col-md-6">
-            <div class="card h-100 glass-card border-0">
-                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
-                    <h5 class="card-title mb-0 fw-bold text-white">
-                        <div class="d-flex align-items-center">
-                            <span class="icon-square bg-success bg-opacity-10 text-success me-3 rounded-3">
-                                <i class="bi bi-server"></i>
-                            </span>
-                            {{ t('dashboard.programs_status', 'Estado de Programas') }}
-                        </div>
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-server"></i>
+                        {{ t('dashboard.programs_status', 'Estado de Programas') }}
                     </h5>
-                    <button class="btn btn-sm btn-outline-light rounded-circle p-2" onclick="checkServiceStatus()">
-                        <i class="bi bi-arrow-clockwise"></i>
-                    </button>
                 </div>
-                <div class="card-body p-4">
-                    <div class="service-list">
-                        <div class="service-item d-flex align-items-center justify-content-between p-3 mb-2 rounded-3 bg-dark bg-opacity-25">
-                            <div class="d-flex align-items-center">
-                                <div class="service-icon me-3 text-white">
-                                    <i class="bi bi-box"></i>
-                                </div>
-                                <span class="fw-medium text-white">HostBerry</span>
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <span class="status-text me-2 small text-muted" id="hostberry-text">{{ t('dashboard.running', 'Ejecutándose') }}</span>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
                                 <span class="status-indicator status-online" id="hostberry-status"></span>
+                                <span>HostBerry: <span id="hostberry-text">{{ t('dashboard.running', 'Ejecutándose') }}</span></span>
                             </div>
-                        </div>
-                        <div class="service-item d-flex align-items-center justify-content-between p-3 mb-2 rounded-3 bg-dark bg-opacity-25">
-                            <div class="d-flex align-items-center">
-                                <div class="service-icon me-3 text-white">
-                                    <i class="bi bi-hdd-network"></i>
-                                </div>
-                                <span class="fw-medium text-white">Nginx</span>
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <span class="status-text me-2 small text-muted" id="nginx-text">{{ t('dashboard.running', 'Ejecutándose') }}</span>
+                            <div class="d-flex align-items-center mb-3">
                                 <span class="status-indicator status-online" id="nginx-status"></span>
+                                <span>Nginx: <span id="nginx-text">{{ t('dashboard.running', 'Ejecutándose') }}</span></span>
+                            </div>
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-indicator status-online" id="ssh-status"></span>
+                                <span>SSH: <span id="ssh-text">{{ t('dashboard.running', 'Ejecutándose') }}</span></span>
                             </div>
                         </div>
-                        <div class="service-item d-flex align-items-center justify-content-between p-3 mb-2 rounded-3 bg-dark bg-opacity-25">
-                            <div class="d-flex align-items-center">
-                                <div class="service-icon me-3 text-white">
-                                    <i class="bi bi-terminal"></i>
-                                </div>
-                                <span class="fw-medium text-white">SSH</span>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-indicator status-online" id="ufw-status"></span>
+                                <span>UFW: <span id="ufw-text">{{ t('dashboard.running', 'Ejecutándose') }}</span></span>
                             </div>
-                            <div class="d-flex align-items-center">
-                                <span class="status-text me-2 small text-muted" id="ssh-text">{{ t('dashboard.running', 'Ejecutándose') }}</span>
-                                <span class="status-indicator status-online" id="ssh-status"></span>
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-indicator status-online" id="fail2ban-status"></span>
+                                <span>Fail2ban: <span id="fail2ban-text">{{ t('dashboard.running', 'Ejecutándose') }}</span></span>
                             </div>
                         </div>
                     </div>
