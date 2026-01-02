@@ -171,7 +171,13 @@
     "too_many_attempts_time": "Too many failed attempts. User locked for {minutes} minutes.",
     "user_exists": "User already exists",
     "user_inactive": "User inactive",
-    "user_updated_relogin": "User updated. Please login again with your new credentials."
+    "user_updated_relogin": "User updated. Please login again with your new credentials.",
+    "first_login": "First Login",
+    "first_login_description": "Change your default credentials",
+    "first_login_info": "Change your default credentials",
+    "new_username": "New Username",
+    "new_password": "New Password",
+    "save_and_continue": "Save and Continue"
   },
   "system": {
     "title": "System",
