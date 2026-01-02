@@ -22,6 +22,58 @@ templates = Jinja2Templates(directory="website/templates")
 templates.env = env
 
 
+def _resolve_language(request: Request, lang: str | None) -> tuple[str, bool]:
+    if lang:
+        i18n.set_context_language(lang)
+        return lang, True
+    cookie_lang = request.cookies.get("lang")
+    if cookie_lang:
+        i18n.set_context_language(cookie_lang)
+        return cookie_lang, False
+    return i18n.get_current_language(), False
+
+
+def _base_context(request: Request, current_lang: str) -> dict:
+    return {
+        "request": request,
+        "language": current_lang,
+        "translations": get_html_translations(current_lang),
+        "system_stats": {
+            "cpu_percent": 25,
+            "memory_percent": 45,
+            "disk_percent": 60,
+            "temperature": 45,
+        },
+        "system_health": {
+            "overall": "healthy",
+            "cpu": "healthy",
+            "memory": "healthy",
+            "disk": "healthy",
+            "network": "healthy",
+            "temperature": "healthy",
+        },
+        "services": {
+            "hostberry": "running",
+            "nginx": "running",
+            "ssh": "running",
+            "ufw": "running",
+            "fail2ban": "running",
+            "wifi": "running",
+        },
+    }
+
+
+def _render(template_name: str, request: Request, lang: str | None, extra: dict | None = None) -> HTMLResponse:
+    current_lang, should_set_cookie = _resolve_language(request, lang)
+    context = _base_context(request, current_lang)
+    if extra:
+        context.update(extra)
+    resp = templates.TemplateResponse(template_name, context)
+    if should_set_cookie:
+        resp.set_cookie("lang", current_lang, max_age=60 * 60 * 24 * 365)
+    return resp
+
+
 @router.get("/")
 async def root_redirect(request: Request):
     # Verificar si hay un token en el header Authorization
@@ -77,6 +129,137 @@ async def login_page(request: Request, response: Response, lang: str | None = Qu
     if lang:
         resp.set_cookie("lang", lang, max_age=60*60*24*365)
     return resp
+
+
+@router.get("/system", response_class=HTMLResponse)
+async def system_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    return _render(
+        "system.html",
+        request,
+        lang,
+        extra={
+            "system_info": {},
+        },
+    )
+
+
+@router.get("/network", response_class=HTMLResponse)
+async def network_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    return _render("network.html", request, lang)
+
+
+@router.get("/wifi", response_class=HTMLResponse)
+async def wifi_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    return _render(
+        "wifi.html",
+        request,
+        lang,
+        extra={
+            "wifi_stats": {},
+            "wifi_status": {"enabled": True, "connected": True},
+            "wifi_config": {},
+            "guest_network": {"enabled": False},
+        },
+    )
+
+
+@router.get("/hostapd", response_class=HTMLResponse)
+async def hostapd_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    return _render(
+        "hostapd.html",
+        request,
+        lang,
+        extra={
+            "hostapd_stats": {},
+            "hostapd_status": {"enabled": False, "running": False},
+            "hostapd_config": {},
+        },
+    )
+
+
+@router.get("/vpn", response_class=HTMLResponse)
+async def vpn_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    return _render(
+        "vpn.html",
+        request,
+        lang,
+        extra={
+            "vpn_stats": {},
+            "vpn_status": {"enabled": False, "connected": False},
+            "vpn_config": {},
+            "vpn_security": {},
+        },
+    )
+
+
+@router.get("/wireguard", response_class=HTMLResponse)
+async def wireguard_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    return _render(
+        "wireguard.html",
+        request,
+        lang,
+        extra={
+            "wireguard_stats": {},
+            "wireguard_status": {"enabled": False},
+            "wireguard_config": {},
+        },
+    )
+
+
+@router.get("/adblock", response_class=HTMLResponse)
+async def adblock_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    return _render(
+        "adblock.html",
+        request,
+        lang,
+        extra={
+            "adblock_stats": {},
+            "adblock_status": {"enabled": False, "running": False},
+            "adblock_config": {},
+        },
+    )
+
+
+@router.get("/settings", response_class=HTMLResponse)
+async def settings_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    current_lang, _ = _resolve_language(request, lang)
+    return _render(
+        "settings.html",
+        request,
+        lang,
+        extra={
+            "settings": {"language": current_lang, "theme": "dark", "timezone": "UTC"},
+            "system_config": {},
+            "network_config": {},
+            "security_config": {},
+            "performance_config": {},
+            "notification_config": {},
+            "system_info": {},
+        },
+    )
+
+
+@router.get("/profile", response_class=HTMLResponse)
+async def profile_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    return _render(
+        "profile.html",
+        request,
+        lang,
+        extra={
+            "user": {"username": "admin", "role": "admin", "timezone": "UTC"},
+            "recent_activities": [],
+        },
+    )
+
+
+@router.get("/help", response_class=HTMLResponse)
+async def help_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    return _render("help.html", request, lang)
+
+
+@router.get("/about", response_class=HTMLResponse)
+async def about_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    return _render("about.html", request, lang, extra={"app_info": {}})
 
 
 @router.get("/first-login", response_class=HTMLResponse)
