@@ -4,7 +4,8 @@ Configuración de HostBerry optimizada para Raspberry Pi 3
 
 import os
 from typing import Optional, List
-from pydantic import BaseSettings, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     """Configuración de la aplicación optimizada para Raspberry Pi 3"""
