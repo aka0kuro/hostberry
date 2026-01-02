@@ -1,4 +1,4 @@
-/* Estilos del dashboard (estética tipo login) */
+/* Dashboard styles (login-like aesthetic) */
 body { 
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
     min-height: 100vh;
@@ -8,7 +8,7 @@ body {
     font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial;
 }
 
-/* Página del dashboard */
+/* Dashboard Page */
 .dashboard-page {
     min-height: 100vh;
     display: flex;
@@ -17,7 +17,7 @@ body {
     padding: 2rem 1rem;
 }
 
-/* Contenedor principal del dashboard (tipo login) */
+/* Main Dashboard Container (login type) */
 .dashboard-container {
     background: rgba(255,255,255,.1);
     backdrop-filter: blur(10px);
@@ -53,7 +53,7 @@ body {
     height: auto;
 }
 
-/* Monitor del sistema: 4 elementos en 1 línea */
+/* System Monitor: 4 items in 1 line */
 .system-monitor {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -109,12 +109,12 @@ body {
     text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
-/* (legacy) stats-scroll-container no se usa en el layout actual */
+/* (legacy) stats-scroll-container not used in current layout */
 .stats-scroll-container {
     display: none;
 }
 
-/* Botón flotante de tema (igual que login) */
+/* Floating Theme Button (same as login) */
 .theme-toggle { 
     position: fixed; 
     bottom: 30px; 
@@ -147,7 +147,7 @@ body {
     background: linear-gradient(135deg, #dc3545 0%, #8b0000 100%); 
 }
 
-/* Selector de idioma flotante (igual que login) */
+/* Floating Language Selector (same as login) */
 .lang-dropdown { 
     position: fixed; 
     top: 20px; 
@@ -187,7 +187,7 @@ body {
 }
 
 .stats-card-wrapper {
-    flex: 0 0 280px; /* Ancho fijo para las cards */
+    flex: 0 0 280px; /* Fixed width for cards */
     min-width: 260px;
 }
 
