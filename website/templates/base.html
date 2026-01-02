@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HostBerry</title>
-    <meta name="description" content="{{ t('common.app_description', 'HostBerry - Sistema de gestión de red para Raspberry Pi') }}">
+    <meta name="description" content="{{ t('common.app_description', 'HostBerry - Network Management System for Raspberry Pi') }}">
     <link rel="icon" type="image/png" href="/static/hostberry.png">
     <link rel="shortcut icon" type="image/png" href="/static/hostberry.png">
     <link rel="apple-touch-icon" href="/static/hostberry.png">
@@ -75,7 +75,7 @@
                             <span class="d-none d-md-inline">{{ current_user.username if current_user else 'User' }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm rounded-3 mt-2">
-                            <li><div class="dropdown-header text-muted">{{ t('navigation.account', 'Cuenta') }}</div></li>
+                            <li><div class="dropdown-header text-muted">{{ t('navigation.account', 'Account') }}</div></li>
                             <li><a class="dropdown-item" href="/profile">
                                 <i class="bi bi-person me-2"></i>
                                 {{ t('navigation.profile') }}
@@ -111,7 +111,7 @@
         </ul>
     </div>
 
-    <button id="theme-toggle" class="theme-toggle" type="button" title="{{ t('common.change_theme', 'Cambiar tema') }}" aria-label="{{ t('common.change_theme', 'Cambiar tema') }}" onclick="toggleTheme()"></button>
+    <button id="theme-toggle" class="theme-toggle" type="button" title="{{ t('common.change_theme', 'Change theme') }}" aria-label="{{ t('common.change_theme', 'Change theme') }}" onclick="toggleTheme()"></button>
 
     <div class="container-fluid mt-4">
         {% block content %}{% endblock %}
