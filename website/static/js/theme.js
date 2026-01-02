@@ -24,11 +24,15 @@ function updateThemeIcon(theme) {
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
         if (theme === 'dark') {
-            themeToggle.innerHTML = '<i class="bi bi-sun"></i>';
+            themeToggle.textContent = '☀️';
             themeToggle.title = 'Cambiar a tema claro';
+            themeToggle.classList.remove('light');
+            themeToggle.classList.add('dark');
         } else {
-            themeToggle.innerHTML = '<i class="bi bi-moon"></i>';
+            themeToggle.textContent = '🌙';
             themeToggle.title = 'Cambiar a tema oscuro';
+            themeToggle.classList.remove('dark');
+            themeToggle.classList.add('light');
         }
     }
 }
@@ -39,10 +43,12 @@ function loadTheme() {
     const body = document.body;
     
     if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        body.classList.remove('light-theme');
         body.classList.add('dark-theme');
         updateThemeIcon('dark');
     } else {
         body.classList.remove('dark-theme');
+        body.classList.add('light-theme');
         updateThemeIcon('light');
     }
 }
@@ -54,10 +60,12 @@ function detectSystemTheme() {
     mediaQuery.addEventListener('change', (e) => {
         if (!localStorage.getItem('theme')) {
             if (e.matches) {
+                document.body.classList.remove('light-theme');
                 document.body.classList.add('dark-theme');
                 updateThemeIcon('dark');
             } else {
                 document.body.classList.remove('dark-theme');
+                document.body.classList.add('light-theme');
                 updateThemeIcon('light');
             }
         }
@@ -68,20 +76,6 @@ function detectSystemTheme() {
 function initTheme() {
     loadTheme();
     detectSystemTheme();
-    
-    // Agregar botón de cambio de tema al navbar si no existe
-    const navbarNav = document.querySelector('.navbar-nav');
-    if (navbarNav && !document.getElementById('theme-toggle')) {
-        const themeToggle = document.createElement('li');
-        themeToggle.className = 'nav-item';
-        themeToggle.innerHTML = `
-            <button class="nav-link btn btn-link" id="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
-                <i class="bi bi-moon"></i>
-            </button>
-        `;
-        navbarNav.appendChild(themeToggle);
-        updateThemeIcon(localStorage.getItem('theme') || 'light');
-    }
 }
 
 // Función para obtener el tema actual
