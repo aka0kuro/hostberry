@@ -39,12 +39,7 @@
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
                     <h5 class="card-title mb-0 fw-bold text-white">
-                        <div class="d-flex align-items-center">
-                            <span class="icon-square bg-primary bg-opacity-10 text-primary me-3 rounded-3">
-                                <i class="bi bi-heart-pulse"></i>
-                            </span>
-                            {{ t('dashboard.system_diagnostics', 'Diagnóstico del Sistema') }}
-                        </div>
+                        {{ t('dashboard.system_diagnostics', 'Diagnóstico del Sistema') }}
                     </h5>
                     <button class="btn btn-sm btn-outline-light rounded-circle p-2" onclick="updateSystemHealth()">
                         <i class="bi bi-arrow-clockwise"></i>
@@ -98,12 +93,7 @@
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
                     <h5 class="card-title mb-0 fw-bold text-white">
-                        <div class="d-flex align-items-center">
-                            <span class="icon-square bg-success bg-opacity-10 text-success me-3 rounded-3">
-                                <i class="bi bi-server"></i>
-                            </span>
-                            {{ t('dashboard.programs_status', 'Estado de Programas') }}
-                        </div>
+                        {{ t('dashboard.programs_status', 'Estado de Programas') }}
                     </h5>
                     <button class="btn btn-sm btn-outline-light rounded-circle p-2" onclick="checkServiceStatus()">
                         <i class="bi bi-arrow-clockwise"></i>
@@ -113,9 +103,6 @@
                     <div class="service-list">
                         <div class="service-item d-flex align-items-center justify-content-between p-3 mb-2 rounded-3 bg-dark bg-opacity-25">
                             <div class="d-flex align-items-center">
-                                <div class="service-icon me-3 text-white">
-                                    <i class="bi bi-box"></i>
-                                </div>
                                 <span class="fw-medium text-white">HostBerry</span>
                             </div>
                             <div class="d-flex align-items-center">
@@ -125,9 +112,6 @@
                         </div>
                         <div class="service-item d-flex align-items-center justify-content-between p-3 mb-2 rounded-3 bg-dark bg-opacity-25">
                             <div class="d-flex align-items-center">
-                                <div class="service-icon me-3 text-white">
-                                    <i class="bi bi-hdd-network"></i>
-                                </div>
                                 <span class="fw-medium text-white">Nginx</span>
                             </div>
                             <div class="d-flex align-items-center">
@@ -137,9 +121,6 @@
                         </div>
                         <div class="service-item d-flex align-items-center justify-content-between p-3 mb-2 rounded-3 bg-dark bg-opacity-25">
                             <div class="d-flex align-items-center">
-                                <div class="service-icon me-3 text-white">
-                                    <i class="bi bi-terminal"></i>
-                                </div>
                                 <span class="fw-medium text-white">SSH</span>
                             </div>
                             <div class="d-flex align-items-center">
