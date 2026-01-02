@@ -306,52 +306,18 @@ async def first_login_page(request: Request, response: Response, lang: str | Non
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
-async def dashboard_page(request: Request, response: Response, lang: str | None = Query(default=None)) -> HTMLResponse:
-    if lang:
-        i18n.set_context_language(lang)
-        response.set_cookie("lang", lang, max_age=60*60*24*365)
-    elif request.cookies.get("lang"):
-        i18n.set_context_language(request.cookies.get("lang"))
-        
-    current_lang = i18n.get_current_language()
-    
-    # Contexto simple para el dashboard
-    context = {
-        "request": request, 
-        "language": current_lang,
-        "translations": get_html_translations(current_lang),
-        "system_stats": {
-            "cpu_percent": 25,
-            "memory_percent": 45,
-            "disk_percent": 60,
-            "temperature": 45
-        },
-        "system_health": {
-            "overall": "healthy",
-            "cpu": "healthy",
-            "memory": "healthy",
-            "disk": "healthy",
-            "network": "healthy",
-            "temperature": "healthy"
-        },
-        "services": {
-            "hostberry": "running",
-            "nginx": "running",
-            "ssh": "running",
-            "ufw": "running",
-            "fail2ban": "running"
-        },
-        "recent_activities": [
-            {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
-            {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
-        ]
-    }
-    
-    # Usar TemplateResponse con el template dashboard.html
-    resp = templates.TemplateResponse("dashboard.html", context)
-    if lang:
-        resp.set_cookie("lang", lang, max_age=60*60*24*365)
-    return resp
+async def dashboard_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    return _render(
+        "dashboard.html",
+        request,
+        lang,
+        extra={
+            "recent_activities": [
+                {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
+                {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
+            ]
+        }
+    )
 
 
 @router.get("/test-dashboard")
