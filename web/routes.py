@@ -6,7 +6,7 @@ from fastapi import APIRouter, Request, Response, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from core.i18n import get_text, i18n
+from core.i18n import get_text, i18n, get_html_translations
 
 router = APIRouter()
 
