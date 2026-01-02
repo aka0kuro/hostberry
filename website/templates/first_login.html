@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Primer inicio de sesión - HostBerry</title>
-    <meta name="description" content="Cambia tus credenciales por defecto">
+    <title>{{ t('auth.first_login', 'Primer Inicio de Sesión') }} - HostBerry</title>
+    <meta name="description" content="{{ t('auth.first_login_description', 'Cambia tus credenciales por defecto') }}">
     <link rel="icon" type="image/png" href="/static/hostberry.png?v={{ last_update }}">
     <link rel="shortcut icon" type="image/png" href="/static/hostberry.png?v={{ last_update }}">
     <link rel="apple-touch-icon" href="/static/hostberry.png?v={{ last_update }}">
@@ -16,15 +16,23 @@
 <body class="dark-theme">
     <!-- Textos i18n para notificaciones -->
     <div id="i18n-data" style="display:none"
+         data-user-not-found="{{ t('auth.user_not_found') }}"
+         data-incorrect-password="{{ t('auth.incorrect_password') }}"
+         data-too-many-attempts="{{ t('auth.too_many_attempts') }}"
+         data-connection-error="{{ t('auth.connection_error') }}"
+         data-login-generic-error="{{ t('auth.login_generic_error') }}"
+         data-login-success="{{ t('auth.login_success') }}"
          data-passwords-dont-match="{{ t('auth.passwords_dont_match') }}"
          data-credentials-updated="{{ t('auth.credentials_updated') }}"
          data-validation-error="{{ t('errors.validation_error') }}"
-         data-connection-error="{{ t('errors.connection_error') }}"
          data-password-special-char="{{ t('errors.password_special_char') }}"
          data-password-length="{{ t('errors.password_length') }}"
          data-password-uppercase="{{ t('errors.password_uppercase') }}"
          data-password-lowercase="{{ t('errors.password_lowercase') }}"
          data-password-number="{{ t('errors.password_number') }}"
+         data-username-required="{{ t('errors.username_required', 'El nombre de usuario es requerido') }}"
+         data-username-too-short="{{ t('errors.username_too_short', 'El nombre de usuario debe tener al menos 3 caracteres') }}"
+         data-username-too-long="{{ t('errors.username_too_long', 'El nombre de usuario no puede exceder 50 caracteres') }}"
     ></div>
     
     <!-- Selector de idioma -->
@@ -39,7 +47,7 @@
     </div>
     
     <!-- Botón flotante de cambio de tema -->
-    <button id="theme-toggle" class="theme-toggle dark" type="button" title="Cambiar tema" aria-label="Cambiar tema" onclick="toggleTheme()">
+    <button id="theme-toggle" class="theme-toggle dark" type="button" title="{{ t('common.change_theme', 'Cambiar tema') }}" aria-label="{{ t('common.change_theme', 'Cambiar tema') }}" onclick="toggleTheme()">
         <span id="theme-emoji" style="font-size:28px; line-height:1" aria-hidden="true">☀️</span>
     </button>
 
@@ -47,7 +55,7 @@
         <div class="login-header">
             <img src="/static/hostberry.png?v={{ last_update }}" alt="hostberry" class="logo-image" />
             <h1>HostBerry</h1>
-            <p>Cambia tus credenciales por defecto</p>
+            <p>{{ t('auth.first_login_info', 'Cambia tus credenciales por defecto') }}</p>
         </div>
         
         <div id="alert" class="alert d-none" role="alert"></div>
@@ -56,19 +64,19 @@
             <div class="mb-3">
                 <label class="form-label">
                     <i class="bi bi-person"></i>
-                    Nuevo usuario
+                    {{ t('auth.new_username', 'Nuevo usuario') }}
                 </label>
-                <input type="text" class="form-control" name="new_username" required minlength="3" maxlength="50" placeholder="Nuevo usuario">
+                <input type="text" class="form-control" name="new_username" required minlength="3" maxlength="50" placeholder="{{ t('auth.new_username', 'Nuevo usuario') }}">
             </div>
             
             <div class="mb-3">
                 <label class="form-label">
                     <i class="bi bi-lock"></i>
-                    Nueva contraseña
+                    {{ t('auth.new_password', 'Nueva contraseña') }}
                 </label>
                 <div class="password-wrapper">
-                    <input type="password" class="form-control" name="new_password" id="new_password" required minlength="8" maxlength="100" placeholder="Nueva contraseña">
-                    <button class="password-toggle" type="button" id="toggle-new-password" aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                    <input type="password" class="form-control" name="new_password" id="new_password" required minlength="8" maxlength="100" placeholder="{{ t('auth.new_password', 'Nueva contraseña') }}">
+                    <button class="password-toggle" type="button" id="toggle-new-password" aria-label="{{ t('common.show_password', 'Mostrar contraseña') }}" title="{{ t('common.show_password', 'Mostrar contraseña') }}">
                         <span id="eye-emoji-new" style="font-size:18px; line-height:1" aria-hidden="true">👁️</span>
                     </button>
                 </div>
@@ -77,11 +85,11 @@
             <div class="mb-3">
                 <label class="form-label">
                     <i class="bi bi-lock-fill"></i>
-                    Confirmar contraseña
+                    {{ t('auth.confirm_password', 'Confirmar contraseña') }}
                 </label>
                 <div class="password-wrapper">
-                    <input type="password" class="form-control" name="confirm_password" id="confirm_password" required minlength="8" maxlength="100" placeholder="Confirmar contraseña">
-                    <button class="password-toggle" type="button" id="toggle-confirm-password" aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                    <input type="password" class="form-control" name="confirm_password" id="confirm_password" required minlength="8" maxlength="100" placeholder="{{ t('auth.confirm_password', 'Confirmar contraseña') }}">
+                    <button class="password-toggle" type="button" id="toggle-confirm-password" aria-label="{{ t('common.show_password', 'Mostrar contraseña') }}" title="{{ t('common.show_password', 'Mostrar contraseña') }}">
                         <span id="eye-emoji-confirm" style="font-size:18px; line-height:1" aria-hidden="true">👁️</span>
                     </button>
                 </div>
@@ -89,7 +97,7 @@
             
             <button type="submit" class="btn btn-login">
                 <i class="bi bi-check-circle"></i>
-                Guardar y continuar
+                {{ t('auth.save_and_continue', 'Guardar y continuar') }}
             </button>
         </form>
     </div>
