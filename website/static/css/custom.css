@@ -220,7 +220,7 @@ body.dark-theme .dropdown-item:hover {
 }
 
 /* === NAVBAR === */
-.navbar {
+.navbar:not(.glass-navbar) {
     margin-bottom: 28px;
     border-radius: 0 0 1rem 1rem;
     box-shadow: 0 0.1rem 0.5rem rgba(0,0,0,0.10);
