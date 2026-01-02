@@ -2354,11 +2354,11 @@ Group=$GROUP
 WorkingDirectory=$PROD_DIR
 Environment="PATH=$VENV_DIR/bin:/usr/local/bin:/usr/bin:/bin"
 EnvironmentFile=$CONFIG_DIR/app.env
-ExecStart=$VENV_DIR/bin/python -m uvicorn --app-dir $PROD_DIR main:app --host $PROD_HOST --port $PROD_PORT --workers $WORKERS --log-level $LOG_LEVEL
+ExecStart=$VENV_DIR/bin/python -m uvicorn --app-dir $PROD_DIR main:app --host $PROD_HOST --port $PROD_PORT --workers $WORKERS --log-level warning
 Restart=always
 RestartSec=5
 # Limits for RPi 3
-MemoryLimit=300M
+MemoryMax=300M
 CPUQuota=50%
 
 [Install]
