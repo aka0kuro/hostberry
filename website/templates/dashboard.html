@@ -311,26 +311,26 @@ function startIntervals() {
     }, 5000);
 }
 
-// Función para detener los intervalos
+// Function to stop intervals
 function stopIntervals() {
     if (statsInterval) clearInterval(statsInterval);
     if (servicesInterval) clearInterval(servicesInterval);
     if (logsInterval) clearInterval(logsInterval);
 }
 
-// Inicializar al cargar la página
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Cargar datos iniciales
+    // Load initial data
     updateSystemStats();
     checkServiceStatus();
     
-    // Agregar algunos logs iniciales
+    // Add some initial logs
     addLog('info', "{{ t('dashboard.log_initialized', 'Dashboard initialized') }}");
     
-    // Iniciar intervalos
+    // Start intervals
     startIntervals();
     
-    // Optimización: detener intervalos cuando la página no esté visible
+    // Optimization: stop intervals when page is not visible
     document.addEventListener('visibilitychange', function() {
         if (document.hidden) {
             stopIntervals();
