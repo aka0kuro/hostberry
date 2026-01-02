@@ -1,9 +1,9 @@
 /**
- * HostBerry - Gestión de Tema Oscuro
- * Maneja el cambio entre tema claro y oscuro
+ * HostBerry - Dark Theme Management
+ * Handles switching between light and dark themes
  */
 
-// Función para cambiar el tema
+// Function to toggle theme
 function toggleTheme() {
     const body = document.body;
     const isDark = body.classList.contains('dark-theme');
@@ -21,25 +21,25 @@ function toggleTheme() {
     }
 }
 
-// Función para actualizar el icono del tema
+// Function to update theme icon
 function updateThemeIcon(theme) {
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
         if (theme === 'dark') {
             themeToggle.textContent = '☀️';
-            themeToggle.title = 'Cambiar a tema claro';
+            themeToggle.title = 'Switch to light theme';
             themeToggle.classList.remove('light');
             themeToggle.classList.add('dark');
         } else {
             themeToggle.textContent = '🌙';
-            themeToggle.title = 'Cambiar a tema oscuro';
+            themeToggle.title = 'Switch to dark theme';
             themeToggle.classList.remove('dark');
             themeToggle.classList.add('light');
         }
     }
 }
 
-// Función para cargar el tema guardado
+// Function to load saved theme
 function loadTheme() {
     const savedTheme = localStorage.getItem('theme');
     const body = document.body;
@@ -55,7 +55,7 @@ function loadTheme() {
     }
 }
 
-// Función para detectar preferencia del sistema
+// Function to detect system preference
 function detectSystemTheme() {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     
@@ -74,18 +74,18 @@ function detectSystemTheme() {
     });
 }
 
-// Función para inicializar el sistema de temas
+// Function to initialize theme system
 function initTheme() {
     loadTheme();
     detectSystemTheme();
 }
 
-// Función para obtener el tema actual
+// Function to get current theme
 function getCurrentTheme() {
     return document.body.classList.contains('dark-theme') ? 'dark' : 'light';
 }
 
-// Función para aplicar tema específico
+// Function to apply specific theme
 function setTheme(theme) {
     const body = document.body;
     
@@ -100,7 +100,7 @@ function setTheme(theme) {
     }
 }
 
-// Función para obtener estadísticas del tema
+// Function to get theme statistics
 function getThemeStats() {
     const theme = getCurrentTheme();
     const savedTheme = localStorage.getItem('theme');
@@ -114,12 +114,12 @@ function getThemeStats() {
     };
 }
 
-// Inicializar cuando el DOM esté listo
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     initTheme();
 });
 
-// Exportar funciones para uso global
+// Export functions for global use
 window.ThemeManager = {
     toggleTheme,
     loadTheme,
