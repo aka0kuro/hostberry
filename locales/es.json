@@ -139,12 +139,16 @@
     "log_services_verified": "Verificación de servicios completada",
     "log_backup_scheduled": "Backup automático programado",
     "log_security_update": "Actualización de seguridad disponible",
+    "log_connection_timeout": "Tiempo de espera agotado al conectar con servidor remoto",
+    "log_disk_space": "Poco espacio en disco en /var",
+    "log_cron_job": "Tarea programada ejecutada correctamente",
+    "log_user_login": "Usuario admin ha iniciado sesión",
+    "log_initialized": "Dashboard inicializado",
     "log_network_stable": "Conexión de red estable",
     "log_disk_space": "Uso de espacio en disco superior al 70%",
     "log_auth_failure": "Intento de inicio de sesión fallido detectado desde {ip}",
     "log_update_check": "Verificación de actualizaciones completada: Sin novedades",
-    "log_cron_job": "Tarea programada {task} ejecutada",
-    "log_initialized": "Dashboard inicializado"
+    "log_cron_job": "Tarea programada {task} ejecutada"
   },
   "auth": {
     "login_info": "Inicia sesión para continuar",

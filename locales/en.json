@@ -144,6 +144,9 @@
     "log_auth_failure": "Failed login attempt detected from {ip}",
     "log_update_check": "Update check completed: No new updates",
     "log_cron_job": "Scheduled task {task} executed",
+    "log_connection_timeout": "Connection timeout to remote server",
+    "log_disk_space_low": "Disk space running low on /var",
+    "log_user_login": "User admin logged in",
     "log_initialized": "Dashboard initialized"
   },
   "auth": {
