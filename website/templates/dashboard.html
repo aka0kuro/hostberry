@@ -289,20 +289,23 @@ function startIntervals() {
     statsInterval = setInterval(updateSystemStats, 30000);
     servicesInterval = setInterval(checkServiceStatus, 60000);
     logsInterval = setInterval(() => {
-        const levels = ['info', 'success', 'warning'];
+        const levels = ['info', 'success', 'warning', 'error'];
         const messages = [
-            "{{ t('dashboard.log_system_ok', 'System operating normally') }}",
-            "{{ t('dashboard.log_monitoring_active', 'Resource monitoring active') }}",
-            "{{ t('dashboard.log_services_verified', 'Service check completed') }}",
-            "{{ t('dashboard.log_backup_scheduled', 'Automatic backup scheduled') }}",
-            "{{ t('dashboard.log_security_update', 'Security update available') }}"
+            { level: 'success', text: "{{ t('dashboard.log_system_ok', 'System operating normally') }}" },
+            { level: 'info', text: "{{ t('dashboard.log_monitoring_active', 'Resource monitoring active') }}" },
+            { level: 'success', text: "{{ t('dashboard.log_services_verified', 'Service check completed') }}" },
+            { level: 'info', text: "{{ t('dashboard.log_backup_scheduled', 'Automatic backup scheduled') }}" },
+            { level: 'warning', text: "{{ t('dashboard.log_security_update', 'Security update available') }}" },
+            { level: 'info', text: "{{ t('dashboard.log_network_stable', 'Network connection stable') }}" },
+            { level: 'warning', text: "{{ t('dashboard.log_disk_space', 'Disk space usage above 70%') }}" },
+            { level: 'error', text: "{{ t('dashboard.log_auth_failure', 'Failed login attempt detected from 192.168.1.105') }}" },
+            { level: 'success', text: "{{ t('dashboard.log_update_check', 'Update check completed: No new updates') }}" },
+            { level: 'info', text: "{{ t('dashboard.log_cron_job', 'Scheduled task maintenance_daily executed') }}" }
         ];
         
-        const randomLevel = levels[Math.floor(Math.random() * levels.length)];
-        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-        
-        addLog(randomLevel, randomMessage);
-    }, 120000);
+        const randomLog = messages[Math.floor(Math.random() * messages.length)];
+        addLog(randomLog.level, randomLog.text);
+    }, 15000);
 }
 
 // Función para detener los intervalos
