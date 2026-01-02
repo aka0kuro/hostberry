@@ -172,40 +172,43 @@
 
 {% block extra_js %}
 <script>
-// Función para actualizar las estadísticas del sistema
+// Function to update system statistics
 function updateSystemStats() {
-    // Simular valores reales del sistema
+    // Simulate real system values
     const cpuUsage = Math.floor(Math.random() * 100);
     const memoryUsage = Math.floor(Math.random() * 100);
     const diskUsage = Math.floor(Math.random() * 100);
     const temperature = Math.floor(Math.random() * 30) + 35;
     
-    // Actualizar los valores en las tarjetas
+    // Update values on cards
     document.querySelector('[data-stat="cpu"]').textContent = cpuUsage + '%';
     document.querySelector('[data-stat="memory"]').textContent = memoryUsage + '%';
     document.querySelector('[data-stat="disk"]').textContent = diskUsage + '%';
     document.querySelector('[data-stat="temperature"]').textContent = temperature + '°C';
     
-    // Cambiar colores según el uso
+    // Change colors based on usage
     updateStatColor('cpu', cpuUsage);
     updateStatColor('memory', memoryUsage);
     updateStatColor('disk', diskUsage);
     updateStatColor('temperature', temperature);
 }
 
-// Función para cambiar colores según el uso
+// Function to change colors based on usage
 function updateStatColor(stat, value) {
     const element = document.querySelector(`[data-stat="${stat}"]`);
+    // Remove previous color classes
+    element.classList.remove('text-success', 'text-warning', 'text-danger');
+    
     if (value < 50) {
-        element.className = 'text-success';
+        element.classList.add('text-success');
     } else if (value < 80) {
-        element.className = 'text-warning';
+        element.classList.add('text-warning');
     } else {
-        element.className = 'text-danger';
+        element.classList.add('text-danger');
     }
 }
 
-// Función para verificar el estado de los servicios
+// Function to check service status
 function checkServiceStatus() {
     const services = {
         'hostberry': Math.random() > 0.1,
@@ -215,7 +218,7 @@ function checkServiceStatus() {
         'fail2ban': Math.random() > 0.15
     };
     
-    // Actualizar indicadores de servicios
+    // Update service indicators
     Object.keys(services).forEach(service => {
         const statusElement = document.getElementById(`${service}-status`);
         const textElement = document.getElementById(`${service}-text`);
@@ -231,11 +234,11 @@ function checkServiceStatus() {
         }
     });
     
-    // Actualizar estado general del sistema
+    // Update overall system health
     updateSystemHealth();
 }
 
-// Función para actualizar la salud del sistema
+// Function to update system health
 function updateSystemHealth() {
     const healthIndicators = ['overall', 'cpu', 'memory', 'storage', 'network', 'temp'];
     
@@ -257,7 +260,7 @@ function updateSystemHealth() {
     });
 }
 
-// Función para agregar logs
+// Function to add logs
 function addLog(level, message) {
     const logsContainer = document.getElementById('logs-container');
     const timestamp = new Date().toLocaleTimeString();
@@ -272,19 +275,19 @@ function addLog(level, message) {
     
     logsContainer.appendChild(logEntry);
     
-    // Mantener solo los últimos 10 logs
+    // Keep only the last 10 logs
     while (logsContainer.children.length > 10) {
         logsContainer.removeChild(logsContainer.firstChild);
     }
     
-    // Scroll al final
+    // Scroll to bottom
     logsContainer.scrollTop = logsContainer.scrollHeight;
 }
 
-// Variables para los intervalos
+// Variables for intervals
 let statsInterval, servicesInterval, logsInterval;
 
-// Función para iniciar los intervalos
+// Function to start intervals
 function startIntervals() {
     statsInterval = setInterval(updateSystemStats, 30000);
     servicesInterval = setInterval(checkServiceStatus, 60000);
