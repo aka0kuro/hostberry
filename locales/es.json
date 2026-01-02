@@ -171,7 +171,13 @@
     "too_many_attempts_time": "Demasiados intentos fallidos. Usuario bloqueado por {minutes} minutos.",
     "user_exists": "El usuario ya existe",
     "user_inactive": "Usuario inactivo",
-    "user_updated_relogin": "Usuario actualizado. Vuelve a iniciar sesión con tus nuevas credenciales."
+    "user_updated_relogin": "Usuario actualizado. Vuelve a iniciar sesión con tus nuevas credenciales.",
+    "first_login": "Primer Inicio de Sesión",
+    "first_login_description": "Cambia tus credenciales por defecto",
+    "first_login_info": "Cambia tus credenciales por defecto",
+    "new_username": "Nuevo usuario",
+    "new_password": "Nueva contraseña",
+    "save_and_continue": "Guardar y continuar"
   },
   "system": {
     "title": "Sistema",
