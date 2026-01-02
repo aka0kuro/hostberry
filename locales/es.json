@@ -145,10 +145,9 @@
     "log_user_login": "Usuario admin ha iniciado sesión",
     "log_initialized": "Dashboard inicializado",
     "log_network_stable": "Conexión de red estable",
-    "log_disk_space": "Uso de espacio en disco superior al 70%",
+    "log_disk_space_high": "Uso de espacio en disco superior al 70%",
     "log_auth_failure": "Intento de inicio de sesión fallido detectado desde {ip}",
-    "log_update_check": "Verificación de actualizaciones completada: Sin novedades",
-    "log_cron_job": "Tarea programada {task} ejecutada"
+    "log_update_check": "Verificación de actualizaciones completada: Sin novedades"
   },
   "auth": {
     "login_info": "Inicia sesión para continuar",

@@ -393,3 +393,48 @@ body.light-theme .status-item:hover,
 body.light-theme .service-item:hover {
     background: rgba(0, 0, 0, 0.05) !important;
 }
+
+/* Light Theme Logs */
+body.light-theme .logs-container {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .log-entry {
+    background: rgba(0, 0, 0, 0.03);
+    color: #212529;
+}
+
+body.light-theme .log-entry:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+body.light-theme .log-timestamp {
+    color: #6c757d;
+}
+
+body.light-theme .monitor-label {
+    color: #495057;
+}
+
+body.light-theme .monitor-item {
+    background: rgba(255, 255, 255, 0.5);
+    border-color: rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .monitor-value {
+    color: #212529;
+}
+
+body.light-theme .dashboard-header h1 {
+    color: #212529;
+}
+
+body.light-theme .dashboard-header p {
+    color: #495057;
+}
+
+body.light-theme .system-monitor {
+    background: rgba(255, 255, 255, 0.6);
+    border-color: rgba(0, 0, 0, 0.05);
+}
