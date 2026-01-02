@@ -39,6 +39,70 @@ class Database:
         self._connection = None
         self._lock = asyncio.Lock()
 
+    async def _create_tables(self, db):
+        """Crear tablas de la base de datos"""
+        try:
+            # Tabla de usuarios
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_login TIMESTAMP
+                )
+            """)
+            
+            # Tabla de logs
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    level TEXT NOT NULL,
+                    message TEXT NOT NULL,
+                    source TEXT,
+                    user_id INTEGER,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users (id)
+                )
+            """)
+            
+            # Tabla de estadísticas
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS statistics (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    metric_name TEXT NOT NULL,
+                    metric_value REAL NOT NULL,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Tabla de configuraciones
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS configurations (
+                    key TEXT PRIMARY KEY,
+                    value TEXT,
+                    description TEXT,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Tabla de servicios
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS services (
+                    name TEXT PRIMARY KEY,
+                    status TEXT NOT NULL,
+                    config TEXT,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            await db.commit()
+            logger.info("✅ Tablas creadas/verificadas")
+            
+        except Exception as e:
+            logger.error(f"❌ Error creando tablas: {e}")
+            raise
+
     async def init_database(self):
         """Inicializar base de datos con conexión persistente"""
         logger.info("🗄️ Inicializando base de datos optimizada para Raspberry Pi 3")
