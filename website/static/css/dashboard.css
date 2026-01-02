@@ -366,6 +366,12 @@ body.light-theme {
     color: #212529;
 }
 
+body.light-theme .dashboard-container {
+    background: rgba(255, 255, 255, 0.7);
+    border-color: rgba(0,0,0,.1);
+    box-shadow: 0 8px 32px rgba(0,0,0,.1);
+}
+
 body.light-theme .glass-card {
     background: rgba(255, 255, 255, 0.8);
     border-color: rgba(255, 255, 255, 0.6);
