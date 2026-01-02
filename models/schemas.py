@@ -4,7 +4,7 @@ Modelos Pydantic para la API de HostBerry
 
 from typing import Optional, List, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from core.i18n import get_text
 
 # Modelos de autenticación
