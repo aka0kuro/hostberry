@@ -121,6 +121,7 @@
     "test_dashboard_working": "TEST DASHBOARD WORKING - OK",
     "system_diagnostics": "System Diagnostics",
     "programs_status": "Service Status",
+    "system_logs": "System Logs",
     "cpu": "CPU",
     "memory": "Memory",
     "storage": "Storage",
