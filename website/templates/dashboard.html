@@ -13,29 +13,29 @@
             <p>{{ t('dashboard.title', 'Dashboard') }}</p>
         </div>
 
-        <div class="system-monitor">
-            <div class="monitor-item">
+        <div class="system-monitor" style="display: flex; justify-content: center; gap: 10px;">
+            <div class="monitor-item" style="width: 120px;">
                 <div class="monitor-label">{{ t('dashboard.cpu', 'CPU') }}</div>
                 <div class="monitor-value" data-stat="cpu">{{ system_stats.cpu_percent }}%</div>
             </div>
-            <div class="monitor-item">
+            <div class="monitor-item" style="width: 120px;">
                 <div class="monitor-label">{{ t('dashboard.memory', 'Memory') }}</div>
                 <div class="monitor-value" data-stat="memory">{{ system_stats.memory_percent }}%</div>
             </div>
-            <div class="monitor-item">
+            <div class="monitor-item" style="width: 120px;">
                 <div class="monitor-label">{{ t('dashboard.storage', 'Storage') }}</div>
                 <div class="monitor-value" data-stat="disk">{{ system_stats.disk_percent }}%</div>
             </div>
-            <div class="monitor-item">
+            <div class="monitor-item" style="width: 120px;">
                 <div class="monitor-label">{{ t('dashboard.temperature', 'Temperature') }}</div>
                 <div class="monitor-value" data-stat="temperature">{{ system_stats.temperature }}°C</div>
             </div>
         </div>
 
         <!-- Segunda fila: Diagnóstico y Estado de Programas -->
-        <div class="row g-4 mb-4 mt-3">
+        <div class="row g-4 mb-4 mt-3 justify-content-center">
         <!-- Diagnóstico del Sistema -->
-        <div class="col-sm-6">
+        <div class="col-sm-3">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
                     <h5 class="card-title mb-0 fw-bold text-white">
@@ -47,7 +47,7 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="row g-3">
-                        <div class="col-sm-6">
+                        <div class="col-sm-12">
                             <div class="status-item p-3 rounded-3 bg-dark bg-opacity-25">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <span class="text-muted small">{{ t('dashboard.general', 'General') }}</span>
@@ -56,7 +56,7 @@
                                 <span class="fw-bold text-white" id="overall-text">{{ t('dashboard.healthy', 'Healthy') }}</span>
                             </div>
                         </div>
-                        <div class="col-sm-6">
+                        <div class="col-sm-12">
                             <div class="status-item p-3 rounded-3 bg-dark bg-opacity-25">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <span class="text-muted small">{{ t('dashboard.cpu', 'CPU') }}</span>
@@ -65,7 +65,7 @@
                                 <span class="fw-bold text-white" id="cpu-text">{{ t('dashboard.healthy', 'Healthy') }}</span>
                             </div>
                         </div>
-                        <div class="col-sm-6">
+                        <div class="col-sm-12">
                             <div class="status-item p-3 rounded-3 bg-dark bg-opacity-25">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <span class="text-muted small">{{ t('dashboard.memory', 'Memory') }}</span>
@@ -74,7 +74,7 @@
                                 <span class="fw-bold text-white" id="memory-text">{{ t('dashboard.healthy', 'Healthy') }}</span>
                             </div>
                         </div>
-                        <div class="col-sm-6">
+                        <div class="col-sm-12">
                             <div class="status-item p-3 rounded-3 bg-dark bg-opacity-25">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <span class="text-muted small">{{ t('dashboard.storage', 'Storage') }}</span>
@@ -89,7 +89,7 @@
         </div>
 
         <!-- Estado de Programas -->
-        <div class="col-sm-6">
+        <div class="col-sm-3">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
                     <h5 class="card-title mb-0 fw-bold text-white">
