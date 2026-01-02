@@ -56,14 +56,12 @@ body {
 /* Monitor del sistema: 4 elementos en 1 línea */
 .system-monitor {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
     padding: 16px;
     background: rgba(255,255,255,.08);
     border: 1px solid rgba(255,255,255,.15);
     border-radius: 16px;
-    max-width: 900px; /* Constrain width */
-    margin: 0 auto 1.5rem auto; /* Center */
 }
 
 .monitor-item {
