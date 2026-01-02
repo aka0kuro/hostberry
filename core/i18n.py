@@ -39,11 +39,7 @@ class I18nManager:
             # Fallback a inglés si el idioma no está soportado (según requerimiento)
             _current_language_ctx.set("en")
 
-    def get_text(self, key: str, language: str = None, **kwargs) -> str:
-        # ...
-        if language is None:
-            language = self.get_current_language()
-        # ...
+    def load_translations(self):
         """Carga todas las traducciones desde archivos JSON"""
         locales_dir = Path("locales")
         
@@ -63,6 +59,7 @@ class I18nManager:
                 except Exception as e:
                     logger.error(f"Error cargando traducciones para {lang}: {e}")
 
+    def get_text(self, key: str, language: str = None, default: str = None, **kwargs) -> str:
         """
         Obtiene el texto traducido para una clave específica
         
