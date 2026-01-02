@@ -215,16 +215,25 @@ async def log_requests(request: Request, call_next):
         raise
 
 # Manejador global de excepciones
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
+@app.exception_handler(500)
+async def internal_server_error_handler(request: Request, exc: Exception):
     """Manejador global de excepciones"""
     logger.error(f"Unhandled exception: {exc}")
+    
+    # Get user's preferred language from request
+    language = "en"  # Default to English
+    if hasattr(request.state, 'language'):
+        language = request.state.language
+    elif "accept-language" in request.headers:
+        accept_lang = request.headers["accept-language"].split(",")[0].split("-")[0]
+        if accept_lang in ["en", "es"]:
+            language = accept_lang
     
     return JSONResponse(
         status_code=500,
         content={
-            "error": "Error interno del servidor",
-            "detail": str(exc) if settings.debug else "Ha ocurrido un error inesperado",
+            "error": get_text("errors.server_error", default="Internal Server Error", language=language),
+            "detail": str(exc) if settings.debug else get_text("errors.general_error_message", default="An unexpected error occurred", language=language),
         },
     )
 
