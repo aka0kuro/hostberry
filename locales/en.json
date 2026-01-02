@@ -693,6 +693,7 @@
     "service_error": "Service error",
     "configuration_error": "Configuration error",
     "update_error": "Update error",
+    "update_completed": "Update completed successfully",
     "backup_error": "Backup error",
     "restore_error": "Restore error",
     "optimization_error": "Optimization error",
