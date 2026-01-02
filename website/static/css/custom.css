@@ -84,7 +84,7 @@ body {
 
 /* === GLASS NAVBAR === */
 .glass-navbar {
-    background: rgba(13, 110, 253, 0.85);
+    background: rgba(31, 41, 55, 0.92);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -96,7 +96,7 @@ body {
 
 .glass-navbar.scrolled {
     padding: 0.5rem 0;
-    background: rgba(13, 110, 253, 0.95);
+    background: rgba(17, 24, 39, 0.96);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
@@ -197,12 +197,12 @@ body {
 
 /* Dark mode adjustments for navbar */
 body.dark-theme .glass-navbar {
-    background: rgba(33, 37, 41, 0.85);
+    background: rgba(17, 24, 39, 0.92);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 body.dark-theme .glass-navbar.scrolled {
-    background: rgba(33, 37, 41, 0.95);
+    background: rgba(17, 24, 39, 0.96);
 }
 
 body.dark-theme .dropdown-menu {
