@@ -139,6 +139,11 @@
     "log_services_verified": "Service check completed",
     "log_backup_scheduled": "Automatic backup scheduled",
     "log_security_update": "Security update available",
+    "log_network_stable": "Network connection stable",
+    "log_disk_space": "Disk space usage above 70%",
+    "log_auth_failure": "Failed login attempt detected from {ip}",
+    "log_update_check": "Update check completed: No new updates",
+    "log_cron_job": "Scheduled task {task} executed",
     "log_initialized": "Dashboard initialized"
   },
   "auth": {
