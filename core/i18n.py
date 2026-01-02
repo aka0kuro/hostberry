@@ -61,6 +61,8 @@ class I18nManager:
                         self.translations[lang] = json.load(f)
                     logger.info(f"Traducciones cargadas para {lang}")
                 except Exception as e:
+                    logger.error(f"Error cargando traducciones para {lang}: {e}")
+
         """
         Obtiene el texto traducido para una clave específica
         
