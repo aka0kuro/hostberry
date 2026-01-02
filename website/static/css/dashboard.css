@@ -56,14 +56,12 @@ body {
 /* Monitor del sistema: 4 elementos en 1 línea */
 .system-monitor {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
     padding: 16px;
     background: rgba(255,255,255,.08);
     border: 1px solid rgba(255,255,255,.15);
     border-radius: 16px;
-    max-width: 900px;
-    margin: 0 auto;
 }
 
 .monitor-item {
@@ -366,12 +364,6 @@ body {
 body.light-theme {
     background: linear-gradient(135deg, #f0f2f5 0%, #e2e6ea 100%);
     color: #212529;
-}
-
-body.light-theme .dashboard-container {
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 body.light-theme .glass-card {

@@ -12,13 +12,6 @@
 /* Tipografía base */
 html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
 
-/* Custom positioning for centered navbar on large screens */
-@media (min-width: 992px) {
-    .position-lg-absolute {
-        position: absolute !important;
-    }
-}
-
 /* Navbar */
 .navbar { display:flex; align-items:center; padding: .5rem 1rem; }
 .navbar-dark { color: var(--hb-text-light); }
