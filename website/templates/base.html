@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ t('common.app_name', 'HostBerry') }}</title>
+    <title>HostBerry</title>
     <meta name="description" content="{{ t('common.app_description', 'HostBerry - Sistema de gestión de red para Raspberry Pi') }}">
     <link rel="icon" type="image/png" href="/static/hostberry.png">
     <link rel="shortcut icon" type="image/png" href="/static/hostberry.png">
@@ -18,7 +18,7 @@
     {% block navbar %}
     <nav class="navbar navbar-expand-lg navbar-dark glass-navbar sticky-top mb-4">
         <div class="container-fluid px-4">
-            <a class="navbar-brand d-flex align-items-center fw-bold" href="/">
+            <a class="navbar-brand d-flex align-items-center fw-bold" href="/dashboard">
                 <div class="brand-icon-wrapper me-2">
                     <i class="bi bi-router"></i>
                 </div>
@@ -68,26 +68,6 @@
                 </ul>
                 
                 <div class="d-flex align-items-center gap-2">
-                    <!-- Theme Toggle Button -->
-                    <button id="theme-toggle-nav" class="btn btn-icon btn-outline-light rounded-circle" type="button" onclick="toggleTheme()">
-                        <i class="bi bi-moon-fill"></i>
-                    </button>
-                    
-                    <!-- Language Selector -->
-                    <div class="dropdown">
-                        <button class="btn btn-icon btn-outline-light rounded-circle dropdown-toggle no-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-globe"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm rounded-3">
-                            <li><a class="dropdown-item d-flex align-items-center" href="?lang=es">
-                                <span class="me-2">🇪🇸</span> Español
-                            </a></li>
-                            <li><a class="dropdown-item d-flex align-items-center" href="?lang=en">
-                                <span class="me-2">🇺🇸</span> English
-                            </a></li>
-                        </ul>
-                    </div>
-                    
                     <!-- User Profile Dropdown -->
                     <div class="dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center user-dropdown ps-3 pe-0" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -123,12 +103,24 @@
     </nav>
     {% endblock %}
 
-    <!-- Main Content -->
+    <div class="dropdown lang-dropdown">
+        <button class="btn lang-toggle dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            {{ 'ES' if language == 'es' else 'EN' }}
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="?lang=es">🇪🇸 Español</a></li>
+            <li><a class="dropdown-item" href="?lang=en">🇺🇸 English</a></li>
+        </ul>
+    </div>
+
+    <button id="theme-toggle" class="theme-toggle" type="button" title="{{ t('common.change_theme', 'Cambiar tema') }}" aria-label="{{ t('common.change_theme', 'Cambiar tema') }}" onclick="toggleTheme()"></button>
+
     <div class="container-fluid mt-4">
         {% block content %}{% endblock %}
     </div>
 
     <script src="/static/js/common.js"></script>
+    <script src="/static/js/theme.js"></script>
     
     {% block extra_js %}{% endblock %}
 </body>
