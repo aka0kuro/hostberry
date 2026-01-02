@@ -956,10 +956,11 @@ EOF
             log "$ANSI_YELLOW" "INFO" "$(get_text 'installing_prod_deps' 'Instalando dependencias de producción...')"
 
             # Instalar pytz desde PyPI para evitar advertencias de deprecación
-            python -m pip install pytz==2023.3 \
+            python -m pip install pytz==2023.4 \
                 --index-url https://pypi.org/simple \
                 --retries 5 \
-                --timeout 60 || handle_error "$(get_text 'pytz_install_failed' 'No se pudo instalar pytz')"
+                --timeout 60 \
+                --prefer-binary || handle_error "$(get_text 'pytz_install_failed' 'No se pudo instalar pytz')"
 
             # Instalar el resto de dependencias
             python -m pip install -r requirements.txt \
