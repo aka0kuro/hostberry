@@ -669,6 +669,7 @@
   },
   "errors": {
     "general_error": "Ha ocurrido un error",
+    "general_error_message": "Ha ocurrido un error inesperado",
     "network_error": "Error de red",
     "database_error": "Error de base de datos",
     "authentication_error": "Error de autenticación",
