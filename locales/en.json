@@ -58,7 +58,9 @@
     "healthy": "Healthy",
     "unhealthy": "Unhealthy",
     "critical": "Critical",
-    "app_description": "HostBerry - Network management system for Raspberry Pi"
+    "app_description": "HostBerry - Network Management System for Raspberry Pi",
+    "change_theme": "Change theme",
+    "show_password": "Show password"
   },
   "navigation": {
     "dashboard": "Dashboard",
