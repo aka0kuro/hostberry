@@ -148,6 +148,12 @@ body {
     box-shadow: 0 0 12px rgba(214, 51, 132, 0.6);
 }
 
+.status-warning {
+    background-color: #ffc107;
+    color: #ffc107;
+    box-shadow: 0 0 12px rgba(255, 193, 7, 0.6);
+}
+
 /* Logs Container */
 .logs-container {
     max-height: 350px;
