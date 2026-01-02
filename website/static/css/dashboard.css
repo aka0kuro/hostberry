@@ -1,10 +1,10 @@
-/* Estilos modernos del dashboard con Glassmorphism */
+/* Estilos del dashboard (neutral + moderno) */
 body { 
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+    background: #0b0f14;
     min-height: 100vh; 
-    margin: 0; 
+    margin: 0;
     padding-bottom: 2rem;
-    color: #f8f9fa;
+    color: #e5e7eb;
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
@@ -13,6 +13,37 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 1rem;
+}
+
+/* Monitor del sistema: 4 elementos en 1 línea */
+.system-monitor {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+}
+
+.monitor-item {
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.monitor-label {
+    font-size: 0.85rem;
+    color: rgba(229, 231, 235, 0.7);
+    margin-bottom: 6px;
+}
+
+.monitor-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #ffffff;
 }
 
 /* Glass Card Effect */
@@ -40,17 +71,9 @@ body {
     text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
-/* Stats Scroll Container - Keeps items in one line */
+/* (legacy) stats-scroll-container no se usa en el layout actual */
 .stats-scroll-container {
-    display: flex;
-    overflow-x: auto;
-    gap: 1.5rem;
-    padding: 0.5rem 0 1.5rem 0; /* Espacio para shadow y scrollbar */
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
-    margin: 0 -0.5rem; /* Compensar padding de las cards */
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    display: none;
 }
 
 .stats-scroll-container::-webkit-scrollbar {
@@ -204,14 +227,14 @@ body {
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
-    .stats-card-wrapper {
-        flex: 0 0 240px;
+    .system-monitor {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        padding: 12px;
     }
-    
-    .stats-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2rem;
+
+    .monitor-value {
+        font-size: 1.35rem;
     }
 }
 
