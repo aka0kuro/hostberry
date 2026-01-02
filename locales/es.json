@@ -85,7 +85,8 @@
     "logout": "Cerrar Sesión",
     "profile": "Perfil",
     "language": "Idioma",
-    "theme": "Tema"
+    "theme": "Tema",
+    "account": "Cuenta"
   },
   "dashboard": {
     "title": "Panel de Control",
