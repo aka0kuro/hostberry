@@ -2221,6 +2221,37 @@ show_production_info() {
     echo
 }
 
+# Mostrar información de actualización exitosa
+show_update_info() {
+    local ip_address
+    ip_address=$(hostname -I | awk '{print $1}')
+    local current_date
+    current_date=$(date '+%Y-%m-%d %H:%M:%S')
+    
+    echo
+    log "$ANSI_GREEN" "INFO" "================================================================"
+    log "$ANSI_GREEN" "INFO" "   HOSTBERRY ACTUALIZADO CORRECTAMENTE (Debian/RPi)"
+    log "$ANSI_GREEN" "INFO" "================================================================"
+    echo
+    log "$ANSI_BLUE" "INFO" "Fecha y hora:    $current_date"
+    echo
+    log "$ANSI_BLUE" "INFO" "URL Local:       http://localhost"
+    log "$ANSI_BLUE" "INFO" "URL Red:         http://$ip_address"
+    if [ -f "$SSL_DIR/hostberry.crt" ]; then
+        log "$ANSI_BLUE" "INFO" "URL Segura:      https://$ip_address (Acepte el certificado)"
+    fi
+    echo
+    log "$ANSI_BLUE" "INFO" "Admin User:      admin"
+    log "$ANSI_BLUE" "INFO" "Admin Password:  hostberry"
+    echo
+    log "$ANSI_BLUE" "INFO" "Logs:            tail -f $LOG_DIR/hostberry_error.log"
+    log "$ANSI_BLUE" "INFO" "Servicio:        systemctl status hostberry.service"
+    log "$ANSI_BLUE" "INFO" "Monitor:         $PROD_DIR/monitor.sh"
+    echo
+    log "$ANSI_GREEN" "SUCCESS" "$(get_text 'update_completed' 'Actualización completada exitosamente')"
+    echo
+}
+
 # Función principal
 main() {
     # Verificar usuario root o sudo
