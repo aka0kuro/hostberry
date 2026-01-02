@@ -1,9 +1,9 @@
 // Common JS for simple UI behaviours (offline)
 (function(){
-  // Namespace global
+  // Global Namespace
   const HostBerry = window.HostBerry || {};
 
-  // Dropdown simple sin Bootstrap
+  // Simple Dropdown without Bootstrap
   document.addEventListener('click', function(e){
     const toggle = e.target.closest('.dropdown-toggle');
     const inDropdown = e.target.closest('.dropdown');
@@ -16,7 +16,7 @@
     }
   });
 
-  // Cargar traducciones JSON embebidas si existen
+  // Load embedded JSON translations if they exist
   function loadTranslations(){
     try{
       const el = document.getElementById('i18n-json');
@@ -29,7 +29,7 @@
 
   const translations = loadTranslations();
 
-  // t: acceso anidado a claves 'a.b.c'
+  // t: nested access to keys 'a.b.c'
   function t(key, defaultValue){
     if(!key) return defaultValue || '';
     const parts = String(key).split('.');
@@ -44,7 +44,7 @@
     return typeof cur === 'string' ? cur : (defaultValue || key);
   }
 
-  // Alert flotante arriba a la derecha
+  // Floating alert top right
   function showAlert(type, message){
     const containerId = 'hb-alert-container';
     let container = document.getElementById(containerId);
@@ -68,7 +68,7 @@
     }, 5000);
   }
 
-  // Wrapper fetch con JSON y token
+  // Fetch wrapper with JSON and token
   async function apiRequest(url, options){
     const opts = Object.assign({ method: 'GET', headers: {} }, options || {});
     const headers = new Headers(opts.headers);
@@ -84,12 +84,12 @@
     return resp;
   }
 
-  // Exportar
+  // Export
   window.t = t;
   HostBerry.t = t;
   HostBerry.showAlert = showAlert;
   HostBerry.apiRequest = apiRequest;
-  // Compat: muchas vistas usan showAlert() directamente
+  // Compat: many views use showAlert() directly
   if(!window.showAlert){ window.showAlert = showAlert; }
   window.HostBerry = HostBerry;
 })();
