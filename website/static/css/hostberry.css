@@ -127,6 +127,36 @@ html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe
     box-shadow: 0 6px 20px rgba(0,0,0,0.4);
 }
 
-/* Tema oscuro opcional por clases existentes */
-body.dark-theme { background-color: #1a1a1a; color: #f1f1f1; }
-body.light-theme { background-color: #f8f9fa; color: #212529; }
+/* Light Theme Overrides */
+body.light-theme .glass-navbar {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0,0,0,.1);
+}
+
+body.light-theme .navbar-brand {
+    color: #212529 !important;
+}
+
+body.light-theme .nav-link {
+    color: #495057 !important;
+}
+
+body.light-theme .nav-link:hover,
+body.light-theme .nav-link.active {
+    color: var(--hb-primary) !important;
+    background: rgba(13, 110, 253, 0.1);
+}
+
+body.light-theme .navbar-toggler-icon {
+    filter: invert(1) grayscale(100%) brightness(0);
+}
+
+body.light-theme .dropdown-menu {
+    border-color: rgba(0,0,0,.1);
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+}
+
+body.light-theme .text-muted {
+    color: #6c757d !important;
+}
