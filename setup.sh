@@ -23,19 +23,6 @@
 # - Crea backup automático antes de limpiar
 # - Dependencias del sistema preinstaladas para acelerar compilación
 #
-# FIXES APLICADOS:
-# - Corregido MemoryLimit= por MemoryMax= en systemd (compatible con systemd moderno)
-# - Corregido log-level de WARNING a warning (formato correcto para uvicorn)
-# - Agregada libffi-dev y libssl-dev para acelerar compilación de paquetes criptográficos
-# - Actualizado pytz a 2023.4 para evitar advertencias de pip
-# - Agregada flag --prefer-binary para acelerar instalación de paquetes
-# - Limitado pip a versión <25.0 para evitar deprecation warnings
-# - Creados directorios /var/lib/hostberry/instance con permisos correctos
-# - Corregidos errores de importación en main.py (log_api_request, log_api_response)
-# - Implementado método _create_tables en core/database.py
-# - Corregida indentación y estructura en core/i18n.py
-# - Actualizado pydantic a 2.10.5 con wheels precompilados para aarch64
-#
 # Soporte multilingüe
 
 # Colores para logs
