@@ -2386,7 +2386,8 @@ EOF
         # Reiniciar servicio
         systemctl restart hostberry.service
         
-        log "$ANSI_GREEN" "SUCCESS" "Actualización completada"
+        # Mostrar información de actualización exitosa
+        show_update_info
         
     elif [[ "$SSL_MODE" = true ]]; then
         setup_ssl
