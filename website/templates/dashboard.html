@@ -291,15 +291,15 @@ function startIntervals() {
     logsInterval = setInterval(() => {
         const levels = ['info', 'success', 'warning', 'error'];
         const messages = [
-            { level: 'info', msg: '{{ t("dashboard.log_system_ok", "System operating normally") }}' },
-            { level: 'info', msg: '{{ t("dashboard.log_monitoring_active", "Resource monitoring active") }}' },
-            { level: 'success', msg: '{{ t("dashboard.log_services_verified", "Service check completed") }}' },
-            { level: 'info', msg: '{{ t("dashboard.log_backup_scheduled", "Automatic backup scheduled") }}' },
-            { level: 'warning', msg: '{{ t("dashboard.log_security_update", "Security update available") }}' },
-            { level: 'error', msg: '{{ t("dashboard.log_connection_timeout", "Connection timeout to remote server") }}' },
-            { level: 'warning', msg: '{{ t("dashboard.log_disk_space", "Disk space running low on /var") }}' },
-            { level: 'success', msg: '{{ t("dashboard.log_cron_job", "Cron job executed successfully") }}' },
-            { level: 'info', msg: '{{ t("dashboard.log_user_login", "User admin logged in") }}' }
+            { level: 'info', msg: "{{ t('dashboard.log_system_ok', 'System operating normally') }}" },
+            { level: 'info', msg: "{{ t('dashboard.log_monitoring_active', 'Resource monitoring active') }}" },
+            { level: 'success', msg: "{{ t('dashboard.log_services_verified', 'Service check completed') }}" },
+            { level: 'info', msg: "{{ t('dashboard.log_backup_scheduled', 'Automatic backup scheduled') }}" },
+            { level: 'warning', msg: "{{ t('dashboard.log_security_update', 'Security update available') }}" },
+            { level: 'error', msg: "{{ t('dashboard.log_connection_timeout', 'Connection timeout to remote server') }}" },
+            { level: 'warning', msg: "{{ t('dashboard.log_disk_space', 'Disk space running low on /var') }}" },
+            { level: 'success', msg: "{{ t('dashboard.log_cron_job', 'Cron job executed successfully') }}" },
+            { level: 'info', msg: "{{ t('dashboard.log_user_login', 'User admin logged in') }}" }
         ];
         
         const randomLog = messages[Math.floor(Math.random() * messages.length)];
@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function() {
     checkServiceStatus();
     
     // Agregar algunos logs iniciales
-    addLog('info', '{{ t("dashboard.log_initialized", "Dashboard initialized") }}');
+    addLog('info', "{{ t('dashboard.log_initialized', 'Dashboard initialized') }}");
     
     // Iniciar intervalos
     startIntervals();
