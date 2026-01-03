@@ -114,7 +114,7 @@ body.light-theme { background: #f6f7f9; color: #212529; }
 .navbar-brand img { display:block; }
 .user-dropdown { padding: 0; }
 .user-dropdown.nav-link { padding: 0; }
-.user-dropdown .user-avatar { flex: 0 0 auto; }
+.user-dropdown .user-avatar { flex: 0 0 auto; margin-top: 2px; }
 .navbar-toggler { display:none; border: none; padding: 0.5rem; border-radius: 8px; transition: background 0.3s ease; }
 .navbar-toggler:focus { box-shadow: none; }
 .navbar-toggler:hover { background: rgba(255, 255, 255, 0.1); }
