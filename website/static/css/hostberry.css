@@ -794,8 +794,8 @@ body.light-theme .text-muted {
     }
     
     .navbar .d-flex.align-items-center {
-        justify-content: center !important;
-        width: 100%;
+        justify-content: flex-start !important;
+        width: auto;
         gap: 15px; /* Add space between logo and user */
     }
     
@@ -902,8 +902,8 @@ body.light-theme .text-muted {
     }
     
     .navbar .d-flex.align-items-center {
-        justify-content: center !important;
-        width: 100%;
+        justify-content: flex-start !important;
+        width: auto;
         gap: 15px; /* Add space between logo and user */
     }
     

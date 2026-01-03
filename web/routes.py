@@ -30,10 +30,10 @@ def template_t(key: str, default: str = None, **kwargs):
     return get_text(key, None, default, **kwargs)
 
 
-def template_gettext(message: str) -> str:
+def template_gettext(message: str, default: str | None = None, **kwargs) -> str:
     # Support Jinja {% trans %} and _() calls.
     # Here, "message" is treated as a translation key; fallback is the message itself.
-    return get_text(message, default=message)
+    return get_text(message, default=(default or message), **kwargs)
 
 
 def template_ngettext(singular: str, plural: str, n: int) -> str:
