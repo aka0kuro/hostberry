@@ -91,6 +91,9 @@
         const result = await resp.json();
         if(resp.ok){
           localStorage.setItem('access_token', result.access_token);
+          // Set cookie for backend access
+          document.cookie = `access_token=${result.access_token}; path=/; max-age=86400; SameSite=Strict`;
+          
           showAlert('success', i18n.login_success);
           setTimeout(()=>{
             if(result.password_change_required){
