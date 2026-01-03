@@ -11,6 +11,9 @@ from core.system_light import boot_time
 import time
 import os
 import platform
+from types import SimpleNamespace
+from datetime import datetime, timezone
+import pytz
 
 router = APIRouter()
 
@@ -128,6 +131,8 @@ def _base_context(request: Request, current_lang: str) -> dict:
         "request": request,
         "language": current_lang,
         "translations": get_html_translations(current_lang),
+        "last_update": int(time.time()),
+        "pytz": pytz,
         "current_user": {"username": username},
         "system_info": {
             "hostname": hostname,
@@ -480,20 +485,24 @@ async def monitoring_page(request: Request, lang: str | None = Query(default=Non
 @router.get("/security", response_class=HTMLResponse)
 async def security_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
     current_lang, _ = _resolve_language(request, lang)
+
+    cfg = SimpleNamespace(
+        FIREWALL_ENABLED=True,
+        TIMEZONE="UTC",
+    )
+    sec = SimpleNamespace(
+        blocked_ips=12,
+        last_attack=None,
+        last_check=datetime.now(timezone.utc),
+    )
+
     return _render(
         "security.html",
         request,
         current_lang,
         extra={
-            "config": {
-                "FIREWALL_ENABLED": True,
-                "TIMEZONE": "UTC",
-            },
-            "security_status": {
-                "blocked_ips": 12,
-                "last_attack": None,
-                "last_check": "2024-01-03T23:00:00Z",
-            },
+            "config": cfg,
+            "security_status": sec,
         },
     )
 

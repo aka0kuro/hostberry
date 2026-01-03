@@ -38,8 +38,7 @@ body.light-theme { background: #f6f7f9; color: #212529; }
 .navbar .container-fluid {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    height: 100%;
+    justify-content: flex-start;
 }
 
 .d-flex.align-items-center.gap-3 {
@@ -790,9 +789,8 @@ body.light-theme .text-muted {
 
 /* Mobile Adjustments */
 @media (max-width: 768px) {
-    /* Center navbar content on mobile */
     .navbar .container-fluid {
-        justify-content: center !important;
+        justify-content: flex-start !important;
     }
     
     .navbar .d-flex.align-items-center {
@@ -899,9 +897,8 @@ body.light-theme .text-muted {
 
 /* Tablet Layout Adjustments */
 @media (min-width: 769px) and (max-width: 991px) {
-    /* Center navbar content on tablet */
     .navbar .container-fluid {
-        justify-content: center !important;
+        justify-content: flex-start !important;
     }
     
     .navbar .d-flex.align-items-center {
