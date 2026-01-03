@@ -115,10 +115,11 @@ async function updateServices() {
     try {
         const response = await fetch('/api/v1/system/services');
         if (response.ok) {
-            const services = await response.json();
+            const data = await response.json();
+            const services = data.services;
             
             Object.keys(services).forEach(serviceName => {
-                updateServiceStatus(serviceName, services[serviceName]);
+                updateServiceStatus(serviceName, services[serviceName].status);
             });
         }
     } catch (error) {
@@ -150,9 +151,10 @@ function updateServiceStatus(serviceName, status) {
 // Actualizar estado de red
 async function updateNetworkStatus() {
     try {
-        const response = await fetch('/api/v1/network/status');
+        const response = await fetch('/api/v1/system/network/status');
         if (response.ok) {
-            const networkData = await response.json();
+            const data = await response.json();
+            const networkData = data.interfaces;
             
             // Actualizar interfaces de red
             updateNetworkInterface('eth0', networkData.eth0);
