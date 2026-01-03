@@ -29,11 +29,11 @@
                     </div>
                     <div class="status-info">
                         <h6>{{ t('system.cpu_usage', 'CPU') }}</h6>
-                        <h3>{{ system_stats.cpu_percent | default(25) }}%</h3>
+                        <h3>{{ system_stats.cpu_percent | default(25, true) }}%</h3>
                     </div>
                 </div>
                 <div class="progress">
-                    <div class="progress-bar cpu-progress" style="width: {{ system_stats.cpu_percent | default(25) }}%"></div>
+                    <div class="progress-bar cpu-progress" style="width: {{ system_stats.cpu_percent | default(25, true) }}%"></div>
                 </div>
                 <div class="status-footer">
                     <span class="status-text">{{ t('system.healthy', 'Healthy') }}</span>
@@ -49,11 +49,11 @@
                     </div>
                     <div class="status-info">
                         <h6>{{ t('system.memory_usage', 'Memory') }}</h6>
-                        <h3>{{ system_stats.memory_percent | default(45) }}%</h3>
+                        <h3>{{ system_stats.memory_percent | default(45, true) }}%</h3>
                     </div>
                 </div>
                 <div class="progress">
-                    <div class="progress-bar memory-progress" style="width: {{ system_stats.memory_percent | default(45) }}%"></div>
+                    <div class="progress-bar memory-progress" style="width: {{ system_stats.memory_percent | default(45, true) }}%"></div>
                 </div>
                 <div class="status-footer">
                     <span class="status-text">{{ t('system.healthy', 'Healthy') }}</span>
@@ -69,11 +69,11 @@
                     </div>
                     <div class="status-info">
                         <h6>{{ t('system.disk_usage', 'Disk') }}</h6>
-                        <h3>{{ system_stats.disk_percent | default(60) }}%</h3>
+                        <h3>{{ system_stats.disk_percent | default(60, true) }}%</h3>
                     </div>
                 </div>
                 <div class="progress">
-                    <div class="progress-bar disk-progress" style="width: {{ system_stats.disk_percent | default(60) }}%"></div>
+                    <div class="progress-bar disk-progress" style="width: {{ system_stats.disk_percent | default(60, true) }}%"></div>
                 </div>
                 <div class="status-footer">
                     <span class="status-text">{{ t('system.healthy', 'Healthy') }}</span>
@@ -89,11 +89,11 @@
                     </div>
                     <div class="status-info">
                         <h6>{{ t('system.temperature', 'Temperature') }}</h6>
-                        <h3>{{ system_stats.temperature | default(45) }}°C</h3>
+                        <h3>{{ system_stats.temperature | default(45, true) }}°C</h3>
                     </div>
                 </div>
                 <div class="progress">
-                    <div class="progress-bar temp-progress" style="width: {{ (system_stats.temperature | default(45) / 100 * 100) | round }}"></div>
+                    <div class="progress-bar temp-progress" style="width: {{ (system_stats.temperature | default(45, true) / 100 * 100) | round }}"></div>
                 </div>
                 <div class="status-footer">
                     <span class="status-text">{{ t('system.normal', 'Normal') }}</span>

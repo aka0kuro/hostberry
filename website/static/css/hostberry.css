@@ -841,8 +841,8 @@ body.light-theme .text-muted {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 180px; /* Make cards taller */
-    padding: 20px; /* Add more padding */
+    min-height: 240px; /* Make cards taller */
+    padding: 28px; /* Add more padding */
     border-radius: 12px; /* Slightly larger border radius */
 }
 
@@ -856,8 +856,8 @@ body.light-theme .text-muted {
 }
 
 .status-icon {
-    width: 48px; /* Larger icons */
-    height: 48px;
+    width: 56px; /* Larger icons */
+    height: 56px;
     margin-bottom: 10px; /* More space below icon */
 }
 
@@ -869,14 +869,14 @@ body.light-theme .text-muted {
 .status-info h6 {
     text-align: center;
     margin-bottom: 8px;
-    font-size: 14px; /* Slightly larger label font */
+    font-size: 16px; /* Slightly larger label font */
     font-weight: 600;
 }
 
 .status-info h3 {
     text-align: center;
     margin-bottom: 0;
-    font-size: 24px; /* Larger value font */
+    font-size: 30px; /* Larger value font */
     font-weight: 700;
 }
 
@@ -887,7 +887,7 @@ body.light-theme .text-muted {
 }
 
 .status-footer .status-text {
-    font-size: 13px; /* Slightly larger status text */
+    font-size: 15px; /* Slightly larger status text */
     font-weight: 500;
 }
 
