@@ -16,6 +16,58 @@ html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe
 .navbar { display:flex; align-items:center; padding: .5rem 1rem; }
 .navbar-dark { color: var(--hb-text-light); }
 .bg-primary { background-color: var(--hb-primary); }
+
+/* Navbar con efecto cristal */
+.glass-navbar {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-navbar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.3), 
+        transparent);
+    animation: shimmer 3s infinite;
+}
+
+.glass-navbar::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, 
+        transparent 30%, 
+        rgba(255, 255, 255, 0.05) 50%, 
+        transparent 70%);
+    animation: glassShine 8s infinite;
+    pointer-events: none;
+}
+
+@keyframes shimmer {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.8; }
+}
+
+@keyframes glassShine {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+}
 .navbar .container-fluid { width:100%; display:flex; align-items:center; justify-content:space-between; }
 .navbar-brand { color:#fff; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:.5rem; }
 .navbar-toggler { display:none; }
