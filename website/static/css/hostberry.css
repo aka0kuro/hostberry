@@ -888,7 +888,7 @@ body.light-theme .text-muted {
 .status-icon {
     width: 56px; /* Larger icons */
     height: 56px;
-    margin-bottom: 15px; /* More space below icon */
+    margin-bottom: 20px; /* More space below icon */
 }
 
 .status-info {
