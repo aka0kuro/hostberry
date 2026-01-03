@@ -309,7 +309,7 @@
 .info-item-grid {
     background: transparent;
     border-radius: 0;
-    padding: 0.5rem;
+    padding: 0.5rem 0.5rem 0.5rem 1rem;
     text-align: center;
     border: none;
     transition: all 0.3s ease;
@@ -1075,6 +1075,16 @@ body:not(.light-theme) .form-select-sm {
     /* Adjust content cards for mobile/tablet */
     .services-card, .network-card, .activity-card, .logs-card, .actions-card {
         min-height: auto;
+    }
+    
+    /* Mobile: Make Network and Services same size and separate */
+    .row .col-lg-6 {
+        margin-bottom: 2rem;
+    }
+    
+    /* Separate system info items more on mobile */
+    .info-item-grid {
+        padding: 0.75rem 0.75rem 0.75rem 1.25rem;
     }
 }
 
