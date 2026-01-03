@@ -466,53 +466,11 @@ async def dashboard_page(request: Request, lang: str | None = Query(default=None
 @router.get("/monitoring", response_class=HTMLResponse)
 async def monitoring_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
     current_lang, _ = _resolve_language(request, lang)
-    system_info = {
-        "hostname": "hostberry",
-        "os_version": "Raspberry Pi OS",
-        "kernel_version": "Linux 6.8.0",
-        "architecture": "armv7l",
-        "processor": "ARM Cortex-A53",
-        "uptime": "2 days, 5 hours",
-        "load_average": "0.25, 0.30, 0.35",
-        "cpu_cores": "4",
-    }
-    system_stats = {
-        "cpu_percent": 25,
-        "memory_percent": 45,
-        "disk_percent": 60,
-        "temperature": 45,
-    }
-    return templates.TemplateResponse(
+    return _render(
         "monitoring.html",
-        {
-            "request": request,
-            **_base_context(request, current_lang),
-            "system_info": system_info,
-            "system_stats": system_stats,
-            "page": "monitoring"
-        },
-    )
-
-
-@router.get("/security", response_class=HTMLResponse)
-async def security_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    current_lang, _ = _resolve_language(request, lang)
-
-    cfg = SimpleNamespace(
-        FIREWALL_ENABLED=True,
-        TIMEZONE="UTC",
-    )
-    sec = SimpleNamespace(
-        blocked_ips=12,
-        last_attack=None,
-        last_check=datetime.now(timezone.utc),
-    )
-
-    return templates.TemplateResponse(
-        "security.html",
-        {
-            "request": request,
-            **_base_context(request, current_lang),
+        request,
+        current_lang,
+        extra={
             "system_info": {
                 "hostname": "hostberry",
                 "os_version": "Raspberry Pi OS",
@@ -523,9 +481,47 @@ async def security_page(request: Request, lang: str | None = Query(default=None)
                 "load_average": "0.25, 0.30, 0.35",
                 "cpu_cores": "4",
             },
+            "system_stats": {
+                "cpu_percent": 25,
+                "memory_percent": 45,
+                "disk_percent": 60,
+                "temperature": 45,
+            },
+        },
+    )
+
+
+@router.get("/security", response_class=HTMLResponse)
+async def security_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    current_lang, _ = _resolve_language(request, lang)
+    
+    cfg = SimpleNamespace(
+        FIREWALL_ENABLED=True,
+        TIMEZONE="UTC",
+    )
+    sec = SimpleNamespace(
+        blocked_ips=12,
+        last_attack=None,
+        last_check=datetime.now(timezone.utc),
+    )
+    
+    return _render(
+        "security.html",
+        request,
+        current_lang,
+        extra={
             "config": cfg,
             "security_status": sec,
-            "page": "security"
+            "system_info": {
+                "hostname": "hostberry",
+                "os_version": "Raspberry Pi OS",
+                "kernel_version": "Linux 6.8.0",
+                "architecture": "armv7l",
+                "processor": "ARM Cortex-A53",
+                "uptime": "2 days, 5 hours",
+                "load_average": "0.25, 0.30, 0.35",
+                "cpu_cores": "4",
+            },
         },
     )
 
