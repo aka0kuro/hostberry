@@ -771,6 +771,21 @@ body.light-theme .text-muted {
 
 /* Mobile Adjustments */
 @media (max-width: 768px) {
+    /* Center navbar content on mobile */
+    .navbar .container-fluid {
+        justify-content: center !important;
+    }
+    
+    .navbar .d-flex.align-items-center {
+        justify-content: center !important;
+        width: 100%;
+    }
+    
+    /* Hide user text on mobile, keep only avatar */
+    .navbar .d-none.d-md-inline {
+        display: none !important;
+    }
+    
     /* Separate System Info items and prevent overlap */
     .info-item-grid {
         margin-bottom: 1rem;
