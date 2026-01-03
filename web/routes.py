@@ -44,7 +44,6 @@ def _base_context(request: Request, current_lang: str) -> dict:
         "request": request,
         "language": current_lang,
         "translations": get_html_translations(current_lang),
-        "current_user": {"username": "usuario"},  # Add current_user to base context
         "system_stats": {
             "cpu_percent": 25,
             "memory_percent": 45,
@@ -73,7 +72,6 @@ def _base_context(request: Request, current_lang: str) -> dict:
 def _render(template_name: str, request: Request, lang: str | None, extra: dict | None = None) -> HTMLResponse:
     current_lang, should_set_cookie = _resolve_language(request, lang)
     context = _base_context(request, current_lang)
-    context["current_user"] = {"username": "admin"}  # Add current_user to context
     if extra:
         context.update(extra)
     resp = templates.TemplateResponse(template_name, context)

@@ -105,6 +105,25 @@
   HostBerry.t = t;
   HostBerry.showAlert = showAlert;
   HostBerry.apiRequest = apiRequest;
+
+  // Populate navbar username from API if logged in
+  document.addEventListener('DOMContentLoaded', async function(){
+    try{
+      const el = document.getElementById('hb-current-username');
+      const token = localStorage.getItem('access_token');
+      if(!el || !token) return;
+
+      const resp = await apiRequest('/api/v1/auth/me');
+      if(!resp || !resp.ok) return;
+      const data = await resp.json();
+      if(data && data.username){
+        el.textContent = data.username;
+      }
+    }catch(_e){
+      // silent
+    }
+  });
+
   // Compat: many views use showAlert() directly
   if(!window.showAlert){ window.showAlert = showAlert; }
   window.HostBerry = HostBerry;

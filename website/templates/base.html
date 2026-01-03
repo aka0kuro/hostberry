@@ -34,7 +34,7 @@
                         <div class="user-avatar bg-white text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
                             <i class="bi bi-person-fill"></i>
                         </div>
-                        <span class="d-none d-md-inline ms-2">{{ current_user.username if current_user else t('common.user', 'User') }}</span>
+                        <span id="hb-current-username" class="d-none d-md-inline ms-2">{{ current_user.username if current_user else t('common.user', 'User') }}</span>
                     </a>
                     <ul class="dropdown-menu border-0 shadow-sm rounded-3 mt-2">
                         <li><div class="dropdown-header text-muted">{{ t('navigation.account', 'Account') }}</div></li>
