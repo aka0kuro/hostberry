@@ -309,7 +309,7 @@
 .info-item-grid {
     background: transparent;
     border-radius: 0;
-    padding: 0.5rem 0.5rem 0.5rem 1rem;
+    padding: 0.5rem;
     text-align: center;
     border: none;
     transition: all 0.3s ease;
@@ -1076,16 +1076,6 @@ body:not(.light-theme) .form-select-sm {
     .services-card, .network-card, .activity-card, .logs-card, .actions-card {
         min-height: auto;
     }
-    
-    /* Mobile: Make Network and Services same size and separate */
-    .row .col-lg-6 {
-        margin-bottom: 2rem;
-    }
-    
-    /* Separate system info items more on mobile */
-    .info-item-grid {
-        padding: 0.75rem 0.75rem 0.75rem 1.25rem;
-    }
 }
 
 @media (max-width: 768px) {
@@ -1105,11 +1095,6 @@ body:not(.light-theme) .form-select-sm {
     
     .status-text {
         font-size: 0.6rem;
-    }
-    
-    /* Ensure system info items are well separated on small mobile */
-    .info-item-grid {
-        padding: 1rem 1rem 1rem 1.5rem;
     }
 }
 
@@ -1135,10 +1120,5 @@ body:not(.light-theme) .form-select-sm {
     
     .quick-actions {
         grid-template-columns: repeat(2, 1fr);
-    }
-    
-    /* Ensure system info items are well separated on very small mobile */
-    .info-item-grid {
-        padding: 1.25rem 1.25rem 1.25rem 1.75rem;
     }
 }
