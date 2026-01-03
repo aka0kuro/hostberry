@@ -1106,6 +1106,11 @@ body:not(.light-theme) .form-select-sm {
     .status-text {
         font-size: 0.6rem;
     }
+    
+    /* Ensure system info items are well separated on small mobile */
+    .info-item-grid {
+        padding: 1rem 1rem 1rem 1.5rem;
+    }
 }
 
 @media (max-width: 576px) {
