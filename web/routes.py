@@ -334,10 +334,10 @@ async def dashboard_page(request: Request, lang: str | None = Query(default=None
                 "cpu_cores": "4"
             },
             "system_stats": {
-                "cpu_percent": 25,
-                "memory_percent": 45,
-                "disk_percent": 60,
-                "temperature": 45
+                "cpu_percent": 25 if not hasattr(request.state, 'cpu_percent') else request.state.cpu_percent,
+                "memory_percent": 45 if not hasattr(request.state, 'memory_percent') else request.state.memory_percent,
+                "disk_percent": 60 if not hasattr(request.state, 'disk_percent') else request.state.disk_percent,
+                "temperature": 45 if not hasattr(request.state, 'temperature') else request.state.temperature
             },
             "recent_activities": [
                 {"title": get_text("auth.login_success", default="Login successful", language=lang or "en"), "description": get_text("auth.user_logged_in", default="User usuario logged in", language=lang or "en"), "timestamp": get_text("time.minutes_ago", default="5 minutes ago", minutes=5, language=lang or "en")},
