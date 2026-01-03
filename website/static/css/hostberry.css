@@ -873,13 +873,13 @@ body.light-theme .text-muted {
     align-items: center;
     justify-content: center;
     width: 100%;
-    margin-bottom: 15px; /* More space between header and progress */
+    margin-bottom: 20px; /* More space between header and progress */
 }
 
 .status-icon {
     width: 56px; /* Larger icons */
     height: 56px;
-    margin-bottom: 10px; /* More space below icon */
+    margin-bottom: 15px; /* More space below icon */
 }
 
 .status-info {
