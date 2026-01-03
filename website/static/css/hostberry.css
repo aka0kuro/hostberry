@@ -12,6 +12,10 @@
 /* Base typography */
 html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
 
+/* Theme backgrounds */
+body.dark-theme { background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); color: var(--hb-text-light); }
+body.light-theme { background: #f6f7f9; color: #212529; }
+
 /* Navbar */
 .navbar { display:flex; align-items:center; padding: .5rem 1rem; }
 .navbar-dark { color: var(--hb-text-light); }
@@ -70,13 +74,35 @@ html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe
 }
 
 .navbar .container-fluid { width:100%; display:flex; align-items:center; justify-content:space-between; gap: 1rem; }
-.navbar-brand { color:#fff; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:.5rem; }
+.navbar-brand { color:#fff; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:.5rem; padding: 0; }
+.navbar-brand img { display:block; }
+.user-dropdown { padding: 0 .25rem; }
 .navbar-toggler { display:none; }
 .navbar-collapse { flex: 1 1 auto; display:flex; justify-content:center; }
 .navbar-nav { display:flex; gap:.5rem; list-style:none; padding:0; margin:0; flex-wrap: nowrap; justify-content: center; align-items: center; }
 .nav-item { margin: 0; display: flex; align-items: center; }
 .nav-link { color:#fff; text-decoration:none; padding:.5rem 1rem; border-radius:.25rem; display:inline-flex; align-items:center; gap:.35rem; white-space: nowrap; transition: all 0.3s ease; }
 .nav-link:hover { background: rgba(255,255,255,.15); transform: translateY(-1px); }
+
+/* Basic grid (Bootstrap-like) */
+.container-fluid { width: 100%; box-sizing: border-box; }
+.row { display:flex; flex-wrap:wrap; margin-left:-.75rem; margin-right:-.75rem; }
+[class*="col-"] { padding-left:.75rem; padding-right:.75rem; box-sizing:border-box; }
+
+.col-12 { width: 100%; }
+.col-6 { width: 50%; }
+
+@media (min-width: 768px) {
+  .col-md-6 { width: 50%; }
+  .col-md-8 { width: 66.6667%; }
+  .col-md-4 { width: 33.3333%; }
+}
+
+@media (min-width: 992px) {
+  .col-lg-3 { width: 25%; }
+  .col-lg-4 { width: 33.3333%; }
+  .col-lg-6 { width: 50%; }
+}
 
 /* Asegurar centrado perfecto sin romper logo/user */
 @media (min-width: 992px) {
