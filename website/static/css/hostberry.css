@@ -109,9 +109,10 @@ body.light-theme { background: #f6f7f9; color: #212529; }
     100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
 }
 
-.navbar .container-fluid { width:100%; display:flex; align-items:center; justify-content:space-between; gap: 1rem; }
+.navbar .container-fluid { width:100%; display:flex; align-items:center; justify-content:flex-start; gap: 1rem; }
 .navbar-brand { color:#fff; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:.5rem; padding: 0; }
 .navbar-brand img { display:block; }
+.navbar .d-flex.align-items-center.gap-3 { flex: 0 0 auto; }
 .user-dropdown { padding: 0; }
 .user-dropdown.nav-link { padding: 0; }
 .user-dropdown .user-avatar { 
@@ -133,7 +134,7 @@ body.light-theme { background: #f6f7f9; color: #212529; }
     align-items: center;
     justify-content: center;
 }
-.navbar-nav .nav-link i { position: relative; top: 1px; }
+.navbar-nav .nav-link i { position: relative; top: 3px; }
 .nav-link:hover { background: rgba(255,255,255,.15); transform: translateY(-1px); }
 
 /* Basic grid (Bootstrap-like) */

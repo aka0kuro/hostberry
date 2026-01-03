@@ -17,7 +17,8 @@ router = APIRouter()
 # Configurar templates
 env = Environment(
     loader=FileSystemLoader("website/templates"),
-    autoescape=select_autoescape(["html", "xml"])
+    autoescape=select_autoescape(["html", "xml"]),
+    extensions=["jinja2.ext.i18n"],
 )
 
 # Función wrapper para traducción que usa el idioma del contexto
@@ -25,8 +26,22 @@ def template_t(key: str, default: str = None, **kwargs):
     """Función de traducción para templates que usa el idioma del contexto"""
     return get_text(key, None, default, **kwargs)
 
+
+def template_gettext(message: str) -> str:
+    # Support Jinja {% trans %} and _() calls.
+    # Here, "message" is treated as a translation key; fallback is the message itself.
+    return get_text(message, default=message)
+
+
+def template_ngettext(singular: str, plural: str, n: int) -> str:
+    key = singular if n == 1 else plural
+    return get_text(key, default=key)
+
 # Asignar la función de traducción global
 env.globals["t"] = template_t
+env.globals["_"] = template_gettext
+
+env.install_gettext_callables(template_gettext, template_ngettext, newstyle=True)
 
 templates = Jinja2Templates(directory="website/templates")
 templates.env = env
