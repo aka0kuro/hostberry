@@ -779,11 +779,12 @@ body.light-theme .text-muted {
     .navbar .d-flex.align-items-center {
         justify-content: center !important;
         width: 100%;
+        gap: 15px; /* Add space between logo and user */
     }
     
-    /* Hide user text on mobile, keep only avatar */
+    /* Show username on mobile */
     .navbar .d-none.d-md-inline {
-        display: none !important;
+        display: inline !important;
     }
     
     /* Separate System Info items and prevent overlap */
