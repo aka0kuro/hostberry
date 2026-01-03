@@ -72,6 +72,7 @@ def _base_context(request: Request, current_lang: str) -> dict:
 def _render(template_name: str, request: Request, lang: str | None, extra: dict | None = None) -> HTMLResponse:
     current_lang, should_set_cookie = _resolve_language(request, lang)
     context = _base_context(request, current_lang)
+    context["current_user"] = {"username": "admin"}  # Add current_user to context
     if extra:
         context.update(extra)
     resp = templates.TemplateResponse(template_name, context)
@@ -94,17 +95,7 @@ async def root_redirect(request: Request):
 
 @router.get("/", response_class=HTMLResponse)
 async def root(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    # Simular usuario logueado (en una app real vendría del token/sesión)
-    current_user = {"username": "admin"}
-    
-    return _render(
-        "index.html",
-        request,
-        lang,
-        extra={
-            "current_user": current_user
-        }
-    )
+    return _render("index.html", request, lang)
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -144,7 +135,8 @@ async def login_page(request: Request, response: Response, lang: str | None = Qu
         "recent_activities": [
             {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
             {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
-        ]
+        ],
+        "current_user": {"username": "admin"}  # Add current_user to context
     }
     resp = templates.TemplateResponse("login.html", context)
     if lang:
@@ -285,41 +277,33 @@ async def about_page(request: Request, lang: str | None = Query(default=None)) -
 
 @router.get("/first-login", response_class=HTMLResponse)
 async def first_login_page(request: Request, response: Response, lang: str | None = Query(default=None)) -> HTMLResponse:
-    # Simular usuario logueado (en una app real vendría del token/sesión)
-    current_user = {"username": "admin"}
-    
-    context = _base_context(request, lang or request.cookies.get("lang", "en"))
-    context.update({
-        "current_user": current_user,
-        "services": {
-            "hostberry": "running",
-            "nginx": "running",
-            "ssh": "running",
-            "ufw": "running",
-            "fail2ban": "running"
-        },
-        "recent_activities": [
-            {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
-            {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
-        ]
-    })
-    resp = templates.TemplateResponse("first_login.html", context)
-    if lang:
-        resp.set_cookie("lang", lang, max_age=60*60*24*365)
-    return resp
+    return _render(
+        "first_login.html",
+        request,
+        lang,
+        extra={
+            "services": {
+                "hostberry": "running",
+                "nginx": "running",
+                "ssh": "running",
+                "ufw": "running",
+                "fail2ban": "running"
+            },
+            "recent_activities": [
+                {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
+                {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
+            ]
+        }
+    )
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    # Simular usuario logueado (en una app real vendría del token/sesión)
-    current_user = {"username": "admin"}
-    
     return _render(
         "dashboard.html",
         request,
         lang,
         extra={
-            "current_user": current_user,
             "system_info": {
                 "hostname": "hostberry",
                 "os_version": "Raspberry Pi OS",
