@@ -114,7 +114,12 @@ body.light-theme { background: #f6f7f9; color: #212529; }
 .navbar-brand img { display:block; }
 .user-dropdown { padding: 0; }
 .user-dropdown.nav-link { padding: 0; }
-.user-dropdown .user-avatar { flex: 0 0 auto; margin-top: 2px; }
+.user-dropdown .user-avatar { 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0; 
+}
 .navbar-toggler { display:none; border: none; padding: 0.5rem; border-radius: 8px; transition: background 0.3s ease; }
 .navbar-toggler:focus { box-shadow: none; }
 .navbar-toggler:hover { background: rgba(255, 255, 255, 0.1); }
@@ -356,7 +361,7 @@ body.light-theme { background: #f6f7f9; color: #212529; }
 .bi-shield-lock::before {
     background-color: currentColor;
     -webkit-mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath d='M5.072 11.293a.5.5 0 0 0 .586.598c.49-.07.95-.295 1.353-.637a5.002 5.002 0 0 0 5.343.34c.143.076.293.142.449.196.49.173.962.295 1.405.352a.5.5 0 0 0 .546-.577 6.132 6.132 0 0 1-.027-.225c-.012-.132-.016-.27-.016-.412 0-1.802.73-3.056 1.258-3.793.428-.596.537-1.125.537-1.42 0-.256-.057-.468-.135-.618-.119-.228-.31-.406-.604-.516a.498.498 0 0 0-.583.172c-.173.228-.403.546-.666.903-.497.669-1.077 1.45-1.554 1.45-.609 0-1.01-.26-1.178-.718-.146-.398-.073-.837.159-1.282.164-.316.389-.606.635-.85.258-.255.51-.433.684-.526a.5.5 0 0 0 .153-.787c-.443-.443-1.07-.63-1.782-.63-.918 0-1.92.383-2.924 1.257-.04.035-.08.07-.12.106-.884.778-1.57 1.57-1.848 1.956-.375.525-.262 1.12.158 1.54.343.342.759.507 1.155.507.45 0 .841-.212 1.056-.47.164-.196.223-.423.223-.623 0-.106-.017-.206-.048-.298-.088-.26-.35-.747-.648-1.076-.118-.13-.236-.24-.352-.33a.499.499 0 0 0-.53-.087c-.12.046-.233.104-.337.172-.897.585-1.57 1.62-1.57 2.778 0 .416.037.828.109 1.229z'/%3e%3c/svg%3e");
-    mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath d='M3 8.812a4.999 4.999 0 0 0 2.578-4.375l-.485-.874A6 6 0 1 0 11 3.616l-.501.865A5 5 0 1 1 3 8.812z'/%3e%3c/svg%3e");
+    mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath d='M3 8.812a4.999 4.999 0 0 1 2.578-4.375l-.485-.874A6 6 0 1 0 11 3.616l-.501.865A5 5 0 1 1 3 8.812z'/%3e%3c/svg%3e");
 }
 
 .bi-cpu::before {
@@ -792,12 +797,6 @@ body.light-theme .text-muted {
     }
 }
 
-/* System Info Icons Spacing */
-.info-item-grid i {
-    margin-right: 8px;
-    margin-left: 5px; /* Add spacing from left border */
-}
-
 /* Mobile Layout Adjustments */
 @media (max-width: 768px) {
     /* Enlarge and separate Network and Services sections */
@@ -817,4 +816,25 @@ body.light-theme .text-muted {
     .system-info-card .row {
         margin-bottom: 10px; /* Additional spacing */
     }
+}
+
+/* Center User Icon in Navbar */
+.user-dropdown .user-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0; /* Reset any previous margin-top */
+}
+
+/* Center System Info Elements */
+.info-item-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.system-info-card .col-lg-2, .system-info-card .col-md-4, .system-info-card .col-6 {
+    display: flex;
+    justify-content: center;
 }

@@ -95,7 +95,17 @@ async def root_redirect(request: Request):
 
 @router.get("/", response_class=HTMLResponse)
 async def root(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    return _render("index.html", request, lang)
+    # Simular usuario logueado (en una app real vendría del token/sesión)
+    current_user = {"username": "admin"}  # Reemplazar con lógica real de autenticación
+    
+    return _render(
+        "index.html",
+        request,
+        lang,
+        extra={
+            "current_user": current_user
+        }
+    )
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -276,34 +286,42 @@ async def about_page(request: Request, lang: str | None = Query(default=None)) -
 
 
 @router.get("/first-login", response_class=HTMLResponse)
-async def first_login_page(request: Request, response: Response, lang: str | None = Query(default=None)) -> HTMLResponse:
-    return _render(
-        "first_login.html",
-        request,
-        lang,
-        extra={
-            "services": {
-                "hostberry": "running",
-                "nginx": "running",
-                "ssh": "running",
-                "ufw": "running",
-                "fail2ban": "running"
-            },
-            "recent_activities": [
-                {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
-                {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
-            ]
-        }
-    )
+async def first_login(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    # Simular usuario logueado (en una app real vendría del token/sesión)
+    current_user = {"username": "admin"}  # Reemplazar con lógica real de autenticación
+    
+    context = _base_context(request, lang or request.cookies.get("lang", "en"))
+    context.update({
+        "current_user": current_user,
+        "services": {
+            "hostberry": "running",
+            "nginx": "running",
+            "ssh": "running",
+            "ufw": "running",
+            "fail2ban": "running"
+        },
+        "recent_activities": [
+            {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
+            {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
+        ]
+    })
+    resp = templates.TemplateResponse("first_login.html", context)
+    if lang:
+        resp.set_cookie("lang", lang, max_age=60*60*24*365)
+    return resp
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    # Simular usuario logueado (en una app real vendría del token/sesión)
+    current_user = {"username": "admin"}  # Reemplazar con lógica real de autenticación
+    
     return _render(
         "dashboard.html",
         request,
         lang,
         extra={
+            "current_user": current_user,
             "system_info": {
                 "hostname": "hostberry",
                 "os_version": "Raspberry Pi OS",
