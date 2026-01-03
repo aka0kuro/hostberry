@@ -137,8 +137,6 @@
     "network": "Red",
     "general": "General",
     "healthy": "Saludable",
-    "running": "Ejecutándose",
-    "stopped": "Detenido",
     "warning": "Advertencia",
     "log_loaded": "Dashboard cargado correctamente",
     "log_services_ok": "Todos los servicios funcionando correctamente",
