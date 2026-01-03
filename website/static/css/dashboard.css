@@ -282,29 +282,62 @@
     padding: 1.5rem;
 }
 
-/* System Information */
-.info-item {
+/* System Info Grid */
+.info-item-grid {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 1rem;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    height: 100%;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-direction: column;
+    justify-content: center;
 }
 
-.info-item:last-child {
-    border-bottom: none;
+.info-item-grid:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
 }
 
-.info-label {
+.info-item-grid .info-label {
+    font-size: 0.75rem;
     color: rgba(255, 255, 255, 0.7);
-    font-size: 0.9rem;
-    font-weight: 500;
+    margin-bottom: 0.25rem;
 }
 
-.info-value {
-    color: #fff;
-    font-size: 0.9rem;
+.info-item-grid .info-value {
+    font-size: 1rem;
     font-weight: 600;
+    color: #fff;
+}
+
+/* Light theme for grid */
+body.light-theme .info-item-grid {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .info-item-grid:hover {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+body.light-theme .info-item-grid .info-label {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+body.light-theme .info-item-grid .info-value {
+    color: #333;
+}
+
+/* Services & Network - Estrechar */
+.services-card, .network-card, .activity-card, .logs-card, .actions-card {
+    padding: 0; /* Remove extra padding from container */
+}
+
+.services-card-body, .network-card-body, .activity-card-body, .logs-card-body, .actions-card-body {
+    padding: 1rem;
 }
 
 /* Services */
