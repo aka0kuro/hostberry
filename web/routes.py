@@ -15,8 +15,14 @@ env = Environment(
     loader=FileSystemLoader("website/templates"),
     autoescape=select_autoescape(["html", "xml"])
 )
+
+# Función wrapper para traducción que usa el idioma del contexto
+def template_t(key: str, default: str = None, **kwargs):
+    """Función de traducción para templates que usa el idioma del contexto"""
+    return get_text(key, None, default, **kwargs)
+
 # Asignar la función de traducción global
-env.globals["t"] = get_text
+env.globals["t"] = template_t
 
 templates = Jinja2Templates(directory="website/templates")
 templates.env = env
