@@ -133,6 +133,7 @@ body.light-theme { background: #f6f7f9; color: #212529; }
     align-items: center;
     justify-content: center;
 }
+.navbar-nav .nav-link i { position: relative; top: 1px; }
 .nav-link:hover { background: rgba(255,255,255,.15); transform: translateY(-1px); }
 
 /* Basic grid (Bootstrap-like) */
@@ -167,8 +168,7 @@ body.light-theme { background: #f6f7f9; color: #212529; }
     /* Keep brand + user next to each other on mobile/tablet */
     .d-flex.align-items-center.gap-3 { flex: 0 0 auto; }
 
-    /* Hide username to keep the header compact */
-    #hb-current-username { display: none !important; }
+    #hb-current-username { display: inline !important; font-size: .9rem; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     
     /* Navbar Collapse Logic */
     .navbar-collapse { 
