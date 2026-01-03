@@ -19,6 +19,10 @@
     {% block navbar %}
     <nav class="navbar navbar-expand-lg navbar-dark glass-navbar sticky-top mb-4">
         <div class="container-fluid px-4">
+            <button class="navbar-toggler border-0 me-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
             <div class="d-flex align-items-center gap-3">
                 <a class="navbar-brand d-flex align-items-center" href="/dashboard">
                     <img src="/static/hostberry.png" alt="HostBerry" style="height: 32px;">
@@ -30,7 +34,7 @@
                         <div class="user-avatar bg-white text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
                             <i class="bi bi-person-fill"></i>
                         </div>
-                        <span class="d-none d-md-inline ms-2">{{ current_user.username if current_user else 'User' }}</span>
+                        <span class="d-none d-md-inline ms-2">{{ current_user.username if current_user else t('common.user', 'User') }}</span>
                     </a>
                     <ul class="dropdown-menu border-0 shadow-sm rounded-3 mt-2">
                         <li><div class="dropdown-header text-muted">{{ t('navigation.account', 'Account') }}</div></li>
