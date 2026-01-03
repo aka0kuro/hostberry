@@ -833,6 +833,9 @@ body.light-theme .text-muted {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    min-height: 180px; /* Make cards taller */
+    padding: 20px; /* Add more padding */
+    border-radius: 12px; /* Slightly larger border radius */
 }
 
 .status-card-header {
@@ -841,6 +844,13 @@ body.light-theme .text-muted {
     align-items: center;
     justify-content: center;
     width: 100%;
+    margin-bottom: 15px; /* More space between header and progress */
+}
+
+.status-icon {
+    width: 48px; /* Larger icons */
+    height: 48px;
+    margin-bottom: 10px; /* More space below icon */
 }
 
 .status-info {
@@ -850,17 +860,27 @@ body.light-theme .text-muted {
 
 .status-info h6 {
     text-align: center;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    font-size: 14px; /* Slightly larger label font */
+    font-weight: 600;
 }
 
 .status-info h3 {
     text-align: center;
     margin-bottom: 0;
+    font-size: 24px; /* Larger value font */
+    font-weight: 700;
 }
 
 .status-footer {
     text-align: center;
     width: 100%;
+    margin-top: 15px; /* More space above footer */
+}
+
+.status-footer .status-text {
+    font-size: 13px; /* Slightly larger status text */
+    font-weight: 500;
 }
 
 /* Force center alignment for system status cards row */

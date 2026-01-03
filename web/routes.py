@@ -44,6 +44,7 @@ def _base_context(request: Request, current_lang: str) -> dict:
         "request": request,
         "language": current_lang,
         "translations": get_html_translations(current_lang),
+        "current_user": {"username": "usuario"},  # Add current_user to base context
         "system_stats": {
             "cpu_percent": 25,
             "memory_percent": 45,
@@ -122,7 +123,7 @@ async def login_page(request: Request, response: Response, lang: str | None = Qu
     current_lang = i18n.get_current_language()
     
     context = {"request": request, "language": current_lang,
-        "current_user": {"username": "usuario"},  # Add current_user to login page
+        "current_user": {"username": "usuario"},  # Ensure current_user is available
         "system_stats": {
             "cpu_percent": 25,
             "memory_percent": 45,
