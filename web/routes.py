@@ -318,6 +318,20 @@ async def dashboard_page(request: Request, lang: str | None = Query(default=None
         request,
         lang,
         extra={
+            "system_info": {
+                "hostname": "hostberry",
+                "os_version": "Raspberry Pi OS",
+                "kernel_version": "Linux 6.8.0",
+                "architecture": "armv7l",
+                "uptime": "2 días, 5 horas",
+                "cpu_cores": "4"
+            },
+            "system_stats": {
+                "cpu_percent": 25,
+                "memory_percent": 45,
+                "disk_percent": 60,
+                "temperature": 45
+            },
             "recent_activities": [
                 {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
                 {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
