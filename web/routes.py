@@ -40,9 +40,18 @@ def template_ngettext(singular: str, plural: str, n: int) -> str:
     key = singular if n == 1 else plural
     return get_text(key, default=key)
 
+def datetimeformat(value, format='%Y-%m-%d %H:%M:%S'):
+    """Format a datetime object"""
+    if value is None:
+        return ''
+    if hasattr(value, 'strftime'):
+        return value.strftime(format)
+    return str(value)
+
 # Asignar la función de traducción global
 env.globals["t"] = template_t
 env.globals["_"] = template_gettext
+env.filters['datetimeformat'] = datetimeformat
 
 env.install_gettext_callables(template_gettext, template_ngettext, newstyle=True)
 
