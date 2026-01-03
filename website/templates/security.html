@@ -1,12 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}{% trans %}Security Center{% endtrans %}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{% trans %}Security Center{% endtrans %}</h1>
+<div class="system-page">
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <img src="/static/hostberry.png" alt="hostberry" class="logo-image" />
+            <h1>HostBerry</h1>
+            <p>{% trans %}Security Center{% endtrans %}</p>
+        </div>
         <div>
             <a href="/security" class="btn btn-primary btn-sm">
                 <i class="bi bi-journal-text me-1"></i> {% trans %}View Logs{% endtrans %}
