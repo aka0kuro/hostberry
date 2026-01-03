@@ -807,7 +807,6 @@
   },
   "messages": {
     "operation_successful": "Operación exitosa",
-    "operation_failed": "Operación fallida",
     "changes_saved": "Cambios guardados",
     "changes_not_saved": "Cambios no guardados",
     "data_loaded": "Datos cargados",
