@@ -73,7 +73,7 @@
     background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(20px);
     border-radius: 20px;
-    padding: 1.2rem;
+    padding: 0;
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 
         0 8px 32px rgba(0, 0, 0, 0.3),
@@ -83,7 +83,9 @@
     height: 100%;
     position: relative;
     overflow: hidden;
-    min-height: 140px;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
 }
 
 .status-card::before {
@@ -281,6 +283,9 @@
 
 .info-card-body, .services-card-body, .network-card-body, .activity-card-body, .logs-card-body, .actions-card-body {
     padding: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 /* System Info Grid */
@@ -335,10 +340,14 @@ body.light-theme .info-item-grid .info-value {
 /* Services & Network - Estrechar */
 .services-card, .network-card, .activity-card, .logs-card, .actions-card {
     padding: 0; /* Remove extra padding from container */
+    min-height: 400px;
 }
 
 .services-card-body, .network-card-body, .activity-card-body, .logs-card-body, .actions-card-body {
     padding: 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Services */
