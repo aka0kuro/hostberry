@@ -206,7 +206,7 @@ async function updateLogs() {
             level = 'all';
         }
         
-        const response = await HostBerry.apiRequest(`/api/v1/system/logs?level=${encodeURIComponent(level)}&limit=10`);
+        const response = await HostBerry.apiRequest(`/api/v1/system/logs?level=${encodeURIComponent(level)}&limit=20`);
         
         if (response.ok) {
             const data = await response.json();
