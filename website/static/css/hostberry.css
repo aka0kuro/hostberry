@@ -932,7 +932,7 @@ body.light-theme .text-muted {
 .status-icon {
     width: 56px; /* Larger icons */
     height: 56px;
-    margin-bottom: 8px; /* Less space below icon, closer to text */
+    margin-bottom: 25px; /* More space below icon, move lower */
 }
 
 .status-info {
