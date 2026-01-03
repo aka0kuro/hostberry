@@ -130,8 +130,6 @@
     "system_diagnostics": "System Diagnostics",
     "programs_status": "Service Status",
     "system_logs": "System Logs",
-    "running": "Active",
-    "stopped": "Stopped",
     "cpu": "CPU",
     "memory": "Memory",
     "storage": "Storage",
