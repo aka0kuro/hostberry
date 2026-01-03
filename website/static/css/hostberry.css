@@ -872,6 +872,16 @@ body.light-theme .text-muted {
 
 /* Tablet Layout Adjustments */
 @media (min-width: 769px) and (max-width: 991px) {
+    /* Center navbar content on tablet */
+    .navbar .container-fluid {
+        justify-content: center !important;
+    }
+    
+    .navbar .d-flex.align-items-center {
+        justify-content: center !important;
+        width: 100%;
+    }
+    
     /* Add separation for System Status cards on tablet */
     .status-cards-row .col-md-6 {
         margin-top: 15px; /* Add separation on top */
