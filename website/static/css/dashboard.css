@@ -734,12 +734,76 @@ body.light-theme .actions-card {
     background: rgba(255, 255, 255, 0.95);
     border: 1px solid rgba(0, 0, 0, 0.1);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    color: #212529;
 }
 
-body.light-theme .dashboard-title,
-body.light-theme .dashboard-subtitle,
-body.light-theme .dashboard-time {
+body.light-theme .dashboard-title {
     color: #212529;
+}
+
+body.light-theme .dashboard-subtitle {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+body.light-theme .dashboard-time {
+    color: rgba(0, 0, 0, 0.8);
+}
+
+body.light-theme .status-info h3,
+body.light-theme .status-info h6 {
+    color: #212529;
+}
+
+body.light-theme .status-text {
+    color: #495057;
+}
+
+body.light-theme .info-card-title,
+body.light-theme .services-card-title,
+body.light-theme .network-card-title,
+body.light-theme .activity-card-title,
+body.light-theme .logs-card-title,
+body.light-theme .actions-card-title {
+    color: #212529;
+}
+
+body.light-theme .info-item-grid {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .info-item-grid:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .info-item-grid .info-label {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+body.light-theme .info-item-grid .info-value {
+    color: #333;
+}
+
+body.light-theme .service-item,
+body.light-theme .network-interface {
+    color: #212529;
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .activity-item,
+body.light-theme .log-item {
+    color: #212529;
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .action-btn {
+    background: rgba(0, 0, 0, 0.05);
+    color: #212529;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .action-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
 }
 
 body.light-theme .status-info h6,
