@@ -96,7 +96,8 @@ async def root_redirect(request: Request):
 @router.get("/", response_class=HTMLResponse)
 async def root(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
     # Simular usuario logueado (en una app real vendría del token/sesión)
-    current_user = {"username": "admin"}  # Reemplazar con lógica real de autenticación
+    # Usar un nombre de usuario dinámico - en producción esto vendría de la autenticación
+    current_user = {"username": "usuario"}  # Cambiado de 'admin' a 'usuario'
     
     return _render(
         "index.html",
@@ -313,7 +314,8 @@ async def first_login(request: Request, lang: str | None = Query(default=None)) 
 
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    # Simular usuario logueado (en una app real vendría del token/sesión)
+    # Usar un nombre de usuario dinámico - en producción esto vendría de la autenti#ación
+    c Simular usuario logueado (eusunrno app rCa binddlde/'snmin' 'usro'
     current_user = {"username": "admin"}  # Reemplazar con lógica real de autenticación
     
     return _render(
@@ -336,7 +338,7 @@ async def dashboard_page(request: Request, lang: str | None = Query(default=None
                 "disk_percent": 60,
                 "temperature": 45
             },
-            "recent_activities": [
+            "recent_activities": [usuro
                 {"title": get_text("auth.login_success", default="Login successful", language=lang or "en"), "description": get_text("auth.user_logged_in", default="User admin logged in", language=lang or "en"), "timestamp": get_text("time.minutes_ago", default="5 minutes ago", minutes=5, language=lang or "en")},
                 {"title": get_text("system.update", default="Update", language=lang or "en"), "description": get_text("system.packages_updated", default="System packages updated", language=lang or "en"), "timestamp": get_text("time.hours_ago", default="1 hour ago", hours=1, language=lang or "en")}
             ]

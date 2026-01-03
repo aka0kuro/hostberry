@@ -832,9 +832,30 @@ body.light-theme .text-muted {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    justify-content: center;
+}
+
+.info-item-grid .info-label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.info-item-grid .info-value {
+    font-weight: 500;
+    color: #6c757d;
 }
 
 .system-info-card .col-lg-2, .system-info-card .col-md-4, .system-info-card .col-6 {
     display: flex;
     justify-content: center;
+}
+
+/* Center system info icons with text */
+.info-item-grid i {
+    margin-right: 8px;
+    margin-left: 0;
+    vertical-align: middle;
 }
