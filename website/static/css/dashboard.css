@@ -3,6 +3,13 @@
     padding: 2rem 1rem;
     max-width: 1200px;
     margin: 0 auto;
+    gap: 2rem;
+}
+
+.row {
+    margin-bottom: 1rem;
+    --bs-gutter-x: 2rem;
+    --bs-gutter-y: 2rem;
 }
 
 /* Header Section - Efecto Cristal tipo Alas */
@@ -18,7 +25,12 @@
         inset 0 -1px 0 rgba(255, 255, 255, 0.05);
     position: relative;
     overflow: hidden;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .dashboard-header::before {
@@ -645,6 +657,9 @@ body.light-theme .info-item-grid .info-value {
 .log-message {
     color: rgba(255, 255, 255, 0.8);
     flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Quick Actions */
@@ -658,7 +673,7 @@ body.light-theme .info-item-grid .info-value {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 1.5rem 1rem;
+    padding: 1rem 0.5rem;
     border: none;
     border-radius: 20px;
     background: rgba(255, 255, 255, 0.08);
@@ -673,6 +688,8 @@ body.light-theme .info-item-grid .info-value {
     box-shadow: 
         0 4px 16px rgba(0, 0, 0, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    height: 100%;
+    justify-content: center;
 }
 
 .action-btn::before {
@@ -709,8 +726,8 @@ body.light-theme .info-item-grid .info-value {
 }
 
 .action-btn i {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .action-btn span {
