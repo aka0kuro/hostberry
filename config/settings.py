@@ -177,14 +177,18 @@ class Settings(BaseSettings):
         if not self.secret_key:
             self.secret_key = os.urandom(32).hex()
         
-        # Crear directorios necesarios usando rutas del sistema
+        # Crear directorios necesarios usando rutas del sistema (solo si no existen)
         logs_dir = "/var/log/hostberry"
         uploads_dir = "/var/lib/hostberry/uploads"
         instance_dir = "/var/lib/hostberry/instance"
         
-        os.makedirs(logs_dir, exist_ok=True)
-        os.makedirs(uploads_dir, exist_ok=True)
-        os.makedirs(instance_dir, exist_ok=True)
+        # Optimización: solo crear si no existen (evita I/O innecesario)
+        if not os.path.exists(logs_dir):
+            os.makedirs(logs_dir, exist_ok=True)
+        if not os.path.exists(uploads_dir):
+            os.makedirs(uploads_dir, exist_ok=True)
+        if not os.path.exists(instance_dir):
+            os.makedirs(instance_dir, exist_ok=True)
         
         # Establecer rutas de archivos dinámicamente
         if not self.audit_log_file:
