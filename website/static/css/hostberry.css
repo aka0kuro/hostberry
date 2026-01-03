@@ -1072,3 +1072,16 @@ body.light-theme .text-muted {
     background: transparent !important;
     background-color: transparent !important;
 }
+
+/* Make services and logs cards shorter */
+.card:nth-child(3) .card-body,
+.card:nth-child(4) .card-body {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+}
+
+/* Reduce minimum height for specific cards */
+.system-page .card.h-100.glass-card:nth-child(3),
+.system-page .card.h-100.glass-card:nth-child(4) {
+    min-height: 200px !important;
+}
