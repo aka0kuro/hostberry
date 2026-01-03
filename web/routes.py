@@ -44,7 +44,7 @@ def _base_context(request: Request, current_lang: str) -> dict:
         "request": request,
         "language": current_lang,
         "translations": get_html_translations(current_lang),
-        "current_user": {"username": "juanperez"},  # Use a realistic username
+        "current_user": {"username": "usuario"},  # Add current_user to base context
         "system_stats": {
             "cpu_percent": 25,
             "memory_percent": 45,
@@ -98,7 +98,7 @@ async def root_redirect(request: Request):
 async def root(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
     # Simular usuario logueado (en una app real vendría del token/sesión)
     # Usar un nombre de usuario dinámico - en producción esto vendría de la autenticación
-    current_user = {"username": "juanperez"}  # Cambiado a un nombre realista
+    current_user = {"username": "usuario"}  # Cambiado de 'admin' a 'usuario'
     
     return _render(
         "index.html",
@@ -318,7 +318,7 @@ async def first_login(request: Request, lang: str | None = Query(default=None)) 
 async def dashboard_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
     # Simular usuario logueado (en una app real vendría del token/sesión)
     # Usar un nombre de usuario dinámico - en producción esto vendría de la autenticación
-    current_user = {"username": "juanperez"}  # Cambiado a un nombre realista
+    current_user = {"username": "usuario"}  # Cambiado de 'admin' a 'usuario'
     
     return _render(
         "dashboard.html",

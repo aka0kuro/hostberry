@@ -844,24 +844,6 @@ body.light-theme .text-muted {
     min-height: 180px; /* Make cards taller */
     padding: 20px; /* Add more padding */
     border-radius: 12px; /* Slightly larger border radius */
-    width: 100%; /* Ensure full width of container */
-    max-width: none; /* Remove max-width restriction */
-}
-
-/* Make status card containers wider */
-.row.mb-4 .col-lg-3 {
-    flex: 0 0 30%; /* Make columns wider instead of 25% */
-    max-width: 30%;
-}
-
-.row.mb-4 .col-md-6 {
-    flex: 0 0 48%; /* Make mobile columns wider */
-    max-width: 48%;
-}
-
-.row.mb-4 .col-6 {
-    flex: 0 0 48%; /* Make small columns wider */
-    max-width: 48%;
 }
 
 .status-card-header {
