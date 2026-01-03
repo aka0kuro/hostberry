@@ -273,8 +273,6 @@
     "memory_usage": "Uso de Memoria",
     "disk_usage": "Uso de Disco",
     "temperature": "Temperatura",
-    "services": "Servicios",
-    "system_logs": "Registros del Sistema",
     "error_logs": "Registros de Error",
     "access_logs": "Registros de Acceso",
     "security_logs": "Registros de Seguridad",
