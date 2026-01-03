@@ -169,7 +169,8 @@ body.light-theme { background: #f6f7f9; color: #212529; }
 .dropdown-menu { 
     position:absolute; 
     top:100%; 
-    left:0;
+    left:0 !important;
+    right: auto !important;
     min-width: 12rem; 
     background: rgba(31, 41, 55, 0.95); 
     backdrop-filter: blur(20px);
@@ -190,6 +191,13 @@ body.light-theme { background: #f6f7f9; color: #212529; }
     margin: 0;
     padding: 0;
     padding-left: 0 !important;
+}
+.dropdown-header {
+    display: block;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.6);
+    white-space: nowrap;
 }
 .dropdown.show .dropdown-menu { display:block; }
 .dropdown-item { 
