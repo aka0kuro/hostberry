@@ -103,9 +103,10 @@ async def lifespan(app: FastAPI):
         log_system_event("app_shutdown", "Deteniendo HostBerry FastAPI")
         cache.clear()
         
-        # Vacuum de base de datos solo si es necesario
-        if getattr(settings, 'auto_vacuum_db', True):
-            await db.vacuum_database()
+        # Vacuum de base de datos deshabilitado en cierre para acelerar shutdown
+        # Se debe ejecutar periódicamente (ej: una vez al día) en lugar de cada cierre
+        # if getattr(settings, 'auto_vacuum_db', True):
+        #     await db.vacuum_database()
             
     except Exception as e:
         logger.error(f"Error durante el cierre: {e}")
