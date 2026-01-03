@@ -316,32 +316,69 @@ async def first_login(request: Request, lang: str | None = Query(default=None)) 
 async def dashboard_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
     # Simular usuario logueado (en una app real vendría del token/sesión)
     # Usar un nombre de usuario dinámico - en producción esto vendría de la autenticación
-    current_user = {"username": "usuario"}  # Cambiado de 'admin' a 'usuario'
+    current_user = {"username": "admin"}  # Reemplazar con lógica real de autenticación
     
+    current_lang, _ = _resolve_language(request, lang)
     return _render(
         "dashboard.html",
         request,
-        lang,
+        current_lang,
         extra={
             "current_user": current_user,
+            "system_stats": {
+                "cpu_percent": 25,
+                "memory_percent": 45,
+                "disk_percent": 60,
+                "temperature": 45,
+            },
+            "services": {
+                "hostberry": "running",
+                "nginx": "running",
+                "ssh": "running",
+                "ufw": "running",
+                "fail2ban": "running",
+                "wifi": "running",
+            },
+            "network_status": {
+                "eth0": {"status": "connected", "ip": "192.168.1.100", "gateway": "192.168.1.1"},
+                "wlan0": {"status": "connected", "ip": "192.168.1.101", "ssid": "HomeNetwork", "signal": 85},
+            },
+            "recent_activity": [],
+            "system_health": {
+                "overall": "healthy",
+                "cpu": "healthy",
+                "memory": "healthy",
+                "disk": "healthy",
+            },
+        },
+    )
+
+
+@router.get("/monitoring", response_class=HTMLResponse)
+async def monitoring_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    current_lang, _ = _resolve_language(request, lang)
+    return _render(
+        "monitoring.html",
+        request,
+        current_lang,
+        extra={
             "system_info": {
                 "hostname": "hostberry",
                 "os_version": "Raspberry Pi OS",
                 "kernel_version": "Linux 6.8.0",
                 "architecture": "armv7l",
-                "uptime": get_text("time.days_hours", default="2 days, 5 hours", days=2, hours=5, language=lang or "en"),
-                "cpu_cores": "4"
+                "processor": "ARM Cortex-A53",
+                "uptime": "2 days, 5 hours",
+                "load_average": "0.25, 0.30, 0.35",
+                "cpu_cores": "4",
             },
             "system_stats": {
-                "cpu_percent": 25 if not hasattr(request.state, 'cpu_percent') else request.state.cpu_percent,
-                "memory_percent": 45 if not hasattr(request.state, 'memory_percent') else request.state.memory_percent,
-                "disk_percent": 60 if not hasattr(request.state, 'disk_percent') else request.state.disk_percent,
-                "temperature": 45 if not hasattr(request.state, 'temperature') else request.state.temperature
+                "cpu_percent": 25,
+                "memory_percent": 45,
+                "disk_percent": 60,
+                "temperature": 45,
             },
-            "recent_activities": [
-                {"title": get_text("auth.login_success", default="Login successful", language=lang or "en"), "description": get_text("auth.user_logged_in", default="User usuario logged in", language=lang or "en"), "timestamp": get_text("time.minutes_ago", default="5 minutes ago", minutes=5, language=lang or "en")},
-                {"title": get_text("system.update", default="Update", language=lang or "en"), "description": get_text("system.packages_updated", default="System packages updated", language=lang or "en"), "timestamp": get_text("time.hours_ago", default="1 hour ago", hours=1, language=lang or "en")}
-            ]
+        },
         }
     )
 
