@@ -243,8 +243,8 @@ async function updateRecentActivity() {
     try {
         const response = await fetch('/api/v1/system/activity?limit=5');
         if (response.ok) {
-            const activities = await response.json();
-            renderActivities(activities);
+            const data = await response.json();
+            renderActivities(data.activities);
         }
     } catch (error) {
         console.error('Error updating recent activity:', error);
