@@ -738,6 +738,106 @@ body.light-theme .form-select-sm {
     color: #212529;
 }
 
+/* Dark Theme - Asegurar que funcione correctamente */
+body.dark-theme,
+body:not(.light-theme) {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+
+body.dark-theme .dashboard-header,
+body:not(.light-theme) .dashboard-header,
+body.dark-theme .status-card,
+body:not(.light-theme) .status-card,
+body.dark-theme .info-card,
+body:not(.light-theme) .info-card,
+body.dark-theme .services-card,
+body:not(.light-theme) .services-card,
+body.dark-theme .network-card,
+body:not(.light-theme) .network-card,
+body.dark-theme .activity-card,
+body:not(.light-theme) .activity-card,
+body.dark-theme .logs-card,
+body:not(.light-theme) .logs-card,
+body.dark-theme .actions-card,
+body:not(.light-theme) .actions-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+body.dark-theme .dashboard-title,
+body:not(.light-theme) .dashboard-title,
+body.dark-theme .dashboard-subtitle,
+body:not(.light-theme) .dashboard-subtitle,
+body.dark-theme .dashboard-time,
+body:not(.light-theme) .dashboard-time {
+    color: #fff;
+}
+
+body.dark-theme .status-info h6,
+body:not(.light-theme) .status-info h6,
+body.dark-theme .info-label,
+body:not(.light-theme) .info-label,
+body.dark-theme .service-name,
+body:not(.light-theme) .service-name,
+body.dark-theme .network-label,
+body:not(.light-theme) .network-label,
+body.dark-theme .activity-content h6,
+body:not(.light-theme) .activity-content h6,
+body.dark-theme .activity-content p,
+body:not(.light-theme) .activity-content p,
+body.dark-theme .log-message,
+body:not(.light-theme) .log-message {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+body.dark-theme .status-info h3,
+body:not(.light-theme) .status-info h3,
+body.dark-theme .info-value,
+body:not(.light-theme) .info-value,
+body.dark-theme .network-value,
+body:not(.light-theme) .network-value,
+body.dark-theme .activity-time,
+body:not(.light-theme) .activity-time {
+    color: #fff;
+}
+
+body.dark-theme .info-card-title,
+body:not(.light-theme) .info-card-title,
+body.dark-theme .services-card-title,
+body:not(.light-theme) .services-card-title,
+body.dark-theme .network-card-title,
+body:not(.light-theme) .network-card-title,
+body.dark-theme .activity-card-title,
+body:not(.light-theme) .activity-card-title,
+body.dark-theme .logs-card-title,
+body:not(.light-theme) .logs-card-title,
+body.dark-theme .actions-card-title,
+body:not(.light-theme) .actions-card-title {
+    color: #fff;
+}
+
+body.dark-theme .progress,
+body:not(.light-theme) .progress {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-theme .action-btn,
+body:not(.light-theme) .action-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+body.dark-theme .form-select-sm,
+body:not(.light-theme) .form-select-sm {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
 /* Scrollbar Styling */
 .activity-list::-webkit-scrollbar,
 .logs-container::-webkit-scrollbar {
