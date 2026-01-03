@@ -1,0 +1,437 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header Section -->
+    <div class="dashboard-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="dashboard-title">
+                    <i class="bi bi-speedometer2 me-2"></i>
+                    {{ t('navigation.dashboard', 'Dashboard') }}
+                </h1>
+                <p class="dashboard-subtitle">{{ t('dashboard.welcome', 'Bienvenido a HostBerry') }}</p>
+            </div>
+            <div class="col-md-6 text-end">
+                <div class="dashboard-time">
+                    <i class="bi bi-clock me-1"></i>
+                    <span id="currentTime">--:--:--</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="status-card cpu-card">
+                <div class="status-card-header">
+                    <div class="status-icon cpu-icon">
+                        <i class="bi bi-cpu"></i>
+                    </div>
+                    <div class="status-info">
+                        <h6>{{ t('system.cpu_usage', 'CPU') }}</h6>
+                        <h3>{{ system_stats.cpu_percent | default(25) }}%</h3>
+                    </div>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar cpu-progress" style="width: {{ system_stats.cpu_percent | default(25) }}%"></div>
+                </div>
+                <div class="status-footer">
+                    <span class="status-text">{{ t('system.healthy', 'Saludable') }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="status-card memory-card">
+                <div class="status-card-header">
+                    <div class="status-icon memory-icon">
+                        <i class="bi bi-memory"></i>
+                    </div>
+                    <div class="status-info">
+                        <h6>{{ t('system.memory_usage', 'Memoria') }}</h6>
+                        <h3>{{ system_stats.memory_percent | default(45) }}%</h3>
+                    </div>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar memory-progress" style="width: {{ system_stats.memory_percent | default(45) }}%"></div>
+                </div>
+                <div class="status-footer">
+                    <span class="status-text">{{ t('system.healthy', 'Saludable') }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="status-card disk-card">
+                <div class="status-card-header">
+                    <div class="status-icon disk-icon">
+                        <i class="bi bi-hdd"></i>
+                    </div>
+                    <div class="status-info">
+                        <h6>{{ t('system.disk_usage', 'Disco') }}</h6>
+                        <h3>{{ system_stats.disk_percent | default(60) }}%</h3>
+                    </div>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar disk-progress" style="width: {{ system_stats.disk_percent | default(60) }}%"></div>
+                </div>
+                <div class="status-footer">
+                    <span class="status-text">{{ t('system.healthy', 'Saludable') }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="status-card temp-card">
+                <div class="status-card-header">
+                    <div class="status-icon temp-icon">
+                        <i class="bi bi-thermometer-half"></i>
+                    </div>
+                    <div class="status-info">
+                        <h6>{{ t('system.temperature', 'Temperatura') }}</h6>
+                        <h3>{{ system_stats.temperature | default(45) }}°C</h3>
+                    </div>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar temp-progress" style="width: {{ (system_stats.temperature | default(45) / 100 * 100) | round }}"></div>
+                </div>
+                <div class="status-footer">
+                    <span class="status-text">{{ t('system.normal', 'Normal') }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row">
+        <!-- System Information -->
+        <div class="col-lg-4 mb-4">
+            <div class="info-card">
+                <div class="info-card-header">
+                    <h5 class="info-card-title">
+                        <i class="bi bi-info-circle me-2"></i>
+                        {{ t('system.information', 'Información del Sistema') }}
+                    </h5>
+                </div>
+                <div class="info-card-body">
+                    <div class="info-item">
+                        <span class="info-label">{{ t('system.hostname', 'Hostname') }}</span>
+                        <span class="info-value">hostberry</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">{{ t('system.os_version', 'Sistema Operativo') }}</span>
+                        <span class="info-value">Raspberry Pi OS</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">{{ t('system.kernel_version', 'Kernel') }}</span>
+                        <span class="info-value">Linux 6.8.0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">{{ t('system.architecture', 'Arquitectura') }}</span>
+                        <span class="info-value">armv7l</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">{{ t('system.uptime', 'Tiempo Activo') }}</span>
+                        <span class="info-value">2 días, 5 horas</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">{{ t('system.cpu_cores', 'Núcleos CPU') }}</span>
+                        <span class="info-value">4</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services Status -->
+        <div class="col-lg-4 mb-4">
+            <div class="services-card">
+                <div class="services-card-header">
+                    <h5 class="services-card-title">
+                        <i class="bi bi-server me-2"></i>
+                        {{ t('system.services', 'Servicios') }}
+                    </h5>
+                </div>
+                <div class="services-card-body">
+                    <div class="service-item">
+                        <div class="service-info">
+                            <i class="bi bi-gear-fill service-icon hostberry-icon"></i>
+                            <span class="service-name">HostBerry</span>
+                        </div>
+                        <div class="service-status">
+                            <span class="status-badge status-running">{{ t('system.running', 'Activo') }}</span>
+                        </div>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <i class="bi bi-shield-check service-icon nginx-icon"></i>
+                            <span class="service-name">Nginx</span>
+                        </div>
+                        <div class="service-status">
+                            <span class="status-badge status-running">{{ t('system.running', 'Activo') }}</span>
+                        </div>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <i class="bi bi-shield-fill service-icon fail2ban-icon"></i>
+                            <span class="service-name">Fail2ban</span>
+                        </div>
+                        <div class="service-status">
+                            <span class="status-badge status-running">{{ t('system.running', 'Activo') }}</span>
+                        </div>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <i class="bi bi-shield-lock service-icon ufw-icon"></i>
+                            <span class="service-name">UFW Firewall</span>
+                        </div>
+                        <div class="service-status">
+                            <span class="status-badge status-running">{{ t('system.running', 'Activo') }}</span>
+                        </div>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <i class="bi bi-wifi service-icon wifi-icon"></i>
+                            <span class="service-name">WiFi</span>
+                        </div>
+                        <div class="service-status">
+                            <span class="status-badge status-running">{{ t('system.running', 'Activo') }}</span>
+                        </div>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <i class="bi bi-terminal service-icon ssh-icon"></i>
+                            <span class="service-name">SSH</span>
+                        </div>
+                        <div class="service-status">
+                            <span class="status-badge status-running">{{ t('system.running', 'Activo') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Status -->
+        <div class="col-lg-4 mb-4">
+            <div class="network-card">
+                <div class="network-card-header">
+                    <h5 class="network-card-title">
+                        <i class="bi bi-wifi me-2"></i>
+                        {{ t('dashboard.network_status', 'Estado de Red') }}
+                    </h5>
+                </div>
+                <div class="network-card-body">
+                    <div class="network-interface">
+                        <div class="interface-header">
+                            <i class="bi bi-ethernet interface-icon"></i>
+                            <div class="interface-info">
+                                <h6>eth0</h6>
+                                <span class="interface-status">{{ t('network.connected', 'Conectado') }}</span>
+                            </div>
+                        </div>
+                        <div class="interface-details">
+                            <div class="network-item">
+                                <span class="network-label">{{ t('network.ip_address', 'IP') }}</span>
+                                <span class="network-value">192.168.1.100</span>
+                            </div>
+                            <div class="network-item">
+                                <span class="network-label">{{ t('network.gateway', 'Gateway') }}</span>
+                                <span class="network-value">192.168.1.1</span>
+                            </div>
+                            <div class="network-item">
+                                <span class="network-label">{{ t('network.dns', 'DNS') }}</span>
+                                <span class="network-value">8.8.8.8</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="network-interface">
+                        <div class="interface-header">
+                            <i class="bi bi-wifi interface-icon"></i>
+                            <div class="interface-info">
+                                <h6>wlan0</h6>
+                                <span class="interface-status">{{ t('network.connected', 'Conectado') }}</span>
+                            </div>
+                        </div>
+                        <div class="interface-details">
+                            <div class="network-item">
+                                <span class="network-label">{{ t('network.ip_address', 'IP') }}</span>
+                                <span class="network-value">192.168.1.101</span>
+                            </div>
+                            <div class="network-item">
+                                <span class="network-label">{{ t('network.ssid', 'SSID') }}</span>
+                                <span class="network-value">HomeNetwork</span>
+                            </div>
+                            <div class="network-item">
+                                <span class="network-label">{{ t('network.signal', 'Señal') }}</span>
+                                <span class="network-value">85%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity & Logs -->
+    <div class="row">
+        <!-- Recent Activity -->
+        <div class="col-lg-6 mb-4">
+            <div class="activity-card">
+                <div class="activity-card-header">
+                    <h5 class="activity-card-title">
+                        <i class="bi bi-clock-history me-2"></i>
+                        {{ t('dashboard.recent_activity', 'Actividad Reciente') }}
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="refreshActivity()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+                <div class="activity-card-body">
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon login-activity">
+                                <i class="bi bi-box-arrow-in-right"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h6>{{ t('auth.login_success', 'Login exitoso') }}</h6>
+                                <p>{{ t('auth.user_logged_in', 'Usuario admin inició sesión') }}</p>
+                                <span class="activity-time">Hace 5 minutos</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon system-activity">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h6>{{ t('system.update', 'Actualización') }}</h6>
+                                <p>{{ t('system.packages_updated', 'Paquetes del sistema actualizados') }}</p>
+                                <span class="activity-time">Hace 1 hora</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon network-activity">
+                                <i class="bi bi-wifi"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h6>{{ t('network.wifi_connected', 'WiFi Conectado') }}</h6>
+                                <p>{{ t('network.connected_to_network', 'Conectado a HomeNetwork') }}</p>
+                                <span class="activity-time">Hace 2 horas</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon security-activity">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h6>{{ t('security.firewall_enabled', 'Firewall Activado') }}</h6>
+                                <p>{{ t('security.ufw_enabled', 'UFW Firewall ha sido activado') }}</p>
+                                <span class="activity-time">Hace 3 horas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Logs -->
+        <div class="col-lg-6 mb-4">
+            <div class="logs-card">
+                <div class="logs-card-header">
+                    <h5 class="logs-card-title">
+                        <i class="bi bi-journal-text me-2"></i>
+                        {{ t('system.logs', 'Logs del Sistema') }}
+                    </h5>
+                    <div class="logs-controls">
+                        <select class="form-select form-select-sm me-2" id="logLevel">
+                            <option value="all">{{ t('logs.all_levels', 'Todos') }}</option>
+                            <option value="error">{{ t('logs.errors', 'Errores') }}</option>
+                            <option value="warning">{{ t('logs.warnings', 'Advertencias') }}</option>
+                            <option value="info">{{ t('logs.info', 'Info') }}</option>
+                        </select>
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshLogs()">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="logs-card-body">
+                    <div class="logs-container">
+                        <div class="log-item log-info">
+                            <span class="log-time">14:32:15</span>
+                            <span class="log-level info">INFO</span>
+                            <span class="log-message">HostBerry FastAPI iniciado correctamente</span>
+                        </div>
+                        <div class="log-item log-warning">
+                            <span class="log-time">14:31:45</span>
+                            <span class="log-level warning">WARN</span>
+                            <span class="log-message">Uso de memoria elevado: 78%</span>
+                        </div>
+                        <div class="log-item log-info">
+                            <span class="log-time">14:30:22</span>
+                            <span class="log-level info">INFO</span>
+                            <span class="log-message">Base de datos conectada exitosamente</span>
+                        </div>
+                        <div class="log-item log-error">
+                            <span class="log-time">14:29:10</span>
+                            <span class="log-level error">ERROR</span>
+                            <span class="log-message">Error al conectar con servicio VPN</span>
+                        </div>
+                        <div class="log-item log-info">
+                            <span class="log-time">14:28:05</span>
+                            <span class="log-level info">INFO</span>
+                            <span class="log-message">WiFi conectado a HomeNetwork</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <h5 class="actions-card-title">
+                        <i class="bi bi-lightning me-2"></i>
+                        {{ t('dashboard.quick_actions', 'Acciones Rápidas') }}
+                    </h5>
+                </div>
+                <div class="actions-card-body">
+                    <div class="quick-actions">
+                        <button class="action-btn action-restart" onclick="restartSystem()">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            <span>{{ t('system.restart', 'Reiniciar') }}</span>
+                        </button>
+                        <button class="action-btn action-shutdown" onclick="shutdownSystem()">
+                            <i class="bi bi-power"></i>
+                            <span>{{ t('system.shutdown', 'Apagar') }}</span>
+                        </button>
+                        <button class="action-btn action-backup" onclick="backupSystem()">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <span>{{ t('system.backup', 'Backup') }}</span>
+                        </button>
+                        <button class="action-btn action-update" onclick="checkUpdates()">
+                            <i class="bi bi-arrow-up-circle"></i>
+                            <span>{{ t('system.updates', 'Actualizaciones') }}</span>
+                        </button>
+                        <button class="action-btn action-monitor" onclick="openMonitoring()">
+                            <i class="bi bi-graph-up"></i>
+                            <span>{{ t('dashboard.monitoring', 'Monitoreo') }}</span>
+                        </button>
+                        <button class="action-btn action-security" onclick="openSecurity()">
+                            <i class="bi bi-shield-lock"></i>
+                            <span>{{ t('navigation.security', 'Seguridad') }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/dashboard.js?v={{ last_update }}"></script>
+{% endblock %}
