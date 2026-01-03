@@ -288,67 +288,6 @@
         </div>
     </div>
 
-    <!-- Recent Activity -->
-    <div class="row">
-        <div class="col-12">
-            <div class="activity-card">
-                <div class="activity-card-header d-flex align-items-center gap-3">
-                    <h5 class="activity-card-title mb-0">
-                        <i class="bi bi-clock-history me-2"></i>
-                        {{ t('dashboard.recent_activity', 'Recent Activity') }}
-                    </h5>
-                    <button class="btn btn-sm btn-outline-primary" onclick="refreshActivity()">
-                        <i class="bi bi-arrow-clockwise"></i>
-                    </button>
-                </div>
-                <div class="activity-card-body">
-                    <div class="activity-list">
-                        <div class="activity-item">
-                            <div class="activity-icon login-activity">
-                                <i class="bi bi-box-arrow-in-right"></i>
-                            </div>
-                            <div class="activity-content">
-                                <h6>{{ t('auth.login_success', 'Login successful') }}</h6>
-                                <p>{{ t('auth.user_logged_in', 'Admin user logged in') }}</p>
-                                <span class="activity-time">5 mins ago</span>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon system-activity">
-                                <i class="bi bi-arrow-clockwise"></i>
-                            </div>
-                            <div class="activity-content">
-                                <h6>{{ t('system.update', 'Update') }}</h6>
-                                <p>{{ t('system.packages_updated', 'System packages updated') }}</p>
-                                <span class="activity-time">1 hour ago</span>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon network-activity">
-                                <i class="bi bi-wifi"></i>
-                            </div>
-                            <div class="activity-content">
-                                <h6>{{ t('network.wifi_connected', 'WiFi Connected') }}</h6>
-                                <p>{{ t('network.connected_to_network', 'Connected to HomeNetwork') }}</p>
-                                <span class="activity-time">2 hours ago</span>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon security-activity">
-                                <i class="bi bi-shield-check"></i>
-                            </div>
-                            <div class="activity-content">
-                                <h6>{{ t('security.firewall_enabled', 'Firewall Enabled') }}</h6>
-                                <p>{{ t('security.ufw_enabled', 'UFW Firewall has been enabled') }}</p>
-                                <span class="activity-time">3 hours ago</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- System Logs -->
     <div class="row">
         <div class="col-12">

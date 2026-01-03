@@ -122,6 +122,7 @@ async def login_page(request: Request, response: Response, lang: str | None = Qu
     current_lang = i18n.get_current_language()
     
     context = {"request": request, "language": current_lang,
+        "current_user": {"username": "usuario"},  # Add current_user to login page
         "system_stats": {
             "cpu_percent": 25,
             "memory_percent": 45,

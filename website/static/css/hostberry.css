@@ -841,11 +841,14 @@ body.light-theme .text-muted {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
 }
 
 .info-item-grid .info-value {
     font-weight: 500;
     color: #6c757d;
+    text-align: center;
+    width: 100%;
 }
 
 .system-info-card .col-lg-2, .system-info-card .col-md-4, .system-info-card .col-6 {
@@ -858,4 +861,13 @@ body.light-theme .text-muted {
     margin-right: 8px;
     margin-left: 0;
     vertical-align: middle;
+}
+
+/* Force center alignment for system info */
+.info-card-body .row {
+    justify-content: center;
+}
+
+.info-card {
+    text-align: center;
 }
