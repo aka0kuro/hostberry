@@ -63,20 +63,20 @@
             </div>
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
-                    <span class="status-indicator status-{{ 'online' if system_health.overall == 'healthy' else 'offline' }}"></span>
-                    <span>{{ t('system.overall') }}: {{ t('common.healthy', 'Healthy') if system_health.overall == 'healthy' else t('common.unhealthy', 'Unhealthy') }}</span>
+                    <span class="status-dot {{ 'dot-success' if system_health.overall == 'healthy' else 'dot-warning' if system_health.overall == 'warning' else 'dot-danger' }}"></span>
+                    <span class="status-text">{{ t('common.healthy', 'Healthy') if system_health.overall == 'healthy' else t('common.warning', 'Warning') if system_health.overall == 'warning' else t('common.unhealthy', 'Unhealthy') }}</span>
                 </div>
                 <div class="d-flex align-items-center mb-3">
-                    <span class="status-indicator status-{{ 'online' if system_health.cpu == 'healthy' else 'warning' }}"></span>
-                    <span>{{ t('system.cpu') }}: {{ t('common.healthy', 'Healthy') if system_health.cpu == 'healthy' else t('common.warning', 'Warning') }}</span>
+                    <span class="status-dot {{ 'dot-success' if system_health.cpu == 'healthy' else 'dot-warning' if system_health.cpu == 'warning' else 'dot-danger' }}"></span>
+                    <span class="status-text">{{ t('common.healthy', 'Healthy') if system_health.cpu == 'healthy' else t('common.warning', 'Warning') if system_health.cpu == 'warning' else t('common.unhealthy', 'Unhealthy') }}</span>
                 </div>
                 <div class="d-flex align-items-center mb-3">
-                    <span class="status-indicator status-{{ 'online' if system_health.memory == 'healthy' else 'warning' }}"></span>
-                    <span>{{ t('system.memory') }}: {{ t('common.healthy', 'Healthy') if system_health.memory == 'healthy' else t('common.warning', 'Warning') }}</span>
+                    <span class="status-dot {{ 'dot-success' if system_health.memory == 'healthy' else 'dot-warning' if system_health.memory == 'warning' else 'dot-danger' }}"></span>
+                    <span class="status-text">{{ t('common.healthy', 'Healthy') if system_health.memory == 'healthy' else t('common.warning', 'Warning') if system_health.memory == 'warning' else t('common.unhealthy', 'Unhealthy') }}</span>
                 </div>
                 <div class="d-flex align-items-center mb-3">
-                    <span class="status-indicator status-{{ 'online' if system_health.disk == 'healthy' else 'warning' }}"></span>
-                    <span>{{ t('system.storage') }}: {{ t('common.healthy', 'Healthy') if system_health.disk == 'healthy' else t('common.warning', 'Warning') }}</span>
+                    <span class="status-dot {{ 'dot-success' if system_health.disk == 'healthy' else 'dot-warning' if system_health.disk == 'warning' else 'dot-danger' }}"></span>
+                    <span class="status-text">{{ t('common.healthy', 'Healthy') if system_health.disk == 'healthy' else t('common.warning', 'Warning') if system_health.disk == 'warning' else t('common.unhealthy', 'Unhealthy') }}</span>
                 </div>
             </div>
         </div>
