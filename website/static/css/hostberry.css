@@ -804,6 +804,14 @@ body.light-theme .text-muted {
         height: auto;
         min-height: 300px; /* Make them larger in mobile view */
         margin-bottom: 20px; /* Add separation between cards */
+        width: 100%; /* Ensure full width like logs */
+    }
+    
+    /* Make Services and Network sections same width as Logs */
+    .row.mb-4 .col-lg-6 {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
     }
     
     /* Separate System Info elements */
