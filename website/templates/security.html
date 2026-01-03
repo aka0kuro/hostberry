@@ -23,20 +23,19 @@
     <div class="row mb-4">
         <!-- Firewall Status -->
         <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-{% if config.FIREWALL_ENABLED %}success{% else %}danger{% endif %} shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-uppercase mb-1">
-                                {% trans %}Firewall{% endtrans %}
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {% if config.FIREWALL_ENABLED %}{% trans %}Active{% endtrans %}{% else %}{% trans %}Inactive{% endtrans %}{% endif %}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-shield-{% if config.FIREWALL_ENABLED %}check{% else %}x{% endif %} fa-2x text-gray-300"></i>
-                        </div>
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-shield-{% if config.FIREWALL_ENABLED %}check{% else %}x{% endif %} me-2"></i>
+                        {% trans %}Firewall{% endtrans %}
+                    </h5>
+                    <span class="status-indicator status-{% if config.FIREWALL_ENABLED %}online{% else %}offline{% endif %}"></span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-white fw-bold">
+                            {% if config.FIREWALL_ENABLED %}{% trans %}Active{% endtrans %}{% else %}{% trans %}Inactive{% endtrans %}{% endif %}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -44,18 +43,17 @@
 
         <!-- Blocked IPs -->
         <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                {% trans %}Blocked IPs{% endtrans %}
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ security_status.blocked_ips }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-ban fa-2x text-gray-300"></i>
-                        </div>
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-ban me-2"></i>
+                        {% trans %}Blocked IPs{% endtrans %}
+                    </h5>
+                    <span class="status-indicator status-warning"></span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-white fw-bold h4">{{ security_status.blocked_ips }}</span>
                     </div>
                 </div>
             </div>
@@ -63,24 +61,23 @@
 
         <!-- Last Attack -->
         <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-{% if security_status.last_attack %}danger{% else %}success{% endif %} shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-uppercase mb-1">
-                                {% trans %}Last Incident{% endtrans %}
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {% if security_status.last_attack %}
-                                    {{ security_status.last_attack|datetimeformat }}
-                                {% else %}
-                                    {% trans %}None{% endtrans %}
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-{% if security_status.last_attack %}exclamation-triangle{% else %}shield{% endif %} fa-2x text-gray-300"></i>
-                        </div>
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-{% if security_status.last_attack %}exclamation-triangle{% else %}shield{% endif %} me-2"></i>
+                        {% trans %}Last Incident{% endtrans %}
+                    </h5>
+                    <span class="status-indicator status-{% if security_status.last_attack %}offline{% else %}online{% endif %}"></span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-white">
+                            {% if security_status.last_attack %}
+                                {{ security_status.last_attack|datetimeformat }}
+                            {% else %}
+                                {% trans %}None{% endtrans %}
+                            {% endif %}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -90,11 +87,11 @@
     <!-- Configuration Section -->
     <div class="row">
         <div class="col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="bi bi-gear me-1"></i> {% trans %}Security Settings{% endtrans %}
-                    </h6>
+            <div class="card h-100 glass-card border-0 mb-4">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-gear me-2"></i> {% trans %}Security Settings{% endtrans %}
+                    </h5>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="/security">
@@ -193,5 +190,8 @@
             </div>
         </div>
     </div>
+    </div>
+</div>
+</div>
 </div>
 {% endblock %}
