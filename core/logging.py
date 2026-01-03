@@ -238,7 +238,6 @@ def setup_logging():
         )
         
         logger.info('logging_configured', language='es')
-        logger.info('logging_configured', language='en')
         
     except Exception as e:
         # Fallback a logging básico si hay error
@@ -265,11 +264,9 @@ def log_system_info():
         }
         
         logger.info('system_info', language='es', **system_info)
-        logger.info('system_info', language='en', **system_info)
         
     except Exception as e:
         logger.error('system_info_error', language='es', error=str(e))
-        logger.error('system_info_error', language='en', error=str(e))
 
 def log_performance_metrics():
     """Registra métricas de rendimiento"""
@@ -283,11 +280,9 @@ def log_performance_metrics():
         }
         
         logger.info('performance_metrics', language='es', **metrics)
-        logger.info('performance_metrics', language='en', **metrics)
         
     except Exception as e:
         logger.error('performance_metrics_error', language='es', error=str(e))
-        logger.error('performance_metrics_error', language='en', error=str(e))
 
 def log_api_request(request_id: str, method: str, endpoint: str, 
                    ip_address: str, user_agent: str, user_id: Optional[str] = None):
@@ -295,15 +290,10 @@ def log_api_request(request_id: str, method: str, endpoint: str,
     logger.info('api_request', language='es', 
                 request_id=request_id, method=method, endpoint=endpoint,
                 ip_address=ip_address, user_agent=user_agent, user_id=user_id)
-    logger.info('api_request', language='en', 
-                request_id=request_id, method=method, endpoint=endpoint,
-                ip_address=ip_address, user_agent=user_agent, user_id=user_id)
 
 def log_api_response(request_id: str, status_code: int, response_time: float):
     """Registra una respuesta API"""
     logger.info('api_response', language='es', 
-                request_id=request_id, status_code=status_code, response_time=response_time)
-    logger.info('api_response', language='en', 
                 request_id=request_id, status_code=status_code, response_time=response_time)
 
 def log_auth_event(event_type: str, user_id: Optional[str] = None, 
@@ -311,15 +301,11 @@ def log_auth_event(event_type: str, user_id: Optional[str] = None,
     """Registra un evento de autenticación"""
     logger.info('auth_event', language='es', 
                 event_type=event_type, user_id=user_id, ip_address=ip_address, success=success)
-    logger.info('auth_event', language='en', 
-                event_type=event_type, user_id=user_id, ip_address=ip_address, success=success)
 
 def log_database_event(event_type: str, operation: str, table: Optional[str] = None,
                       error: Optional[str] = None):
     """Registra un evento de base de datos"""
     logger.info('database_event', language='es', 
-                event_type=event_type, operation=operation, table=table, error=error)
-    logger.info('database_event', language='en', 
                 event_type=event_type, operation=operation, table=table, error=error)
 
 def log_cache_event(event_type: str, cache_key: Optional[str] = None,
@@ -327,15 +313,11 @@ def log_cache_event(event_type: str, cache_key: Optional[str] = None,
     """Registra un evento de caché"""
     logger.info('cache_event', language='es', 
                 event_type=event_type, cache_key=cache_key, cache_stats=cache_stats)
-    logger.info('cache_event', language='en', 
-                event_type=event_type, cache_key=cache_key, cache_stats=cache_stats)
 
 def log_security_event(event_type: str, ip_address: Optional[str] = None,
                       user_id: Optional[str] = None, details: Optional[str] = None):
     """Registra un evento de seguridad"""
     logger.info('security_event', language='es', 
-                event_type=event_type, ip_address=ip_address, user_id=user_id, details=details)
-    logger.info('security_event', language='en', 
                 event_type=event_type, ip_address=ip_address, user_id=user_id, details=details)
 
 def log_user_action(action: str, user_id: Optional[str] = None,
@@ -343,15 +325,11 @@ def log_user_action(action: str, user_id: Optional[str] = None,
     """Registra una acción de usuario"""
     logger.info('user_action', language='es', 
                 action=action, user_id=user_id, ip_address=ip_address, details=details)
-    logger.info('user_action', language='en', 
-                action=action, user_id=user_id, ip_address=ip_address, details=details)
 
 def log_system_event(event_type: str, details: Optional[str] = None,
                     resource_usage: Optional[Dict[str, Any]] = None):
     """Registra un evento del sistema"""
     logger.info('system_event', language='es', 
-                event_type=event_type, details=details, resource_usage=resource_usage)
-    logger.info('system_event', language='en', 
                 event_type=event_type, details=details, resource_usage=resource_usage)
 
 def log_network_event(event_type: str, endpoint: Optional[str] = None,
@@ -359,15 +337,11 @@ def log_network_event(event_type: str, endpoint: Optional[str] = None,
     """Registra un evento de red"""
     logger.info('network_event', language='es', 
                 event_type=event_type, endpoint=endpoint, ip_address=ip_address, details=details)
-    logger.info('network_event', language='en', 
-                event_type=event_type, endpoint=endpoint, ip_address=ip_address, details=details)
 
 def log_service_event(event_type: str, service_name: str,
                      status: Optional[str] = None, details: Optional[str] = None):
     """Registra un evento de servicio"""
     logger.info('service_event', language='es', 
-                event_type=event_type, service_name=service_name, status=status, details=details)
-    logger.info('service_event', language='en', 
                 event_type=event_type, service_name=service_name, status=status, details=details)
 
 def log_file_event(event_type: str, file_path: Optional[str] = None,
@@ -375,15 +349,11 @@ def log_file_event(event_type: str, file_path: Optional[str] = None,
     """Registra un evento de archivo"""
     logger.info('file_event', language='es', 
                 event_type=event_type, file_path=file_path, file_size=file_size, details=details)
-    logger.info('file_event', language='en', 
-                event_type=event_type, file_path=file_path, file_size=file_size, details=details)
 
 def log_config_event(event_type: str, config_key: Optional[str] = None,
                     old_value: Optional[str] = None, new_value: Optional[str] = None):
     """Registra un evento de configuración"""
     logger.info('config_event', language='es', 
-                event_type=event_type, config_key=config_key, old_value=old_value, new_value=new_value)
-    logger.info('config_event', language='en', 
                 event_type=event_type, config_key=config_key, old_value=old_value, new_value=new_value)
 
 def log_backup_event(event_type: str, backup_path: Optional[str] = None,
@@ -391,15 +361,11 @@ def log_backup_event(event_type: str, backup_path: Optional[str] = None,
     """Registra un evento de backup"""
     logger.info('backup_event', language='es', 
                 event_type=event_type, backup_path=backup_path, backup_size=backup_size, details=details)
-    logger.info('backup_event', language='en', 
-                event_type=event_type, backup_path=backup_path, backup_size=backup_size, details=details)
 
 def log_update_event(event_type: str, version: Optional[str] = None,
                     details: Optional[str] = None):
     """Registra un evento de actualización"""
     logger.info('update_event', language='es', 
-                event_type=event_type, version=version, details=details)
-    logger.info('update_event', language='en', 
                 event_type=event_type, version=version, details=details)
 
 def log_monitoring_event(event_type: str, metric_name: Optional[str] = None,
@@ -407,16 +373,11 @@ def log_monitoring_event(event_type: str, metric_name: Optional[str] = None,
     """Registra un evento de monitoreo"""
     logger.info('monitoring_event', language='es', 
                 event_type=event_type, metric_name=metric_name, metric_value=metric_value, threshold=threshold)
-    logger.info('monitoring_event', language='en', 
-                event_type=event_type, metric_name=metric_name, metric_value=metric_value, threshold=threshold)
 
 def log_optimization_event(event_type: str, optimization_type: Optional[str] = None,
                           performance_improvement: Optional[float] = None, details: Optional[str] = None):
     """Registra un evento de optimización"""
     logger.info('optimization_event', language='es', 
-                event_type=event_type, optimization_type=optimization_type, 
-                performance_improvement=performance_improvement, details=details)
-    logger.info('optimization_event', language='en', 
                 event_type=event_type, optimization_type=optimization_type, 
                 performance_improvement=performance_improvement, details=details)
 
@@ -431,11 +392,9 @@ def cleanup_old_logs():
             if file_age.days > 30:  # Eliminar logs de más de 30 días
                 log_file.unlink()
                 logger.info('old_log_cleaned', language='es', file=str(log_file))
-                logger.info('old_log_cleaned', language='en', file=str(log_file))
                 
     except Exception as e:
         logger.error('cleanup_error', language='es', error=str(e))
-        logger.error('cleanup_error', language='en', error=str(e))
 
 def get_logger(name: str = "hostberry") -> MultiLanguageLogger:
     """Obtiene un logger multilingüe"""
