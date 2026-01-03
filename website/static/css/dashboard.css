@@ -320,9 +320,9 @@
 }
 
 .info-item-grid:hover {
-    background: rgba(255, 255, 255, 0.05);
-    transform: translateY(-2px);
-    border-radius: 10px;
+    background: transparent;
+    transform: none;
+    border-radius: 0;
 }
 
 .info-item-grid .info-label {
