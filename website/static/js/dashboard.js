@@ -201,10 +201,14 @@ async function updateLogs() {
     const logsContainer = document.querySelector('.logs-container');
     try {
         const levelSelect = document.getElementById('logLevel');
-        const level = levelSelect ? levelSelect.value : 'all';
+        let level = levelSelect ? levelSelect.value : 'all';
         
-        // Removed timestamp to prevent potential 422 errors if server is strict
-        const response = await fetch(`/api/v1/system/logs?level=${level}&limit=10`);
+        // Ensure level is valid
+        if (!level || level === 'undefined' || level === 'null') {
+            level = 'all';
+        }
+        
+        const response = await fetch(`/api/v1/system/logs?level=${encodeURIComponent(level)}&limit=10`);
         
         if (response.ok) {
             const data = await response.json();
