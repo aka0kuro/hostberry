@@ -87,9 +87,10 @@ async def lifespan(app: FastAPI):
         await db.init_database()
         log_system_event("database_initialized", "Base de datos inicializada")
         
-        # Limpiar logs antiguos solo si es necesario
-        if getattr(settings, 'auto_cleanup_logs', True):
-            cleanup_old_logs()
+        # Limpiar logs antiguos deshabilitado en arranque para acelerar inicio
+        # Se puede ejecutar periódicamente en background o manualmente
+        # if getattr(settings, 'auto_cleanup_logs', True):
+        #     cleanup_old_logs()
         
     except Exception as e:
         logger.error(f"Error durante el inicio: {e}")
