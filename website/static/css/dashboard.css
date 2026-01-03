@@ -344,7 +344,7 @@ body.light-theme .info-item-grid {
 }
 
 body.light-theme .info-item-grid:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: transparent;
 }
 
 body.light-theme .info-item-grid .info-label {
