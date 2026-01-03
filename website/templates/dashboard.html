@@ -102,10 +102,9 @@
         </div>
     </div>
 
-    <!-- Main Content Row -->
-    <div class="row">
-        <!-- System Information -->
-        <div class="col-lg-4 mb-4">
+    <!-- System Information -->
+    <div class="row mb-4">
+        <div class="col-12">
             <div class="info-card">
                 <div class="info-card-header">
                     <h5 class="info-card-title">
@@ -114,36 +113,53 @@
                     </h5>
                 </div>
                 <div class="info-card-body">
-                    <div class="info-item">
-                        <span class="info-label">{{ t('system.hostname', 'Hostname') }}</span>
-                        <span class="info-value">hostberry</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">{{ t('system.os_version', 'Sistema Operativo') }}</span>
-                        <span class="info-value">Raspberry Pi OS</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">{{ t('system.kernel_version', 'Kernel') }}</span>
-                        <span class="info-value">Linux 6.8.0</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">{{ t('system.architecture', 'Arquitectura') }}</span>
-                        <span class="info-value">armv7l</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">{{ t('system.uptime', 'Tiempo Activo') }}</span>
-                        <span class="info-value">2 días, 5 horas</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">{{ t('system.cpu_cores', 'Núcleos CPU') }}</span>
-                        <span class="info-value">4</span>
+                    <div class="row">
+                        <div class="col-lg-3 col-md-4 col-6 mb-3">
+                            <div class="info-item-grid">
+                                <span class="info-label d-block">{{ t('system.hostname', 'Hostname') }}</span>
+                                <span class="info-value">{{ system_info.hostname | default('hostberry') }}</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-6 mb-3">
+                            <div class="info-item-grid">
+                                <span class="info-label d-block">{{ t('system.os_version', 'Sistema Operativo') }}</span>
+                                <span class="info-value">{{ system_info.os_version | default('Raspberry Pi OS') }}</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-6 mb-3">
+                            <div class="info-item-grid">
+                                <span class="info-label d-block">{{ t('system.kernel_version', 'Kernel') }}</span>
+                                <span class="info-value">{{ system_info.kernel_version | default('Linux 6.8.0') }}</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-6 mb-3">
+                            <div class="info-item-grid">
+                                <span class="info-label d-block">{{ t('system.architecture', 'Arquitectura') }}</span>
+                                <span class="info-value">{{ system_info.architecture | default('armv7l') }}</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-6 mb-3">
+                            <div class="info-item-grid">
+                                <span class="info-label d-block">{{ t('system.uptime', 'Tiempo Activo') }}</span>
+                                <span class="info-value">{{ system_info.uptime | default('2 días, 5 horas') }}</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-6 mb-3">
+                            <div class="info-item-grid">
+                                <span class="info-label d-block">{{ t('system.cpu_cores', 'Núcleos CPU') }}</span>
+                                <span class="info-value">{{ system_info.cpu_cores | default('4') }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
+    <!-- Services & Network Status -->
+    <div class="row">
         <!-- Services Status -->
-        <div class="col-lg-4 mb-4">
+        <div class="col-lg-6 mb-4">
             <div class="services-card">
                 <div class="services-card-header">
                     <h5 class="services-card-title">
