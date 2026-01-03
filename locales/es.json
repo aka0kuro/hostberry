@@ -131,8 +131,6 @@
     "system_diagnostics": "Diagnóstico del Sistema",
     "programs_status": "Estado de Programas",
     "system_logs": "Registros del Sistema",
-    "running": "Activo",
-    "stopped": "Detenido",
     "cpu": "CPU",
     "memory": "Memoria",
     "storage": "Almacenamiento",
