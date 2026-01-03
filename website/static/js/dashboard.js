@@ -202,8 +202,8 @@ async function updateLogs() {
         const level = document.getElementById('logLevel')?.value || 'all';
         const response = await fetch(`/api/v1/system/logs?level=${level}&limit=10`);
         if (response.ok) {
-            const logs = await response.json();
-            renderLogs(logs);
+            const data = await response.json();
+            renderLogs(data.logs);
         }
     } catch (error) {
         console.error('Error updating logs:', error);
