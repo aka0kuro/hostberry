@@ -806,6 +806,7 @@ body.light-theme .text-muted {
         flex: 0 0 100% !important;
         padding: 0 8px;
         margin-bottom: 25px; /* More separation between cards on mobile */
+        margin-top: 15px; /* Add separation on top */
     }
     
     /* Ensure Healthy text is centered on mobile */
@@ -851,6 +852,15 @@ body.light-theme .text-muted {
     /* Ensure no overlap in system info container */
     .system-info-card .row {
         margin-bottom: 10px; /* Additional spacing */
+    }
+}
+
+/* Tablet Layout Adjustments */
+@media (min-width: 769px) and (max-width: 991px) {
+    /* Add separation for System Status cards on tablet */
+    .status-cards-row .col-md-6 {
+        margin-top: 15px; /* Add separation on top */
+        margin-bottom: 20px; /* Add separation between cards */
     }
 }
 
