@@ -9,6 +9,8 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from core.i18n import get_text, i18n, get_html_translations
 from core.system_light import boot_time
 import time
+import os
+import platform
 
 router = APIRouter()
 
@@ -56,19 +58,71 @@ def _base_context(request: Request, current_lang: str) -> dict:
     hours = (uptime_seconds % 86400) // 3600
     minutes = (uptime_seconds % 3600) // 60
 
+    hostname = "hostberry"
+    try:
+        hostname = platform.node() or hostname
+    except Exception:
+        hostname = hostname
+
+    os_version = "Raspberry Pi OS"
+    try:
+        if os.path.exists("/etc/os-release"):
+            with open("/etc/os-release", "r", encoding="utf-8", errors="ignore") as f:
+                data = f.read()
+            for line in data.splitlines():
+                if line.startswith("PRETTY_NAME="):
+                    os_version = line.split("=", 1)[1].strip().strip('"') or os_version
+                    break
+    except Exception:
+        os_version = os_version
+
+    kernel_version = "Linux"
+    try:
+        kernel_version = platform.release() or kernel_version
+    except Exception:
+        kernel_version = kernel_version
+
+    architecture = "unknown"
+    try:
+        architecture = platform.machine() or architecture
+    except Exception:
+        architecture = architecture
+
+    processor = ""
+    try:
+        processor = platform.processor() or ""
+    except Exception:
+        processor = ""
+
+    load_average = "0.00, 0.00, 0.00"
+    try:
+        la = os.getloadavg()
+        load_average = f"{la[0]:.2f}, {la[1]:.2f}, {la[2]:.2f}"
+    except Exception:
+        load_average = load_average
+
+    cpu_cores = "0"
+    try:
+        cpu_cores = str(os.cpu_count() or 0)
+    except Exception:
+        cpu_cores = cpu_cores
+
+    username = request.cookies.get("username") or "admin"
+
     return {
         "request": request,
         "language": current_lang,
         "translations": get_html_translations(current_lang),
+        "current_user": {"username": username},
         "system_info": {
-            "hostname": "hostberry",
-            "os_version": "Raspberry Pi OS",
-            "kernel_version": "Linux 6.8.0",
-            "architecture": "armv7l",
-            "processor": "ARM Cortex-A53",
+            "hostname": hostname,
+            "os_version": os_version,
+            "kernel_version": kernel_version,
+            "architecture": architecture,
+            "processor": processor or "ARM",
             "uptime": f"{days}d {hours}h {minutes}m",
-            "load_average": "0.25, 0.30, 0.35",
-            "cpu_cores": "4",
+            "load_average": load_average,
+            "cpu_cores": cpu_cores,
         },
         "system_stats": {
             "cpu_percent": 25,
