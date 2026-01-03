@@ -160,6 +160,21 @@ body.light-theme { background: #f6f7f9; color: #212529; }
     .navbar-collapse { justify-content: center; }
 }
 
+/* Desktop mode - align icons to tablet/mobile height */
+@media (min-width: 992px) {
+    .navbar-nav .nav-link {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .navbar-nav .nav-link i {
+        line-height: 1;
+        vertical-align: middle;
+    }
+}
+
 /* Responsive para móviles */
 @media (max-width: 991px) {
     .navbar-toggler { display: block; }
