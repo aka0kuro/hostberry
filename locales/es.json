@@ -269,6 +269,8 @@
     "failed_services": "Servicios Fallidos",
     "healthy": "Saludable",
     "normal": "Normal",
+    "warning": "Advertencia",
+    "critical": "Crítico",
     "cpu_usage": "Uso de CPU",
     "memory_usage": "Uso de Memoria",
     "disk_usage": "Uso de Disco",

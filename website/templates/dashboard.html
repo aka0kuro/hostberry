@@ -376,5 +376,16 @@
   }
 }
 </script>
+<script>
+// Ensure translations are loaded before dashboard script
+window.HostBerryTranslations = {
+  "system": {
+    "healthy": "{{ t('system.healthy', 'Healthy') }}",
+    "warning": "{{ t('system.warning', 'Warning') }}",
+    "critical": "{{ t('system.critical', 'Critical') }}",
+    "normal": "{{ t('system.normal', 'Normal') }}"
+  }
+};
+</script>
 <script src="/static/js/dashboard.js?v={{ last_update }}"></script>
 {% endblock %}
