@@ -92,6 +92,21 @@ async def root_redirect(request: Request):
         return RedirectResponse("/login", status_code=302)
 
 
+@router.get("/", response_class=HTMLResponse)
+async def root(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    # Simular usuario logueado (en una app real vendría del token/sesión)
+    current_user = {"username": "admin"}
+    
+    return _render(
+        "index.html",
+        request,
+        lang,
+        extra={
+            "current_user": current_user
+        }
+    )
+
+
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, response: Response, lang: str | None = Query(default=None)) -> HTMLResponse:
     # Resolver idioma desde query, cookie o usar el del contexto (middleware)
@@ -270,29 +285,12 @@ async def about_page(request: Request, lang: str | None = Query(default=None)) -
 
 @router.get("/first-login", response_class=HTMLResponse)
 async def first_login_page(request: Request, response: Response, lang: str | None = Query(default=None)) -> HTMLResponse:
-    if lang:
-        i18n.set_context_language(lang)
-        response.set_cookie("lang", lang, max_age=60*60*24*365)
-    elif request.cookies.get("lang"):
-        i18n.set_context_language(request.cookies.get("lang"))
-        
-    current_lang = i18n.get_current_language()
-
-    context = {"request": request, "language": current_lang,
-        "system_stats": {
-            "cpu_percent": 25,
-            "memory_percent": 45,
-            "disk_percent": 60,
-            "temperature": 45
-        },
-        "system_health": {
-            "overall": "healthy",
-            "cpu": "healthy",
-            "memory": "healthy",
-            "disk": "healthy",
-            "network": "healthy",
-            "temperature": "healthy"
-        },
+    # Simular usuario logueado (en una app real vendría del token/sesión)
+    current_user = {"username": "admin"}
+    
+    context = _base_context(request, lang or request.cookies.get("lang", "en"))
+    context.update({
+        "current_user": current_user,
         "services": {
             "hostberry": "running",
             "nginx": "running",
@@ -304,7 +302,7 @@ async def first_login_page(request: Request, response: Response, lang: str | Non
             {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
             {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
         ]
-    }
+    })
     resp = templates.TemplateResponse("first_login.html", context)
     if lang:
         resp.set_cookie("lang", lang, max_age=60*60*24*365)
