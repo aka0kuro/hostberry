@@ -27,9 +27,10 @@ class RPICache:
             'size': 0
         }
         
-        # Iniciar limpieza automática
-        if settings.cache_enabled:
-            self._start_cleanup_thread()
+        # Limpieza automática deshabilitada en arranque para acelerar inicio
+        # Se puede iniciar manualmente si es necesario
+        # if settings.cache_enabled:
+        #     self._start_cleanup_thread()
     
     def _start_cleanup_thread(self):
         """Iniciar thread de limpieza automática"""
