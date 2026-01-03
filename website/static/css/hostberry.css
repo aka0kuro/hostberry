@@ -799,12 +799,21 @@ body.light-theme .text-muted {
 
 /* Mobile Layout Adjustments */
 @media (max-width: 768px) {
-    /* Make System Status cards full width on mobile */
+    /* Make System Status cards full width on mobile with more separation */
     .status-cards-row .col-12 {
         width: 100% !important;
         max-width: 100% !important;
         flex: 0 0 100% !important;
         padding: 0 8px;
+        margin-bottom: 25px; /* More separation between cards on mobile */
+    }
+    
+    /* Ensure Healthy text is centered on mobile */
+    .status-footer {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        text-align: center !important;
     }
     
     /* Enlarge and separate Network and Services sections */
