@@ -323,8 +323,22 @@ body.light-theme .navbar-toggler-icon {
 }
 
 body.light-theme .dropdown-menu {
+    background: rgba(255, 255, 255, 0.95);
+    color: #212529;
     border-color: rgba(0,0,0,.1);
     box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+}
+
+body.light-theme .dropdown-item {
+    color: #212529;
+}
+
+body.light-theme .dropdown-item:hover {
+    background: rgba(0,0,0,.05);
+}
+
+body.light-theme .dropdown-divider {
+    background: rgba(0,0,0,.1);
 }
 
 body.light-theme .text-muted {
