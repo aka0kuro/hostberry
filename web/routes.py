@@ -314,9 +314,9 @@ async def first_login(request: Request, lang: str | None = Query(default=None)) 
 
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    # Usar un nombre de usuario dinámico - en producción esto vendría de la autenti#ación
-    c Simular usuario logueado (eusunrno app rCa binddlde/'snmin' 'usro'
-    current_user = {"username": "admin"}  # Reemplazar con lógica real de autenticación
+    # Simular usuario logueado (en una app real vendría del token/sesión)
+    # Usar un nombre de usuario dinámico - en producción esto vendría de la autenticación
+    current_user = {"username": "usuario"}  # Cambiado de 'admin' a 'usuario'
     
     return _render(
         "dashboard.html",
