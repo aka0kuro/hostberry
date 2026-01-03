@@ -1,8 +1,17 @@
 {% extends "base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4"><i class="fas fa-chart-line me-2"></i>{{ _('System Monitoring') }}</h1>
+<div class="system-page">
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <img src="/static/hostberry.png" alt="hostberry" class="logo-image" />
+            <h1>HostBerry</h1>
+            <p>{{ _('System Monitoring', 'System Monitoring') }}</p>
+        </div>
     
     <!-- Uptime Card -->
     <div class="card mb-4">
