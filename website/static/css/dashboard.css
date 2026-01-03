@@ -1136,4 +1136,9 @@ body:not(.light-theme) .form-select-sm {
     .quick-actions {
         grid-template-columns: repeat(2, 1fr);
     }
+    
+    /* Ensure system info items are well separated on very small mobile */
+    .info-item-grid {
+        padding: 1.25rem 1.25rem 1.25rem 1.75rem;
+    }
 }
