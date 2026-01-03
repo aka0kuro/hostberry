@@ -22,7 +22,7 @@ updateCurrentTime();
 // Actualizar datos del sistema
 async function updateSystemStats() {
     try {
-        const response = await fetch('/api/v1/system/stats');
+        const response = await HostBerry.apiRequest('/api/v1/system/stats');
         if (response.ok) {
             const stats = await response.json();
             
@@ -113,7 +113,7 @@ function updateHealthStatus(type, value) {
 // Actualizar servicios
 async function updateServices() {
     try {
-        const response = await fetch('/api/v1/system/services');
+        const response = await HostBerry.apiRequest('/api/v1/system/services');
         if (response.ok) {
             const data = await response.json();
             const services = data.services;
@@ -151,7 +151,7 @@ function updateServiceStatus(serviceName, status) {
 // Actualizar estado de red
 async function updateNetworkStatus() {
     try {
-        const response = await fetch('/api/v1/system/network/status');
+        const response = await HostBerry.apiRequest('/api/v1/system/network/status');
         if (response.ok) {
             const data = await response.json();
             const networkData = data.interfaces;
@@ -208,7 +208,7 @@ async function updateLogs() {
             level = 'all';
         }
         
-        const response = await fetch(`/api/v1/system/logs?level=${encodeURIComponent(level)}&limit=10`);
+        const response = await HostBerry.apiRequest(`/api/v1/system/logs?level=${encodeURIComponent(level)}&limit=10`);
         
         if (response.ok) {
             const data = await response.json();
@@ -284,7 +284,7 @@ function renderLogs(logs) {
 // Actualizar actividad reciente
 async function updateRecentActivity() {
     try {
-        const response = await fetch('/api/v1/system/activity?limit=5');
+        const response = await HostBerry.apiRequest('/api/v1/system/activity?limit=5');
         if (response.ok) {
             const data = await response.json();
             renderActivities(data.activities);
@@ -364,7 +364,7 @@ async function restartSystem() {
     if (!confirm('¿Estás seguro de que quieres reiniciar el sistema?')) return;
     
     try {
-        const response = await fetch('/api/v1/system/restart', { method: 'POST' });
+        const response = await HostBerry.apiRequest('/api/v1/system/restart', { method: 'POST' });
         if (response.ok) {
             showNotification('Sistema reiniciándose...', 'info');
             setTimeout(() => {
@@ -382,7 +382,7 @@ async function shutdownSystem() {
     if (!confirm('¿Estás seguro de que quieres apagar el sistema?')) return;
     
     try {
-        const response = await fetch('/api/v1/system/shutdown', { method: 'POST' });
+        const response = await HostBerry.apiRequest('/api/v1/system/shutdown', { method: 'POST' });
         if (response.ok) {
             showNotification('Sistema apagándose...', 'info');
         } else {
@@ -396,7 +396,7 @@ async function shutdownSystem() {
 async function backupSystem() {
     try {
         showNotification('Iniciando backup...', 'info');
-        const response = await fetch('/api/v1/system/backup', { method: 'POST' });
+        const response = await HostBerry.apiRequest('/api/v1/system/backup', { method: 'POST' });
         if (response.ok) {
             const result = await response.json();
             showNotification('Backup completado exitosamente', 'success');
@@ -411,7 +411,7 @@ async function backupSystem() {
 async function checkUpdates() {
     try {
         showNotification('Buscando actualizaciones...', 'info');
-        const response = await fetch('/api/v1/system/updates', { method: 'POST' });
+        const response = await HostBerry.apiRequest('/api/v1/system/updates', { method: 'POST' });
         if (response.ok) {
             const result = await response.json();
             if (result.updates_available) {
