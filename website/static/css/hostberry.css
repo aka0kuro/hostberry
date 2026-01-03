@@ -914,6 +914,7 @@ body.light-theme .text-muted {
 .status-cards-row .col-3 {
     display: flex;
     justify-content: center;
+    padding: 0 8px; /* Add small horizontal padding to columns for spacing */
 }
 .info-item-grid {
     display: flex;
