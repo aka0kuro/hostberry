@@ -366,5 +366,15 @@
 {% endblock %}
 
 {% block extra_js %}
+<script id="i18n-json" type="application/json">
+{
+  "system": {
+    "healthy": "{{ t('system.healthy', 'Healthy') }}",
+    "warning": "{{ t('system.warning', 'Warning') }}",
+    "critical": "{{ t('system.critical', 'Critical') }}",
+    "normal": "{{ t('system.normal', 'Normal') }}"
+  }
+}
+</script>
 <script src="/static/js/dashboard.js?v={{ last_update }}"></script>
 {% endblock %}
