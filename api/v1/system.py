@@ -4,6 +4,7 @@ Router del sistema para FastAPI
 
 import os
 import time
+import platform
 from core import system_light as psutil
 from typing import Dict, Any, List
 
