@@ -1,7 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
+<div class="system-page">
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <img src="/static/hostberry.png" alt="hostberry" class="logo-image" />
+            <h1>HostBerry</h1>
+            <p>{{ t('system.title', 'System') }}</p>
+        </div>
+
+        <div class="row">
     <!-- Información del Sistema -->
     <div class="col-md-8 mb-4">
         <div class="card">
