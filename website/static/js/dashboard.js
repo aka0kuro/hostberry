@@ -27,16 +27,16 @@ async function updateSystemStats() {
             const stats = await response.json();
             
             // Actualizar CPU
-            updateStatCard('cpu', stats.cpu_percent);
+            updateStatCard('cpu', stats.cpu_usage);
             
             // Actualizar Memoria
-            updateStatCard('memory', stats.memory_percent);
+            updateStatCard('memory', stats.memory_usage);
             
             // Actualizar Disco
-            updateStatCard('disk', stats.disk_percent);
+            updateStatCard('disk', stats.disk_usage);
             
             // Actualizar Temperatura
-            updateStatCard('temp', stats.temperature);
+            updateStatCard('temp', stats.cpu_temperature);
         }
     } catch (error) {
         console.error('Error updating system stats:', error);
