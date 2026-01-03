@@ -6,8 +6,10 @@ from fastapi import APIRouter, Request, Response, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from markupsafe import Markup
 from core.i18n import get_text, i18n, get_html_translations
 from core.system_light import boot_time
+import json
 import time
 import os
 import platform
@@ -52,6 +54,16 @@ def datetimeformat(value, format='%Y-%m-%d %H:%M:%S'):
 env.globals["t"] = template_t
 env.globals["_"] = template_gettext
 env.filters['datetimeformat'] = datetimeformat
+
+
+def tojson_filter(value) -> Markup:
+    try:
+        return Markup(json.dumps(value, ensure_ascii=False))
+    except Exception:
+        return Markup("{}")
+
+
+env.filters["tojson"] = tojson_filter
 
 env.install_gettext_callables(template_gettext, template_ngettext, newstyle=True)
 
