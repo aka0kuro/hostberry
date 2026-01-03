@@ -372,30 +372,9 @@
                 </div>
                 <div class="logs-card-body">
                     <div class="logs-container">
-                        <div class="log-item log-info">
-                            <span class="log-time">14:32:15</span>
-                            <span class="log-level info">INFO</span>
-                            <span class="log-message">HostBerry FastAPI iniciado correctamente</span>
-                        </div>
-                        <div class="log-item log-warning">
-                            <span class="log-time">14:31:45</span>
-                            <span class="log-level warning">WARN</span>
-                            <span class="log-message">Uso de memoria elevado: 78%</span>
-                        </div>
-                        <div class="log-item log-info">
-                            <span class="log-time">14:30:22</span>
-                            <span class="log-level info">INFO</span>
-                            <span class="log-message">Base de datos conectada exitosamente</span>
-                        </div>
-                        <div class="log-item log-error">
-                            <span class="log-time">14:29:10</span>
-                            <span class="log-level error">ERROR</span>
-                            <span class="log-message">Error al conectar con servicio VPN</span>
-                        </div>
-                        <div class="log-item log-info">
-                            <span class="log-time">14:28:05</span>
-                            <span class="log-level info">INFO</span>
-                            <span class="log-message">WiFi conectado a HomeNetwork</span>
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-arrow-clockwise spinning"></i>
+                            <p class="mb-0 mt-2">{{ t('system.loading_logs', 'Cargando logs...') }}</p>
                         </div>
                     </div>
                 </div>
