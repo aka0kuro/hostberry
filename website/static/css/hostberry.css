@@ -127,7 +127,12 @@ body.light-theme { background: #f6f7f9; color: #212529; }
 .navbar-collapse { flex: 1 1 auto; display:flex; justify-content:center; }
 .navbar-nav { display:flex; gap:.5rem; list-style:none; padding:0; margin:0; flex-wrap: nowrap; justify-content: center; align-items: center; }
 .nav-item { margin: 0; display: flex; align-items: center; }
-.nav-link { color:#fff; text-decoration:none; padding:.5rem 1rem; border-radius:.25rem; display:inline-flex; align-items:center; gap:.35rem; white-space: nowrap; transition: all 0.3s ease; }
+.nav-link { color:#fff; text-decoration:none; padding:.5rem 1rem; border-radius:.25rem; display:inline-flex; align-items:center; gap:.35rem; white-space: nowrap; transition: all 0.3s ease; line-height: 1; }
+.nav-link i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
 .nav-link:hover { background: rgba(255,255,255,.15); transform: translateY(-1px); }
 
 /* Basic grid (Bootstrap-like) */
@@ -158,6 +163,12 @@ body.light-theme { background: #f6f7f9; color: #212529; }
 /* Responsive para móviles */
 @media (max-width: 991px) {
     .navbar-toggler { display: block; }
+
+    /* Keep brand + user next to each other on mobile/tablet */
+    .d-flex.align-items-center.gap-3 { flex: 0 0 auto; }
+
+    /* Hide username to keep the header compact */
+    #hb-current-username { display: none !important; }
     
     /* Navbar Collapse Logic */
     .navbar-collapse { 
