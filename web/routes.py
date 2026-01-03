@@ -457,27 +457,30 @@ async def dashboard_page(request: Request, lang: str | None = Query(default=None
 @router.get("/monitoring", response_class=HTMLResponse)
 async def monitoring_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
     current_lang, _ = _resolve_language(request, lang)
-    return _render(
+    system_info = {
+        "hostname": "hostberry",
+        "os_version": "Raspberry Pi OS",
+        "kernel_version": "Linux 6.8.0",
+        "architecture": "armv7l",
+        "processor": "ARM Cortex-A53",
+        "uptime": "2 days, 5 hours",
+        "load_average": "0.25, 0.30, 0.35",
+        "cpu_cores": "4",
+    }
+    system_stats = {
+        "cpu_percent": 25,
+        "memory_percent": 45,
+        "disk_percent": 60,
+        "temperature": 45,
+    }
+    return templates.TemplateResponse(
         "monitoring.html",
-        request,
-        current_lang,
-        extra={
-            "system_info": {
-                "hostname": "hostberry",
-                "os_version": "Raspberry Pi OS",
-                "kernel_version": "Linux 6.8.0",
-                "architecture": "armv7l",
-                "processor": "ARM Cortex-A53",
-                "uptime": "2 days, 5 hours",
-                "load_average": "0.25, 0.30, 0.35",
-                "cpu_cores": "4",
-            },
-            "system_stats": {
-                "cpu_percent": 25,
-                "memory_percent": 45,
-                "disk_percent": 60,
-                "temperature": 45,
-            },
+        {
+            "request": request,
+            **_base_context(request, current_lang),
+            "system_info": system_info,
+            "system_stats": system_stats,
+            "page": "monitoring"
         },
     )
 
@@ -496,13 +499,24 @@ async def security_page(request: Request, lang: str | None = Query(default=None)
         last_check=datetime.now(timezone.utc),
     )
 
-    return _render(
+    return templates.TemplateResponse(
         "security.html",
-        request,
-        current_lang,
-        extra={
+        {
+            "request": request,
+            **_base_context(request, current_lang),
+            "system_info": {
+                "hostname": "hostberry",
+                "os_version": "Raspberry Pi OS",
+                "kernel_version": "Linux 6.8.0",
+                "architecture": "armv7l",
+                "processor": "ARM Cortex-A53",
+                "uptime": "2 days, 5 hours",
+                "load_average": "0.25, 0.30, 0.35",
+                "cpu_cores": "4",
+            },
             "config": cfg,
             "security_status": sec,
+            "page": "security"
         },
     )
 
