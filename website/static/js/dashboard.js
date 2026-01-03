@@ -102,7 +102,9 @@ function updateHealthStatus(type, value) {
     }
     
     // Actualizar texto con traducción
-    statusText.textContent = HostBerry.t(status, status === 'system.healthy' ? 'Healthy' : (status === 'system.warning' ? 'Warning' : 'Critical'));
+    const translation = window.HostBerryTranslations?.system?.[status.split('.')[1]] || 
+                      (status === 'system.healthy' ? 'Healthy' : (status === 'system.warning' ? 'Warning' : 'Critical'));
+    statusText.textContent = translation;
     statusText.className = `status-text ${statusClass}`;
 }
 
