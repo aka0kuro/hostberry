@@ -541,7 +541,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(updateSystemStats, 30000); // Cada 30 segundos
     setInterval(updateServices, 60000);   // Cada minuto
     setInterval(updateNetworkStatus, 30000); // Cada 30 segundos
-    setInterval(updateLogs, 30000);       // Cada 30 segundos
+    setInterval(updateLogs, 10000);       // Cada 10 segundos
     setInterval(updateRecentActivity, 60000); // Cada minuto
     
     // Event listener para cambio de nivel de logs
