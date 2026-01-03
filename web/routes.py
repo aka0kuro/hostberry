@@ -338,8 +338,8 @@ async def dashboard_page(request: Request, lang: str | None = Query(default=None
                 "disk_percent": 60,
                 "temperature": 45
             },
-            "recent_activities": [usuro
-                {"title": get_text("auth.login_success", default="Login successful", language=lang or "en"), "description": get_text("auth.user_logged_in", default="User admin logged in", language=lang or "en"), "timestamp": get_text("time.minutes_ago", default="5 minutes ago", minutes=5, language=lang or "en")},
+            "recent_activities": [
+                {"title": get_text("auth.login_success", default="Login successful", language=lang or "en"), "description": get_text("auth.user_logged_in", default="User usuario logged in", language=lang or "en"), "timestamp": get_text("time.minutes_ago", default="5 minutes ago", minutes=5, language=lang or "en")},
                 {"title": get_text("system.update", default="Update", language=lang or "en"), "description": get_text("system.packages_updated", default="System packages updated", language=lang or "en"), "timestamp": get_text("time.hours_ago", default="1 hour ago", hours=1, language=lang or "en")}
             ]
         }
