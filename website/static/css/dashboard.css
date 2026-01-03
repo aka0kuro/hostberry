@@ -1046,6 +1046,11 @@ body:not(.light-theme) .form-select-sm {
     .action-btn span {
         font-size: 0.8rem;
     }
+    
+    /* Adjust content cards for mobile/tablet */
+    .services-card, .network-card, .activity-card, .logs-card, .actions-card {
+        min-height: auto;
+    }
 }
 
 @media (max-width: 768px) {
