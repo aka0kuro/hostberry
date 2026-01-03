@@ -925,6 +925,15 @@ body.light-theme .text-muted {
     text-align: center;
 }
 
+/* Desktop specific adjustments */
+@media (min-width: 992px) {
+    .status-footer {
+        justify-content: center !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+}
+
 /* Force center alignment for system status cards row */
 .status-cards-row {
     justify-content: center;
