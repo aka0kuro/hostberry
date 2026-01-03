@@ -3,11 +3,13 @@
     padding: 2rem 1rem;
     max-width: 1200px;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
     gap: 2rem;
 }
 
 .row {
-    margin-bottom: 1rem;
+    margin-bottom: 0;
     --bs-gutter-x: 2rem;
     --bs-gutter-y: 2rem;
 }
@@ -353,9 +355,14 @@ body.light-theme .info-item-grid .info-value {
 }
 
 /* Services & Network - Estrechar */
-.services-card, .network-card, .activity-card, .logs-card, .actions-card {
+.services-card, .network-card, .activity-card, .logs-card {
     padding: 0; /* Remove extra padding from container */
     min-height: 400px;
+}
+
+.actions-card {
+    padding: 0;
+    min-height: auto;
 }
 
 .services-card-body, .network-card-body, .activity-card-body, .logs-card-body, .actions-card-body {
