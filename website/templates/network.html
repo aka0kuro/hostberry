@@ -1,171 +1,198 @@
 {% extends "base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+{% endblock %}
+
 {% block content %}
-<div class="row">
-    <!-- Interfaces de Red -->
-    <div class="col-md-8 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-hdd-network"></i>
-                    {{ t('network.interfaces') }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <div id="interfacesContainer">
-                    <!-- Las interfaces se cargarán dinámicamente -->
-                </div>
-            </div>
+<div class="system-page">
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <img src="/static/hostberry.png" alt="hostberry" class="logo-image" />
+            <h1>HostBerry</h1>
+            <p>{{ t('network.title', 'Network Management') }}</p>
         </div>
     </div>
 
-    <!-- Estado de Red -->
-    <div class="col-md-4 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-wifi"></i>
-                    {{ t('network.status') }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-3">
-                    <span class="status-indicator status-online"></span>
-                    <span>{{ t('network.connected') }}</span>
-                </div>
-                <div class="d-flex align-items-center mb-3">
-                    <span class="status-indicator status-online"></span>
-                    <span>{{ t('network.internet_available') }}</span>
-                </div>
-                <div class="d-flex align-items-center mb-3">
-                    <span class="status-indicator status-online"></span>
-                    <span>{{ t('network.firewall_active') }}</span>
-                </div>
-                <div class="d-flex align-items-center mb-3">
-                    <span class="status-indicator status-warning"></span>
-                    <span>{{ t('network.dhcp_running') }}</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tabla de Enrutamiento -->
-    <div class="col-md-8 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-diagram-3"></i>
-                    {{ t('network.routing_table') }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>{{ t('network.destination') }}</th>
-                                <th>{{ t('network.gateway') }}</th>
-                                <th>{{ t('network.interface') }}</th>
-                                <th>{{ t('network.metric') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody id="routingTable">
-                            <!-- La tabla de enrutamiento se cargará dinámicamente -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Firewall -->
-    <div class="col-md-4 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-shield-check"></i>
-                    {{ t('network.firewall') }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-3">
-                    <span class="status-indicator status-online"></span>
-                    <span>{{ t('network.firewall_enabled') }}</span>
-                </div>
-                <div class="d-flex align-items-center mb-3">
-                    <span class="status-indicator status-online"></span>
-                    <span>{{ t('network.ssh_allowed') }}</span>
-                </div>
-                <div class="d-flex align-items-center mb-3">
-                    <span class="status-indicator status-online"></span>
-                    <span>{{ t('network.http_allowed') }}</span>
-                </div>
-                <div class="d-flex align-items-center mb-3">
-                    <span class="status-indicator status-offline"></span>
-                    <span>{{ t('network.https_allowed') }}</span>
-                </div>
-                
-                <hr>
-                
-                <button class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="toggleFirewall()">
-                    <i class="bi bi-shield"></i>
-                    {{ t('network.toggle_firewall') }}
-                </button>
-                
-                <button class="btn btn-outline-secondary btn-sm w-100" onclick="viewFirewallRules()">
-                    <i class="bi bi-list"></i>
-                    {{ t('network.view_rules') }}
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Configuración de Red -->
-    <div class="col-12 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-gear"></i>
-                    {{ t('network.configuration') }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <form id="networkConfigForm">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="hostname" class="form-label">{{ t('network.hostname') }}</label>
-                                <input type="text" class="form-control" id="hostname" name="hostname" value="hostberry">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="gateway" class="form-label">{{ t('network.gateway') }}</label>
-                                <input type="text" class="form-control" id="gateway" name="gateway" value="192.168.1.1">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="dns1" class="form-label">{{ t('network.primary_dns') }}</label>
-                                <input type="text" class="form-control" id="dns1" name="dns1" value="8.8.8.8">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="dns2" class="form-label">{{ t('network.secondary_dns') }}</label>
-                                <input type="text" class="form-control" id="dns2" name="dns2" value="8.8.4.4">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check"></i>
-                        {{ t('network.save_configuration') }}
+    <div class="row">
+        <!-- Network Interfaces -->
+        <div class="col-xl-8 col-lg-7 mb-4">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-hdd-network me-2"></i>{{ t('network.interfaces', 'Network Interfaces') }}
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadInterfaces()">
+                        <i class="bi bi-arrow-clockwise"></i>
                     </button>
-                </form>
+                </div>
+                <div class="card-body">
+                    <div id="interfacesContainer">
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-arrow-clockwise spinning"></i>
+                            <p class="mb-0 mt-2">{{ t('network.loading_interfaces', 'Loading interfaces...') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Status -->
+        <div class="col-xl-4 col-lg-5 mb-4">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-wifi me-2"></i>{{ t('network.status', 'Network Status') }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="status-indicator status-online"></span>
+                        <span class="text-white">{{ t('network.connected', 'Connected') }}</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="status-indicator status-online"></span>
+                        <span class="text-white">{{ t('network.internet_available', 'Internet Available') }}</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="status-indicator status-online"></span>
+                        <span class="text-white">{{ t('network.firewall_active', 'Firewall Active') }}</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="status-indicator status-warning"></span>
+                        <span class="text-white">{{ t('network.dhcp_running', 'DHCP Running') }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Routing Table -->
+        <div class="col-xl-8 col-lg-7 mb-4">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-diagram-3 me-2"></i>{{ t('network.routing_table', 'Routing Table') }}
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadRoutingTable()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover">
+                            <thead>
+                                <tr>
+                                    <th>{{ t('network.destination', 'Destination') }}</th>
+                                    <th>{{ t('network.gateway', 'Gateway') }}</th>
+                                    <th>{{ t('network.interface', 'Interface') }}</th>
+                                    <th>{{ t('network.metric', 'Metric') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="routingTable">
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">
+                                        <i class="bi bi-arrow-clockwise spinning"></i>
+                                        <p class="mb-0 mt-2">{{ t('network.loading_routes', 'Loading routes...') }}</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Firewall -->
+        <div class="col-xl-4 col-lg-5 mb-4">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-shield-check me-2"></i>{{ t('network.firewall', 'Firewall') }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="status-indicator status-online"></span>
+                        <span class="text-white">{{ t('network.firewall_enabled', 'Firewall Enabled') }}</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="status-indicator status-online"></span>
+                        <span class="text-white">{{ t('network.ssh_allowed', 'SSH Allowed') }}</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="status-indicator status-online"></span>
+                        <span class="text-white">{{ t('network.http_allowed', 'HTTP Allowed') }}</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="status-indicator status-offline"></span>
+                        <span class="text-white">{{ t('network.https_allowed', 'HTTPS Allowed') }}</span>
+                    </div>
+                    
+                    <hr class="border-secondary">
+                    
+                    <button class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="toggleFirewall()">
+                        <i class="bi bi-shield"></i>
+                        {{ t('network.toggle_firewall', 'Toggle Firewall') }}
+                    </button>
+                    
+                    <button class="btn btn-outline-secondary btn-sm w-100" onclick="viewFirewallRules()">
+                        <i class="bi bi-list"></i>
+                        {{ t('network.view_rules', 'View Rules') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Network Configuration -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-gear me-2"></i>{{ t('network.configuration', 'Network Configuration') }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="networkConfigForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="hostname" class="form-label text-white">{{ t('network.hostname', 'Hostname') }}</label>
+                                    <input type="text" class="form-control" id="hostname" name="hostname" value="hostberry">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="gateway" class="form-label text-white">{{ t('network.gateway', 'Gateway') }}</label>
+                                    <input type="text" class="form-control" id="gateway" name="gateway" value="192.168.1.1">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="dns1" class="form-label text-white">{{ t('network.primary_dns', 'Primary DNS') }}</label>
+                                    <input type="text" class="form-control" id="dns1" name="dns1" value="8.8.8.8">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="dns2" class="form-label text-white">{{ t('network.secondary_dns', 'Secondary DNS') }}</label>
+                                    <input type="text" class="form-control" id="dns2" name="dns2" value="8.8.4.4">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check"></i>
+                            {{ t('network.save_configuration', 'Save Configuration') }}
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -173,5 +200,127 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="/static/js/network.js?v={{ last_update }}"></script>
+<script>
+// Network functionality
+async function loadInterfaces(){
+    try{
+        const resp = await fetch('/api/v1/network/interfaces', { headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
+        if(resp.ok){ 
+            displayInterfaces(await resp.json()); 
+        } else { 
+            HostBerry.showAlert('danger', HostBerry.t('errors.loading_interfaces')); 
+        }
+    }catch(_e){ 
+        HostBerry.showAlert('danger', HostBerry.t('errors.network_error')); 
+    }
+}
+
+function displayInterfaces(interfaces){
+    const container = document.getElementById('interfacesContainer'); 
+    if(!container) return;
+    
+    if(!interfaces || interfaces.length===0){ 
+        container.innerHTML = '<p class="text-muted">'+HostBerry.t('network.no_interfaces', 'No interfaces found')+'</p>'; 
+        return; 
+    }
+    
+    let html='';
+    interfaces.forEach(function(iface){
+        const statusClass = iface.status==='up'?'success':'danger'; 
+        const statusIcon = iface.status==='up'?'bi-check-circle':'bi-x-circle';
+        html += '<div class="row mb-3">'
+            +'<div class="col-md-3"><strong class="text-white">'+iface.name+'</strong></div>'
+            +'<div class="col-md-3"><span class="badge bg-'+statusClass+'"><i class="bi '+statusIcon+'"></i> '+iface.status+'</span></div>'
+            +'<div class="col-md-3 text-white">'+(iface.ip||'N/A')+'</div>'
+            +'<div class="col-md-3 text-white">'+(iface.mac||'N/A')+'</div>'
+            +'</div>';
+    });
+    container.innerHTML = html;
+}
+
+async function loadRoutingTable(){
+    try{
+        const resp = await fetch('/api/v1/network/routing', { headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
+        if(resp.ok){ 
+            displayRoutingTable(await resp.json()); 
+        } else { 
+            HostBerry.showAlert('danger', HostBerry.t('errors.loading_routing')); 
+        }
+    }catch(_e){ 
+        HostBerry.showAlert('danger', HostBerry.t('errors.network_error')); 
+    }
+}
+
+function displayRoutingTable(routes){
+    const tbody = document.getElementById('routingTable'); 
+    if(!tbody) return;
+    
+    if(!routes || routes.length===0){ 
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">'+HostBerry.t('network.no_routes', 'No routes found')+'</td></tr>'; 
+        return; 
+    }
+    
+    let html='';
+    routes.forEach(function(route){ 
+        html += '<tr><td class="text-white">'+route.destination+'</td><td class="text-white">'+(route.gateway||'*')+'</td><td class="text-white">'+route.interface+'</td><td class="text-white">'+(route.metric||'0')+'</td></tr>'; 
+    });
+    tbody.innerHTML = html;
+}
+
+async function toggleFirewall(){
+    try{
+        const resp = await fetch('/api/v1/network/firewall/toggle', { method:'POST', headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
+        if(resp.ok){ 
+            HostBerry.showAlert('success', HostBerry.t('messages.operation_successful', 'Operation successful')); 
+            setTimeout(()=>window.location.reload(), 1000); 
+        }
+        else { 
+            HostBerry.showAlert('danger', HostBerry.t('errors.operation_failed')); 
+        }
+    }catch(_e){ 
+        HostBerry.showAlert('danger', HostBerry.t('errors.network_error')); 
+    }
+}
+
+function viewFirewallRules(){ 
+    alert(HostBerry.t('network.viewing_firewall_rules','Viewing firewall rules')); 
+}
+
+const configForm = document.getElementById('networkConfigForm');
+if(configForm){
+    configForm.addEventListener('submit', async function(e){
+        e.preventDefault(); 
+        const fd = new FormData(this);
+        const data = { 
+            hostname: fd.get('hostname'), 
+            dns1: fd.get('dns1'), 
+            dns2: fd.get('dns2'), 
+            gateway: fd.get('gateway') 
+        };
+        try{
+            const resp = await fetch('/api/v1/network/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                body: JSON.stringify(data)
+            });
+            if(resp.ok){
+                HostBerry.showAlert('success', HostBerry.t('messages.config_saved', 'Configuration saved'));
+            } else {
+                HostBerry.showAlert('danger', HostBerry.t('errors.config_update_error'));
+            }
+        }catch(_e){
+            HostBerry.showAlert('danger', HostBerry.t('errors.network_error'));
+        }
+    });
+}
+
+// Load data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadInterfaces();
+    loadRoutingTable();
+});
+</script>
 {% endblock %}
