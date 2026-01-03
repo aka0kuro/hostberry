@@ -21,8 +21,37 @@ html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe
 .navbar-toggler { display:none; }
 .navbar-nav { display:flex; gap:.5rem; list-style:none; padding:0; margin:0; flex-wrap: nowrap; justify-content: center; align-items: center; width: 100%; }
 .nav-item { margin: 0; display: flex; align-items: center; }
-.nav-link { color:#fff; text-decoration:none; padding:.5rem 1rem; border-radius:.25rem; display:inline-flex; align-items:center; gap:.35rem; white-space: nowrap; }
-.nav-link:hover { background: rgba(255,255,255,.15); }
+.nav-link { color:#fff; text-decoration:none; padding:.5rem 1rem; border-radius:.25rem; display:inline-flex; align-items:center; gap:.35rem; white-space: nowrap; transition: all 0.3s ease; }
+.nav-link:hover { background: rgba(255,255,255,.15); transform: translateY(-1px); }
+
+/* Asegurar centrado perfecto en diferentes tamaños */
+@media (min-width: 992px) {
+    .navbar-nav {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: auto;
+    }
+}
+
+/* Responsive para móviles */
+@media (max-width: 991px) {
+    .navbar-nav {
+        width: 100%;
+        justify-content: center;
+        padding: 1rem 0;
+    }
+    
+    .navbar-nav .nav-item {
+        text-align: center;
+        width: 100%;
+    }
+    
+    .navbar-nav .nav-link {
+        justify-content: center;
+        width: 100%;
+    }
+}
 
 /* Dropdown */
 .dropdown { position:relative; }
