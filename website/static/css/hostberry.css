@@ -312,14 +312,21 @@ body.light-theme { background: #f6f7f9; color: #212529; }
 .position-fixed { position:fixed; }
 .bg-primary-gradient { background: linear-gradient(135deg, var(--hb-primary) 0%, var(--hb-primary-dark) 100%); }
 
-/* Bootstrap Icons (empty fallback to avoid breaking layout) */
-[class^="bi"]::before, [class*=" bi-"]::before {
-    content: "";
-    display: inline-block;
-    width: 1em;
-    height: 1em;
-    vertical-align: -0.125em;
-}
+ /* Bootstrap Icons (empty fallback to avoid breaking layout) */
+ [class^="bi"]::before, [class*=" bi-"]::before {
+     content: "";
+     display: inline-block;
+     width: 1em;
+     height: 1em;
+     vertical-align: -0.125em;
+     background-color: currentColor;
+     -webkit-mask-repeat: no-repeat;
+     mask-repeat: no-repeat;
+     -webkit-mask-position: center;
+     mask-position: center;
+     -webkit-mask-size: contain;
+     mask-size: contain;
+ }
 
 /* Icon Definitions - Mask Implementation */
 .bi-arrow-clockwise::before {
