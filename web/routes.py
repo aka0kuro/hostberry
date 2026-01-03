@@ -44,6 +44,16 @@ def _base_context(request: Request, current_lang: str) -> dict:
         "request": request,
         "language": current_lang,
         "translations": get_html_translations(current_lang),
+        "system_info": {
+            "hostname": "hostberry",
+            "os_version": "Raspberry Pi OS",
+            "kernel_version": "Linux 6.8.0",
+            "architecture": "armv7l",
+            "processor": "ARM Cortex-A53",
+            "uptime": "2 days, 5 hours",
+            "load_average": "0.25, 0.30, 0.35",
+            "cpu_cores": "4",
+        },
         "system_stats": {
             "cpu_percent": 25,
             "memory_percent": 45,
