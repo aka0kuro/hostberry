@@ -862,14 +862,61 @@ body:not(.light-theme) .form-select-sm {
     background: rgba(255, 255, 255, 0.5);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* Responsive - 4 columnas en una línea */
+@media (min-width: 1200px) {
+    .status-card {
+        min-height: 160px;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .status-card {
+        min-height: 140px;
+        padding: 1rem;
+    }
+    
+    .status-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+    
+    .status-info h3 {
+        font-size: 1.3rem;
+    }
+    
+    .status-info h6 {
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 991px) {
     .dashboard-header {
         padding: 1.5rem;
     }
     
     .dashboard-title {
         font-size: 2rem;
+    }
+    
+    .status-card {
+        min-height: 120px;
+        padding: 1rem;
+    }
+    
+    .status-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 0.9rem;
+        margin-right: 0.6rem;
+    }
+    
+    .status-info h3 {
+        font-size: 1.2rem;
+    }
+    
+    .status-info h6 {
+        font-size: 0.65rem;
     }
     
     .quick-actions {
@@ -886,6 +933,26 @@ body:not(.light-theme) .form-select-sm {
     
     .action-btn span {
         font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .status-card {
+        min-height: 100px;
+        padding: 0.8rem;
+    }
+    
+    .status-card-header {
+        margin-bottom: 0.5rem;
+    }
+    
+    .progress {
+        height: 6px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .status-text {
+        font-size: 0.6rem;
     }
 }
 
