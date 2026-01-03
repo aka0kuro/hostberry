@@ -73,9 +73,10 @@ async def lifespan(app: FastAPI):
         log_system_event("app_startup", "Iniciando HostBerry FastAPI")
         setup_logging()
         
-        # Solo log_system_info si está en modo debug
-        if settings.debug:
-            log_system_info()
+        # log_system_info deshabilitado para acelerar arranque
+        # Se puede habilitar manualmente si es necesario para debugging
+        # if settings.debug:
+        #     log_system_info()
         
         # Optimizaciones para RPi (solo si está habilitado)
         if getattr(settings, 'rpi_optimization', False):
