@@ -16,6 +16,22 @@
     }
   });
 
+  // Navbar Toggler (Hamburger)
+  document.addEventListener('click', function(e){
+    const toggler = e.target.closest('.navbar-toggler');
+    if(toggler){
+        const targetId = toggler.getAttribute('data-bs-target');
+        if(targetId){
+            const target = document.querySelector(targetId);
+            if(target){
+                target.classList.toggle('show');
+                const expanded = target.classList.contains('show');
+                toggler.setAttribute('aria-expanded', expanded);
+            }
+        }
+    }
+  });
+
   // Load embedded JSON translations if they exist
   function loadTranslations(){
     try{
