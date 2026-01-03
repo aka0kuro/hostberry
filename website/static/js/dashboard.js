@@ -202,9 +202,9 @@ async function updateLogs() {
     try {
         const levelSelect = document.getElementById('logLevel');
         const level = levelSelect ? levelSelect.value : 'all';
-        // Add timestamp to prevent caching
-        const timestamp = new Date().getTime();
-        const response = await fetch(`/api/v1/system/logs?level=${level}&limit=10&_t=${timestamp}`);
+        
+        // Removed timestamp to prevent potential 422 errors if server is strict
+        const response = await fetch(`/api/v1/system/logs?level=${level}&limit=10`);
         
         if (response.ok) {
             const data = await response.json();
@@ -240,7 +240,7 @@ function renderLogs(logs) {
     
     logsContainer.innerHTML = '';
     
-    if (!logs || logs.length === 0) {
+    if (!logs || !Array.isArray(logs) || logs.length === 0) {
         logsContainer.innerHTML = `
             <div class="text-center py-4 text-muted">
                 <i class="bi bi-journal-x"></i>
@@ -252,7 +252,8 @@ function renderLogs(logs) {
     
     logs.forEach(log => {
         const logItem = document.createElement('div');
-        logItem.className = `log-item log-${log.level.toLowerCase()}`;
+        const logLevel = (log.level || 'INFO').toLowerCase();
+        logItem.className = `log-item log-${logLevel}`;
         
         let timeStr = '';
         try {
@@ -268,8 +269,8 @@ function renderLogs(logs) {
         
         logItem.innerHTML = `
             <span class="log-time">${timeStr}</span>
-            <span class="log-level ${log.level.toLowerCase()}">${log.level}</span>
-            <span class="log-message" title="${log.message}">${log.message}</span>
+            <span class="log-level ${logLevel}">${log.level || 'INFO'}</span>
+            <span class="log-message" title="${log.message || ''}">${log.message || ''}</span>
         `;
         
         logsContainer.appendChild(logItem);
