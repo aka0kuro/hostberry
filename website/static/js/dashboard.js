@@ -53,14 +53,16 @@ function updateStatCard(type, value) {
     
     if (valueElement) {
         if (type === 'temp') {
-            valueElement.textContent = `${value}°C`;
+            const tempVal = typeof value === 'number' ? value.toFixed(1) : value;
+            valueElement.textContent = `${tempVal}°C`;
             // Para temperatura, calcular porcentaje basado en 100°C como máximo
             const tempPercent = Math.min((value / 100) * 100, 100);
             if (progressBar) {
                 progressBar.style.width = `${tempPercent}%`;
             }
         } else {
-            valueElement.textContent = `${value}%`;
+            const val = typeof value === 'number' ? value.toFixed(1) : value;
+            valueElement.textContent = `${val}%`;
             if (progressBar) {
                 progressBar.style.width = `${value}%`;
             }
@@ -99,14 +101,8 @@ function updateHealthStatus(type, value) {
         statusClass = 'status-warning';
     }
     
-    // Actualizar texto (usar traducciones si están disponibles)
-    const statusTexts = {
-        'system.healthy': 'Saludable',
-        'system.warning': 'Advertencia',
-        'system.critical': 'Crítico'
-    };
-    
-    statusText.textContent = statusTexts[status] || status;
+    // Actualizar texto con traducción
+    statusText.textContent = HostBerry.t(status, status === 'system.healthy' ? 'Healthy' : (status === 'system.warning' ? 'Warning' : 'Critical'));
     statusText.className = `status-text ${statusClass}`;
 }
 
@@ -138,10 +134,10 @@ function updateServiceStatus(serviceName, status) {
             if (statusBadge) {
                 if (status === 'running') {
                     statusBadge.className = 'status-badge status-running';
-                    statusBadge.textContent = 'Activo';
+                    statusBadge.textContent = HostBerry.t('system.running', 'Active');
                 } else {
                     statusBadge.className = 'status-badge status-stopped';
-                    statusBadge.textContent = 'Detenido';
+                    statusBadge.textContent = HostBerry.t('system.stopped', 'Stopped');
                 }
             }
         }
@@ -176,7 +172,7 @@ function updateNetworkInterface(interfaceName, data) {
             const details = interface.querySelectorAll('.network-item');
             
             if (statusElement) {
-                statusElement.textContent = data.connected ? 'Conectado' : 'Desconectado';
+                statusElement.textContent = data.connected ? HostBerry.t('network.connected', 'Connected') : HostBerry.t('network.disconnected', 'Disconnected');
             }
             
             // Actualizar detalles si están disponibles
