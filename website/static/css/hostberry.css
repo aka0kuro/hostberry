@@ -149,17 +149,57 @@ body.light-theme { background: #f6f7f9; color: #212529; }
 
 /* Responsive para móviles */
 @media (max-width: 991px) {
-    .navbar-collapse { justify-content: center; }
-    .navbar-nav { justify-content: center; padding: 1rem 0; }
+    .navbar-collapse { 
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.2);
+        margin-top: 1rem;
+        border-radius: 15px;
+        padding: 1rem;
+    }
+    
+    .navbar-nav { 
+        justify-content: center; 
+        padding: 0; 
+        width: 100%;
+    }
     
     .navbar-nav .nav-item {
         text-align: center;
         width: 100%;
+        margin-bottom: 0.5rem;
+        display: block;
     }
     
     .navbar-nav .nav-link {
         justify-content: center;
         width: 100%;
+        padding: 0.75rem;
+        border-radius: 10px;
+    }
+    
+    .navbar-nav .nav-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .navbar-nav .dropdown-menu {
+        text-align: center;
+        background: transparent;
+        box-shadow: none;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        position: static;
+        display: none;
+        float: none;
+        margin-top: 0.5rem;
+    }
+    
+    .navbar-nav .dropdown.show .dropdown-menu {
+        display: block;
+    }
+    
+    .navbar-nav .dropdown-item {
+        justify-content: center;
+        display: flex;
+        align-items: center;
     }
 }
 
