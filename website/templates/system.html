@@ -222,27 +222,24 @@
                     <i class="bi bi-journal-text me-2"></i>
                     {{ t('system.logs') }}
                 </h5>
+                <div class="logs-controls">
+                    <select class="form-select form-select-sm me-2" id="logLevel">
+                        <option value="all">{{ t('logs.all_levels', 'All') }}</option>
+                        <option value="error">{{ t('logs.errors', 'Errors') }}</option>
+                        <option value="warning">{{ t('logs.warnings', 'Warnings') }}</option>
+                        <option value="info">{{ t('logs.info', 'Info') }}</option>
+                    </select>
+                    <button class="btn btn-sm btn-outline-primary" onclick="refreshLogs()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>{{ t('common.time') }}</th>
-                                <th>{{ t('common.level') }}</th>
-                                <th>{{ t('common.message') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody id="logsTable">
-                            <!-- Los logs se cargarán dinámicamente -->
-                        </tbody>
-                    </table>
-                </div>
-                <div class="text-center">
-                    <button class="btn btn-outline-secondary btn-sm" onclick="refreshLogs()">
-                        <i class="bi bi-arrow-clockwise"></i>
-                        {{ t('common.refresh') }}
-                    </button>
+                <div class="logs-container">
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-arrow-clockwise spinning"></i>
+                        <p class="mb-0 mt-2">{{ t('system.loading_logs', 'Loading logs...') }}</p>
+                    </div>
                 </div>
             </div>
         </div>
