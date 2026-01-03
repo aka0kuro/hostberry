@@ -923,7 +923,7 @@ body.light-theme .text-muted {
 .status-footer {
     text-align: center;
     width: 100%;
-    margin-top: 20px; /* More space above footer */
+    margin-top: 10px; /* Less space above footer, move Healthy higher */
     display: flex;
     justify-content: center;
     align-items: center;
