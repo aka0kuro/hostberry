@@ -83,7 +83,7 @@
     height: 100%;
     position: relative;
     overflow: hidden;
-    min-height: 400px;
+    min-height: 180px;
     display: flex;
     flex-direction: column;
 }
