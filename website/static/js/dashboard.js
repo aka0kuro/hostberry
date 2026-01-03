@@ -349,10 +349,20 @@ function getTimeAgo(timestamp) {
     const time = new Date(timestamp);
     const diff = Math.floor((now - time) / 1000); // diferencia en segundos
     
-    if (diff < 60) return 'Ahora';
-    if (diff < 3600) return `Hace ${Math.floor(diff / 60)} minutos`;
-    if (diff < 86400) return `Hace ${Math.floor(diff / 3600)} horas`;
-    return `Hace ${Math.floor(diff / 86400)} días`;
+    if (diff < 60) return HostBerry.t('time.just_now', 'Just now');
+    
+    if (diff < 3600) {
+        const minutes = Math.floor(diff / 60);
+        return HostBerry.t('time.minutes_ago', `Hace ${minutes} minutos`).replace('{minutes}', minutes);
+    }
+    
+    if (diff < 86400) {
+        const hours = Math.floor(diff / 3600);
+        return HostBerry.t('time.hours_ago', `Hace ${hours} horas`).replace('{hours}', hours);
+    }
+    
+    const days = Math.floor(diff / 86400);
+    return HostBerry.t('time.days_ago', `Hace ${days} días`).replace('{days}', days);
 }
 
 // Funciones de acción rápida
