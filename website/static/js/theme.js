@@ -90,11 +90,13 @@ function setTheme(theme) {
     const body = document.body;
     
     if (theme === 'dark') {
+        body.classList.remove('light-theme');
         body.classList.add('dark-theme');
         localStorage.setItem('theme', 'dark');
         updateThemeIcon('dark');
     } else {
         body.classList.remove('dark-theme');
+        body.classList.add('light-theme');
         localStorage.setItem('theme', 'light');
         updateThemeIcon('light');
     }
