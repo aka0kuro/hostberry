@@ -198,18 +198,38 @@ function updateNetworkInterface(interfaceName, data) {
 
 // Actualizar logs
 async function updateLogs() {
+    const logsContainer = document.querySelector('.logs-container');
     try {
         const levelSelect = document.getElementById('logLevel');
         const level = levelSelect ? levelSelect.value : 'all';
         // Add timestamp to prevent caching
         const timestamp = new Date().getTime();
         const response = await fetch(`/api/v1/system/logs?level=${level}&limit=10&_t=${timestamp}`);
+        
         if (response.ok) {
             const data = await response.json();
             renderLogs(data.logs);
+        } else {
+            console.error('Server returned error:', response.status);
+            if (logsContainer) {
+                logsContainer.innerHTML = `
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-exclamation-circle text-danger"></i>
+                        <p class="mb-0 mt-2">Error al cargar logs (${response.status})</p>
+                    </div>
+                `;
+            }
         }
     } catch (error) {
         console.error('Error updating logs:', error);
+        if (logsContainer) {
+            logsContainer.innerHTML = `
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-wifi-off text-danger"></i>
+                    <p class="mb-0 mt-2">Error de conexión</p>
+                </div>
+            `;
+        }
     }
 }
 
@@ -220,21 +240,36 @@ function renderLogs(logs) {
     
     logsContainer.innerHTML = '';
     
+    if (!logs || logs.length === 0) {
+        logsContainer.innerHTML = `
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-journal-x"></i>
+                <p class="mb-0 mt-2">No hay logs disponibles</p>
+            </div>
+        `;
+        return;
+    }
+    
     logs.forEach(log => {
         const logItem = document.createElement('div');
         logItem.className = `log-item log-${log.level.toLowerCase()}`;
         
-        const time = new Date(log.timestamp).toLocaleTimeString('es-ES', { 
-            hour12: false,
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
+        let timeStr = '';
+        try {
+            timeStr = new Date(log.timestamp).toLocaleTimeString('es-ES', { 
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        } catch (e) {
+            timeStr = '--:--:--';
+        }
         
         logItem.innerHTML = `
-            <span class="log-time">${time}</span>
+            <span class="log-time">${timeStr}</span>
             <span class="log-level ${log.level.toLowerCase()}">${log.level}</span>
-            <span class="log-message">${log.message}</span>
+            <span class="log-message" title="${log.message}">${log.message}</span>
         `;
         
         logsContainer.appendChild(logItem);
