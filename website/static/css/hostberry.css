@@ -782,9 +782,16 @@ body.light-theme .text-muted {
         gap: 15px; /* Add space between logo and user */
     }
     
-    /* Show username on mobile */
+    /* Show username on mobile next to avatar */
     .navbar .d-none.d-md-inline {
         display: inline !important;
+    }
+    
+    /* Position username next to avatar on mobile */
+    .navbar .user-dropdown {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
     }
     
     /* Separate System Info items and prevent overlap */
