@@ -136,8 +136,6 @@
     "network": "Network",
     "general": "Overall",
     "healthy": "Healthy",
-    "running": "Running",
-    "stopped": "Stopped",
     "warning": "Warning",
     "log_loaded": "Dashboard loaded successfully",
     "log_services_ok": "All services running correctly",
