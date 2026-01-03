@@ -192,6 +192,12 @@ async def get_system_logs(
 ):
     """Obtiene logs del sistema"""
     try:
+        # Convertir nivel a mayúsculas si existe para coincidir con la base de datos
+        if level and level.lower() != 'all':
+            level = level.upper()
+        else:
+            level = None
+            
         logs = await db.get_logs(limit=limit, level=level)
         return {
             "logs": logs,
