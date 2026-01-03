@@ -69,8 +69,8 @@
 .status-card {
     background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(20px);
-    border-radius: 25px;
-    padding: 1.8rem;
+    border-radius: 20px;
+    padding: 1.2rem;
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 
         0 8px 32px rgba(0, 0, 0, 0.3),
@@ -80,6 +80,7 @@
     height: 100%;
     position: relative;
     overflow: hidden;
+    min-height: 140px;
 }
 
 .status-card::before {
