@@ -908,7 +908,8 @@ body.light-theme .text-muted {
 }
 
 .status-cards-row .col-lg-3, .status-cards-row .col-md-6, .status-cards-row .col-6,
-.status-cards-row .col-lg-6, .status-cards-row .col-lg-12, .status-cards-row .col-md-12, .status-cards-row .col-12 {
+.status-cards-row .col-lg-6, .status-cards-row .col-lg-12, .status-cards-row .col-md-12, .status-cards-row .col-12,
+.status-cards-row .col-3 {
     display: flex;
     justify-content: center;
 }
