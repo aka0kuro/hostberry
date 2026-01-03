@@ -50,20 +50,20 @@
 
 .dashboard-title {
     color: #fff;
-    font-size: 2.2rem;
+    font-size: 1.8rem;
     font-weight: 300;
     margin-bottom: 0.5rem;
 }
 
 .dashboard-subtitle {
     color: rgba(255, 255, 255, 0.7);
-    font-size: 1rem;
+    font-size: 0.9rem;
     margin: 0;
 }
 
 .dashboard-time {
     color: rgba(255, 255, 255, 0.8);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 500;
 }
 
