@@ -535,6 +535,16 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     font-family: 'Courier New', monospace;
     font-size: 0.85rem;
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    margin-bottom: 4px;
+    transition: all 0.3s ease;
+}
+
+.log-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateX(2px);
 }
 
 .log-item:last-child {
