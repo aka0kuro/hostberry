@@ -272,6 +272,7 @@ function renderLogs(logs) {
         logItem.innerHTML = `
             <span class="log-time">${timeStr}</span>
             <span class="log-level ${logLevel}">${log.level || 'INFO'}</span>
+            <span class="log-source">${log.source || 'system'}</span>
             <span class="log-message" title="${log.message || ''}">${log.message || ''}</span>
         `;
         
