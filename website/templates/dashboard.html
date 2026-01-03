@@ -36,7 +36,7 @@
                     <div class="progress-bar cpu-progress" style="width: {{ system_stats.cpu_percent | default(25) }}%"></div>
                 </div>
                 <div class="status-footer">
-                    <span class="status-text">{{ t('system.healthy', 'Saludable') }}</span>
+                    <span class="status-text">{{ t('system.healthy', 'Healthy') }}</span>
                 </div>
             </div>
         </div>
@@ -48,7 +48,7 @@
                         <i class="bi bi-memory"></i>
                     </div>
                     <div class="status-info">
-                        <h6>{{ t('system.memory_usage', 'Memoria') }}</h6>
+                        <h6>{{ t('system.memory_usage', 'Memory') }}</h6>
                         <h3>{{ system_stats.memory_percent | default(45) }}%</h3>
                     </div>
                 </div>
@@ -56,7 +56,7 @@
                     <div class="progress-bar memory-progress" style="width: {{ system_stats.memory_percent | default(45) }}%"></div>
                 </div>
                 <div class="status-footer">
-                    <span class="status-text">{{ t('system.healthy', 'Saludable') }}</span>
+                    <span class="status-text">{{ t('system.healthy', 'Healthy') }}</span>
                 </div>
             </div>
         </div>
@@ -68,7 +68,7 @@
                         <i class="bi bi-hdd"></i>
                     </div>
                     <div class="status-info">
-                        <h6>{{ t('system.disk_usage', 'Disco') }}</h6>
+                        <h6>{{ t('system.disk_usage', 'Disk') }}</h6>
                         <h3>{{ system_stats.disk_percent | default(60) }}%</h3>
                     </div>
                 </div>
@@ -76,7 +76,7 @@
                     <div class="progress-bar disk-progress" style="width: {{ system_stats.disk_percent | default(60) }}%"></div>
                 </div>
                 <div class="status-footer">
-                    <span class="status-text">{{ t('system.healthy', 'Saludable') }}</span>
+                    <span class="status-text">{{ t('system.healthy', 'Healthy') }}</span>
                 </div>
             </div>
         </div>
@@ -88,7 +88,7 @@
                         <i class="bi bi-thermometer-half"></i>
                     </div>
                     <div class="status-info">
-                        <h6>{{ t('system.temperature', 'Temperatura') }}</h6>
+                        <h6>{{ t('system.temperature', 'Temperature') }}</h6>
                         <h3>{{ system_stats.temperature | default(45) }}°C</h3>
                     </div>
                 </div>
@@ -109,7 +109,7 @@
                 <div class="info-card-header">
                     <h5 class="info-card-title">
                         <i class="bi bi-info-circle me-2"></i>
-                        {{ t('system.information', 'Información del Sistema') }}
+                        {{ t('system.information', 'System Information') }}
                     </h5>
                 </div>
                 <div class="info-card-body">
@@ -122,7 +122,7 @@
                         </div>
                         <div class="col-lg-2 col-md-4 col-6 mb-3">
                             <div class="info-item-grid">
-                                <span class="info-label d-block">{{ t('system.os_version', 'Sistema Operativo') }}</span>
+                                <span class="info-label d-block">{{ t('system.os_version', 'OS Version') }}</span>
                                 <span class="info-value">{{ system_info.os_version | default('Raspberry Pi OS') }}</span>
                             </div>
                         </div>
@@ -134,19 +134,19 @@
                         </div>
                         <div class="col-lg-2 col-md-4 col-6 mb-3">
                             <div class="info-item-grid">
-                                <span class="info-label d-block">{{ t('system.architecture', 'Arquitectura') }}</span>
+                                <span class="info-label d-block">{{ t('system.architecture', 'Architecture') }}</span>
                                 <span class="info-value">{{ system_info.architecture | default('armv7l') }}</span>
                             </div>
                         </div>
                         <div class="col-lg-2 col-md-4 col-6 mb-3">
                             <div class="info-item-grid">
-                                <span class="info-label d-block">{{ t('system.uptime', 'Tiempo Activo') }}</span>
-                                <span class="info-value">{{ system_info.uptime | default('2 días, 5 horas') }}</span>
+                                <span class="info-label d-block">{{ t('system.uptime', 'Uptime') }}</span>
+                                <span class="info-value">{{ system_info.uptime | default('2 days, 5 hours') }}</span>
                             </div>
                         </div>
                         <div class="col-lg-2 col-md-4 col-6 mb-3">
                             <div class="info-item-grid">
-                                <span class="info-label d-block">{{ t('system.cpu_cores', 'Núcleos CPU') }}</span>
+                                <span class="info-label d-block">{{ t('system.cpu_cores', 'CPU Cores') }}</span>
                                 <span class="info-value">{{ system_info.cpu_cores | default('4') }}</span>
                             </div>
                         </div>
@@ -164,7 +164,7 @@
                 <div class="services-card-header">
                     <h5 class="services-card-title">
                         <i class="bi bi-server me-2"></i>
-                        {{ t('system.services', 'Servicios') }}
+                        {{ t('system.services', 'Services') }}
                     </h5>
                 </div>
                 <div class="services-card-body">
@@ -174,7 +174,7 @@
                             <span class="service-name">HostBerry</span>
                         </div>
                         <div class="service-status">
-                            <span class="status-badge status-running">{{ t('system.running', 'Activo') }}</span>
+                            <span class="status-badge status-running">{{ t('system.running', 'Active') }}</span>
                         </div>
                     </div>
                     <div class="service-item">
@@ -183,7 +183,7 @@
                             <span class="service-name">Nginx</span>
                         </div>
                         <div class="service-status">
-                            <span class="status-badge status-running">{{ t('system.running', 'Activo') }}</span>
+                            <span class="status-badge status-running">{{ t('system.running', 'Active') }}</span>
                         </div>
                     </div>
                     <div class="service-item">
@@ -192,7 +192,7 @@
                             <span class="service-name">Fail2ban</span>
                         </div>
                         <div class="service-status">
-                            <span class="status-badge status-running">{{ t('system.running', 'Activo') }}</span>
+                            <span class="status-badge status-running">{{ t('system.running', 'Active') }}</span>
                         </div>
                     </div>
                     <div class="service-item">
@@ -201,7 +201,7 @@
                             <span class="service-name">UFW Firewall</span>
                         </div>
                         <div class="service-status">
-                            <span class="status-badge status-running">{{ t('system.running', 'Activo') }}</span>
+                            <span class="status-badge status-running">{{ t('system.running', 'Active') }}</span>
                         </div>
                     </div>
                     <div class="service-item">
@@ -210,7 +210,7 @@
                             <span class="service-name">WiFi</span>
                         </div>
                         <div class="service-status">
-                            <span class="status-badge status-running">{{ t('system.running', 'Activo') }}</span>
+                            <span class="status-badge status-running">{{ t('system.running', 'Active') }}</span>
                         </div>
                     </div>
                     <div class="service-item">
@@ -219,7 +219,7 @@
                             <span class="service-name">SSH</span>
                         </div>
                         <div class="service-status">
-                            <span class="status-badge status-running">{{ t('system.running', 'Activo') }}</span>
+                            <span class="status-badge status-running">{{ t('system.running', 'Active') }}</span>
                         </div>
                     </div>
                 </div>
@@ -232,7 +232,7 @@
                 <div class="network-card-header">
                     <h5 class="network-card-title">
                         <i class="bi bi-wifi me-2"></i>
-                        {{ t('dashboard.network_status', 'Estado de Red') }}
+                        {{ t('dashboard.network_status', 'Network Status') }}
                     </h5>
                 </div>
                 <div class="network-card-body">
@@ -241,7 +241,7 @@
                             <i class="bi bi-ethernet interface-icon"></i>
                             <div class="interface-info">
                                 <h6>eth0</h6>
-                                <span class="interface-status">{{ t('network.connected', 'Conectado') }}</span>
+                                <span class="interface-status">{{ t('network.connected', 'Connected') }}</span>
                             </div>
                         </div>
                         <div class="interface-details">
@@ -265,7 +265,7 @@
                             <i class="bi bi-wifi interface-icon"></i>
                             <div class="interface-info">
                                 <h6>wlan0</h6>
-                                <span class="interface-status">{{ t('network.connected', 'Conectado') }}</span>
+                                <span class="interface-status">{{ t('network.connected', 'Connected') }}</span>
                             </div>
                         </div>
                         <div class="interface-details">
@@ -278,7 +278,7 @@
                                 <span class="network-value">HomeNetwork</span>
                             </div>
                             <div class="network-item">
-                                <span class="network-label">{{ t('network.signal', 'Señal') }}</span>
+                                <span class="network-label">{{ t('network.signal', 'Signal') }}</span>
                                 <span class="network-value">85%</span>
                             </div>
                         </div>
@@ -292,10 +292,10 @@
     <div class="row">
         <div class="col-12">
             <div class="activity-card">
-                <div class="activity-card-header">
-                    <h5 class="activity-card-title">
+                <div class="activity-card-header d-flex align-items-center gap-3">
+                    <h5 class="activity-card-title mb-0">
                         <i class="bi bi-clock-history me-2"></i>
-                        {{ t('dashboard.recent_activity', 'Actividad Reciente') }}
+                        {{ t('dashboard.recent_activity', 'Recent Activity') }}
                     </h5>
                     <button class="btn btn-sm btn-outline-primary" onclick="refreshActivity()">
                         <i class="bi bi-arrow-clockwise"></i>
@@ -308,9 +308,9 @@
                                 <i class="bi bi-box-arrow-in-right"></i>
                             </div>
                             <div class="activity-content">
-                                <h6>{{ t('auth.login_success', 'Login exitoso') }}</h6>
-                                <p>{{ t('auth.user_logged_in', 'Usuario admin inició sesión') }}</p>
-                                <span class="activity-time">Hace 5 minutos</span>
+                                <h6>{{ t('auth.login_success', 'Login successful') }}</h6>
+                                <p>{{ t('auth.user_logged_in', 'Admin user logged in') }}</p>
+                                <span class="activity-time">5 mins ago</span>
                             </div>
                         </div>
                         <div class="activity-item">
@@ -318,9 +318,9 @@
                                 <i class="bi bi-arrow-clockwise"></i>
                             </div>
                             <div class="activity-content">
-                                <h6>{{ t('system.update', 'Actualización') }}</h6>
-                                <p>{{ t('system.packages_updated', 'Paquetes del sistema actualizados') }}</p>
-                                <span class="activity-time">Hace 1 hora</span>
+                                <h6>{{ t('system.update', 'Update') }}</h6>
+                                <p>{{ t('system.packages_updated', 'System packages updated') }}</p>
+                                <span class="activity-time">1 hour ago</span>
                             </div>
                         </div>
                         <div class="activity-item">
@@ -328,9 +328,9 @@
                                 <i class="bi bi-wifi"></i>
                             </div>
                             <div class="activity-content">
-                                <h6>{{ t('network.wifi_connected', 'WiFi Conectado') }}</h6>
-                                <p>{{ t('network.connected_to_network', 'Conectado a HomeNetwork') }}</p>
-                                <span class="activity-time">Hace 2 horas</span>
+                                <h6>{{ t('network.wifi_connected', 'WiFi Connected') }}</h6>
+                                <p>{{ t('network.connected_to_network', 'Connected to HomeNetwork') }}</p>
+                                <span class="activity-time">2 hours ago</span>
                             </div>
                         </div>
                         <div class="activity-item">
@@ -338,9 +338,9 @@
                                 <i class="bi bi-shield-check"></i>
                             </div>
                             <div class="activity-content">
-                                <h6>{{ t('security.firewall_enabled', 'Firewall Activado') }}</h6>
-                                <p>{{ t('security.ufw_enabled', 'UFW Firewall ha sido activado') }}</p>
-                                <span class="activity-time">Hace 3 horas</span>
+                                <h6>{{ t('security.firewall_enabled', 'Firewall Enabled') }}</h6>
+                                <p>{{ t('security.ufw_enabled', 'UFW Firewall has been enabled') }}</p>
+                                <span class="activity-time">3 hours ago</span>
                             </div>
                         </div>
                     </div>
@@ -356,13 +356,13 @@
                 <div class="logs-card-header">
                     <h5 class="logs-card-title">
                         <i class="bi bi-journal-text me-2"></i>
-                        {{ t('system.logs', 'Logs del Sistema') }}
+                        {{ t('system.logs', 'System Logs') }}
                     </h5>
                     <div class="logs-controls">
                         <select class="form-select form-select-sm me-2" id="logLevel">
-                            <option value="all">{{ t('logs.all_levels', 'Todos') }}</option>
-                            <option value="error">{{ t('logs.errors', 'Errores') }}</option>
-                            <option value="warning">{{ t('logs.warnings', 'Advertencias') }}</option>
+                            <option value="all">{{ t('logs.all_levels', 'All') }}</option>
+                            <option value="error">{{ t('logs.errors', 'Errors') }}</option>
+                            <option value="warning">{{ t('logs.warnings', 'Warnings') }}</option>
                             <option value="info">{{ t('logs.info', 'Info') }}</option>
                         </select>
                         <button class="btn btn-sm btn-outline-primary" onclick="refreshLogs()">
@@ -374,7 +374,7 @@
                     <div class="logs-container">
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-arrow-clockwise spinning"></i>
-                            <p class="mb-0 mt-2">{{ t('system.loading_logs', 'Cargando logs...') }}</p>
+                            <p class="mb-0 mt-2">{{ t('system.loading_logs', 'Loading logs...') }}</p>
                         </div>
                     </div>
                 </div>
@@ -389,18 +389,18 @@
                 <div class="actions-card-header">
                     <h5 class="actions-card-title">
                         <i class="bi bi-lightning me-2"></i>
-                        {{ t('dashboard.quick_actions', 'Acciones Rápidas') }}
+                        {{ t('dashboard.quick_actions', 'Quick Actions') }}
                     </h5>
                 </div>
                 <div class="actions-card-body">
                     <div class="quick-actions">
                         <button class="action-btn action-restart" onclick="restartSystem()">
                             <i class="bi bi-arrow-clockwise"></i>
-                            <span>{{ t('system.restart', 'Reiniciar') }}</span>
+                            <span>{{ t('system.restart', 'Restart') }}</span>
                         </button>
                         <button class="action-btn action-shutdown" onclick="shutdownSystem()">
                             <i class="bi bi-power"></i>
-                            <span>{{ t('system.shutdown', 'Apagar') }}</span>
+                            <span>{{ t('system.shutdown', 'Shutdown') }}</span>
                         </button>
                         <button class="action-btn action-backup" onclick="backupSystem()">
                             <i class="bi bi-cloud-arrow-up"></i>
@@ -408,15 +408,15 @@
                         </button>
                         <button class="action-btn action-update" onclick="checkUpdates()">
                             <i class="bi bi-arrow-up-circle"></i>
-                            <span>{{ t('system.updates', 'Actualizaciones') }}</span>
+                            <span>{{ t('system.updates', 'Updates') }}</span>
                         </button>
                         <button class="action-btn action-monitor" onclick="openMonitoring()">
                             <i class="bi bi-graph-up"></i>
-                            <span>{{ t('dashboard.monitoring', 'Monitoreo') }}</span>
+                            <span>{{ t('dashboard.monitoring', 'Monitoring') }}</span>
                         </button>
                         <button class="action-btn action-security" onclick="openSecurity()">
                             <i class="bi bi-shield-lock"></i>
-                            <span>{{ t('navigation.security', 'Seguridad') }}</span>
+                            <span>{{ t('navigation.security', 'Security') }}</span>
                         </button>
                     </div>
                 </div>
