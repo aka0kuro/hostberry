@@ -379,7 +379,6 @@ async def monitoring_page(request: Request, lang: str | None = Query(default=Non
                 "temperature": 45,
             },
         },
-        }
     )
 
 
