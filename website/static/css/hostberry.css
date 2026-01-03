@@ -881,6 +881,14 @@ body.light-theme .text-muted {
     .navbar .d-flex.align-items-center {
         justify-content: center !important;
         width: 100%;
+        gap: 15px; /* Add space between logo and user */
+    }
+    
+    /* Make Services and Network sections full width on tablet like Logs */
+    .services-network-row .col-lg-6 {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
     }
     
     /* Add separation for System Status cards on tablet */
