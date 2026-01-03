@@ -855,6 +855,8 @@ body.light-theme .text-muted {
     min-height: 240px; /* Make cards taller */
     padding: 28px; /* Add more padding */
     border-radius: 12px; /* Slightly larger border radius */
+    width: 100%; /* Ensure cards take full width of their column */
+    max-width: none; /* Remove any max-width restrictions */
 }
 
 .status-card-header {
