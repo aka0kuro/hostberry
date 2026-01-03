@@ -52,8 +52,6 @@
     "offline": "Desconectado",
     "connected": "Conectado",
     "disconnected": "Desconectado",
-    "running": "Ejecutándose",
-    "stopped": "Detenido",
     "starting": "Iniciando",
     "stopping": "Deteniendo",
     "restarting": "Reiniciando",
