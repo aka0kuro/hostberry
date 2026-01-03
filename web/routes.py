@@ -7,6 +7,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from core.i18n import get_text, i18n, get_html_translations
+from core.system_light import boot_time
+import time
 
 router = APIRouter()
 
@@ -40,6 +42,20 @@ def _resolve_language(request: Request, lang: str | None) -> tuple[str, bool]:
 
 
 def _base_context(request: Request, current_lang: str) -> dict:
+    bt = 0.0
+    try:
+        bt = float(boot_time() or 0.0)
+    except Exception:
+        bt = 0.0
+
+    uptime_seconds = 0
+    if bt > 0:
+        uptime_seconds = max(0, int(time.time() - bt))
+
+    days = uptime_seconds // 86400
+    hours = (uptime_seconds % 86400) // 3600
+    minutes = (uptime_seconds % 3600) // 60
+
     return {
         "request": request,
         "language": current_lang,
@@ -50,7 +66,7 @@ def _base_context(request: Request, current_lang: str) -> dict:
             "kernel_version": "Linux 6.8.0",
             "architecture": "armv7l",
             "processor": "ARM Cortex-A53",
-            "uptime": "2 days, 5 hours",
+            "uptime": f"{days}d {hours}h {minutes}m",
             "load_average": "0.25, 0.30, 0.35",
             "cpu_cores": "4",
         },
