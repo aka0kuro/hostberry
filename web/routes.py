@@ -313,17 +313,21 @@ async def first_login_page(request: Request, response: Response, lang: str | Non
 
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    # Simular usuario logueado (en una app real vendría del token/sesión)
+    current_user = {"username": "admin"}
+    
     return _render(
         "dashboard.html",
         request,
         lang,
         extra={
+            "current_user": current_user,
             "system_info": {
                 "hostname": "hostberry",
                 "os_version": "Raspberry Pi OS",
                 "kernel_version": "Linux 6.8.0",
                 "architecture": "armv7l",
-                "uptime": "2 días, 5 horas",
+                "uptime": get_text("time.days_hours", default="2 days, 5 hours", days=2, hours=5, language=lang or "en"),
                 "cpu_cores": "4"
             },
             "system_stats": {
@@ -333,8 +337,8 @@ async def dashboard_page(request: Request, lang: str | None = Query(default=None
                 "temperature": 45
             },
             "recent_activities": [
-                {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
-                {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
+                {"title": get_text("auth.login_success", default="Login successful", language=lang or "en"), "description": get_text("auth.user_logged_in", default="User admin logged in", language=lang or "en"), "timestamp": get_text("time.minutes_ago", default="5 minutes ago", minutes=5, language=lang or "en")},
+                {"title": get_text("system.update", default="Update", language=lang or "en"), "description": get_text("system.packages_updated", default="System packages updated", language=lang or "en"), "timestamp": get_text("time.hours_ago", default="1 hour ago", hours=1, language=lang or "en")}
             ]
         }
     )

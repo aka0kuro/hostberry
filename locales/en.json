@@ -62,6 +62,12 @@
     "change_theme": "Change theme",
     "show_password": "Show password"
   },
+  "time": {
+    "days_hours": "{days} days, {hours} hours",
+    "minutes_ago": "{minutes} minutes ago",
+    "hours_ago": "{hours} hour(s) ago",
+    "just_now": "Just now"
+  },
   "navigation": {
     "dashboard": "Dashboard",
     "system": "System",

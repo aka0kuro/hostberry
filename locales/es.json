@@ -62,6 +62,12 @@
     "change_theme": "Cambiar tema",
     "show_password": "Mostrar contraseña"
   },
+  "time": {
+    "days_hours": "{days} días, {hours} horas",
+    "minutes_ago": "Hace {minutes} minutos",
+    "hours_ago": "Hace {hours} hora(s)",
+    "just_now": "Ahora"
+  },
   "navigation": {
     "dashboard": "Panel Principal",
     "system": "Sistema",
