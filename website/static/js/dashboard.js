@@ -199,8 +199,11 @@ function updateNetworkInterface(interfaceName, data) {
 // Actualizar logs
 async function updateLogs() {
     try {
-        const level = document.getElementById('logLevel')?.value || 'all';
-        const response = await fetch(`/api/v1/system/logs?level=${level}&limit=10`);
+        const levelSelect = document.getElementById('logLevel');
+        const level = levelSelect ? levelSelect.value : 'all';
+        // Add timestamp to prevent caching
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/api/v1/system/logs?level=${level}&limit=10&_t=${timestamp}`);
         if (response.ok) {
             const data = await response.json();
             renderLogs(data.logs);
