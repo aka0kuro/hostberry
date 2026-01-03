@@ -115,7 +115,10 @@ body.light-theme { background: #f6f7f9; color: #212529; }
 .user-dropdown { padding: 0; }
 .user-dropdown.nav-link { padding: 0; }
 .user-dropdown .user-avatar { flex: 0 0 auto; }
-.navbar-toggler { display:none; }
+.navbar-toggler { display:none; border: none; padding: 0.5rem; border-radius: 8px; transition: background 0.3s ease; }
+.navbar-toggler:focus { box-shadow: none; }
+.navbar-toggler:hover { background: rgba(255, 255, 255, 0.1); }
+.navbar-toggler-icon { width: 1.5em; height: 1.5em; }
 .navbar-collapse { flex: 1 1 auto; display:flex; justify-content:center; }
 .navbar-nav { display:flex; gap:.5rem; list-style:none; padding:0; margin:0; flex-wrap: nowrap; justify-content: center; align-items: center; }
 .nav-item { margin: 0; display: flex; align-items: center; }
