@@ -307,12 +307,17 @@ body.light-theme { background: #f6f7f9; color: #212529; }
 .position-fixed { position:fixed; }
 .bg-primary-gradient { background: linear-gradient(135deg, var(--hb-primary) 0%, var(--hb-primary-dark) 100%); }
 
-/* Bootstrap Icons (Offline Support via Mask) */
+/* Bootstrap Icons (empty fallback to avoid breaking layout) */
 [class^="bi"]::before, [class*=" bi-"]::before {
     content: "";
     display: inline-block;
     width: 1em;
     height: 1em;
+    vertical-align: -0.125em;
+}
+
+/* Icon Definitions - Mask Implementation */
+.bi-arrow-clockwise::before {
     background-color: currentColor;
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
@@ -320,11 +325,6 @@ body.light-theme { background: #f6f7f9; color: #212529; }
     mask-position: center;
     -webkit-mask-size: contain;
     mask-size: contain;
-    vertical-align: -0.125em;
-}
-
-/* Icon Definitions */
-.bi-arrow-clockwise::before {
     -webkit-mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill-rule='evenodd' d='M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z'/%3e%3cpath d='M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z'/%3e%3c/svg%3e");
     mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill-rule='evenodd' d='M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z'/%3e%3cpath d='M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z'/%3e%3c/svg%3e");
 }
