@@ -78,10 +78,12 @@ async def lifespan(app: FastAPI):
         # if settings.debug:
         #     log_system_info()
         
-        # Optimizaciones para RPi (solo si está habilitado)
-        if getattr(settings, 'rpi_optimization', False):
-            optimize_system_for_rpi()
-            log_system_event("rpi_optimization", "Optimizaciones RPi aplicadas")
+        # Optimizaciones para RPi deshabilitadas en arranque para acelerar inicio
+        # Estas optimizaciones ejecutan comandos sudo costosos
+        # Se deben aplicar manualmente una vez o mediante script de configuración inicial
+        # if getattr(settings, 'rpi_optimization', False):
+        #     optimize_system_for_rpi()
+        #     log_system_event("rpi_optimization", "Optimizaciones RPi aplicadas")
         
         # Inicializar base de datos
         await db.init_database()
