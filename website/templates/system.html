@@ -64,19 +64,19 @@
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
                     <span class="status-indicator status-{{ 'online' if system_health.overall == 'healthy' else 'offline' }}"></span>
-                    <span>{{ t('system.overall') }}: {{ t('system.healthy' if system_health.overall == 'healthy' else 'system.unhealthy') }}</span>
+                    <span>{{ t('system.overall') }}: {{ t('common.healthy', 'Healthy') if system_health.overall == 'healthy' else t('common.unhealthy', 'Unhealthy') }}</span>
                 </div>
                 <div class="d-flex align-items-center mb-3">
                     <span class="status-indicator status-{{ 'online' if system_health.cpu == 'healthy' else 'warning' }}"></span>
-                    <span>{{ t('system.cpu') }}: {{ t('system.healthy' if system_health.cpu == 'healthy' else 'system.warning') }}</span>
+                    <span>{{ t('system.cpu') }}: {{ t('common.healthy', 'Healthy') if system_health.cpu == 'healthy' else t('common.warning', 'Warning') }}</span>
                 </div>
                 <div class="d-flex align-items-center mb-3">
                     <span class="status-indicator status-{{ 'online' if system_health.memory == 'healthy' else 'warning' }}"></span>
-                    <span>{{ t('system.memory') }}: {{ t('system.healthy' if system_health.memory == 'healthy' else 'system.warning') }}</span>
+                    <span>{{ t('system.memory') }}: {{ t('common.healthy', 'Healthy') if system_health.memory == 'healthy' else t('common.warning', 'Warning') }}</span>
                 </div>
                 <div class="d-flex align-items-center mb-3">
                     <span class="status-indicator status-{{ 'online' if system_health.disk == 'healthy' else 'warning' }}"></span>
-                    <span>{{ t('system.storage') }}: {{ t('system.healthy' if system_health.disk == 'healthy' else 'system.warning') }}</span>
+                    <span>{{ t('system.storage') }}: {{ t('common.healthy', 'Healthy') if system_health.disk == 'healthy' else t('common.warning', 'Warning') }}</span>
                 </div>
             </div>
         </div>
