@@ -255,5 +255,105 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+// Logs functionality for system page
+async function refreshLogs() {
+    try {
+        const levelSelect = document.getElementById('logLevel');
+        let level = levelSelect ? levelSelect.value : 'all';
+        
+        if (!level || level === 'undefined' || level === 'null') {
+            level = 'all';
+        }
+        
+        const response = await HostBerry.apiRequest(`/api/v1/system/logs?level=${encodeURIComponent(level)}&limit=20`);
+        
+        if (response.ok) {
+            const data = await response.json();
+            renderLogs(data.logs);
+        } else {
+            console.error('Server returned error:', response.status);
+            const logsContainer = document.querySelector('.logs-container');
+            if (logsContainer) {
+                logsContainer.innerHTML = `
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-exclamation-circle text-danger"></i>
+                        <p class="mb-0 mt-2">Error loading logs (${response.status})</p>
+                    </div>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error('Error updating logs:', error);
+        const logsContainer = document.querySelector('.logs-container');
+        if (logsContainer) {
+            logsContainer.innerHTML = `
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-wifi-off text-danger"></i>
+                    <p class="mb-0 mt-2">Connection error</p>
+                </div>
+            `;
+        }
+    }
+}
+
+function renderLogs(logs) {
+    const logsContainer = document.querySelector('.logs-container');
+    if (!logsContainer) return;
+    
+    logsContainer.innerHTML = '';
+    
+    if (!logs || !Array.isArray(logs) || logs.length === 0) {
+        logsContainer.innerHTML = `
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-journal-x"></i>
+                <p class="mb-0 mt-2">No logs available</p>
+            </div>
+        `;
+        return;
+    }
+    
+    logs.forEach(log => {
+        const logItem = document.createElement('div');
+        const logLevel = (log.level || 'INFO').toLowerCase();
+        logItem.className = `log-item log-${logLevel}`;
+        
+        let timeStr = '';
+        try {
+            timeStr = new Date(log.timestamp).toLocaleTimeString('en-US', { 
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        } catch (e) {
+            timeStr = '--:--:--';
+        }
+        
+        logItem.innerHTML = `
+            <span class="log-time">${timeStr}</span>
+            <span class="log-level ${logLevel}">${log.level || 'INFO'}</span>
+            <span class="log-source">${log.source || 'system'}</span>
+            <span class="log-message" title="${log.message || ''}">${log.message || ''}</span>
+        `;
+        
+        logsContainer.appendChild(logItem);
+    });
+}
+
+// Auto-refresh logs every 10 seconds
+setInterval(refreshLogs, 10000);
+
+// Event listener for log level change
+document.addEventListener('DOMContentLoaded', function() {
+    const logLevelSelect = document.getElementById('logLevel');
+    if (logLevelSelect) {
+        logLevelSelect.addEventListener('change', refreshLogs);
+    }
+    
+    // Initial load
+    refreshLogs();
+});
+</script>
 <script src="/static/js/system.js?v={{ last_update }}"></script>
 {% endblock %}
