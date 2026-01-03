@@ -791,7 +791,6 @@
     "system_info_error": "Error getting system info",
     "system_stats_error": "Error getting system statistics",
     "translations_error": "Error getting translations",
-    "uptime_error": "Error getting uptime",
     "vpn_connect_error": "Error connecting to VPN",
     "vpn_disconnect_error": "Error disconnecting from VPN",
     "vpn_status_error": "Error getting VPN status",
