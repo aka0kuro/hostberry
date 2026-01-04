@@ -42,10 +42,10 @@
                             <i class="bi bi-hdd-network"></i>
                             <span>{{ t('backup.create_backup', 'Crear backup') }}</span>
                         </button>
-                        <label class="action-btn action-backup" id="action-upload-backup" style="cursor: pointer; margin: 0;">
+                        <label class="action-btn action-backup" id="action-upload-backup" style="cursor: pointer; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 1.1rem 0.75rem 1rem; border: none; border-radius: 20px; background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none; position: relative; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1); height: 100%; justify-content: center;">
                             <input type="file" id="backup-file-input" accept=".tar.gz,.tgz" style="display: none;">
-                            <i class="bi bi-cloud-upload"></i>
-                            <span>{{ t('backup.upload_backup', 'Cargar backup') }}</span>
+                            <i class="bi bi-cloud-upload" style="font-size: 1.5rem; margin-bottom: 0.25rem;"></i>
+                            <span style="font-size: 0.9rem; font-weight: 500;">{{ t('backup.upload_backup', 'Cargar backup') }}</span>
                         </label>
                         <button class="action-btn action-backup" id="action-list-backups">
                             <i class="bi bi-archive"></i>
