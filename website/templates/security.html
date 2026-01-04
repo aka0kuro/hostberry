@@ -479,7 +479,7 @@
   async function uploadBackup(file){
     try{
       if(!file){
-        showNotification(HostBerry.t?.('backup.no_file', 'No se seleccionó ningún archivo') || 'No se seleccionó ningún archivo', 'error');
+        showNotification(getTranslation('backup.no_file', 'No file selected'), 'error');
         return;
       }
       
