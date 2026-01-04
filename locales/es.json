@@ -392,6 +392,7 @@
     "running_services": "Servicios Ejecutándose",
     "stopped_services": "Servicios Detenidos",
     "failed_services": "Servicios Fallidos",
+    "unknown": "Desconocido",
     "healthy": "Saludable",
     "normal": "Normal",
     "warning": "Advertencia",
