@@ -138,7 +138,13 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
         asyncio.create_task(db.insert_statistic("disk_usage", disk.percent))
         
         # Guardar en caché (5 segundos TTL) con información adicional
-        stats_dict = stats.dict() if hasattr(stats, 'dict') else {
+        # Usar model_dump() si está disponible (Pydantic v2) o dict() (Pydantic v1)
+        if hasattr(stats, 'model_dump'):
+            stats_dict = stats.model_dump()
+        elif hasattr(stats, 'dict'):
+            stats_dict = stats.dict()
+        else:
+            stats_dict = {
             "cpu_usage": stats.cpu_usage,
             "cpu_cores": stats.cpu_cores,
             "memory_usage": stats.memory_usage,
