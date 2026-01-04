@@ -593,6 +593,77 @@
     }
   }
 
+  async function downloadBackup(backupName){
+    try{
+      if(!backupName){
+        HostBerry.showAlert?.('danger', HostBerry.t?.('errors.backup_not_found', 'Backup not found') || 'Backup not found');
+        return;
+      }
+      
+      HostBerry.showAlert?.('info', HostBerry.t?.('security.backup_downloaded', 'Downloading backup...') || 'Downloading backup...');
+      
+      // Crear enlace de descarga
+      const downloadUrl = `/api/v1/security/backup/${encodeURIComponent(backupName)}/download`;
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = backupName;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Esperar un momento y mostrar mensaje de éxito
+      setTimeout(() => {
+        HostBerry.showAlert?.('success', HostBerry.t?.('security.backup_downloaded', 'Backup downloaded successfully') || 'Backup downloaded successfully');
+      }, 500);
+      
+    }catch(error){
+      console.error('Backup download failed', error);
+      HostBerry.showAlert?.('danger', HostBerry.t?.('security.backup_download_error', 'Unable to download backup') || 'Unable to download backup');
+    }
+  }
+
+  async function restoreBackup(backupName){
+    try{
+      if(!backupName){
+        HostBerry.showAlert?.('danger', HostBerry.t?.('errors.backup_not_found', 'Backup not found') || 'Backup not found');
+        return;
+      }
+      
+      // Confirmación doble para restauración
+      const confirmMsg1 = HostBerry.t?.('security.backup_restore_confirm', 'Are you sure you want to restore this backup? This will replace the current system data.') || 'Are you sure you want to restore this backup? This will replace the current system data.';
+      if(!confirm(confirmMsg1)) return;
+      
+      const confirmMsg2 = HostBerry.t?.('security.backup_restore_confirm_final', 'WARNING! This action will restore the backup and replace current data. Are you absolutely sure?') || 'WARNING! This action will restore the backup and replace current data. Are you absolutely sure?';
+      if(!confirm(confirmMsg2)) return;
+      
+      HostBerry.showAlert?.('warning', HostBerry.t?.('security.backup_restoring', 'Restoring backup...') || 'Restoring backup...');
+      
+      const resp = await HostBerry.apiRequest(`/api/v1/security/backup/${encodeURIComponent(backupName)}/restore`, {
+        method: 'POST'
+      });
+      
+      if(!resp.ok){
+        const errorText = await resp.text();
+        throw new Error(errorText || 'Restore failed');
+      }
+      
+      const payload = await resp.json();
+      const message = payload.message || payload.data?.message || HostBerry.t?.('security.backup_restored', 'Backup restored successfully') || 'Backup restored successfully';
+      HostBerry.showAlert?.('success', message);
+      
+      // Recargar la lista de backups después de un momento
+      setTimeout(() => {
+        loadBackups();
+      }, 2000);
+      
+    }catch(error){
+      console.error('Backup restore failed', error);
+      const errorMsg = HostBerry.t?.('security.backup_restore_error', 'Unable to restore backup') || 'Unable to restore backup';
+      HostBerry.showAlert?.('danger', errorMsg);
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', function(){
     fetchSecurityStatus();
     loadServices();
