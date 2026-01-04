@@ -117,7 +117,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="HostBerry FastAPI",
     description="API optimizada para Raspberry Pi 3",
-    version="2.0.0",
+    version=settings.version,
     lifespan=lifespan,
     default_response_class=JSONResponse,
     # Optimizaciones para RPi 3
