@@ -575,7 +575,7 @@
   async function showBackupStats(){
     try{
       const resp = await HostBerry.apiRequest('/api/v1/security/backups');
-      if(!resp.ok) throw new Error('Stats request failed');
+      if(!resp.ok) throw new Error(HostBerry.t?.('backup.stats_failed', 'Error al obtener estadísticas') || 'Error al obtener estadísticas');
       
       const payload = await resp.json();
       const backups = payload.data?.backups || payload.backups || [];
