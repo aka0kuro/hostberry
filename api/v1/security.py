@@ -2,11 +2,12 @@
 API de seguridad para HostBerry FastAPI
 """
 
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File
 from fastapi.responses import FileResponse
 from typing import Dict, Any, List
 from pathlib import Path
 import time
+import shutil
 
 from models.schemas import SuccessResponse, ErrorResponse
 from core.security import get_current_active_user
