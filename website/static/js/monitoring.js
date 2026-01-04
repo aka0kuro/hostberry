@@ -176,22 +176,23 @@
       }
 
       // Actualizar uptime
-      const uptime = systemStats.uptime || 0;
+      const uptime = systemStats.uptime || systemStats.uptime_seconds || 0;
       setText('uptime-value', formatUptime(uptime));
       
       // Actualizar CPU
-      const cpuUsage = systemStats.cpu_usage || 0;
-      setText('cpu-usage', `${safeToFixed(cpuUsage)}%`);
-      updateProgress('cpu-progress', cpuUsage);
+      const cpuUsage = systemStats.cpu_usage || systemStats.cpu_percent || 0;
+      const cpuUsageValue = typeof cpuUsage === 'number' ? cpuUsage : parseFloat(cpuUsage) || 0;
+      setText('cpu-usage', `${safeToFixed(cpuUsageValue)}%`);
+      updateProgress('cpu-progress', cpuUsageValue);
       
-      const cpuTemp = systemStats.cpu_temperature;
+      const cpuTemp = systemStats.cpu_temperature || systemStats.temperature;
       if(typeof cpuTemp === 'number' && cpuTemp > 0){
         setText('cpu-temp', `${safeToFixed(cpuTemp)}°C`);
       } else {
         setText('cpu-temp', '--°C');
       }
       
-      const cpuCores = systemStats.cpu_cores;
+      const cpuCores = systemStats.cpu_cores || systemStats.cpu_count;
       setText('cpu-cores', cpuCores ? String(cpuCores) : '-');
 
       // Actualizar Memoria
