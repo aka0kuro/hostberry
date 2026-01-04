@@ -174,7 +174,6 @@ class Database:
             logger.info("🗄️ Conexión de base de datos cerrada")
 
     @asynccontextmanager
-    @asynccontextmanager
     async def get_connection(self):
         """Obtener la conexión persistente (thread-safe con lock y pooling)"""
         if not self._connection:
