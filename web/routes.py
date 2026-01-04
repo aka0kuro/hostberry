@@ -303,14 +303,7 @@ def _base_context(request: Request, current_lang: str) -> dict:
             "cpu_cores": cpu_cores,
         },
         "system_stats": _get_system_stats(),
-        "system_health": {
-            "overall": "healthy",
-            "cpu": "healthy",
-            "memory": "healthy",
-            "disk": "healthy",
-            "network": "healthy",
-            "temperature": "healthy",
-        },
+        "system_health": _calculate_health_status(_get_system_stats()),
         "services": _get_service_statuses(),
     }
 
