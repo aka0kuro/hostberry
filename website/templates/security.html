@@ -457,7 +457,7 @@
       
       if(!resp.ok){
         const errorText = await resp.text();
-        throw new Error(errorText || 'Restore failed');
+        throw new Error(errorText || (HostBerry.t?.('backup.restore_failed', 'Error al restaurar backup') || 'Error al restaurar backup'));
       }
       
       const payload = await resp.json();
