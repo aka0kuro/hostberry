@@ -171,7 +171,7 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
             detail=get_text("errors.system_stats_error", default="Error obteniendo estadísticas del sistema")
         )
 
-@router.get("/network", response_model=NetworkStats)
+@router.get("/network")
 async def get_network_statistics(
     interface: str = None,
     current_user: Dict[str, Any] = Depends(get_current_active_user)
