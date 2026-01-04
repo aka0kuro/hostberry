@@ -195,11 +195,18 @@
 </script>
 <script>
 (function(){
-  // Mejorar la función t para que busque en múltiples lugares
+  // Mejorar la función t para que busque en múltiples lugares y detecte el idioma actual
   function getTranslation(key, defaultValue) {
     if (!key) return defaultValue || '';
     
     const keys = String(key).split('.');
+    
+    // Obtener idioma actual
+    const urlParams = new URLSearchParams(window.location.search);
+    const langParam = urlParams.get('lang');
+    const cookieLang = document.cookie.split('; ').find(row => row.startsWith('lang='))?.split('=')[1];
+    const htmlLang = document.documentElement.lang;
+    const currentLang = langParam || cookieLang || htmlLang || 'es';
     
     // 1. Intentar desde HostBerry.translations (más confiable)
     if (window.HostBerry?.translations) {
@@ -249,7 +256,29 @@
       // Ignorar errores
     }
     
-    // 4. Usar HostBerry.t si está disponible
+    // 4. Intentar cargar desde la API si no está disponible
+    if (currentLang !== 'es' && window.HostBerry?.apiRequest) {
+      // Cargar traducciones de forma síncrona (solo si no están cargadas)
+      if (!window._translationsLoading) {
+        window._translationsLoading = true;
+        HostBerry.apiRequest(`/api/v1/translations/${currentLang}`)
+          .then(resp => resp.json())
+          .then(data => {
+            if (data && data.translations) {
+              if (!window.HostBerry.translations) window.HostBerry.translations = {};
+              Object.assign(window.HostBerry.translations, data.translations);
+              if (!window.translations) window.translations = {};
+              Object.assign(window.translations, data.translations);
+            }
+            window._translationsLoading = false;
+          })
+          .catch(() => {
+            window._translationsLoading = false;
+          });
+      }
+    }
+    
+    // 5. Usar HostBerry.t si está disponible
     if (window.HostBerry?.t) {
       try {
         const result = window.HostBerry.t(key, defaultValue);
@@ -259,7 +288,7 @@
       }
     }
     
-    // 5. Fallback al valor por defecto
+    // 6. Fallback al valor por defecto
     return defaultValue || key;
   }
   
