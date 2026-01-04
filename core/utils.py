@@ -1,7 +1,7 @@
 import datetime
 import pytz
 import time
-import psutil
+# psutil se importa lazy cuando se necesita
 
 # Helpers generales para fechas y zonas horarias
 
