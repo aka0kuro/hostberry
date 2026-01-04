@@ -682,12 +682,12 @@
       const oldestBackup = backups.length > 0 ? backups[backups.length - 1] : null;
       const newestBackup = backups.length > 0 ? backups[0] : null;
       
-      const statsText = `${HostBerry.t?.('backup.total', 'Total de backups')}: ${totalBackups} | ${HostBerry.t?.('backup.total_size', 'Tamaño total')}: ${formatBytes(totalSize)}${oldestBackup ? ` | ${HostBerry.t?.('backup.oldest', 'Más antiguo')}: ${oldestBackup.name || oldestBackup.filename || 'N/A'}` : ''}${newestBackup ? ` | ${HostBerry.t?.('backup.newest', 'Más reciente')}: ${newestBackup.name || newestBackup.filename || 'N/A'}` : ''}`;
+      const statsText = `${getTranslation('backup.total', 'Total backups')}: ${totalBackups} | ${getTranslation('backup.total_size', 'Total size')}: ${formatBytes(totalSize)}${oldestBackup ? ` | ${getTranslation('backup.oldest', 'Oldest')}: ${oldestBackup.name || oldestBackup.filename || 'N/A'}` : ''}${newestBackup ? ` | ${getTranslation('backup.newest', 'Newest')}: ${newestBackup.name || newestBackup.filename || 'N/A'}` : ''}`;
       
       showNotification(statsText, 'info');
     }catch(error){
       console.error('Backup stats failed', error);
-      showNotification(HostBerry.t?.('backup.stats_error', 'Error al obtener estadísticas') || 'Error al obtener estadísticas', 'error');
+      showNotification(getTranslation('backup.stats_error', 'Error getting statistics'), 'error');
     }
   }
 
