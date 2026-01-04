@@ -288,10 +288,14 @@
       }
       
       try{
+        // Obtener idioma actual de la página o cookie
+        const currentLang = document.documentElement.lang || document.querySelector('html').getAttribute('lang') || 'es';
+        
         const resp = await fetch('/api/v1/auth/first-login/change', {
                     method:'POST', 
                     headers:{ 
-                        'Content-Type':'application/json'
+                        'Content-Type':'application/json',
+                        'Accept-Language': currentLang
                     }, 
                     body: JSON.stringify(payload)
                 });
