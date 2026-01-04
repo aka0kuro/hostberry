@@ -330,15 +330,24 @@ async def get_wifi_config(
 ) -> Dict[str, Any]:
     """Obtiene la configuración de WiFi"""
     try:
+        # Obtener configuración desde base de datos o usar valores por defecto desde settings
+        from core.database import db
+        
+        # Intentar obtener configuración guardada
+        wifi_ssid = await db.get_configuration("wifi_ssid")
+        wifi_channel = await db.get_configuration("wifi_channel")
+        guest_enabled = await db.get_configuration("guest_network_enabled")
+        guest_ssid = await db.get_configuration("guest_network_ssid")
+        
         config = {
-            "ssid": "HostBerry_WiFi",
-            "password": "********",
-            "channel": 6,
+            "ssid": wifi_ssid or "HostBerry_WiFi",
+            "password": "********",  # Nunca exponer contraseña
+            "channel": int(wifi_channel) if wifi_channel else 6,
             "security": "WPA2",
             "guest_network": {
-                "enabled": True,
-                "ssid": "HostBerry_Guest",
-                "password": "guest123"
+                "enabled": guest_enabled == "true" if guest_enabled else False,
+                "ssid": guest_ssid or "HostBerry_Guest",
+                "password": "********"  # Nunca exponer contraseña
             },
             "advanced": {
                 "bandwidth_limit": "10 Mbps",
