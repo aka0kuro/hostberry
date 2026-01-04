@@ -566,7 +566,7 @@ async def dashboard_page(request: Request, lang: str | None = Query(default=None
             },
             "services": _get_service_statuses(),
             "network_status": {
-                "eth0": {"status": "connected", "ip": "192.168.1.100", "gateway": "192.168.1.1"},
+                "eth0": {"status": "connected", "ip": "0.0.0.0", "gateway": "0.0.0.0"},
                 "wlan0": {"status": "connected", "ip": "0.0.0.0", "ssid": "Unknown", "signal": 0},
             },
             "recent_activity": [],
