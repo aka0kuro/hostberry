@@ -453,6 +453,8 @@
     "firewall": "Firewall",
     "routing": "Routing",
     "dns": "DNS",
+    "ssid": "SSID",
+    "signal": "Signal",
     "dhcp": "DHCP",
     "vlans": "VLANs",
     "bonding": "Bonding",
