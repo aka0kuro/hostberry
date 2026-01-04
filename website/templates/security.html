@@ -334,6 +334,20 @@
       }
       
       container.innerHTML = '';
+      const serviceIcons = {
+        'hostberry': 'bi-gear-fill hostberry-icon',
+        'nginx': 'bi-shield-check nginx-icon',
+        'fail2ban': 'bi-shield-fill fail2ban-icon',
+        'ufw': 'bi-shield-lock ufw-icon',
+        'ssh': 'bi-terminal ssh-icon',
+        'hostapd': 'bi-wifi wifi-icon',
+        'openvpn': 'bi-shield-check openvpn-icon',
+        'wg-quick': 'bi-shield-lock wireguard-icon',
+        'wireguard': 'bi-shield-lock wireguard-icon',
+        'dnsmasq': 'bi-diagram-3 dns-icon',
+        'adblock': 'bi-shield-x adblock-icon'
+      };
+      
       Object.keys(services).forEach(serviceName => {
         const service = services[serviceName];
         const status = service.status || service;
@@ -344,11 +358,14 @@
           : (HostBerry.t?.('system.stopped', 'Stopped') || 'Stopped');
         const statusClass = isRunning ? 'bg-success' : 'bg-danger';
         
+        const normalizedName = serviceName.toLowerCase().replace(/[_-]/g, '');
+        const iconClass = serviceIcons[normalizedName] || serviceIcons[serviceName.toLowerCase()] || 'bi-gear-fill default-icon';
+        
         const item = document.createElement('div');
         item.className = 'service-item';
         item.innerHTML = `
           <div class="service-info">
-            <i class="bi bi-gear-fill service-icon default-icon"></i>
+            <i class="bi ${iconClass} service-icon"></i>
             <span class="service-name">${serviceName}</span>
           </div>
           <div class="service-status">
