@@ -187,7 +187,11 @@
       const isPass = input.getAttribute('type') === 'password';
       input.setAttribute('type', isPass ? 'text' : 'password');
       emoji.textContent = isPass ? '🙈' : '👁️';
-      emoji.setAttribute('title', isPass ? 'Ocultar contraseña' : 'Mostrar contraseña');
+      const hideText = t('common.hide_password', 'Ocultar contraseña');
+      const showText = t('common.show_password', 'Mostrar contraseña');
+      emoji.setAttribute('title', isPass ? hideText : showText);
+      btn.setAttribute('aria-label', isPass ? hideText : showText);
+      btn.setAttribute('title', isPass ? hideText : showText);
     });
   }
 
