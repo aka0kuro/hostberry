@@ -436,10 +436,13 @@ async def backup_system(current_user: Dict[str, Any] = Depends(get_current_activ
         # Log de la acción
         await db.insert_log("INFO", f"Backup iniciado por {current_user['username']}")
         
-        # Simular backup (en producción implementar backup real)
-        import subprocess
-        result = subprocess.run(["sudo", "tar", "-czf", "/tmp/hostberry_backup.tar.gz", "/etc", "/var/lib/hostberry"], 
-                              capture_output=True, text=True, timeout=300)
+        # Crear backup (async)
+        from core.async_utils import run_subprocess_async
+        returncode, stdout, stderr = await run_subprocess_async(
+            ["sudo", "tar", "-czf", "/tmp/hostberry_backup.tar.gz", "/etc", "/var/lib/hostberry"],
+            timeout=300
+        )
+        result = type('obj', (object,), {'returncode': returncode, 'stderr': stderr})()
         
         if result.returncode == 0:
             await db.insert_log("INFO", "Backup completado exitosamente")
