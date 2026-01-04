@@ -558,7 +558,7 @@
       }
       
       const payload = await resp.json();
-      const message = payload.message || payload.data?.message || HostBerry.t?.('backup.restored', 'Backup restaurado exitosamente') || 'Backup restaurado exitosamente';
+      const message = payload.message || payload.data?.message || getTranslation('backup.restored', 'Backup restored successfully');
       showNotification(message, 'success');
       
       // Recargar la lista de backups después de un momento
