@@ -123,16 +123,29 @@
       ]);
       
       // Manejar respuesta de system stats (puede venir directamente o envuelta)
-      const systemStats = systemStatsResp.data || systemStatsResp;
+      let systemStats = systemStatsResp;
+      if(systemStatsResp && typeof systemStatsResp === 'object'){
+        // Si tiene 'data', usarlo; si no, usar directamente
+        systemStats = systemStatsResp.data || systemStatsResp;
+      }
+      
       if(!systemStats || typeof systemStats !== 'object'){
+        console.error('Invalid system stats response:', systemStatsResp);
         throw new Error('Invalid system stats response');
       }
       
       // Manejar respuesta de network stats (puede venir directamente o envuelta)
-      const networkStatsRaw = networkStatsResp.data || networkStatsResp;
+      let networkStatsRaw = networkStatsResp;
+      if(networkStatsResp && typeof networkStatsResp === 'object'){
+        // Si tiene 'data', usarlo; si no, usar directamente
+        networkStatsRaw = networkStatsResp.data || networkStatsResp;
+      }
+      
       if(!networkStatsRaw || typeof networkStatsRaw !== 'object'){
+        console.error('Invalid network stats response:', networkStatsResp);
         throw new Error('Invalid network stats response');
       }
+      
       const networkStats = computeNetworkRates(networkStatsRaw);
       
       // Populate interface select
