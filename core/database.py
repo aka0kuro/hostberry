@@ -248,15 +248,26 @@ class Database:
     async def ensure_default_admin(self):
         """Crear usuario admin por defecto si no existe ninguno"""
         try:
-            rows = await self.execute_query("SELECT COUNT(*) as cnt FROM users")
-            count = rows[0]["cnt"] if rows else 0
-            if count == 0:
-                from config.settings import settings
-                ok = await self.insert_user(settings.default_username, settings.default_password)
-                if ok:
+            # Usar conexión directa ya que estamos en init_database
+            if not self._connection:
+                return
+            
+            async with self._lock:
+                cursor = await self._connection.execute("SELECT COUNT(*) as cnt FROM users")
+                row = await cursor.fetchone()
+                count = row[0] if row else 0
+                
+                if count == 0:
+                    from config.settings import settings
+                    from core.security import get_password_hash
+                    
+                    password_hash = get_password_hash(settings.default_password)
+                    await self._connection.execute(
+                        "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+                        (settings.default_username, password_hash)
+                    )
+                    await self._connection.commit()
                     logger.info("✅ Usuario admin por defecto creado")
-                else:
-                    logger.warning("⚠️ No se pudo crear el usuario admin por defecto")
         except Exception as e:
             logger.error(f"❌ Error asegurando usuario admin por defecto: {e}")
 
