@@ -216,6 +216,83 @@ async def download_backup(
             detail=get_text("errors.backup_download_failed", default="Error descargando backup")
         )
 
+@router.post("/security/backup/upload")
+async def upload_backup(
+    file: UploadFile = File(...),
+    current_user: Dict[str, Any] = Depends(get_current_active_user)
+):
+    """Subir un archivo de backup al sistema"""
+    try:
+        # Validar que sea un archivo tar.gz
+        if not file.filename.endswith(('.tar.gz', '.tgz')):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=get_text("errors.invalid_backup_format", default="El archivo debe ser un backup .tar.gz")
+            )
+        
+        # Obtener directorio de backups
+        from core.backup import backup_manager
+        backup_dir = backup_manager.backup_dir
+        backup_dir.mkdir(exist_ok=True)
+        
+        # Guardar archivo
+        backup_path = backup_dir / file.filename
+        
+        # Verificar si ya existe
+        if backup_path.exists():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=get_text("errors.backup_already_exists", default="Ya existe un backup con ese nombre")
+            )
+        
+        # Leer y guardar el archivo
+        try:
+            with open(backup_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+        except Exception as e:
+            logger.error(f"Error guardando archivo: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=get_text("errors.backup_upload_failed", default="Error guardando el archivo de backup")
+            )
+        
+        # Registrar la carga
+        await db.insert_log(
+            "INFO",
+            f"Backup cargado: {file.filename} por usuario: {current_user.get('username')}",
+            source="security",
+            user_id=current_user.get("username")
+        )
+        
+        audit_sensitive_operation(
+            "backup_uploaded",
+            current_user.get("username"),
+            None,
+            {"backup_name": file.filename, "backup_size": backup_path.stat().st_size}
+        )
+        
+        logger.info(f"✅ Backup cargado: {file.filename} por usuario: {current_user.get('username')}")
+        
+        return SuccessResponse(
+            message=get_text("security.backup_uploaded", default="Backup cargado exitosamente"),
+            data={"backup_name": file.filename, "backup_path": str(backup_path)}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error cargando backup: {e}")
+        await db.insert_log(
+            "ERROR",
+            f"Error cargando backup: {str(e)}",
+            source="security",
+            user_id=current_user.get("username")
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=get_text("errors.backup_upload_failed", default="Error cargando backup")
+        )
+
 @router.post("/security/backup/{backup_name}/restore")
 async def restore_backup(
     backup_name: str,
