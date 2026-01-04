@@ -218,20 +218,23 @@
       }
 
       // Actualizar Disco
-      const diskUsage = systemStats.disk_usage || 0;
-      setText('disk-usage', `${safeToFixed(diskUsage)}%`);
-      updateProgress('disk-progress', diskUsage);
+      const diskUsage = systemStats.disk_usage || systemStats.disk_percent || 0;
+      const diskUsageValue = typeof diskUsage === 'number' ? diskUsage : parseFloat(diskUsage) || 0;
+      setText('disk-usage', `${safeToFixed(diskUsageValue)}%`);
+      updateProgress('disk-progress', diskUsageValue);
       
-      const diskTotal = systemStats.disk_total;
+      const diskTotal = systemStats.disk_total || systemStats.disk_total_bytes;
       if(diskTotal && diskTotal > 0){
-        setText('disk-total', `${safeToFixed(diskTotal / (1024 ** 3),1)} GB`);
+        const diskTotalGB = typeof diskTotal === 'number' ? diskTotal : parseFloat(diskTotal) || 0;
+        setText('disk-total', `${safeToFixed(diskTotalGB / (1024 ** 3),1)} GB`);
       } else {
         setText('disk-total', '0 GB');
       }
       
-      const diskUsed = systemStats.disk_used;
+      const diskUsed = systemStats.disk_used || systemStats.disk_used_bytes;
       if(diskUsed && diskUsed > 0){
-        setText('disk-used', `${safeToFixed(diskUsed / (1024 ** 3),1)} GB`);
+        const diskUsedGB = typeof diskUsed === 'number' ? diskUsed : parseFloat(diskUsed) || 0;
+        setText('disk-used', `${safeToFixed(diskUsedGB / (1024 ** 3),1)} GB`);
       } else {
         setText('disk-used', '0 GB');
       }
