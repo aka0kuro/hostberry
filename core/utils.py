@@ -29,6 +29,8 @@ def get_all_timezones():
 def get_network_stats():
     """Obtiene estadísticas de red"""
     try:
+        # Lazy import de psutil
+        import psutil
         net_io = psutil.net_io_counters()
         return {
             'bytes_sent': net_io.bytes_sent,
