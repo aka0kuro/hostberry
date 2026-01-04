@@ -284,14 +284,30 @@ class Database:
     async def insert_log(self, level: str, message: str, source: str = None, user_id: int = None):
         """Insertar log con limpieza automática"""
         try:
+            # Si user_id es un string (username), intentar obtener el ID numérico
+            user_id_int = None
+            if user_id:
+                if isinstance(user_id, str):
+                    # Intentar obtener ID del usuario por username
+                    try:
+                        user = await self.get_user_by_username(user_id)
+                        if user and 'id' in user:
+                            user_id_int = user['id']
+                    except Exception:
+                        pass
+                else:
+                    user_id_int = user_id
+            
             query = """
                 INSERT INTO logs (level, message, source, user_id)
                 VALUES (?, ?, ?, ?)
             """
-            await self.execute_update(query, (level, message, source, user_id))
+            await self.execute_update(query, (level, message, source, user_id_int))
             
-            # Limpiar logs antiguos automáticamente
-            await self._cleanup_old_logs()
+            # Limpiar logs antiguos automáticamente (solo cada 100 logs para no sobrecargar)
+            import random
+            if random.randint(1, 100) == 1:  # 1% de probabilidad
+                await self._cleanup_old_logs()
             
         except Exception as e:
             logger.error(f"❌ Error insertando log: {e}")
