@@ -523,7 +523,7 @@
       
     }catch(error){
       console.error('Backup upload failed', error);
-      let errorMsg = HostBerry.t?.('backup.upload_error', 'Error al cargar backup') || 'Error al cargar backup';
+      let errorMsg = getTranslation('backup.upload_error', 'Error uploading backup');
       // Mostrar mensaje de error más específico si está disponible
       if(error.message && error.message !== 'Error al cargar backup' && error.message !== 'Upload failed'){
         errorMsg = error.message;
