@@ -217,7 +217,7 @@
       container.innerHTML = `
         <div class="text-center py-4 text-danger">
           <i class="bi bi-exclamation-triangle"></i>
-          <p class="mb-0 mt-2">${HostBerry.t?.('monitoring.logs_error', 'Unable to load logs') || 'Unable to load logs'}</p>
+          <p class="mb-0 mt-2">${HostBerry.t?.('monitoring.logs_error_state', 'Unable to load logs') || 'Unable to load logs'}</p>
         </div>`;
     }
   }
