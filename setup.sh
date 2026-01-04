@@ -1154,7 +1154,12 @@ Environment=HOSTBERRY_SKIP_RUNTIME_OPTIMIZE=1
 # Configuración optimizada para RPi 3
 ExecStart=$VENV_DIR/bin/python -m uvicorn --app-dir $PROD_DIR main:app --host 127.0.0.1 --port $PROD_PORT --workers $WORKERS --loop asyncio --http h11 --log-level $LOG_LEVEL --limit-concurrency 100 --limit-max-requests 1000
 Restart=always
-RestartSec=5
+RestartSec=2
+# Timeouts optimizados para reinicio rápido
+TimeoutStartSec=15
+TimeoutStopSec=10
+KillMode=mixed
+KillSignal=SIGTERM
 StandardOutput=journal
 StandardError=journal
 # Optimizaciones de recursos
