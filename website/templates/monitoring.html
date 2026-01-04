@@ -414,24 +414,29 @@
 
   function populateInterfaceSelect(interfaces){
     const select = document.getElementById('net-interface-select');
-    if(!select || !interfaces || !Array.isArray(interfaces)) return;
+    if(!select) return;
     
-    // Limpiar opciones existentes excepto "Auto detect"
-    while(select.options.length > 1){
-      select.remove(1);
-    }
-    
-    interfaces.forEach(iface => {
-      if(iface && iface.name){
-        const option = document.createElement('option');
-        option.value = iface.name;
-        option.textContent = iface.name;
-        if(iface.name === selectedInterface){
-          option.selected = true;
-        }
-        select.appendChild(option);
+    // Si interfaces es un array de strings o objetos
+    if(Array.isArray(interfaces) && interfaces.length > 0){
+      // Limpiar opciones existentes excepto "Auto detect"
+      while(select.options.length > 1){
+        select.remove(1);
       }
-    });
+      
+      interfaces.forEach(iface => {
+        // Manejar tanto strings como objetos
+        const ifaceName = (typeof iface === 'string') ? iface : (iface.name || iface);
+        if(ifaceName && ifaceName !== 'lo'){
+          const option = document.createElement('option');
+          option.value = ifaceName;
+          option.textContent = ifaceName;
+          if(ifaceName === selectedInterface){
+            option.selected = true;
+          }
+          select.appendChild(option);
+        }
+      });
+    }
   }
 
   function computeNetworkRates(current){
