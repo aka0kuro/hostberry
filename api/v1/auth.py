@@ -295,11 +295,11 @@ async def get_current_user_info(current_user: dict = Depends(get_current_active_
         )
 
 @router.post("/logout")
-async def logout(current_user: dict = Depends(get_current_active_user), request: Request = None):
+async def logout(request: Request, current_user: dict = Depends(get_current_active_user)):
     """Cerrar sesión"""
     try:
         username = current_user.get('username')
-        client_ip = _get_client_ip(request) if request else "unknown"
+        client_ip = _get_client_ip(request)
         
         logger.info(f"🚪 Logout - Usuario: {username}, IP: {client_ip}")
         await db.insert_log(
