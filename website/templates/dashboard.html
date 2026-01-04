@@ -64,10 +64,10 @@
                     <div class="progress-bar memory-progress" style="width: {{ system_stats.memory_percent | default(45, true) }}%"></div>
                 </div>
                 <div class="status-footer">
-                    <span class="status-text status-{{ system_health.cpu }}">
-                        {% if system_health.cpu == 'critical' %}
+                    <span class="status-text status-{{ system_health.memory }}">
+                        {% if system_health.memory == 'critical' %}
                             {{ t('system.critical', 'Critical') }}
-                        {% elif system_health.cpu == 'warning' %}
+                        {% elif system_health.memory == 'warning' %}
                             {{ t('system.warning', 'Warning') }}
                         {% else %}
                             {{ t('system.healthy', 'Healthy') }}
@@ -92,10 +92,10 @@
                     <div class="progress-bar disk-progress" style="width: {{ system_stats.disk_percent | default(60, true) }}%"></div>
                 </div>
                 <div class="status-footer">
-                    <span class="status-text status-{{ system_health.cpu }}">
-                        {% if system_health.cpu == 'critical' %}
+                    <span class="status-text status-{{ system_health.disk }}">
+                        {% if system_health.disk == 'critical' %}
                             {{ t('system.critical', 'Critical') }}
-                        {% elif system_health.cpu == 'warning' %}
+                        {% elif system_health.disk == 'warning' %}
                             {{ t('system.warning', 'Warning') }}
                         {% else %}
                             {{ t('system.healthy', 'Healthy') }}
