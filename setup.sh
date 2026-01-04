@@ -2358,7 +2358,13 @@ Environment="PATH=$VENV_DIR/bin:/usr/local/bin:/usr/bin:/bin"
 EnvironmentFile=$CONFIG_DIR/app.env
 ExecStart=$VENV_DIR/bin/python -m uvicorn --app-dir $PROD_DIR main:app --host $PROD_HOST --port $PROD_PORT --workers $WORKERS --log-level warning
 Restart=always
-RestartSec=5
+RestartSec=2
+# Timeouts optimizados para reinicio rápido
+TimeoutStartSec=15
+TimeoutStopSec=10
+# Kill mode para terminar procesos rápidamente
+KillMode=mixed
+KillSignal=SIGTERM
 # Limits for RPi 3
 MemoryMax=300M
 CPUQuota=50%
@@ -2383,7 +2389,13 @@ Environment="PATH=$VENV_DIR/bin:/usr/local/bin:/usr/bin:/bin"
 EnvironmentFile=$CONFIG_DIR/app.env
 ExecStart=$VENV_DIR/bin/python -m uvicorn --app-dir $PROD_DIR main:app --host $PROD_HOST --port $PROD_PORT --workers $WORKERS --log-level warning
 Restart=always
-RestartSec=5
+RestartSec=2
+# Timeouts optimizados para reinicio rápido
+TimeoutStartSec=15
+TimeoutStopSec=10
+# Kill mode para terminar procesos rápidamente
+KillMode=mixed
+KillSignal=SIGTERM
 # Limits for RPi 3
 MemoryMax=300M
 CPUQuota=50%
