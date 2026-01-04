@@ -45,22 +45,24 @@
                         <i class="bi bi-wifi me-2"></i>{{ t('network.status', 'Network Status') }}
                     </h5>
                 </div>
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <span class="status-indicator status-online"></span>
-                        <span class="text-white">{{ t('network.connected', 'Connected') }}</span>
-                    </div>
-                    <div class="d-flex align-items-center mb-3">
-                        <span class="status-indicator status-online"></span>
-                        <span class="text-white">{{ t('network.internet_available', 'Internet Available') }}</span>
-                    </div>
-                    <div class="d-flex align-items-center mb-3">
-                        <span class="status-indicator status-online"></span>
-                        <span class="text-white">{{ t('network.firewall_active', 'Firewall Active') }}</span>
-                    </div>
-                    <div class="d-flex align-items-center mb-3">
-                        <span class="status-indicator status-warning"></span>
-                        <span class="text-white">{{ t('network.dhcp_running', 'DHCP Running') }}</span>
+                <div class="card-body text-center">
+                    <div class="d-flex flex-column align-items-center gap-3">
+                        <div class="d-flex align-items-center">
+                            <span class="status-indicator status-online me-2"></span>
+                            <span class="text-white">{{ t('network.connected', 'Connected') }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="status-indicator status-online me-2"></span>
+                            <span class="text-white">{{ t('network.internet_available', 'Internet Available') }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="status-indicator status-online me-2"></span>
+                            <span class="text-white">{{ t('network.firewall_active', 'Firewall Active') }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="status-indicator status-warning me-2"></span>
+                            <span class="text-white">{{ t('network.dhcp_running', 'DHCP Running') }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
