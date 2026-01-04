@@ -55,18 +55,75 @@ def _get_system_stats() -> dict[str, float]:
         disk = 0.0
 
     try:
-        import psutil
-        get_temp = getattr(psutil, "get_cpu_temp", None)
-        if callable(get_temp):
-            temperature = float(get_temp()) or 0.0
+        # Intentar leer temperatura desde /sys/class/thermal
+        try:
+            with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
+                temp_raw = int(f.read().strip())
+                temperature = temp_raw / 1000
+        except:
+            # Fallback a psutil si está disponible
+            import psutil
+            get_temp = getattr(psutil, "sensors_temperatures", None)
+            if callable(get_temp):
+                temps = get_temp()
+                if temps:
+                    for name, entries in temps.items():
+                        if entries:
+                            temperature = float(entries[0].current) or 0.0
+                            break
     except Exception:
-        temperature = 0.0
+        temperature = 45.0  # Valor por defecto
 
     return {
         "cpu_percent": round(cpu, 1),
         "memory_percent": round(memory, 1),
         "disk_percent": round(disk, 1),
         "temperature": round(temperature, 1),
+    }
+
+
+def _calculate_health_status(stats: dict[str, float]) -> dict[str, str]:
+    """Calcular estado de salud del sistema basado en estadísticas reales"""
+    cpu = stats.get("cpu_percent", 0)
+    memory = stats.get("memory_percent", 0)
+    disk = stats.get("disk_percent", 0)
+    temperature = stats.get("temperature", 45)
+    
+    def get_status(value: float, thresholds: dict[str, float]) -> str:
+        """Obtener estado basado en umbrales"""
+        if value >= thresholds.get("critical", 90):
+            return "critical"
+        elif value >= thresholds.get("warning", 75):
+            return "warning"
+        else:
+            return "healthy"
+    
+    cpu_status = get_status(cpu, {"warning": 70, "critical": 90})
+    memory_status = get_status(memory, {"warning": 75, "critical": 90})
+    disk_status = get_status(disk, {"warning": 80, "critical": 95})
+    
+    # Temperatura: healthy < 60, warning 60-80, critical > 80
+    if temperature >= 80:
+        temp_status = "critical"
+    elif temperature >= 60:
+        temp_status = "warning"
+    else:
+        temp_status = "normal"  # Para temperatura usamos "normal" en lugar de "healthy"
+    
+    # Estado general: si alguno es crítico, general es crítico; si alguno es warning, general es warning
+    if cpu_status == "critical" or memory_status == "critical" or disk_status == "critical" or temp_status == "critical":
+        overall = "critical"
+    elif cpu_status == "warning" or memory_status == "warning" or disk_status == "warning" or temp_status == "warning":
+        overall = "warning"
+    else:
+        overall = "healthy"
+    
+    return {
+        "overall": overall,
+        "cpu": cpu_status,
+        "memory": memory_status,
+        "disk": disk_status,
+        "temperature": temp_status,
     }
 """
 Router web mínimo para asegurar arranque del backend.
