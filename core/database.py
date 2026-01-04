@@ -414,9 +414,10 @@ class Database:
             return False
     
     async def get_logs(self, limit: int = 100, level: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Obtener logs con filtros"""
+        """Obtener logs con filtros (optimizado con índices)"""
         try:
             if level:
+                # Query optimizada usando índices idx_logs_level y idx_logs_timestamp
                 query = """
                     SELECT * FROM logs 
                     WHERE level = ?
