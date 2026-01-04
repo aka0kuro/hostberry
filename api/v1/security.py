@@ -158,6 +158,150 @@ async def get_backup_info(
             detail=get_text("errors.server_error", default="Error interno del servidor")
         )
 
+@router.get("/security/backup/{backup_name}/download")
+async def download_backup(
+    backup_name: str,
+    current_user: Dict[str, Any] = Depends(get_current_active_user)
+):
+    """Descargar un backup específico"""
+    try:
+        # Obtener ruta del backup
+        app_dir = Path(__file__).parent.parent.parent
+        backup_path = app_dir / "backups" / backup_name
+        
+        # Verificar que el archivo existe
+        if not backup_path.exists():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=get_text("errors.backup_not_found", default="Backup no encontrado")
+            )
+        
+        # Registrar la descarga
+        await db.insert_log(
+            "INFO",
+            f"Backup descargado: {backup_name} por usuario: {current_user.get('username')}",
+            source="security",
+            user_id=current_user.get("username")
+        )
+        
+        audit_sensitive_operation(
+            "backup_downloaded",
+            current_user.get("username"),
+            None,
+            {"backup_name": backup_name, "backup_size": backup_path.stat().st_size}
+        )
+        
+        logger.info(f"✅ Backup descargado: {backup_name} por usuario: {current_user.get('username')}")
+        
+        # Retornar archivo para descarga
+        return FileResponse(
+            path=str(backup_path),
+            filename=backup_name,
+            media_type="application/gzip"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error descargando backup: {e}")
+        await db.insert_log(
+            "ERROR",
+            f"Error descargando backup {backup_name}: {str(e)}",
+            source="security",
+            user_id=current_user.get("username")
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=get_text("errors.backup_download_failed", default="Error descargando backup")
+        )
+
+@router.post("/security/backup/{backup_name}/restore")
+async def restore_backup(
+    backup_name: str,
+    current_user: Dict[str, Any] = Depends(get_current_active_user)
+):
+    """Restaurar un backup específico"""
+    try:
+        # Obtener ruta del backup
+        app_dir = Path(__file__).parent.parent.parent
+        backup_path = app_dir / "backups" / backup_name
+        
+        # Verificar que el archivo existe
+        if not backup_path.exists():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=get_text("errors.backup_not_found", default="Backup no encontrado")
+            )
+        
+        # Registrar inicio de restauración
+        await db.insert_log(
+            "WARNING",
+            f"Iniciando restauración de backup: {backup_name} por usuario: {current_user.get('username')}",
+            source="security",
+            user_id=current_user.get("username")
+        )
+        
+        logger.warning(f"⚠️ Iniciando restauración de backup: {backup_name} por usuario: {current_user.get('username')}")
+        
+        # Restaurar backup
+        success = restore_system_backup(str(backup_path))
+        
+        if success:
+            await db.insert_log(
+                "INFO",
+                f"Backup restaurado exitosamente: {backup_name} por usuario: {current_user.get('username')}",
+                source="security",
+                user_id=current_user.get("username")
+            )
+            
+            audit_sensitive_operation(
+                "backup_restored",
+                current_user.get("username"),
+                None,
+                {"backup_name": backup_name, "success": True}
+            )
+            
+            logger.info(f"✅ Backup restaurado exitosamente: {backup_name} por usuario: {current_user.get('username')}")
+            
+            return SuccessResponse(
+                message=get_text("security.backup_restored", default="Backup restaurado exitosamente"),
+                data={"backup_name": backup_name, "restored": True}
+            )
+        else:
+            await db.insert_log(
+                "ERROR",
+                f"Error restaurando backup: {backup_name} por usuario: {current_user.get('username')}",
+                source="security",
+                user_id=current_user.get("username")
+            )
+            
+            audit_sensitive_operation(
+                "backup_restore_failed",
+                current_user.get("username"),
+                None,
+                {"backup_name": backup_name, "success": False}
+            )
+            
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=get_text("errors.backup_restore_failed", default="Error restaurando backup")
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error restaurando backup: {e}")
+        await db.insert_log(
+            "ERROR",
+            f"Error restaurando backup {backup_name}: {str(e)}",
+            source="security",
+            user_id=current_user.get("username")
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=get_text("errors.backup_restore_failed", default="Error restaurando backup")
+        )
+
 @router.post("/security/validate-input")
 async def validate_input(
     input_data: str,
