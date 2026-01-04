@@ -363,7 +363,11 @@
         }
         
         const data = await resp.json();
-        return data.data || data;
+        // Si la respuesta tiene 'data', usarlo; si no, usar directamente
+        if(data && typeof data === 'object' && 'data' in data){
+          return data.data;
+        }
+        return data;
       }
       
       // Fallback: usar fetch directamente
