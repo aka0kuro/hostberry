@@ -5,7 +5,7 @@ Router de autenticación para FastAPI
 from datetime import timedelta
 from typing import Dict, Any, Optional
 
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import time
 
@@ -20,9 +20,24 @@ from core.security import (
 )
 from core.database import db
 from core.hostberry_logging import logger, log_auth_event, log_user_action, log_security_event
+from core.audit import audit_login_attempt, audit_security_violation
 from core.i18n import get_text
 
 router = APIRouter()
+
+def _get_client_ip(request: Request) -> str:
+    """Obtener IP real del cliente"""
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    real_ip = request.headers.get("X-Real-IP")
+    if real_ip:
+        return real_ip
+    return request.client.host if request.client else "unknown"
+
+def _get_user_agent(request: Request) -> str:
+    """Obtener User-Agent del cliente"""
+    return request.headers.get("user-agent", "unknown")
 @router.post("/first-login/change")
 async def first_login_change(data: FirstLoginChange):
     """Cambiar usuario/contraseña en primer login y eliminar admin por defecto"""
