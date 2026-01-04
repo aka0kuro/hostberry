@@ -29,27 +29,33 @@ def _get_service_statuses() -> dict[str, str]:
 
 
 def _get_system_stats() -> dict[str, float]:
+    """Obtener estadísticas del sistema con lazy import de psutil"""
     cpu = 0.0
     memory = 0.0
     disk = 0.0
     temperature = 0.0
 
     try:
+        # Lazy import de psutil
+        import psutil
         cpu = float(psutil.cpu_percent(interval=None))
     except Exception:
         cpu = 0.0
 
     try:
+        import psutil
         memory = float(psutil.virtual_memory().percent)
     except Exception:
         memory = 0.0
 
     try:
+        import psutil
         disk = float(psutil.disk_usage("/").percent)
     except Exception:
         disk = 0.0
 
     try:
+        import psutil
         get_temp = getattr(psutil, "get_cpu_temp", None)
         if callable(get_temp):
             temperature = float(get_temp()) or 0.0
