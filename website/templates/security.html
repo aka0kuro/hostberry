@@ -512,7 +512,7 @@
           const errorText = await resp.text();
           errorData = { detail: errorText };
         }
-        throw new Error(errorData.detail || errorData.message || (HostBerry.t?.('backup.upload_failed', 'Error al cargar backup') || 'Error al cargar backup'));
+        throw new Error(errorData.detail || errorData.message || (getTranslation('backup.upload_failed', 'Error uploading backup')));
       }
       
       const payload = await resp.json();
