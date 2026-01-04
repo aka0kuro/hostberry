@@ -617,30 +617,25 @@ async def dashboard_page(request: Request, lang: str | None = Query(default=None
     current_user = {"username": "admin"}  # Reemplazar con lógica real de autenticación
     
     current_lang, _ = _resolve_language(request, lang)
+    
+    # Obtener estadísticas reales del sistema
+    system_stats = _get_system_stats()
+    system_health = _calculate_health_status(system_stats)
+    
     return _render(
         "dashboard.html",
         request,
         current_lang,
         extra={
             "current_user": current_user,
-            "system_stats": {
-                "cpu_percent": 25,
-                "memory_percent": 45,
-                "disk_percent": 60,
-                "temperature": 45,
-            },
+            "system_stats": system_stats,
+            "system_health": system_health,
             "services": _get_service_statuses(),
             "network_status": {
                 "eth0": {"status": "connected", "ip": "0.0.0.0", "gateway": "0.0.0.0"},
                 "wlan0": {"status": "connected", "ip": "0.0.0.0", "ssid": "Unknown", "signal": 0},
             },
             "recent_activity": [],
-            "system_health": {
-                "overall": "healthy",
-                "cpu": "healthy",
-                "memory": "healthy",
-                "disk": "healthy",
-            },
         },
     )
 
