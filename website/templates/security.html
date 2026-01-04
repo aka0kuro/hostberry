@@ -93,21 +93,56 @@
 // Cargar traducciones de backup desde el JSON embebido o API
 (function() {
   // Función mejorada para cargar traducciones
-  function loadBackupTranslations() {
+  async function loadBackupTranslations() {
     try {
-      // Intentar cargar desde el JSON embebido
+      // 1. Intentar cargar desde el JSON embebido
       const i18nEl = document.getElementById('i18n-json');
+      let translations = {};
+      
       if (i18nEl) {
-        const translations = JSON.parse(i18nEl.textContent || i18nEl.innerText || '{}');
-        if (translations.backup) {
-          // Asegurar que HostBerry.t puede acceder a las traducciones
-          if (!window.HostBerry) window.HostBerry = {};
-          if (!window.HostBerry.translations) window.HostBerry.translations = {};
-          window.HostBerry.translations.backup = translations.backup;
-          
-          // También actualizar el objeto translations en common.js
-          if (window.translations) {
-            window.translations.backup = translations.backup;
+        try {
+          translations = JSON.parse(i18nEl.textContent || i18nEl.innerText || '{}');
+        } catch (e) {
+          console.warn('Error parsing i18n-json:', e);
+        }
+      }
+      
+      // 2. Si no hay traducciones de backup en el JSON embebido, cargar desde la API
+      if (!translations.backup && HostBerry && HostBerry.apiRequest) {
+        try {
+          // Obtener el idioma actual desde la cookie o del HTML
+          const lang = document.documentElement.lang || 'es';
+          const resp = await HostBerry.apiRequest(`/api/v1/translations/${lang}`);
+          if (resp && resp.ok) {
+            const data = await resp.json();
+            if (data && data.translations) {
+              translations = data.translations;
+            }
+          }
+        } catch (e) {
+          console.warn('Error loading translations from API:', e);
+        }
+      }
+      
+      // 3. Asegurar que las traducciones estén disponibles
+      if (translations.backup) {
+        // Asegurar que HostBerry.t puede acceder a las traducciones
+        if (!window.HostBerry) window.HostBerry = {};
+        if (!window.HostBerry.translations) window.HostBerry.translations = {};
+        window.HostBerry.translations.backup = translations.backup;
+        
+        // También actualizar el objeto translations en common.js
+        if (!window.translations) window.translations = {};
+        window.translations.backup = translations.backup;
+        
+        // Actualizar el JSON embebido si existe
+        if (i18nEl && !i18nEl.textContent.includes('backup')) {
+          try {
+            const current = JSON.parse(i18nEl.textContent || '{}');
+            current.backup = translations.backup;
+            i18nEl.textContent = JSON.stringify(current);
+          } catch (e) {
+            // Ignorar errores al actualizar
           }
         }
       }
@@ -118,9 +153,12 @@
   
   // Cargar traducciones cuando el DOM esté listo
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadBackupTranslations);
+    document.addEventListener('DOMContentLoaded', () => {
+      // Esperar un poco para que common.js se cargue primero
+      setTimeout(loadBackupTranslations, 200);
+    });
   } else {
-    loadBackupTranslations();
+    setTimeout(loadBackupTranslations, 200);
   }
 })();
 </script>
