@@ -30,8 +30,9 @@
                         <div class="mb-3">
                             <label for="language" class="form-label text-white">{{ t('settings.language', 'Language') }}</label>
                             <select class="form-select bg-dark text-white border-secondary" id="language" name="language">
-                                <option value="es" {{ 'selected' if (settings.language if settings else 'es') == 'es' else '' }}>🇪🇸 Español</option>
-                                <option value="en" {{ 'selected' if (settings.language if settings else 'es') == 'en' else '' }}>🇺🇸 English</option>
+                                {% set current_lang = (settings.language if settings else language) or 'es' %}
+                                <option value="es" {{ 'selected' if current_lang == 'es' else '' }}>🇪🇸 Español</option>
+                                <option value="en" {{ 'selected' if current_lang == 'en' else '' }}>🇺🇸 English</option>
                             </select>
                         </div>
                         
