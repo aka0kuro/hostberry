@@ -1039,6 +1039,17 @@ body:not(.light-theme) .form-select-sm {
     .status-card {
         min-height: 160px;
     }
+    
+    .status-card-header {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+    
+    .status-icon {
+        margin-right: 0 !important;
+        margin-bottom: 0.5rem !important;
+    }
 }
 
 @media (min-width: 992px) and (max-width: 1199px) {
