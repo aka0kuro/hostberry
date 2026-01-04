@@ -278,25 +278,32 @@ async def health_check():
 
 @app.get("/system/info")
 async def system_info():
-    """Información del sistema optimizada para RPi 3"""
+    """Información del sistema optimizada para RPi 3 (con caché)"""
     try:
+        from core.cache import cache
+        
+        # Verificar caché (información estática, cache más largo)
+        cache_key = "main_system_info"
+        cached_info = cache.get(cache_key)
+        if cached_info:
+            return cached_info
+        
+        # Lazy import de psutil (solo cuando se necesita)
         import psutil
         
         # Cache de información del sistema para evitar cálculos repetidos
-        if not hasattr(system_info, '_cache') or not getattr(system_info, '_cache_time', 0):
-            system_info._cache = {
-                "hostname": psutil.os.uname().nodename,
-                "platform": psutil.os.uname().sysname,
-                "cpu_count": psutil.cpu_count(),
-                "memory_total": psutil.virtual_memory().total
-            }
-            system_info._cache_time = time.time()
+        info = {
+            "hostname": psutil.os.uname().nodename,
+            "platform": psutil.os.uname().sysname,
+            "cpu_count": psutil.cpu_count(),
+            "memory_total": psutil.virtual_memory().total,
+            "disk_usage": psutil.disk_usage('/').percent
+        }
         
-        # Solo actualizar información dinámica
-        current_info = system_info._cache.copy()
-        current_info["disk_usage"] = psutil.disk_usage('/').percent
+        # Guardar en caché (60 segundos TTL - información relativamente estática)
+        cache.set(cache_key, info)
         
-        return current_info
+        return info
         
     except Exception as e:
         logger.error(f"System info error: {e}")
