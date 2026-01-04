@@ -4,7 +4,7 @@ Utilidades del sistema optimizadas para Raspberry Pi 3
 
 import os
 import subprocess
-from core import system_light as psutil
+import psutil
 import time
 from typing import Dict, Any, List, Optional
 import logging
