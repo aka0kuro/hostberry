@@ -174,14 +174,15 @@ async def get_wireguard_peers(current_user: Dict[str, Any] = Depends(get_current
     try:
         peers = []
         
-        # Obtener información de peers
-        result = subprocess.run(
+        # Obtener información de peers (async)
+        from core.async_utils import run_subprocess_async
+        returncode, stdout, stderr = await run_subprocess_async(
             ["wg", "show", "wg0"],
-            capture_output=True,
-            text=True
+            timeout=5
         )
         
-        if result.returncode == 0:
+        if returncode == 0:
+            result = type('obj', (object,), {'stdout': stdout})()
             lines = result.stdout.split('\n')
             current_peer = {}
             
