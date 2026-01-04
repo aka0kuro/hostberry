@@ -952,6 +952,7 @@
     "backup_download_failed": "Error downloading backup",
     "backup_restore_failed": "Error restoring backup",
     "backup_upload_failed": "Error uploading backup",
+    "backup_delete_failed": "Error deleting backup",
     "invalid_backup_format": "File must be a .tar.gz backup",
     "backup_already_exists": "A backup with that name already exists",
     "config_error": "Error getting configuration",
