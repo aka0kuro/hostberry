@@ -45,8 +45,78 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
         cpu_temp = get_cpu_temp()
         cpu_count = psutil.cpu_count()
         
-        # Obtener uptime
-        uptime = int(time.time() - psutil.boot_time())
+        # Obtener uptime usando /proc/uptime (más preciso)
+        try:
+            with open('/proc/uptime', 'r') as f:
+                uptime_seconds = float(f.read().split()[0])
+                uptime = int(uptime_seconds)
+        except:
+            # Fallback a psutil
+            uptime = int(time.time() - psutil.boot_time())
+        
+        # Obtener información del sistema usando comandos Linux
+        hostname = None
+        os_version = None
+        kernel_version = None
+        architecture = None
+        processor = None
+        load_average = None
+        
+        try:
+            # Hostname
+            result = subprocess.run(['hostname'], capture_output=True, text=True, timeout=2)
+            if result.returncode == 0:
+                hostname = result.stdout.strip()
+        except:
+            hostname = platform.node()
+        
+        try:
+            # Kernel version
+            result = subprocess.run(['uname', '-r'], capture_output=True, text=True, timeout=2)
+            if result.returncode == 0:
+                kernel_version = result.stdout.strip()
+        except:
+            kernel_version = platform.release()
+        
+        try:
+            # Architecture
+            result = subprocess.run(['uname', '-m'], capture_output=True, text=True, timeout=2)
+            if result.returncode == 0:
+                architecture = result.stdout.strip()
+        except:
+            architecture = platform.machine()
+        
+        try:
+            # OS version desde /etc/os-release
+            with open('/etc/os-release', 'r') as f:
+                for line in f:
+                    if line.startswith('PRETTY_NAME='):
+                        os_version = line.split('=')[1].strip().strip('"')
+                        break
+        except:
+            os_version = "Linux"
+        
+        try:
+            # Load average desde /proc/loadavg
+            with open('/proc/loadavg', 'r') as f:
+                load_avg = f.read().split()[:3]
+                load_average = ', '.join(load_avg)
+        except:
+            try:
+                load_avg = os.getloadavg()
+                load_average = ', '.join([f"{x:.2f}" for x in load_avg])
+            except:
+                load_average = "0.00, 0.00, 0.00"
+        
+        try:
+            # Processor info
+            with open('/proc/cpuinfo', 'r') as f:
+                for line in f:
+                    if 'model name' in line.lower():
+                        processor = line.split(':')[1].strip()
+                        break
+        except:
+            processor = platform.processor() or "ARM"
         
         stats = SystemStats(
             cpu_usage=cpu_usage,
@@ -66,7 +136,7 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
         asyncio.create_task(db.insert_statistic("memory_usage", memory.percent))
         asyncio.create_task(db.insert_statistic("disk_usage", disk.percent))
         
-        # Guardar en caché (5 segundos TTL)
+        # Guardar en caché (5 segundos TTL) con información adicional
         stats_dict = stats.dict() if hasattr(stats, 'dict') else {
             "cpu_usage": stats.cpu_usage,
             "cpu_cores": stats.cpu_cores,
@@ -79,8 +149,18 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
             "cpu_temperature": stats.cpu_temperature,
             "uptime": stats.uptime
         }
+        # Agregar información adicional del sistema
+        stats_dict.update({
+            "hostname": hostname,
+            "os_version": os_version,
+            "kernel_version": kernel_version,
+            "architecture": architecture,
+            "processor": processor,
+            "load_average": load_average
+        })
         cache.set(cache_key, stats_dict)
         
+        # Devolver stats pero con información adicional disponible en el dict
         return stats
         
     except Exception as e:
