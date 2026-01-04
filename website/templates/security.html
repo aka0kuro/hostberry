@@ -1,200 +1,185 @@
 {% extends "base.html" %}
 
-{% block extra_css %}
-<style>
-    .security-page .glass-card {
-        border-radius: 24px;
-        background: rgba(12, 15, 32, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(20px);
-    }
-    .security-page .hero-card {
-        background: radial-gradient(circle at top left, rgba(99, 102, 241, 0.25), transparent),
-                    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.25), transparent),
-                    rgba(15, 18, 40, 0.9);
-    }
-    .security-page .status-pill {
-        padding: 0.4rem 1rem;
-        border-radius: 999px;
-        font-weight: 600;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-    }
-    .security-page .metric-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    .security-page .metric-list li {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .security-page .metric-list li:last-child {
-        border-bottom: none;
-    }
-    .security-page .metric-label {
-        font-size: 0.9rem;
-        color: rgba(255, 255, 255, 0.7);
-    }
-    .security-page .metric-value {
-        font-weight: 600;
-    }
-    .security-page .badge-status {
-        padding: 0.35rem 0.75rem;
-        border-radius: 999px;
-        font-size: 0.75rem;
-    }
-    .security-page .logs-container {
-        max-height: 380px;
-        overflow-y: auto;
-    }
-    .security-page .log-item {
-        padding: 0.75rem 1rem;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-        margin-bottom: 0.75rem;
-    }
-    .security-page .log-item:last-child {
-        margin-bottom: 0;
-    }
-    .security-page .log-level {
-        min-width: 80px;
-        text-transform: uppercase;
-        font-size: 0.7rem;
-    }
-    .security-page .backup-list .backup-item {
-        padding: 0.75rem 1rem;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        margin-bottom: 0.75rem;
-        transition: all 0.3s ease;
-    }
-    .security-page .backup-list .backup-item:hover {
-        background: rgba(255, 255, 255, 0.05);
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-    .security-page .backup-list .backup-item:last-child {
-        margin-bottom: 0;
-    }
-    .security-page .service-item {
-        padding: 0.5rem 0.75rem;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        margin-bottom: 0.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .security-page .service-item:last-child {
-        margin-bottom: 0;
-    }
-    .security-page .service-name {
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.9);
-    }
-    .security-page .spinning {
-        animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="system-page security-page">
-    <div class="dashboard-container">
-        <section class="glass-card hero-card p-4 mb-4">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-                <div>
-                    <p class="text-uppercase text-primary fw-semibold small mb-2">{{ t('security.kicker', 'Security overview') }}</p>
-                    <h2 class="text-white fw-bold mb-2">{{ t('security.title', 'Security Command Center') }}</h2>
-                    <p class="text-white-50 mb-0">{{ t('security.subtitle', 'Monitor audit, rate limiting and backup posture in real time') }}</p>
-                </div>
-                <div class="text-end">
-                    <div class="text-white-50 small">{{ t('security.last_check', 'Last check') }} <span id="security-last-check">--</span></div>
-                    <div class="status-pill bg-opacity-25 bg-success text-white mt-2" id="security-overall-pill">{{ t('security.status_ok', 'All systems nominal') }}</div>
+<div class="dashboard-container">
+    <!-- Header Section -->
+    <div class="dashboard-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-12 text-center">
+                <h1 class="dashboard-title">
+                    <i class="bi bi-shield-lock me-2"></i>
+                    {{ t('navigation.security', 'Security') }}
+                </h1>
+                <p class="dashboard-subtitle">{{ t('security.subtitle', 'Monitor audit, rate limiting and backup posture in real time') }}</p>
+                <div class="dashboard-time">
+                    <i class="bi bi-clock me-1"></i>
+                    {{ t('security.last_check', 'Last check') }}: <span id="security-last-check">--</span>
                 </div>
             </div>
-        </section>
+        </div>
+    </div>
 
-        <div class="row g-4">
-            <div class="col-lg-7">
-                <div class="glass-card p-4 h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="text-white mb-0">{{ t('security.controls_heading', 'Controls status') }}</h5>
+    <!-- Security Status Cards -->
+    <div class="row mb-4 status-cards-row">
+        <div class="col-lg-3 col-md-6 col-12 mb-3">
+            <div class="status-card">
+                <div class="status-card-header">
+                    <div class="status-icon" style="background: linear-gradient(135deg, #198754 0%, #0f5132 100%);">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <div class="status-info">
+                        <h6>{{ t('security.audit_logging', 'Audit logging') }}</h6>
+                        <h3 id="status-audit-text">--</h3>
+                    </div>
+                </div>
+                <div class="status-footer">
+                    <span class="status-text" id="status-audit-badge">
+                        <span class="badge bg-secondary">--</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-12 mb-3">
+            <div class="status-card">
+                <div class="status-card-header">
+                    <div class="status-icon" style="background: linear-gradient(135deg, #0dcaf0 0%, #055160 100%);">
+                        <i class="bi bi-speedometer2"></i>
+                    </div>
+                    <div class="status-info">
+                        <h6>{{ t('security.rate_limit', 'Rate limiting') }}</h6>
+                        <h3 id="status-rate-text">--</h3>
+                    </div>
+                </div>
+                <div class="status-footer">
+                    <span class="status-text" id="status-rate-badge">
+                        <span class="badge bg-secondary">--</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-12 mb-3">
+            <div class="status-card">
+                <div class="status-card-header">
+                    <div class="status-icon" style="background: linear-gradient(135deg, #ffc107 0%, #856404 100%);">
+                        <i class="bi bi-shield-fill"></i>
+                    </div>
+                    <div class="status-info">
+                        <h6>{{ t('security.security_headers', 'Security headers') }}</h6>
+                        <h3 id="status-headers-text">--</h3>
+                    </div>
+                </div>
+                <div class="status-footer">
+                    <span class="status-text" id="status-headers-badge">
+                        <span class="badge bg-secondary">--</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-12 mb-3">
+            <div class="status-card">
+                <div class="status-card-header">
+                    <div class="status-icon" style="background: linear-gradient(135deg, #6610f2 0%, #3d0a91 100%);">
+                        <i class="bi bi-hdd-network"></i>
+                    </div>
+                    <div class="status-info">
+                        <h6>{{ t('security.backup_encryption', 'Backup encryption') }}</h6>
+                        <h3 id="status-backup-text">--</h3>
+                    </div>
+                </div>
+                <div class="status-footer">
+                    <span class="status-text" id="status-backup-badge">
+                        <span class="badge bg-secondary">--</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls & Actions -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mb-4">
+            <div class="info-card">
+                <div class="info-card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="info-card-title">
+                            <i class="bi bi-shield-lock me-2"></i>
+                            {{ t('security.controls_heading', 'Controls status') }}
+                        </h5>
                         <button class="btn btn-sm btn-outline-light" id="securityStatusRefresh">
                             <i class="bi bi-arrow-clockwise me-1"></i>{{ t('common.refresh', 'Refresh') }}
                         </button>
                     </div>
-                    <ul class="metric-list text-white">
-                        <li>
-                            <span class="metric-label">{{ t('security.audit_logging', 'Audit logging') }}</span>
-                            <span class="badge-status bg-secondary" id="status-audit">--</span>
-                        </li>
-                        <li>
-                            <span class="metric-label">{{ t('security.rate_limit', 'Rate limiting') }}</span>
-                            <span class="badge-status bg-secondary" id="status-rate">--</span>
-                        </li>
-                        <li>
-                            <span class="metric-label">{{ t('security.security_headers', 'Security headers') }}</span>
-                            <span class="badge-status bg-secondary" id="status-headers">--</span>
-                        </li>
-                        <li>
-                            <span class="metric-label">{{ t('security.backup_encryption', 'Backup encryption') }}</span>
-                            <span class="badge-status bg-secondary" id="status-backup">--</span>
-                        </li>
-                        <li>
-                            <span class="metric-label">{{ t('security.two_factor', 'Two-factor auth') }}</span>
-                            <span class="badge-status bg-secondary" id="status-2fa">--</span>
-                        </li>
-                        <li>
-                            <span class="metric-label">{{ t('security.ip_lists', 'IP blacklist / whitelist') }}</span>
-                            <span class="badge-status bg-secondary" id="status-ip-lists">--</span>
-                        </li>
-                    </ul>
+                </div>
+                <div class="info-card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item-grid">
+                                <span class="info-label d-block">{{ t('security.two_factor', 'Two-factor auth') }}</span>
+                                <span class="info-value">
+                                    <span class="badge bg-secondary" id="status-2fa">--</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item-grid">
+                                <span class="info-label d-block">{{ t('security.ip_lists', 'IP blacklist / whitelist') }}</span>
+                                <span class="info-value">
+                                    <span class="badge bg-secondary" id="status-ip-lists">--</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-lg-5">
-                <div class="glass-card p-4 h-100">
-                    <h5 class="text-white mb-3">{{ t('security.actions_heading', 'Quick actions') }}</h5>
-                    <div class="d-grid gap-3">
-                        <button class="btn btn-light text-start d-flex justify-content-between align-items-center" id="action-create-backup">
-                            <span><i class="bi bi-hdd-network me-2 text-primary"></i>{{ t('security.create_backup', 'Create encrypted backup') }}</span>
-                            <i class="bi bi-arrow-right-short"></i>
+        </div>
+        <div class="col-lg-4 mb-4">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <h5 class="actions-card-title">
+                        <i class="bi bi-lightning me-2"></i>
+                        {{ t('security.actions_heading', 'Quick actions') }}
+                    </h5>
+                </div>
+                <div class="actions-card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" id="action-create-backup">
+                            <i class="bi bi-hdd-network me-2"></i>
+                            {{ t('security.create_backup', 'Create encrypted backup') }}
                         </button>
-                        <button class="btn btn-outline-light text-start d-flex justify-content-between align-items-center" id="action-list-backups">
-                            <span><i class="bi bi-archive me-2 text-info"></i>{{ t('security.list_backups', 'List backups') }}</span>
-                            <i class="bi bi-arrow-right-short"></i>
+                        <button class="btn btn-outline-light" id="action-list-backups">
+                            <i class="bi bi-archive me-2"></i>
+                            {{ t('security.list_backups', 'List backups') }}
                         </button>
-                        <button class="btn btn-outline-light text-start d-flex justify-content-between align-items-center" id="action-validate-input">
-                            <span><i class="bi bi-search me-2 text-warning"></i>{{ t('security.validate_input', 'Validate input sanitization') }}</span>
-                            <i class="bi bi-arrow-right-short"></i>
+                        <button class="btn btn-outline-light" id="action-validate-input">
+                            <i class="bi bi-search me-2"></i>
+                            {{ t('security.validate_input', 'Validate input sanitization') }}
                         </button>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="row g-4 mt-1">
-            <div class="col-xl-4">
-                <div class="glass-card p-4 h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="text-white mb-0">{{ t('security.active_services', 'Active Services') }}</h5>
+    <!-- Services, Logs & Backups -->
+    <div class="row services-network-row">
+        <!-- Active Services -->
+        <div class="col-lg-4 mb-4">
+            <div class="services-card">
+                <div class="services-card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="services-card-title">
+                            <i class="bi bi-server me-2"></i>
+                            {{ t('security.active_services', 'Active Services') }}
+                        </h5>
                         <button class="btn btn-sm btn-outline-light" id="servicesRefresh">
                             <i class="bi bi-arrow-clockwise"></i>
                         </button>
                     </div>
+                </div>
+                <div class="services-card-body">
                     <div id="services-list">
                         <div class="text-center py-4 text-white-50">
                             <i class="bi bi-arrow-clockwise spinning"></i>
@@ -203,11 +188,18 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-4">
-                <div class="glass-card p-4 h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+        </div>
+
+        <!-- Security Logs -->
+        <div class="col-lg-4 mb-4">
+            <div class="logs-card">
+                <div class="logs-card-header">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <div>
-                            <h5 class="text-white mb-1">{{ t('security.logs_heading', 'Security logs') }}</h5>
+                            <h5 class="logs-card-title">
+                                <i class="bi bi-journal-text me-2"></i>
+                                {{ t('security.logs_heading', 'Security logs') }}
+                            </h5>
                             <p class="text-white-50 mb-0 small">{{ t('security.logs_caption', 'Filter critical events in real time') }}</p>
                         </div>
                         <div class="d-flex gap-2">
@@ -217,9 +209,13 @@
                                 <option value="info">{{ t('security.logs_info', 'Info') }}</option>
                                 <option value="all">{{ t('security.logs_all', 'All') }}</option>
                             </select>
-                            <button class="btn btn-sm btn-outline-light" id="securityLogsRefresh"><i class="bi bi-arrow-clockwise"></i></button>
+                            <button class="btn btn-sm btn-outline-light" id="securityLogsRefresh">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
                         </div>
                     </div>
+                </div>
+                <div class="logs-card-body">
                     <div class="logs-container" id="security-logs">
                         <div class="text-center py-4 text-white-50">
                             <i class="bi bi-arrow-clockwise spinning"></i>
@@ -228,17 +224,26 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-4">
-                <div class="glass-card p-4 h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+        </div>
+
+        <!-- Backup Inventory -->
+        <div class="col-lg-4 mb-4">
+            <div class="network-card">
+                <div class="network-card-header">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h5 class="text-white mb-1">{{ t('security.backups_heading', 'Backup inventory') }}</h5>
+                            <h5 class="network-card-title">
+                                <i class="bi bi-archive me-2"></i>
+                                {{ t('security.backups_heading', 'Backup inventory') }}
+                            </h5>
                             <p class="text-white-50 mb-0 small">{{ t('security.backups_caption', 'Latest encrypted backups stored on device') }}</p>
                         </div>
                         <button class="btn btn-sm btn-outline-light" id="securityBackupsRefresh">
                             <i class="bi bi-arrow-clockwise"></i>
                         </button>
                     </div>
+                </div>
+                <div class="network-card-body">
                     <div class="backup-list" id="security-backup-list">
                         <div class="text-center py-4 text-white-50">
                             <i class="bi bi-database"></i>
@@ -259,8 +264,30 @@
     const el = document.getElementById(id);
     if(!el) return;
     const isOn = !!enabled;
-    el.className = 'badge-status ' + (isOn ? 'bg-success text-white' : 'bg-danger text-white');
-    el.textContent = isOn ? (HostBerry.t?.('security.enabled', 'Enabled') || 'Enabled') : (HostBerry.t?.('security.disabled', 'Disabled') || 'Disabled');
+    const enabledText = HostBerry.t?.('security.enabled', 'Enabled') || 'Enabled';
+    const disabledText = HostBerry.t?.('security.disabled', 'Disabled') || 'Disabled';
+    el.className = 'badge ' + (isOn ? 'bg-success' : 'bg-danger');
+    el.textContent = isOn ? enabledText : disabledText;
+  };
+
+  const setStatusCard = (idPrefix, enabled) => {
+    const textEl = document.getElementById(idPrefix + '-text');
+    const badgeEl = document.getElementById(idPrefix + '-badge');
+    if(textEl) {
+      const statusText = enabled 
+        ? (HostBerry.t?.('security.enabled', 'Enabled') || 'Enabled')
+        : (HostBerry.t?.('security.disabled', 'Disabled') || 'Disabled');
+      textEl.textContent = statusText;
+    }
+    if(badgeEl) {
+      const badge = badgeEl.querySelector('.badge');
+      if(badge) {
+        badge.className = 'badge ' + (enabled ? 'bg-success' : 'bg-danger');
+        badge.textContent = enabled 
+          ? (HostBerry.t?.('security.enabled', 'Enabled') || 'Enabled')
+          : (HostBerry.t?.('security.disabled', 'Disabled') || 'Disabled');
+      }
+    }
   };
 
   const setText = (id, value) => {
@@ -274,18 +301,14 @@
       if(!resp.ok) throw new Error('Status request failed');
       const payload = await resp.json();
       const data = payload.data || payload;
-      setBadge('status-audit', data.audit_logging_enabled);
-      setBadge('status-rate', data.rate_limiting_enabled);
-      setBadge('status-headers', data.security_headers_enabled);
-      setBadge('status-backup', data.backup_encryption_enabled);
+      
+      setStatusCard('status-audit', data.audit_logging_enabled);
+      setStatusCard('status-rate', data.rate_limiting_enabled);
+      setStatusCard('status-headers', data.security_headers_enabled);
+      setStatusCard('status-backup', data.backup_encryption_enabled);
       setBadge('status-2fa', data.two_factor_enabled);
       setBadge('status-ip-lists', data.ip_blacklist_enabled || data.ip_whitelist_enabled);
       setText('security-last-check', new Date().toLocaleString());
-      const pill = document.getElementById('security-overall-pill');
-      if(pill){
-        pill.className = 'status-pill bg-opacity-25 bg-success text-white mt-2';
-        pill.textContent = HostBerry.t?.('security.status_ok', 'All systems nominal') || 'All systems nominal';
-      }
     }catch(error){
       console.error('Security status failed', error);
       HostBerry.showAlert?.('danger', HostBerry.t?.('errors.security_status', 'Unable to fetch security status') || 'Unable to fetch security status');
@@ -317,15 +340,20 @@
         const statusLower = (typeof status === 'string' ? status : 'unknown').toLowerCase();
         const isRunning = statusLower === 'running' || statusLower === 'active';
         const statusText = isRunning 
-          ? (HostBerry.t?.('system.running', 'Ejecutándose') || 'Running')
-          : (HostBerry.t?.('system.stopped', 'Detenido') || 'Stopped');
+          ? (HostBerry.t?.('system.running', 'Running') || 'Running')
+          : (HostBerry.t?.('system.stopped', 'Stopped') || 'Stopped');
         const statusClass = isRunning ? 'bg-success' : 'bg-danger';
         
         const item = document.createElement('div');
         item.className = 'service-item';
         item.innerHTML = `
-          <span class="service-name">${serviceName}</span>
-          <span class="badge ${statusClass} text-white">${statusText}</span>
+          <div class="service-info">
+            <i class="bi bi-gear-fill service-icon default-icon"></i>
+            <span class="service-name">${serviceName}</span>
+          </div>
+          <div class="service-status">
+            <span class="status-badge ${statusClass}">${statusText}</span>
+          </div>
         `;
         container.appendChild(item);
       });
@@ -361,10 +389,10 @@
       container.innerHTML = '';
       logs.forEach(log => {
         const item = document.createElement('div');
+        item.className = 'log-item';
         const levelLabel = (log.level || log.log_level || 'INFO').toUpperCase();
         const ts = log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : (log.created_at ? new Date(log.created_at).toLocaleTimeString() : '--:--:--');
         const message = log.message || log.log_message || log.content || '';
-        item.className = 'log-item';
         item.innerHTML = `
           <span class="text-white-50 small">${ts}</span>
           <span class="badge bg-${getLevelColor(levelLabel)} log-level">${levelLabel}</span>
@@ -433,9 +461,9 @@
       backups.slice(0, 10).forEach(backup => {
         const item = document.createElement('div');
         item.className = 'backup-item text-white';
-        const name = backup.name || backup.filename || backup.path || backup;
+        const name = backup.name || backup.filename || backup.path || (typeof backup === 'string' ? backup : 'backup');
         const size = backup.size ? formatBytes(backup.size) : '';
-        const date = backup.created_at || backup.timestamp || backup.date || '';
+        const date = backup.created_at || backup.timestamp || backup.date || backup.created || '';
         const formattedDate = date ? new Date(date).toLocaleString() : '';
         item.innerHTML = `
           <div class="d-flex justify-content-between align-items-center">
@@ -510,4 +538,50 @@
   });
 })();
 </script>
+<style>
+.spinning {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.log-item {
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+.log-item:last-child {
+    margin-bottom: 0;
+}
+.log-level {
+    min-width: 80px;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+}
+.backup-item {
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 0.75rem;
+    transition: all 0.3s ease;
+}
+.backup-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+.backup-item:last-child {
+    margin-bottom: 0;
+}
+.logs-container {
+    max-height: 380px;
+    overflow-y: auto;
+}
+</style>
 {% endblock %}
