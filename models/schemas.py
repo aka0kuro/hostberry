@@ -126,6 +126,7 @@ class NetworkStats(BaseModel):
     bytes_recv: int
     packets_sent: Optional[int] = None
     packets_recv: Optional[int] = None
+    interfaces: Optional[List[str]] = None
 
 class SystemInfo(BaseModel):
     hostname: str
