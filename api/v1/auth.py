@@ -281,10 +281,21 @@ async def login(user_credentials: UserLogin, request: Request):
         )
 
 @router.post("/register", response_model=UserResponse)
-async def register(user_data: UserCreate):
+async def register(user_data: UserCreate, request: Request):
     """Registrar nuevo usuario"""
+    client_ip = _get_client_ip(request)
+    user_agent = _get_user_agent(request)
+    
     try:
         start_time = time.time()
+        
+        logger.info(f"📝 Intento de registro - Usuario: {user_data.username}, IP: {client_ip}")
+        await db.insert_log(
+            "INFO",
+            f"Intento de registro - Usuario: {user_data.username}, IP: {client_ip}",
+            source="auth",
+            user_id=None
+        )
         
         # Verificar si el usuario ya existe
         existing_user = await db.execute_query(
@@ -293,8 +304,19 @@ async def register(user_data: UserCreate):
         )
         
         if existing_user:
+            logger.warning(f"❌ Registro fallido - Usuario ya existe: {user_data.username}, IP: {client_ip}")
+            await db.insert_log(
+                "WARNING",
+                f"Registro fallido - Usuario ya existe: {user_data.username}, IP: {client_ip}",
+                source="auth",
+                user_id=None
+            )
             log_auth_event("register_failed", username=user_data.username, 
                           details="Usuario ya existe", success=False)
+            audit_security_violation("duplicate_registration", client_ip, {
+                "username": user_data.username,
+                "user_agent": user_agent
+            })
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=get_text("auth.user_already_exists", default="El usuario ya existe")
@@ -309,8 +331,22 @@ async def register(user_data: UserCreate):
         response_time = time.time() - start_time
         
         # Log de registro exitoso
-        log_auth_event("register_success", username=user_data.username, success=True)
-        log_user_action("register", user_id=user_data.username, details=f"response_time={response_time:.3f}s")
+        success_message = f"✅ Registro exitoso - Usuario: {user_data.username}, IP: {client_ip}, User-Agent: {user_agent}, Tiempo: {response_time:.3f}s"
+        logger.info(success_message)
+        await db.insert_log(
+            "INFO",
+            f"Registro exitoso - Usuario: {user_data.username}, IP: {client_ip}, Tiempo: {response_time:.3f}s",
+            source="auth",
+            user_id=None
+        )
+        log_auth_event("register_success", username=user_data.username, ip_address=client_ip, success=True)
+        log_user_action("register", user_id=user_data.username, ip_address=client_ip, details=f"response_time={response_time:.3f}s, user_agent={user_agent}")
+        audit_sensitive_operation(
+            "user_registered",
+            user_data.username,
+            client_ip,
+            {"email": user_data.email, "user_agent": user_agent}
+        )
         
         return UserResponse(
             username=user_data.username,
@@ -321,7 +357,14 @@ async def register(user_data: UserCreate):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error('register_error', error=str(e))
+        error_message = f"❌ Error en registro - Usuario: {user_data.username}, IP: {client_ip}, Error: {str(e)}"
+        logger.error(error_message)
+        await db.insert_log(
+            "ERROR",
+            f"Error en registro - Usuario: {user_data.username}, IP: {client_ip}, Error: {str(e)}",
+            source="auth",
+            user_id=None
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=get_text("errors.internal_server_error", default="Error interno del servidor")
