@@ -1076,11 +1076,18 @@ body:not(.light-theme) .form-select-sm {
         padding: 1rem;
     }
     
+    .status-card-header {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+    
     .status-icon {
         width: 30px;
         height: 30px;
         font-size: 0.9rem;
-        margin-right: 0.6rem;
+        margin-right: 0 !important;
+        margin-bottom: 0.5rem !important;
     }
     
     .status-info h3 {
