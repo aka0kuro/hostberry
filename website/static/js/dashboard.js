@@ -679,6 +679,7 @@ window.dashboard = {
     updateRecentActivity,
     refreshActivity,
     refreshLogs,
+    refreshServices,
     restartSystem,
     shutdownSystem,
     backupSystem,
