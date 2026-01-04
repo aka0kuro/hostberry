@@ -71,7 +71,7 @@
     "just_now": "Ahora"
   },
   "navigation": {
-    "dashboard": "Panel Principal",
+    "dashboard": "Panel",
     "system": "Sistema",
     "network": "Red",
     "wifi": "WiFi",
@@ -95,6 +95,77 @@
     "language": "Idioma",
     "theme": "Tema",
     "account": "Cuenta"
+  },
+  "help": {
+    "hero_kicker": "Centro de soporte",
+    "hero_title": "Estamos aquí para mantener HostBerry funcionando",
+    "hero_subtitle": "Encuentra respuestas rápidas, guías detalladas y acceso directo a nuestros canales de soporte con la misma estética del dashboard.",
+    "hero_cta_contact": "Contactar soporte",
+    "hero_cta_docs": "Explorar guías",
+    "stats": {
+      "active_tickets": "Tickets activos",
+      "resolution_rate": "Tasa de resolución",
+      "system_uptime": "Disponibilidad del sistema",
+      "response_time": "Tiempo medio de respuesta"
+    },
+    "guides": {
+      "heading": "Recorridos guiados",
+      "caption": "Sigue pasos curados para cada escenario",
+      "open": "Abrir guía",
+      "getting_started_title": "Primeros pasos",
+      "getting_started_desc": "Checklist inicial y mejores prácticas.",
+      "wifi_title": "Configuración WiFi",
+      "wifi_desc": "Protege tu red y gestiona SSID.",
+      "security_title": "Fortalecimiento de seguridad",
+      "security_desc": "Cierra puertos, firewall y acceso VPN.",
+      "advanced_title": "Automatización avanzada",
+      "advanced_desc": "Ajusta servicios, cron y automatizaciones."
+    },
+    "faqs": {
+      "heading": "Preguntas frecuentes",
+      "caption": "Respuestas cortas para desbloquearte",
+      "monitoring_q": "¿Por qué mis métricas de monitoreo se quedan congeladas?",
+      "monitoring_a": "Comprueba que los servicios HostBerry estén activos y que el reloj del dispositivo esté sincronizado. Reiniciar el servicio de monitoreo suele resolverlo.",
+      "security_q": "¿Cómo reaplico las reglas de seguridad?",
+      "security_a": "Ve a Seguridad → Firewall y pulsa “Aplicar reglas”. El sistema validará y recargará UFW y Fail2ban.",
+      "updates_q": "¿Es seguro actualizar mientras hay clientes conectados?",
+      "updates_a": "Sí. Las actualizaciones se ejecutan en segundo plano y solo reinician servicios cuando es necesario. Se notificará antes de un cambio disruptivo."
+    },
+    "links": {
+      "heading": "Recursos rápidos",
+      "docs_title": "Documentación del producto",
+      "docs_desc": "Manual de arquitectura, despliegue y mantenimiento.",
+      "api_title": "Referencia API",
+      "api_desc": "Especificaciones OpenAPI interactivas.",
+      "troubleshoot_title": "Guía de resolución",
+      "troubleshoot_desc": "Diagramas para diagnosticar conectividad y seguridad.",
+      "support_title": "Portal de soporte",
+      "support_desc": "Abre tickets, sigue su estado y escala incidencias."
+    },
+    "contact": {
+      "heading": "Envíanos un mensaje",
+      "caption": "Suelo respondemos en pocos minutos",
+      "response_time_desc": "Tiempo medio de respuesta: menos de 15 minutos",
+      "email": "Correo electrónico",
+      "community": "Comunidad",
+      "repo": "Código fuente"
+    },
+    "form": {
+      "name": "Tu nombre",
+      "email": "Correo",
+      "subject": "Asunto",
+      "subject_placeholder": "Selecciona una opción",
+      "subject_general": "Consulta general",
+      "subject_technical": "Soporte técnico",
+      "subject_bug": "Reporte de bug",
+      "subject_feature": "Solicitud de mejora",
+      "priority": "Prioridad",
+      "priority_normal": "Normal",
+      "priority_high": "Alta",
+      "priority_urgent": "Urgente",
+      "message": "Mensaje",
+      "submit": "Enviar mensaje"
+    }
   },
   "dashboard": {
     "title": "Panel de Control",
