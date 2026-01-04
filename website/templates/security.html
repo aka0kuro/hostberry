@@ -152,13 +152,27 @@
   }
   
   // Cargar traducciones cuando el DOM esté listo
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      // Esperar un poco para que common.js se cargue primero
-      setTimeout(loadBackupTranslations, 200);
-    });
-  } else {
+  function initTranslations() {
+    // Esperar un poco para que common.js se cargue primero
     setTimeout(loadBackupTranslations, 200);
+    
+    // Recargar traducciones cuando cambie el idioma
+    const langDropdown = document.querySelector('.lang-dropdown');
+    if (langDropdown) {
+      langDropdown.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (link && link.href.includes('lang=')) {
+          // Recargar traducciones después de cambiar el idioma
+          setTimeout(loadBackupTranslations, 500);
+        }
+      });
+    }
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTranslations);
+  } else {
+    initTranslations();
   }
 })();
 </script>
