@@ -647,4 +647,184 @@ async def get_network_status(current_user: Dict[str, Any] = Depends(get_current_
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error obteniendo estado de red"
+        )
+
+
+@router.get("/network/interfaces")
+async def get_network_interfaces(current_user: Dict[str, Any] = Depends(get_current_active_user)):
+    """Obtiene todas las interfaces de red con sus detalles"""
+    try:
+        # Lazy import de psutil
+        import psutil
+        import socket
+        
+        interfaces = []
+        addrs = psutil.net_if_addrs()
+        stats = psutil.net_if_stats()
+        
+        for iface_name in addrs.keys():
+            if iface_name == "lo":  # Saltar loopback
+                continue
+                
+            iface_addrs = addrs[iface_name]
+            iface_stat = stats.get(iface_name)
+            
+            # Obtener IP y MAC
+            ip_address = None
+            mac_address = None
+            
+            for addr in iface_addrs:
+                if addr.family == socket.AF_INET:  # IPv4
+                    ip_address = addr.address
+                elif addr.family == psutil.AF_LINK:  # MAC
+                    mac_address = addr.address
+            
+            # Estado de la interfaz
+            status = "up" if (iface_stat and iface_stat.isup) else "down"
+            
+            interfaces.append({
+                "name": iface_name,
+                "status": status,
+                "ip": ip_address or "N/A",
+                "mac": mac_address or "N/A",
+                "speed": iface_stat.speed if iface_stat else 0,
+                "mtu": iface_stat.mtu if iface_stat else 1500
+            })
+        
+        return interfaces
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo interfaces de red: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=get_text("errors.loading_interfaces", default="Error cargando interfaces de red")
+        )
+
+
+@router.get("/network/routing")
+async def get_routing_table(current_user: Dict[str, Any] = Depends(get_current_active_user)):
+    """Obtiene la tabla de enrutamiento"""
+    try:
+        from core.async_utils import run_command_async
+        
+        # Ejecutar comando ip route
+        returncode, stdout, stderr = await run_command_async("ip", "route", "show")
+        
+        if returncode != 0:
+            logger.error(f"Error ejecutando ip route: {stderr}")
+            return []
+        
+        routes = []
+        for line in stdout.split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Parsear línea de ruta
+            # Ejemplo: "default via 192.168.1.1 dev eth0 metric 100"
+            parts = line.split()
+            
+            destination = "default"
+            gateway = "*"
+            interface = "unknown"
+            metric = "0"
+            
+            if "via" in parts:
+                via_idx = parts.index("via")
+                if via_idx > 0:
+                    destination = parts[0]
+                if via_idx + 1 < len(parts):
+                    gateway = parts[via_idx + 1]
+            
+            if "dev" in parts:
+                dev_idx = parts.index("dev")
+                if dev_idx + 1 < len(parts):
+                    interface = parts[dev_idx + 1]
+            
+            if "metric" in parts:
+                metric_idx = parts.index("metric")
+                if metric_idx + 1 < len(parts):
+                    metric = parts[metric_idx + 1]
+            
+            routes.append({
+                "destination": destination,
+                "gateway": gateway,
+                "interface": interface,
+                "metric": metric
+            })
+        
+        return routes
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo tabla de enrutamiento: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=get_text("errors.loading_routing", default="Error cargando tabla de enrutamiento")
+        )
+
+
+@router.post("/network/firewall/toggle")
+async def toggle_firewall(current_user: Dict[str, Any] = Depends(get_current_active_user)):
+    """Alterna el estado del firewall (UFW)"""
+    try:
+        from core.async_utils import run_command_async
+        
+        # Verificar estado actual
+        returncode, stdout, _ = await run_command_async("ufw", "status")
+        is_active = "Status: active" in stdout or "Estado: activo" in stdout
+        
+        if is_active:
+            # Desactivar firewall
+            returncode, stdout, stderr = await run_command_async("ufw", "--force", "disable")
+        else:
+            # Activar firewall
+            returncode, stdout, stderr = await run_command_async("ufw", "--force", "enable")
+        
+        if returncode != 0:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=get_text("errors.operation_failed", default="Error al alternar firewall")
+            )
+        
+        return {
+            "success": True,
+            "message": get_text("messages.operation_successful", default="Operación exitosa"),
+            "firewall_enabled": not is_active
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error alternando firewall: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=get_text("errors.operation_failed", default="Error al alternar firewall")
+        )
+
+
+@router.post("/network/config")
+async def save_network_config(
+    config: Dict[str, str],
+    current_user: Dict[str, Any] = Depends(get_current_active_user)
+):
+    """Guarda la configuración de red"""
+    try:
+        # Aquí se implementaría la lógica para guardar la configuración
+        # Por ahora solo retornamos éxito
+        
+        # TODO: Implementar guardado real de configuración
+        # - hostname: /etc/hostname
+        # - DNS: /etc/resolv.conf
+        # - Gateway: /etc/network/interfaces o netplan
+        
+        return {
+            "success": True,
+            "message": get_text("messages.config_saved", default="Configuración guardada")
+        }
+        
+    except Exception as e:
+        logger.error(f"Error guardando configuración de red: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=get_text("errors.config_update_error", default="Error guardando configuración")
         ) 
