@@ -42,6 +42,7 @@
   }
 
   let netChart;
+  let selectedInterface = '';
   const netHistory = {
     labels: [],
     download: [],
@@ -108,9 +109,10 @@
     try{
       const [systemStats, networkStatsRaw] = await Promise.all([
         fetchJson('/api/v1/system/stats'),
-        fetchJson('/api/v1/system/network')
+        fetchJson(`/api/v1/system/network${selectedInterface ? `?interface=${encodeURIComponent(selectedInterface)}` : ''}`)
       ]);
       const networkStats = computeNetworkRates(networkStatsRaw);
+      populateInterfaceSelect(networkStats.interfaces || []);
 
       setText('uptime-value', formatUptime(systemStats.uptime));
       setText('cpu-usage', `${safeToFixed(systemStats.cpu_usage)}%`);
@@ -159,6 +161,14 @@
     if(!current || typeof current.bytes_recv !== 'number' || typeof current.bytes_sent !== 'number'){
       return current || {};
     }
+    // reset snapshot if cambia interfaz
+    if(lastNetSnapshot && current.interface !== lastNetSnapshot.interface){
+      lastNetSnapshot = null;
+      netHistory.labels.length = 0;
+      netHistory.download.length = 0;
+      netHistory.upload.length = 0;
+      if(netChart){ netChart.update(); }
+    }
     const now = Date.now();
     if(!lastNetSnapshot){
       lastNetSnapshot = { time: now, ...current };
@@ -181,8 +191,48 @@
   function initMonitoring(){
     updateStats();
     setInterval(updateStats, 60000);
+    const ifaceSelect = document.getElementById('net-interface-select');
+    if(ifaceSelect){
+      ifaceSelect.addEventListener('change', ()=>{
+        selectedInterface = ifaceSelect.value;
+        lastNetSnapshot = null;
+        netHistory.labels.length = 0;
+        netHistory.download.length = 0;
+        netHistory.upload.length = 0;
+        if(netChart){ netChart.update(); }
+        updateStats();
+      });
+    }
   }
 
   document.addEventListener('DOMContentLoaded', initMonitoring);
 })();
 
+
+  function populateInterfaceSelect(list){
+    const select = document.getElementById('net-interface-select');
+    if(!select || !Array.isArray(list)) return;
+    const current = select.value;
+    const existing = Array.from(select.options).map(o => o.value);
+    let changed = false;
+    list.forEach(iface=>{
+      if(iface && !existing.includes(iface)){
+        const opt = document.createElement('option');
+        opt.value = iface;
+        opt.textContent = iface;
+        select.appendChild(opt);
+        changed = true;
+      }
+    });
+    if(current && !list.includes(current)){
+      select.value = '';
+      selectedInterface = '';
+      changed = true;
+    }
+    if(!current && selectedInterface){
+      select.value = selectedInterface;
+    }
+    if(changed && select.value !== current){
+      select.dispatchEvent(new Event('change'));
+    }
+  }
