@@ -295,24 +295,24 @@
 
   async function createBackup(){
     try{
-      const confirmMsg = HostBerry.t?.('backup.create_confirm', '¿Estás seguro de que quieres crear un backup?') || '¿Estás seguro de que quieres crear un backup?';
+      const confirmMsg = getTranslation('backup.create_confirm', 'Are you sure you want to create a backup?');
       if(!confirm(confirmMsg)) return;
       
-      showNotification(HostBerry.t?.('backup.creating', 'Creando backup...') || 'Creando backup...', 'info');
+      showNotification(getTranslation('backup.creating', 'Creating backup...'), 'info');
       
       const resp = await HostBerry.apiRequest('/api/v1/security/backup?include_logs=true&include_uploads=true', { method: 'POST' });
       if(!resp.ok){
         const errorText = await resp.text();
-        throw new Error(errorText || (HostBerry.t?.('backup.create_failed', 'Error al crear backup') || 'Error al crear backup'));
+        throw new Error(errorText || getTranslation('backup.create_failed', 'Error creating backup'));
       }
       const payload = await resp.json();
-      const message = payload.message || payload.data?.message || HostBerry.t?.('backup.created', 'Backup creado exitosamente') || 'Backup creado exitosamente';
+      const message = payload.message || payload.data?.message || getTranslation('backup.created', 'Backup created successfully');
       showNotification(message, 'success');
       updateLastCheck();
       await loadBackups();
     }catch(error){
       console.error('Backup failed', error);
-      const errorMsg = HostBerry.t?.('backup.create_error', 'Error al crear backup') || 'Error al crear backup';
+      const errorMsg = getTranslation('backup.create_error', 'Error creating backup');
       showNotification(errorMsg, 'error');
     }
   }
