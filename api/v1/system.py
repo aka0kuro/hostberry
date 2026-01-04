@@ -114,9 +114,10 @@ async def get_network_statistics(
         # Obtener estadísticas de red
         net_io = psutil.net_io_counters()
         
-        # Calcular velocidades (simplificado)
-        upload_speed = net_io.bytes_sent / 1024  # KB
-        download_speed = net_io.bytes_recv / 1024  # KB
+        # No calcular velocidades aquí - el cliente las calculará basándose en el tiempo
+        # Solo devolver los bytes totales (las velocidades se calcularán en el cliente)
+        upload_speed = 0.0  # Se calculará en el cliente basándose en bytes_sent
+        download_speed = 0.0  # Se calculará en el cliente basándose en bytes_recv
 
         # Fallbacks si no hay interfaz detectada
         if not interface:
