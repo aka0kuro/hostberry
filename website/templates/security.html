@@ -516,7 +516,7 @@
       }
       
       const payload = await resp.json();
-      const message = payload.message || payload.data?.message || HostBerry.t?.('backup.uploaded', 'Backup cargado exitosamente') || 'Backup cargado exitosamente';
+      const message = payload.message || payload.data?.message || getTranslation('backup.uploaded', 'Backup uploaded successfully');
       showNotification(message, 'success');
       updateLastCheck();
       await loadBackups();
