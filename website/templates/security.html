@@ -205,18 +205,29 @@
         const date = backup.created_at || backup.timestamp || backup.date || backup.created || '';
         const formattedDate = date ? new Date(date).toLocaleString() : '';
         item.innerHTML = `
-          <div class="d-flex justify-content-between align-items-center gap-2">
+          <div class="d-flex justify-content-between align-items-center gap-3">
             <div class="flex-grow-1 min-w-0">
-              <strong class="d-block backup-name" title="${name}">${name}</strong>
-              <span class="text-white-50 small">${formattedDate}</span>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <i class="bi bi-file-earmark-zip text-primary"></i>
+                <strong class="backup-name" title="${name}">${name}</strong>
+              </div>
+              <div class="d-flex align-items-center gap-3 text-white-50 small">
+                ${formattedDate ? `<span><i class="bi bi-calendar3 me-1"></i>${formattedDate}</span>` : ''}
+                ${size ? `<span><i class="bi bi-hdd me-1"></i>${size}</span>` : ''}
+              </div>
             </div>
             <div class="d-flex align-items-center gap-2 flex-shrink-0">
-              ${size ? `<span class="text-white-50 small">${size}</span>` : ''}
-              <button class="btn btn-sm btn-outline-primary download-backup-btn" data-backup-name="${name}" title="${HostBerry.t?.('security.download_backup', 'Download') || 'Download'}">
+              <button class="btn btn-sm btn-outline-info info-backup-btn" data-backup-name="${name}" title="${HostBerry.t?.('backup.info', 'Información') || 'Información'}">
+                <i class="bi bi-info-circle"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-primary download-backup-btn" data-backup-name="${name}" title="${HostBerry.t?.('backup.download', 'Descargar') || 'Descargar'}">
                 <i class="bi bi-download"></i>
               </button>
-              <button class="btn btn-sm btn-outline-warning restore-backup-btn" data-backup-name="${name}" title="${HostBerry.t?.('security.restore_backup', 'Restore') || 'Restore'}">
+              <button class="btn btn-sm btn-outline-warning restore-backup-btn" data-backup-name="${name}" title="${HostBerry.t?.('backup.restore', 'Restaurar') || 'Restaurar'}">
                 <i class="bi bi-arrow-clockwise"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger delete-backup-btn" data-backup-name="${name}" title="${HostBerry.t?.('backup.delete', 'Eliminar') || 'Eliminar'}">
+                <i class="bi bi-trash"></i>
               </button>
             </div>
           </div>`;
