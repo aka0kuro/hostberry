@@ -6,6 +6,8 @@ import os
 import time
 import platform
 import asyncio
+import subprocess
+import re
 from typing import Dict, Any, List
 # psutil se importa lazy cuando se necesita
 
