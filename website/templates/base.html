@@ -13,6 +13,25 @@
     <link href="/static/css/hostberry.css" rel="stylesheet">
     <link href="/static/css/dashboard.css" rel="stylesheet">
     
+    <!-- Prevenir layout shifts -->
+    <style>
+        html, body {
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .dashboard-container {
+            min-height: calc(100vh - 200px);
+        }
+        /* Prevenir reflows durante la carga */
+        * {
+            box-sizing: border-box;
+        }
+        /* Suavizar transiciones de tamaño */
+        body {
+            transition: min-height 0.3s ease-out;
+        }
+    </style>
+    
     {% block extra_css %}{% endblock %}
 </head>
 <body>
