@@ -160,37 +160,8 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
         })
         cache.set(cache_key, stats_dict)
         
-        # Devolver stats con información adicional
-        # Usar model_dump() si está disponible (Pydantic v2) o dict() (Pydantic v1)
-        if hasattr(stats, 'model_dump'):
-            response_data = stats.model_dump()
-        elif hasattr(stats, 'dict'):
-            response_data = stats.dict()
-        else:
-            response_data = {
-                "cpu_usage": stats.cpu_usage,
-                "cpu_cores": stats.cpu_cores,
-                "memory_usage": stats.memory_usage,
-                "memory_total": stats.memory_total,
-                "memory_free": stats.memory_free,
-                "disk_usage": stats.disk_usage,
-                "disk_total": stats.disk_total,
-                "disk_used": stats.disk_used,
-                "cpu_temperature": stats.cpu_temperature,
-                "uptime": stats.uptime
-            }
-        
-        # Agregar información adicional del sistema
-        response_data.update({
-            "hostname": hostname,
-            "os_version": os_version,
-            "kernel_version": kernel_version,
-            "architecture": architecture,
-            "processor": processor,
-            "load_average": load_average
-        })
-        
-        return response_data
+        # Devolver stats_dict que ya tiene toda la información incluida
+        return stats_dict
         
     except Exception as e:
         logger.error(f"Error obteniendo estadísticas del sistema: {str(e)}")
