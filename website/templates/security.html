@@ -201,8 +201,8 @@
       if(badge) {
         badge.className = 'badge ' + (enabled ? 'bg-success' : 'bg-danger');
         badge.textContent = enabled 
-          ? (HostBerry.t?.('security.enabled', 'Enabled') || 'Enabled')
-          : (HostBerry.t?.('security.disabled', 'Disabled') || 'Disabled');
+          ? getTranslation('security.enabled', 'Enabled')
+          : getTranslation('security.disabled', 'Disabled');
       }
     }
   };
