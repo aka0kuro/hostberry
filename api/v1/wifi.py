@@ -11,7 +11,7 @@ import time
 import os
 
 from core.security import get_current_active_user
-from core.logging import logger
+from core.hostberry_logging import logger
 from config.settings import settings
 from core.i18n import get_text
 
