@@ -194,7 +194,8 @@ async def get_network_statistics(
         cache_key = f"network_stats_{interface or 'default'}"
         cached_stats = cache.get(cache_key)
         if cached_stats:
-            return NetworkStats(**cached_stats)
+            # Devolver directamente el dict del caché
+            return cached_stats
         
         # Lazy import de psutil
         import psutil
