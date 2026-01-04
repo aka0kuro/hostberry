@@ -217,7 +217,7 @@
       setStatusCard('status-rate', data.rate_limiting_enabled);
       setStatusCard('status-headers', data.security_headers_enabled);
       setStatusCard('status-backup', data.backup_encryption_enabled);
-      setText('security-last-check', new Date().toLocaleString());
+      setText('backup-last-check', new Date().toLocaleString());
     }catch(error){
       console.error('Security status failed', error);
       HostBerry.showAlert?.('danger', HostBerry.t?.('errors.security_status', 'Unable to fetch security status') || 'Unable to fetch security status');
