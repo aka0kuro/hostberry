@@ -1337,6 +1337,15 @@
     "total_size": "Tamaño total",
     "oldest": "Backup más antiguo",
     "newest": "Backup más reciente",
-    "stats_error": "Error al obtener estadísticas"
+    "stats_error": "Error al obtener estadísticas",
+    "create_confirm": "¿Estás seguro de que quieres crear un backup?",
+    "creating": "Creando backup...",
+    "created": "Backup creado exitosamente",
+    "create_error": "Error al crear backup",
+    "restore_confirm": "¿Estás seguro de que quieres restaurar este backup? Esto reemplazará los datos actuales del sistema.",
+    "restore_confirm_final": "¡ADVERTENCIA! Esta acción restaurará el backup y reemplazará los datos actuales. ¿Estás absolutamente seguro?",
+    "restoring": "Restaurando backup...",
+    "restored": "Backup restaurado exitosamente",
+    "restore_error": "Error al restaurar backup"
   }
 }
