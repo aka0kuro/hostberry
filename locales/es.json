@@ -1299,7 +1299,7 @@
     "ssid_valid": "SSID válido"
   },
   "backup": {
-    "subtitle": "Gestiona y restaura tus respaldos del sistema",
+    "subtitle": "Gestiona y restaura tus respaldos de la configuración",
     "last_check": "Última verificación",
     "actions_heading": "Acciones de backup",
     "create_backup": "Crear backup",
