@@ -129,7 +129,11 @@
         });
         
         // Recargar la página cada 60 segundos si el usuario está inactivo
+        // Prevenir layout shift durante el reload
+        let refreshScheduled = false;
         setInterval(function() {
+            if (refreshScheduled) return;
+            
             const timeSinceActivity = Date.now() - lastActivity;
             
             // Solo recargar si:
@@ -143,7 +147,17 @@
                 document.activeElement.tagName !== 'TEXTAREA' &&
                 document.activeElement.tagName !== 'SELECT' &&
                 document.readyState === 'complete') {
-                window.location.reload();
+                
+                refreshScheduled = true;
+                // Prevenir layout shift fijando la altura antes del reload
+                const currentHeight = document.documentElement.scrollHeight;
+                document.documentElement.style.minHeight = currentHeight + 'px';
+                document.body.style.minHeight = currentHeight + 'px';
+                
+                // Usar requestAnimationFrame para suavizar la transición
+                requestAnimationFrame(function() {
+                    window.location.reload();
+                });
             }
         }, 60000); // 60 segundos = 60000 milisegundos
     })();
