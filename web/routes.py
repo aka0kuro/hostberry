@@ -26,6 +26,42 @@ def _get_service_statuses() -> dict[str, str]:
             "ssh": "running",
         }
     return statuses
+
+
+def _get_system_stats() -> dict[str, float]:
+    cpu = 0.0
+    memory = 0.0
+    disk = 0.0
+    temperature = 0.0
+
+    try:
+        cpu = float(psutil.cpu_percent(interval=None))
+    except Exception:
+        cpu = 0.0
+
+    try:
+        memory = float(psutil.virtual_memory().percent)
+    except Exception:
+        memory = 0.0
+
+    try:
+        disk = float(psutil.disk_usage("/").percent)
+    except Exception:
+        disk = 0.0
+
+    try:
+        get_temp = getattr(psutil, "get_cpu_temp", None)
+        if callable(get_temp):
+            temperature = float(get_temp()) or 0.0
+    except Exception:
+        temperature = 0.0
+
+    return {
+        "cpu_percent": round(cpu, 1),
+        "memory_percent": round(memory, 1),
+        "disk_percent": round(disk, 1),
+        "temperature": round(temperature, 1),
+    }
 """
 Router web mínimo para asegurar arranque del backend.
 """
@@ -37,6 +73,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 from core.i18n import get_text, i18n, get_html_translations
 from core.system_light import boot_time
+from core import system_light as psutil
 import json
 import time
 import os
@@ -200,12 +237,7 @@ def _base_context(request: Request, current_lang: str) -> dict:
             "load_average": load_average,
             "cpu_cores": cpu_cores,
         },
-        "system_stats": {
-            "cpu_percent": 25,
-            "memory_percent": 45,
-            "disk_percent": 60,
-            "temperature": 45,
-        },
+        "system_stats": _get_system_stats(),
         "system_health": {
             "overall": "healthy",
             "cpu": "healthy",
@@ -276,14 +308,9 @@ async def login_page(request: Request, response: Response, lang: str | None = Qu
     
     current_lang = i18n.get_current_language()
     
-    context = {"request": request, "language": current_lang,
+    context = _base_context(request, current_lang)
+    context.update({
         "current_user": {"username": "usuario"},  # Ensure current_user is available
-        "system_stats": {
-            "cpu_percent": 25,
-            "memory_percent": 45,
-            "disk_percent": 60,
-            "temperature": 45
-        },
         "system_health": {
             "overall": "healthy",
             "cpu": "healthy",
@@ -298,7 +325,7 @@ async def login_page(request: Request, response: Response, lang: str | None = Qu
             {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
         ],
         "current_user": {"username": "admin"}  # Add current_user to context
-    }
+    })
     resp = templates.TemplateResponse("login.html", context)
     if lang:
         resp.set_cookie("lang", lang, max_age=60*60*24*365)
