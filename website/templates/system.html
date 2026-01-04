@@ -466,8 +466,9 @@
 
   async function toggleService(serviceName, isRunning){
     try{
-      const action = isRunning ? 'stop' : 'start';
-      const confirmMsg = HostBerry.t?.('system.service_confirm', `Are you sure you want to ${action} ${serviceName}?`) || `Are you sure you want to ${action} ${serviceName}?`;
+      const action = isRunning ? (HostBerry.t?.('system.stop_service', 'stop') || 'stop') : (HostBerry.t?.('system.start_service', 'start') || 'start');
+      const actionText = isRunning ? (HostBerry.t?.('system.stop_service', 'Stop service') || 'stop') : (HostBerry.t?.('system.start_service', 'Start service') || 'start');
+      const confirmMsg = `${HostBerry.t?.('system.service_confirm', 'Are you sure you want to {action} {service}?') || 'Are you sure you want to {action} {service}?'}`.replace('{action}', actionText).replace('{service}', serviceName);
       if(!confirm(confirmMsg)) return;
       
       // TODO: Implementar endpoint para iniciar/detener servicios
