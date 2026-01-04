@@ -23,8 +23,15 @@ logger = get_logger("system")
 
 @router.get("/stats", response_model=SystemStats)
 async def get_system_statistics():
-    """Obtiene estadísticas del sistema"""
+    """Obtiene estadísticas del sistema (con caché)"""
     try:
+        from core.cache import cache
+        
+        # Verificar caché
+        cache_key = "system_stats"
+        cached_stats = cache.get(cache_key)
+        if cached_stats:
+            return SystemStats(**cached_stats)
         # Obtener estadísticas básicas
         cpu_usage = psutil.cpu_percent(interval=1)
         memory = psutil.virtual_memory()
