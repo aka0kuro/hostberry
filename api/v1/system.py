@@ -93,9 +93,11 @@ async def get_network_statistics(
     interface: str = None,
     current_user: Dict[str, Any] = Depends(get_current_active_user)
 ):
-    """Obtiene estadísticas de red (con caché)"""
+    """Obtiene estadísticas de red usando comandos de Linux (con caché)"""
     try:
         from core.cache import cache
+        import subprocess
+        import re
         
         # Verificar caché
         cache_key = f"network_stats_{interface or 'default'}"
@@ -106,41 +108,90 @@ async def get_network_statistics(
         # Lazy import de psutil
         import psutil
         
+        # Obtener interfaces disponibles usando comando Linux
+        try:
+            result = subprocess.run(['ip', 'link', 'show'], capture_output=True, text=True, timeout=5)
+            available_interfaces = []
+            for line in result.stdout.split('\n'):
+                if ': ' in line and 'state' in line.lower():
+                    # Extraer nombre de interfaz: "2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP>"
+                    match = re.search(r'\d+:\s+(\w+):', line)
+                    if match and match.group(1) != 'lo':
+                        available_interfaces.append(match.group(1))
+        except:
+            # Fallback a psutil
+            available_interfaces = [
+                name for name, st in psutil.net_if_stats().items()
+                if name != "lo" and getattr(st, "isup", False)
+            ] or [
+                name for name in psutil.net_if_stats().keys() if name != "lo"
+            ]
+        
         # Obtener información de red
         iface_info = get_network_interface(interface)
         interface = iface_info.get("interface") if isinstance(iface_info, dict) else None
         ip_address = iface_info.get("ip_address") if isinstance(iface_info, dict) else None
         
-        # Obtener estadísticas de red
-        net_io = psutil.net_io_counters()
+        # Obtener estadísticas de red usando /proc/net/dev (más preciso)
+        bytes_sent = 0
+        bytes_recv = 0
+        packets_sent = 0
+        packets_recv = 0
         
-        # No calcular velocidades aquí - el cliente las calculará basándose en el tiempo
-        # Solo devolver los bytes totales (las velocidades se calcularán en el cliente)
-        upload_speed = 0.0  # Se calculará en el cliente basándose en bytes_sent
-        download_speed = 0.0  # Se calculará en el cliente basándose en bytes_recv
+        try:
+            with open('/proc/net/dev', 'r') as f:
+                for line in f:
+                    if interface and interface in line:
+                        # Formato: interface: bytes_recv packets_recv errs_recv drop_recv bytes_sent packets_sent errs_sent drop_sent
+                        parts = line.split()
+                        if len(parts) >= 10:
+                            bytes_recv = int(parts[1])
+                            packets_recv = int(parts[2])
+                            bytes_sent = int(parts[9])
+                            packets_sent = int(parts[10])
+                        break
+        except:
+            # Fallback a psutil
+            net_io = psutil.net_io_counters()
+            bytes_sent = net_io.bytes_sent
+            bytes_recv = net_io.bytes_recv
+            packets_sent = net_io.packets_sent
+            packets_recv = net_io.packets_recv
+        
+        # Obtener IP usando comando Linux
+        if interface and not ip_address:
+            try:
+                result = subprocess.run(
+                    ['ip', 'addr', 'show', interface],
+                    capture_output=True, text=True, timeout=5
+                )
+                for line in result.stdout.split('\n'):
+                    if 'inet ' in line and not '127.0.0.1' in line:
+                        ip_address = line.split()[1].split('/')[0]
+                        break
+            except:
+                ip_address = get_ip_address(interface) if interface else None
 
         # Fallbacks si no hay interfaz detectada
         if not interface:
             # elegir cualquier interfaz activa
-            ifaces = psutil.net_if_stats()
-            for name, st in ifaces.items():
-                if name == "lo":
-                    continue
-                if getattr(st, "isup", False):
-                    interface = name
-                    break
-        if not ip_address:
-            ip_address = get_ip_address(interface) if interface else None
+            if available_interfaces:
+                interface = available_interfaces[0]
+            else:
+                ifaces = psutil.net_if_stats()
+                for name, st in ifaces.items():
+                    if name == "lo":
+                        continue
+                    if getattr(st, "isup", False):
+                        interface = name
+                        break
+        
         interface = interface or "unknown"
         ip_address = ip_address or "--"
-
-        # recopilar lista de interfaces disponibles (sin loopback)
-        available_interfaces = [
-            name for name, st in psutil.net_if_stats().items()
-            if name != "lo" and getattr(st, "isup", False)
-        ] or [
-            name for name in psutil.net_if_stats().keys() if name != "lo"
-        ]
+        
+        # No calcular velocidades aquí - el cliente las calculará basándose en el tiempo
+        upload_speed = 0.0  # Se calculará en el cliente basándose en bytes_sent
+        download_speed = 0.0  # Se calculará en el cliente basándose en bytes_recv
 
         stats = NetworkStats(
             interface=interface,
