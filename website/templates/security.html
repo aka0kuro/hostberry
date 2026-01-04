@@ -692,9 +692,16 @@
   }
 
   document.addEventListener('DOMContentLoaded', function(){
+    // Actualizar última verificación inmediatamente (no bloquea)
     updateLastCheck();
-    loadBackups();
     
+    // Cargar backups de forma asíncrona después de que la página se haya renderizado
+    // Esto evita bloquear el renderizado inicial
+    setTimeout(() => {
+      loadBackups();
+    }, 100);
+    
+    // Configurar event listeners
     document.getElementById('backupsListRefresh')?.addEventListener('click', loadBackups);
     document.getElementById('action-create-backup')?.addEventListener('click', createBackup);
     document.getElementById('action-list-backups')?.addEventListener('click', loadBackups);
@@ -713,7 +720,8 @@
       });
     }
     
-    setInterval(loadBackups, 30000);
+    // Actualizar backups cada 60 segundos (reducido de 30 para menos carga)
+    setInterval(loadBackups, 60000);
   });
 })();
 </script>
