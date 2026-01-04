@@ -51,13 +51,13 @@
                             <select class="form-select bg-dark text-white border-secondary" id="timezone" name="timezone">
                                 {% set current_tz = (settings.timezone if settings else 'UTC') or 'UTC' %}
                                 <option value="UTC" {{ 'selected' if current_tz == 'UTC' else '' }}>UTC</option>
-                                <option value="Europe/Madrid" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'Europe/Madrid' else '' }}>Europe/Madrid</option>
-                                <option value="Europe/London" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'Europe/London' else '' }}>Europe/London</option>
-                                <option value="America/New_York" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'America/New_York' else '' }}>America/New_York</option>
-                                <option value="America/Los_Angeles" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'America/Los_Angeles' else '' }}>America/Los_Angeles</option>
-                                <option value="America/Mexico_City" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'America/Mexico_City' else '' }}>America/Mexico_City</option>
-                                <option value="America/Bogota" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'America/Bogota' else '' }}>America/Bogota</option>
-                                <option value="Asia/Tokyo" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'Asia/Tokyo' else '' }}>Asia/Tokyo</option>
+                                <option value="Europe/Madrid" {{ 'selected' if current_tz == 'Europe/Madrid' else '' }}>Europe/Madrid</option>
+                                <option value="Europe/London" {{ 'selected' if current_tz == 'Europe/London' else '' }}>Europe/London</option>
+                                <option value="America/New_York" {{ 'selected' if current_tz == 'America/New_York' else '' }}>America/New_York</option>
+                                <option value="America/Los_Angeles" {{ 'selected' if current_tz == 'America/Los_Angeles' else '' }}>America/Los_Angeles</option>
+                                <option value="America/Mexico_City" {{ 'selected' if current_tz == 'America/Mexico_City' else '' }}>America/Mexico_City</option>
+                                <option value="America/Bogota" {{ 'selected' if current_tz == 'America/Bogota' else '' }}>America/Bogota</option>
+                                <option value="Asia/Tokyo" {{ 'selected' if current_tz == 'Asia/Tokyo' else '' }}>Asia/Tokyo</option>
                             </select>
                         </div>
                         
