@@ -142,8 +142,9 @@ verb 3
 async def disconnect_vpn(current_user: Dict[str, Any] = Depends(get_current_active_user)):
     """Desconecta de la VPN"""
     try:
-        # Detener OpenVPN
-        subprocess.run(['systemctl', 'stop', 'openvpn'], check=True)
+        # Detener OpenVPN (async)
+        from core.async_utils import run_subprocess_async
+        await run_subprocess_async(['systemctl', 'stop', 'openvpn'], timeout=10)
         
         # Log de la desconexión
         await db.insert_log("INFO", "Desconexión VPN iniciada")
@@ -155,12 +156,6 @@ async def disconnect_vpn(current_user: Dict[str, Any] = Depends(get_current_acti
             "message": get_text("vpn.disconnecting", default="Desconectando de VPN")
         }
         
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Error desconectando VPN: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=get_text("errors.vpn_disconnect_error", default="Error desconectando de VPN")
-        )
     except Exception as e:
         logger.error(f"Error desconectando VPN: {str(e)}")
         raise HTTPException(
@@ -175,15 +170,25 @@ async def upload_vpn_config(
 ):
     """Sube un archivo de configuración VPN"""
     try:
-        # Guardar archivo
+        # Guardar archivo (async)
         config_path = "/etc/openvpn/client.conf"
         try:
-            with open(config_path, 'wb') as f:
-                f.write(file)
+            import aiofiles
+            async with aiofiles.open(config_path, 'wb') as f:
+                await f.write(file)
         except PermissionError:
             # Usar directorio temporal si no hay permisos
             os.makedirs('/tmp/hostberry', exist_ok=True)
             config_path = '/tmp/hostberry/client.conf'
+            try:
+                async with aiofiles.open(config_path, 'wb') as f:
+                    await f.write(file)
+            except ImportError:
+                # Fallback síncrono
+                with open(config_path, 'wb') as f:
+                    f.write(file)
+        except ImportError:
+            # Fallback síncrono si aiofiles no está disponible
             with open(config_path, 'wb') as f:
                 f.write(file)
         
