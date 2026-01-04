@@ -368,17 +368,17 @@
   async function uploadBackup(file){
     try{
       if(!file){
-        HostBerry.showAlert?.('danger', HostBerry.t?.('backup.no_file', 'No se seleccionó ningún archivo') || 'No se seleccionó ningún archivo');
+        showNotification(HostBerry.t?.('backup.no_file', 'No se seleccionó ningún archivo') || 'No se seleccionó ningún archivo', 'error');
         return;
       }
       
       // Validar extensión
       if(!file.name.endsWith('.tar.gz') && !file.name.endsWith('.tgz')){
-        HostBerry.showAlert?.('danger', HostBerry.t?.('backup.invalid_format', 'El archivo debe ser un backup .tar.gz') || 'El archivo debe ser un backup .tar.gz');
+        showNotification(HostBerry.t?.('backup.invalid_format', 'El archivo debe ser un backup .tar.gz') || 'El archivo debe ser un backup .tar.gz', 'error');
         return;
       }
       
-      HostBerry.showAlert?.('info', HostBerry.t?.('backup.uploading', 'Cargando backup...') || 'Cargando backup...');
+      showNotification(HostBerry.t?.('backup.uploading', 'Cargando backup...') || 'Cargando backup...', 'info');
       
       const formData = new FormData();
       formData.append('file', file);
@@ -389,7 +389,6 @@
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
-          // No establecer Content-Type, el navegador lo establece automáticamente con el boundary correcto
         },
         body: formData
       });
@@ -401,14 +400,14 @@
       
       const payload = await resp.json();
       const message = payload.message || payload.data?.message || HostBerry.t?.('backup.uploaded', 'Backup cargado exitosamente') || 'Backup cargado exitosamente';
-      HostBerry.showAlert?.('success', message);
+      showNotification(message, 'success');
       updateLastCheck();
       await loadBackups();
       
     }catch(error){
       console.error('Backup upload failed', error);
       const errorMsg = HostBerry.t?.('backup.upload_error', 'Error al cargar backup') || 'Error al cargar backup';
-      HostBerry.showAlert?.('danger', errorMsg);
+      showNotification(errorMsg, 'error');
     }
   }
 
