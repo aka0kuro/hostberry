@@ -295,16 +295,33 @@ async def get_current_user_info(current_user: dict = Depends(get_current_active_
         )
 
 @router.post("/logout")
-async def logout(current_user: dict = Depends(get_current_active_user)):
+async def logout(current_user: dict = Depends(get_current_active_user), request: Request = None):
     """Cerrar sesión"""
     try:
-        log_auth_event("logout", user_id=current_user.get('username'), success=True)
-        log_user_action("logout", user_id=current_user.get('username'))
+        username = current_user.get('username')
+        client_ip = _get_client_ip(request) if request else "unknown"
+        
+        logger.info(f"🚪 Logout - Usuario: {username}, IP: {client_ip}")
+        await db.insert_log(
+            "INFO",
+            f"Logout - Usuario: {username}, IP: {client_ip}",
+            source="auth",
+            user_id=None
+        )
+        log_auth_event("logout", user_id=username, ip_address=client_ip, success=True)
+        log_user_action("logout", user_id=username, ip_address=client_ip)
         
         return {"message": "Sesión cerrada exitosamente"}
         
     except Exception as e:
-        logger.error('logout_error', error=str(e), user_id=current_user.get('username'))
+        username = current_user.get('username', 'unknown')
+        logger.error(f'❌ Error en logout - Usuario: {username}, Error: {str(e)}')
+        await db.insert_log(
+            "ERROR",
+            f"Error en logout - Usuario: {username}, Error: {str(e)}",
+            source="auth",
+            user_id=None
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=get_text("errors.internal_server_error", default="Error interno del servidor")
