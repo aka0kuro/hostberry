@@ -337,11 +337,11 @@
   async function downloadBackup(backupName){
     try{
       if(!backupName){
-        HostBerry.showAlert?.('danger', HostBerry.t?.('errors.backup_not_found', 'Backup not found') || 'Backup not found');
+        showNotification(HostBerry.t?.('errors.backup_not_found', 'Backup no encontrado') || 'Backup no encontrado', 'error');
         return;
       }
       
-      HostBerry.showAlert?.('info', HostBerry.t?.('backup.downloading', 'Descargando backup...') || 'Descargando backup...');
+      showNotification(HostBerry.t?.('backup.downloading', 'Descargando backup...') || 'Descargando backup...', 'info');
       
       // Crear enlace de descarga
       const downloadUrl = `/api/v1/security/backup/${encodeURIComponent(backupName)}/download`;
@@ -355,13 +355,13 @@
       
       // Esperar un momento y mostrar mensaje de éxito
       setTimeout(() => {
-        HostBerry.showAlert?.('success', HostBerry.t?.('backup.downloaded', 'Backup descargado exitosamente') || 'Backup descargado exitosamente');
+        showNotification(HostBerry.t?.('backup.downloaded', 'Backup descargado exitosamente') || 'Backup descargado exitosamente', 'success');
         updateLastCheck();
       }, 500);
       
     }catch(error){
       console.error('Backup download failed', error);
-      HostBerry.showAlert?.('danger', HostBerry.t?.('backup.download_error', 'Error al descargar backup') || 'Error al descargar backup');
+      showNotification(HostBerry.t?.('backup.download_error', 'Error al descargar backup') || 'Error al descargar backup', 'error');
     }
   }
 
