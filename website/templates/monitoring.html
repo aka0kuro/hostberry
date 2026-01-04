@@ -733,13 +733,16 @@
                      (networkStats.drop || networkStatsRaw.drop || 0);
       setText('net-errors', errors || '0');
 
-      pushNetHistory(downloadSpeed, uploadSpeed);
+      // Convertir velocidades a KB/s para el gráfico
+      const downloadSpeedKB = downloadSpeed / 1024;
+      const uploadSpeedKB = uploadSpeed / 1024;
+      pushNetHistory(downloadSpeedKB, uploadSpeedKB);
 
       setText('monitoring-last-update', new Date().toLocaleTimeString());
       ensureNetChart();
       
       if(netChart){
-        netChart.update();
+        netChart.update('none'); // 'none' para actualización suave sin animación
       }
     }catch(error){
       console.error('Error updating monitoring stats:', error);
