@@ -97,22 +97,33 @@ AllowedIPs = {config.allowed_ips or '0.0.0.0/0'}
 PersistentKeepalive = 25
 """
         
-        # Guardar configuración
+        # Guardar configuración (async)
         config_path = "/etc/wireguard/wg0.conf"
         try:
-            with open(config_path, 'w') as f:
-                f.write(wg_config)
+            import aiofiles
+            async with aiofiles.open(config_path, 'w') as f:
+                await f.write(wg_config)
         except PermissionError:
             # Usar directorio temporal si no hay permisos
             os.makedirs('/tmp/hostberry', exist_ok=True)
             config_path = '/tmp/hostberry/wg0.conf'
+            try:
+                async with aiofiles.open(config_path, 'w') as f:
+                    await f.write(wg_config)
+            except ImportError:
+                # Fallback síncrono
+                with open(config_path, 'w') as f:
+                    f.write(wg_config)
+        except ImportError:
+            # Fallback síncrono si aiofiles no está disponible
             with open(config_path, 'w') as f:
                 f.write(wg_config)
         
-        # Iniciar WireGuard
+        # Iniciar WireGuard (async)
         try:
-            subprocess.run(['systemctl', 'start', 'wg-quick@wg0'], check=True)
-        except subprocess.CalledProcessError as e:
+            from core.async_utils import run_subprocess_async
+            await run_subprocess_async(['systemctl', 'start', 'wg-quick@wg0'], timeout=10)
+        except Exception as e:
             logger.warning(f"No se pudo iniciar WireGuard: {e}")
         
         # Log del inicio
@@ -136,8 +147,9 @@ PersistentKeepalive = 25
 async def stop_wireguard(current_user: Dict[str, Any] = Depends(get_current_active_user)):
     """Detiene WireGuard"""
     try:
-        # Detener WireGuard
-        subprocess.run(['systemctl', 'stop', 'wg-quick@wg0'], check=True)
+        # Detener WireGuard (async)
+        from core.async_utils import run_subprocess_async
+        await run_subprocess_async(['systemctl', 'stop', 'wg-quick@wg0'], timeout=10)
         
         # Log del detenimiento
         await db.insert_log("INFO", "WireGuard detenido")
