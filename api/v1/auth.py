@@ -59,6 +59,10 @@ async def first_login_change(data: FirstLoginChange, request: Request):
     """Cambiar usuario/contraseña en primer login y eliminar admin por defecto"""
     client_ip = _get_client_ip(request)
     user_agent = _get_user_agent(request)
+    language = _get_language_from_request(request)
+    
+    # Establecer idioma en el contexto
+    i18n.set_context_language(language)
     
     try:
         from config.settings import settings
@@ -88,7 +92,7 @@ async def first_login_change(data: FirstLoginChange, request: Request):
             )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, 
-                detail=get_text("auth.default_admin_missing", default="El usuario admin por defecto ya no existe")
+                detail=get_text("auth.default_admin_missing", language=language, default="El usuario admin por defecto ya no existe")
             )
 
         # Validaciones básicas
