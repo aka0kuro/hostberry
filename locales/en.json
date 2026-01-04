@@ -898,7 +898,8 @@
     "saving": "Saving...",
     "saved": "Settings saved successfully",
     "timezone_updated": "Timezone updated. Changes will take effect on next page reload.",
-    "author": "Author"
+    "author": "Author",
+    "invalid_config": "Invalid configuration data"
   },
   "errors": {
     "general_error": "An error has occurred",
