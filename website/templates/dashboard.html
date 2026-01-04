@@ -168,60 +168,42 @@
                     </h5>
                 </div>
                 <div class="services-card-body">
-                    <div class="service-item">
-                        <div class="service-info">
-                            <i class="bi bi-gear-fill service-icon hostberry-icon"></i>
-                            <span class="service-name">HostBerry</span>
+                    {% set service_icons = {
+                        'hostberry': 'bi bi-gear-fill service-icon hostberry-icon',
+                        'nginx': 'bi bi-shield-check service-icon nginx-icon',
+                        'fail2ban': 'bi bi-shield-fill service-icon fail2ban-icon',
+                        'ufw': 'bi bi-shield-lock service-icon ufw-icon',
+                        'ufw firewall': 'bi bi-shield-lock service-icon ufw-icon',
+                        'wifi': 'bi bi-wifi service-icon wifi-icon',
+                        'ssh': 'bi bi-terminal service-icon ssh-icon',
+                        'hostapd': 'bi bi-wifi service-icon wifi-icon',
+                        'openvpn': 'bi bi-shield-lock service-icon vpn-icon',
+                        'wg-quick': 'bi bi-shield-lock service-icon vpn-icon',
+                        'dnsmasq': 'bi bi-diagram-3 service-icon dns-icon'
+                    } %}
+                    {% if services %}
+                        {% for service_name, service_status in services.items() %}
+                            {% set icon_class = service_icons.get(service_name|lower, 'bi bi-hdd service-icon default-icon') %}
+                            {% set status_value = service_status.status if service_status is mapping and service_status.status is defined else service_status %}
+                            {% set status_lower = (status_value|string)|lower %}
+                            {% set is_running = status_lower in ['running', 'active', 'online'] %}
+                            <div class="service-item">
+                                <div class="service-info">
+                                    <i class="{{ icon_class }}"></i>
+                                    <span class="service-name">{{ service_name|title }}</span>
+                                </div>
+                                <div class="service-status">
+                                    <span class="status-badge {{ 'status-running' if is_running else 'status-stopped' }}">
+                                        {{ t('system.running', 'Active') if is_running else t('system.stopped', 'Stopped') }}
+                                    </span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-muted small">
+                            {{ t('system.no_services', 'No services to display') }}
                         </div>
-                        <div class="service-status">
-                            <span class="status-badge status-running">{{ t('system.running', 'Active') }}</span>
-                        </div>
-                    </div>
-                    <div class="service-item">
-                        <div class="service-info">
-                            <i class="bi bi-shield-check service-icon nginx-icon"></i>
-                            <span class="service-name">Nginx</span>
-                        </div>
-                        <div class="service-status">
-                            <span class="status-badge status-running">{{ t('system.running', 'Active') }}</span>
-                        </div>
-                    </div>
-                    <div class="service-item">
-                        <div class="service-info">
-                            <i class="bi bi-shield-fill service-icon fail2ban-icon"></i>
-                            <span class="service-name">Fail2ban</span>
-                        </div>
-                        <div class="service-status">
-                            <span class="status-badge status-running">{{ t('system.running', 'Active') }}</span>
-                        </div>
-                    </div>
-                    <div class="service-item">
-                        <div class="service-info">
-                            <i class="bi bi-shield-lock service-icon ufw-icon"></i>
-                            <span class="service-name">UFW Firewall</span>
-                        </div>
-                        <div class="service-status">
-                            <span class="status-badge status-running">{{ t('system.running', 'Active') }}</span>
-                        </div>
-                    </div>
-                    <div class="service-item">
-                        <div class="service-info">
-                            <i class="bi bi-wifi service-icon wifi-icon"></i>
-                            <span class="service-name">WiFi</span>
-                        </div>
-                        <div class="service-status">
-                            <span class="status-badge status-running">{{ t('system.running', 'Active') }}</span>
-                        </div>
-                    </div>
-                    <div class="service-item">
-                        <div class="service-info">
-                            <i class="bi bi-terminal service-icon ssh-icon"></i>
-                            <span class="service-name">SSH</span>
-                        </div>
-                        <div class="service-status">
-                            <span class="status-badge status-running">{{ t('system.running', 'Active') }}</span>
-                        </div>
-                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
