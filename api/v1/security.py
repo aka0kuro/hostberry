@@ -274,7 +274,7 @@ async def upload_backup(
         logger.info(f"✅ Backup cargado: {file.filename} por usuario: {current_user.get('username')}")
         
         return SuccessResponse(
-            message=get_text("security.backup_uploaded", default="Backup cargado exitosamente"),
+            message=get_text("backup.uploaded", default="Backup cargado exitosamente"),
             data={"backup_name": file.filename, "backup_path": str(backup_path)}
         )
         
