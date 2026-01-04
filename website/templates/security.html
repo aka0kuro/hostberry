@@ -568,7 +568,7 @@
       
     }catch(error){
       console.error('Backup restore failed', error);
-      const errorMsg = HostBerry.t?.('backup.restore_error', 'Error al restaurar backup') || 'Error al restaurar backup';
+      const errorMsg = getTranslation('backup.restore_error', 'Error restoring backup');
       showNotification(errorMsg, 'error');
     }
   }
