@@ -416,9 +416,9 @@ async def shutdown_system(current_user: Dict[str, Any] = Depends(get_current_act
         # Log de la acción
         await db.insert_log("WARNING", f"Sistema apagado por {current_user['username']}")
         
-        # Ejecutar comando de apagado
-        import subprocess
-        subprocess.run(["sudo", "shutdown", "-h", "now"], check=False)
+        # Ejecutar comando de apagado (async)
+        from core.async_utils import run_subprocess_async
+        await run_subprocess_async(["sudo", "shutdown", "-h", "now"], timeout=5)
         
         return {"message": "Sistema apagándose..."}
         
