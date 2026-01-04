@@ -114,35 +114,39 @@
                         <i class="bi bi-shield-check me-2"></i>{{ t('network.firewall', 'Firewall') }}
                     </h5>
                 </div>
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <span class="status-indicator status-online"></span>
-                        <span class="text-white">{{ t('network.firewall_enabled', 'Firewall Enabled') }}</span>
-                    </div>
-                    <div class="d-flex align-items-center mb-3">
-                        <span class="status-indicator status-online"></span>
-                        <span class="text-white">{{ t('network.ssh_allowed', 'SSH Allowed') }}</span>
-                    </div>
-                    <div class="d-flex align-items-center mb-3">
-                        <span class="status-indicator status-online"></span>
-                        <span class="text-white">{{ t('network.http_allowed', 'HTTP Allowed') }}</span>
-                    </div>
-                    <div class="d-flex align-items-center mb-3">
-                        <span class="status-indicator status-offline"></span>
-                        <span class="text-white">{{ t('network.https_allowed', 'HTTPS Allowed') }}</span>
+                <div class="card-body text-center">
+                    <div class="d-flex flex-column align-items-center gap-3 mb-3">
+                        <div class="d-flex align-items-center">
+                            <span class="status-indicator status-online me-2"></span>
+                            <span class="text-white">{{ t('network.firewall_enabled', 'Firewall Enabled') }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="status-indicator status-online me-2"></span>
+                            <span class="text-white">{{ t('network.ssh_allowed', 'SSH Allowed') }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="status-indicator status-online me-2"></span>
+                            <span class="text-white">{{ t('network.http_allowed', 'HTTP Allowed') }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="status-indicator status-offline me-2"></span>
+                            <span class="text-white">{{ t('network.https_allowed', 'HTTPS Allowed') }}</span>
+                        </div>
                     </div>
                     
                     <hr class="border-secondary">
                     
-                    <button class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="toggleFirewall()">
-                        <i class="bi bi-shield"></i>
-                        {{ t('network.toggle_firewall', 'Toggle Firewall') }}
-                    </button>
-                    
-                    <button class="btn btn-outline-secondary btn-sm w-100" onclick="viewFirewallRules()">
-                        <i class="bi bi-list"></i>
-                        {{ t('network.view_rules', 'View Rules') }}
-                    </button>
+                    <div class="d-flex flex-column gap-2">
+                        <button class="btn btn-outline-primary btn-sm w-100" onclick="toggleFirewall()">
+                            <i class="bi bi-shield"></i>
+                            {{ t('network.toggle_firewall', 'Toggle Firewall') }}
+                        </button>
+                        
+                        <button class="btn btn-outline-secondary btn-sm w-100" onclick="viewFirewallRules()">
+                            <i class="bi bi-list"></i>
+                            {{ t('network.view_rules', 'View Rules') }}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
