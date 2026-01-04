@@ -39,16 +39,15 @@ async def get_vpn_status(current_user: Dict[str, Any] = Depends(get_current_acti
         
         if running:
             try:
-                # Obtener IP pública
-                result = subprocess.run(
+                # Obtener IP pública (async)
+                from core.async_utils import run_subprocess_async
+                returncode, stdout, stderr = await run_subprocess_async(
                     ["curl", "-s", "ifconfig.me"],
-                    capture_output=True,
-                    text=True,
                     timeout=10
                 )
-                if result.returncode == 0:
-                    ip_address = result.stdout.strip()
-            except:
+                if returncode == 0:
+                    ip_address = stdout.strip()
+            except Exception:
                 pass
         
         status = VPNStatus(
@@ -92,22 +91,33 @@ verb 3
         if vpn_config.username and vpn_config.password:
             config_content += f"auth-user-pass\n"
         
-        # Guardar configuración
+        # Guardar configuración (async)
         config_path = "/etc/openvpn/client.conf"
         try:
-            with open(config_path, 'w') as f:
-                f.write(config_content)
+            import aiofiles
+            async with aiofiles.open(config_path, 'w') as f:
+                await f.write(config_content)
         except PermissionError:
             # Usar directorio temporal si no hay permisos
             os.makedirs('/tmp/hostberry', exist_ok=True)
             config_path = '/tmp/hostberry/client.conf'
+            try:
+                async with aiofiles.open(config_path, 'w') as f:
+                    await f.write(config_content)
+            except ImportError:
+                # Fallback síncrono
+                with open(config_path, 'w') as f:
+                    f.write(config_content)
+        except ImportError:
+            # Fallback síncrono si aiofiles no está disponible
             with open(config_path, 'w') as f:
                 f.write(config_content)
         
-        # Iniciar OpenVPN
+        # Iniciar OpenVPN (async)
         try:
-            subprocess.run(['systemctl', 'start', 'openvpn'], check=True)
-        except subprocess.CalledProcessError as e:
+            from core.async_utils import run_subprocess_async
+            await run_subprocess_async(['systemctl', 'start', 'openvpn'], timeout=10)
+        except Exception as e:
             logger.warning(f"No se pudo iniciar OpenVPN: {e}")
         
         # Log de la conexión
