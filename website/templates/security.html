@@ -472,7 +472,7 @@
       
     }catch(error){
       console.error('Backup download failed', error);
-      showNotification(HostBerry.t?.('backup.download_error', 'Error al descargar backup') || 'Error al descargar backup', 'error');
+      showNotification(getTranslation('backup.download_error', 'Error downloading backup'), 'error');
     }
   }
 
