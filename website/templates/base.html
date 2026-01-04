@@ -118,12 +118,31 @@
     <!-- Auto-refresh global cada 60 segundos -->
     <script>
     (function() {
-        // Recargar la página cada 60 segundos
+        let userActive = true;
+        let lastActivity = Date.now();
+        
+        // Detectar actividad del usuario
+        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(function(event) {
+            document.addEventListener(event, function() {
+                userActive = true;
+                lastActivity = Date.now();
+            }, { passive: true });
+        });
+        
+        // Recargar la página cada 60 segundos si el usuario está inactivo
         setInterval(function() {
-            // Solo recargar si no hay modales abiertos y no hay formularios en proceso
-            if (!document.querySelector('.modal.show') && 
-                !document.querySelector('form:has(input:focus)') &&
-                !document.querySelector('textarea:focus') &&
+            const timeSinceActivity = Date.now() - lastActivity;
+            
+            // Solo recargar si:
+            // - No hay modales abiertos
+            // - No hay inputs/textarea con foco
+            // - El usuario ha estado inactivo por al menos 5 segundos
+            // - La página está completamente cargada
+            if (timeSinceActivity >= 5000 && 
+                !document.querySelector('.modal.show') && 
+                document.activeElement.tagName !== 'INPUT' &&
+                document.activeElement.tagName !== 'TEXTAREA' &&
+                document.activeElement.tagName !== 'SELECT' &&
                 document.readyState === 'complete') {
                 window.location.reload();
             }
