@@ -190,14 +190,19 @@
 
     <!-- Services & Network Status -->
     <div class="row services-network-row">
-        <!-- Services Status -->
+        <!-- System Manager - Services Status -->
         <div class="col-lg-6 mb-4">
             <div class="services-card">
                 <div class="services-card-header">
-                    <h5 class="services-card-title">
-                        <i class="bi bi-server me-2"></i>
-                        {{ t('system.services', 'Services') }}
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="services-card-title">
+                            <i class="bi bi-gear-fill me-2"></i>
+                            {{ t('system.manager', 'System Manager') }}
+                        </h5>
+                        <button class="btn btn-sm btn-outline-light" onclick="refreshServices()" title="{{ t('common.refresh', 'Refresh') }}">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="services-card-body">
                     {% set service_icons = {
