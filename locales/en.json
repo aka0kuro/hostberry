@@ -1276,6 +1276,7 @@
     "create_backup_desc": "Create a system backup",
     "upload_backup": "Upload backup",
     "upload_backup_desc": "Upload a backup file",
+    "config_backup": "Configuration backup",
     "list_backups": "List backups",
     "list_backups_desc": "View all available backups",
     "inventory_heading": "Backup inventory",
