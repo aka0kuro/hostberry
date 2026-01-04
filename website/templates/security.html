@@ -409,7 +409,7 @@
       list.innerHTML = `
         <div class="text-center py-4 text-danger">
           <i class="bi bi-exclamation-triangle"></i>
-          <p class="mb-0 mt-2">${HostBerry.t?.('backup.load_error', 'Error al cargar backups') || 'Error al cargar backups'}</p>
+          <p class="mb-0 mt-2">${getTranslation('backup.load_error', 'Error loading backups')}</p>
         </div>`;
     }
   }
