@@ -1,7 +1,7 @@
 import datetime
 import pytz
 import time
-from core import system_light as psutil
+import psutil
 
 # Helpers generales para fechas y zonas horarias
 

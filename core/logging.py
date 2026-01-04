@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 from typing import Dict, Any, Optional
 from pathlib import Path
-from core import system_light as psutil
+import psutil
 import structlog
 from config.settings import settings
 

@@ -145,7 +145,7 @@ class RPICache:
     def optimize_for_memory(self):
         """Optimizar caché según uso de memoria"""
         try:
-            from core import system_light as psutil
+            import psutil
             memory_percent = psutil.virtual_memory().percent
             
             with self.lock:

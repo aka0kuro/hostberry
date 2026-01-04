@@ -5,7 +5,7 @@ Router del sistema para FastAPI
 import os
 import time
 import platform
-from core import system_light as psutil
+import psutil
 from typing import Dict, Any, List
 
 from fastapi import APIRouter, HTTPException, status, Depends

@@ -4,7 +4,7 @@ API endpoints para estadísticas del sistema
 
 from fastapi import APIRouter, HTTPException, Depends
 from typing import Dict, Any, Optional
-from core import system_light as psutil
+import psutil
 import time
 import os
 

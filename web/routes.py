@@ -73,7 +73,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 from core.i18n import get_text, i18n, get_html_translations
 from core.system_light import boot_time
-from core import system_light as psutil
+import psutil
 import json
 import time
 import os

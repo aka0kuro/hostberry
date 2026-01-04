@@ -279,7 +279,7 @@ async def health_check():
 async def system_info():
     """Información del sistema optimizada para RPi 3"""
     try:
-        from core import system_light as psutil
+        import psutil
         
         # Cache de información del sistema para evitar cálculos repetidos
         if not hasattr(system_info, '_cache') or not getattr(system_info, '_cache_time', 0):

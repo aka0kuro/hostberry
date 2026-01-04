@@ -204,7 +204,7 @@ class Settings(BaseSettings):
         """Aplicar optimizaciones específicas para Raspberry Pi 3"""
         # Reducir workers si hay poca memoria
         try:
-            from core import system_light as psutil
+            import psutil
             memory_gb = psutil.virtual_memory().total / (1024**3)
             if memory_gb < 1.0:  # Menos de 1GB
                 self.workers = 1
