@@ -248,7 +248,7 @@ function displayInterfaces(interfaces){
 
 async function loadRoutingTable(){
     try{
-        const resp = await fetch('/api/v1/network/routing', { headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
+        const resp = await fetch('/api/v1/system/network/routing', { headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
         if(resp.ok){ 
             displayRoutingTable(await resp.json()); 
         } else { 
