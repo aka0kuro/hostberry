@@ -475,13 +475,20 @@ async def check_updates(current_user: Dict[str, Any] = Depends(get_current_activ
         # Log de la acción
         await db.insert_log("INFO", f"Búsqueda de actualizaciones iniciada por {current_user['username']}")
         
-        # Simular búsqueda de actualizaciones
-        import subprocess
-        result = subprocess.run(["sudo", "apt", "update"], capture_output=True, text=True, timeout=60)
+        # Buscar actualizaciones (async)
+        from core.async_utils import run_subprocess_async
+        returncode, stdout, stderr = await run_subprocess_async(
+            ["sudo", "apt", "update"],
+            timeout=60
+        )
         
-        if result.returncode == 0:
+        if returncode == 0:
             # Buscar actualizaciones disponibles
-            result = subprocess.run(["sudo", "apt", "list", "--upgradable"], capture_output=True, text=True, timeout=30)
+            returncode2, stdout2, stderr2 = await run_subprocess_async(
+                ["sudo", "apt", "list", "--upgradable"],
+                timeout=30
+            )
+            result = type('obj', (object,), {'returncode': returncode2, 'stdout': stdout2})()
             
             updates = result.stdout.strip().split('\n') if result.stdout.strip() else []
             update_count = len([line for line in updates if line.strip()])
