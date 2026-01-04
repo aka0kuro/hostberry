@@ -26,6 +26,11 @@
 
   async function fetchJson(url){
     const resp = await HostBerry.apiRequest(url);
+    if(resp.status === 401){
+      // token inválido, redirige a login
+      window.location.href = '/login';
+      throw new Error('Unauthorized');
+    }
     if(!resp.ok){
       const errText = await resp.text();
       throw new Error(`Request failed ${resp.status}: ${errText}`);
@@ -53,7 +58,7 @@
   function ensureNetChart(){
     if(netChart) return netChart;
     const ctx = document.getElementById('net-chart');
-    if(!ctx) return null;
+    if(!ctx || typeof Chart === 'undefined') return null;
     netChart = new Chart(ctx, {
       type: 'line',
       data: {
