@@ -523,9 +523,34 @@
               <strong class="d-block">${name}</strong>
               <span class="text-white-50 small">${formattedDate}</span>
             </div>
-            ${size ? `<span class="text-white-50 small ms-2">${size}</span>` : ''}
+            <div class="d-flex align-items-center gap-2">
+              ${size ? `<span class="text-white-50 small">${size}</span>` : ''}
+              <button class="btn btn-sm btn-outline-primary download-backup-btn" data-backup-name="${name}" title="${HostBerry.t?.('security.download_backup', 'Download') || 'Download'}">
+                <i class="bi bi-download"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-warning restore-backup-btn" data-backup-name="${name}" title="${HostBerry.t?.('security.restore_backup', 'Restore') || 'Restore'}">
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+            </div>
           </div>`;
         list.appendChild(item);
+      });
+      
+      // Agregar event listeners a los botones
+      document.querySelectorAll('.download-backup-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const backupName = btn.getAttribute('data-backup-name');
+          downloadBackup(backupName);
+        });
+      });
+      
+      document.querySelectorAll('.restore-backup-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const backupName = btn.getAttribute('data-backup-name');
+          restoreBackup(backupName);
+        });
       });
     }catch(error){
       console.error('Backups load failed', error);
