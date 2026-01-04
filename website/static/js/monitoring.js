@@ -89,98 +89,6 @@
     }
   }
 
-  async function loadBackups(){
-    await refreshBackupList();
-  }
-
-  async function refreshBackupList(){
-    const list = document.getElementById('monitoring-backup-list');
-    if(!list) return;
-    try{
-      const resp = await HostBerry.apiRequest('/api/v1/security/backups');
-      const payload = await resp.json();
-      const backups = payload.data?.backups || [];
-      document.getElementById('backup-count')?.textContent = backups.length;
-      if(!backups.length){
-        list.innerHTML = `
-          <div class="text-center py-4 text-white-50">
-            <i class="bi bi-archive"></i>
-            <p class="mb-0 mt-2">${HostBerry.t?.('monitoring.backup_empty', 'No backups recorded yet')}</p>
-          </div>`;
-        updateBackupSummary(null);
-        return;
-      }
-      list.innerHTML = '';
-      backups.slice(0,5).forEach(backup => {
-        const item = document.createElement('div');
-        item.className = 'backup-item text-white';
-        const status = backup.status || 'success';
-        item.innerHTML = `
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <strong>${backup.name || backup.filename || 'backup'}</strong>
-              <div class="text-white-50 small">${backup.created_at || ''}</div>
-            </div>
-            <span class="badge bg-${status === 'success' ? 'success' : (status === 'warning' ? 'warning text-dark' : 'danger')}">${status}</span>
-          </div>
-          <div class="text-white-50 small mt-1">${backup.size || ''}</div>`;
-        list.appendChild(item);
-      });
-      updateBackupSummary(backups[0]);
-    }catch(error){
-      console.error('Error loading backups', error);
-      list.innerHTML = `
-        <div class="text-center py-4 text-danger">
-          <i class="bi bi-exclamation-triangle"></i>
-          <p class="mb-0 mt-2">${HostBerry.t?.('monitoring.backup_error', 'Unable to load backups')}</p>
-        </div>`;
-    }
-  }
-
-  function updateBackupSummary(latest){
-    const lastRunEl = document.getElementById('backup-last-run');
-    const lastSizeEl = document.getElementById('backup-last-size');
-    const pill = document.getElementById('backup-status-pill');
-    if(!latest){
-      if(lastRunEl) lastRunEl.textContent = '--';
-      if(lastSizeEl) lastSizeEl.textContent = '--';
-      if(pill){
-        pill.className = 'status-pill bg-dark text-white';
-        pill.textContent = HostBerry.t?.('monitoring.backup_status_unknown', 'Unknown');
-      }
-      return;
-    }
-    if(lastRunEl) lastRunEl.textContent = latest.created_at || '--';
-    if(lastSizeEl) lastSizeEl.textContent = latest.size || '--';
-    if(pill){
-      const ok = (latest.status || '').toLowerCase() === 'success';
-      pill.className = `status-pill ${ok ? 'bg-success text-white' : 'bg-warning text-dark'}`;
-      pill.textContent = ok ? HostBerry.t?.('monitoring.backup_ok', 'Healthy') : HostBerry.t?.('monitoring.backup_attention', 'Needs attention');
-    }
-  }
-
-  async function runBackup(){
-    const btn = document.getElementById('monitoringBackupRun');
-    if(btn){
-      btn.disabled = true;
-      btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${HostBerry.t?.('monitoring.backup_running', 'Creating backup...')}`;
-    }
-    try{
-      const resp = await HostBerry.apiRequest('/api/v1/security/backup?include_logs=true&include_uploads=true', { method: 'POST' });
-      const payload = await resp.json();
-      HostBerry.showAlert?.('success', payload.message || HostBerry.t?.('monitoring.backup_success', 'Backup created successfully'));
-      await refreshBackupList();
-    }catch(error){
-      console.error('Backup creation failed', error);
-      HostBerry.showAlert?.('danger', HostBerry.t?.('monitoring.backup_failed', 'Unable to create backup'));
-    }finally{
-      if(btn){
-        btn.disabled = false;
-        btn.innerHTML = `<i class="bi bi-hdd-network me-2"></i>${HostBerry.t?.('monitoring.backup_run_now', 'Create encrypted backup')}`;
-      }
-    }
-  }
-
   async function loadLogs(){
     const container = document.getElementById('monitoring-logs');
     if(!container) return;
@@ -234,16 +142,12 @@
   function initMonitoring(){
     updateStats();
     loadLogs();
-    loadBackups();
     setInterval(updateStats, 60000);
     setInterval(loadLogs, 60000);
-    setInterval(loadBackups, 60000);
     const refreshBtn = document.getElementById('monitoringLogsRefresh');
     if(refreshBtn){ refreshBtn.addEventListener('click', loadLogs); }
     const logLevelSelect = document.getElementById('monitoringLogLevel');
     if(logLevelSelect){ logLevelSelect.addEventListener('change', loadLogs); }
-    document.getElementById('monitoringBackupRefresh')?.addEventListener('click', loadBackups);
-    document.getElementById('monitoringBackupRun')?.addEventListener('click', runBackup);
   }
 
   document.addEventListener('DOMContentLoaded', initMonitoring);
