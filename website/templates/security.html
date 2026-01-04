@@ -394,7 +394,13 @@
       });
       
       if(!resp.ok){
-        const errorData = await resp.json().catch(() => ({ detail: await resp.text() }));
+        let errorData;
+        try {
+          errorData = await resp.json();
+        } catch {
+          const errorText = await resp.text();
+          errorData = { detail: errorText };
+        }
         throw new Error(errorData.detail || errorData.message || 'Upload failed');
       }
       
