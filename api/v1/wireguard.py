@@ -161,12 +161,6 @@ async def stop_wireguard(current_user: Dict[str, Any] = Depends(get_current_acti
             "message": get_text("wireguard.stopped", default="WireGuard detenido exitosamente")
         }
         
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Error deteniendo WireGuard: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=get_text("errors.wireguard_stop_error", default="Error deteniendo WireGuard")
-        )
     except Exception as e:
         logger.error(f"Error deteniendo WireGuard: {str(e)}")
         raise HTTPException(
