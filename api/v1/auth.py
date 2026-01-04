@@ -21,9 +21,25 @@ from core.security import (
 from core.database import db
 from core.hostberry_logging import logger, log_auth_event, log_user_action, log_security_event
 from core.audit import audit_login_attempt, audit_security_violation
-from core.i18n import get_text
+from core.i18n import get_text, i18n
 
 router = APIRouter()
+
+def _get_language_from_request(request: Request) -> str:
+    """Obtener idioma del request"""
+    # Intentar obtener del estado del request (seteado por middleware)
+    if hasattr(request.state, 'language'):
+        return request.state.language
+    
+    # Intentar obtener del header Accept-Language
+    accept_language = request.headers.get("Accept-Language", "").lower()
+    if "es" in accept_language:
+        return "es"
+    elif accept_language:
+        return "en"
+    
+    # Default a español
+    return "es"
 
 def _get_client_ip(request: Request) -> str:
     """Obtener IP real del cliente"""
