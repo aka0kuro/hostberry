@@ -325,28 +325,6 @@
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   }
 
-  async function validateInput(){
-    try{
-      const promptMsg = HostBerry.t?.('security.prompt_input', 'Enter input to validate') || 'Enter input to validate';
-      const sample = prompt(promptMsg) || '';
-      if(!sample) return;
-      const resp = await HostBerry.apiRequest('/api/v1/security/validate-input', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sample)
-      });
-      if(!resp.ok) throw new Error('Validation failed');
-      const payload = await resp.json();
-      const valid = payload.data?.is_valid !== false;
-      const msg = valid 
-        ? (HostBerry.t?.('security.input_ok', 'Input considered safe') || 'Input considered safe')
-        : (HostBerry.t?.('security.input_not_ok', 'Potentially unsafe input detected') || 'Potentially unsafe input detected');
-      HostBerry.showAlert?.(valid ? 'success' : 'warning', msg);
-    }catch(error){
-      console.error('Input validation failed', error);
-      HostBerry.showAlert?.('danger', HostBerry.t?.('security.input_error', 'Unable to validate input') || 'Unable to validate input');
-    }
-  }
 
   async function downloadBackup(backupName){
     try{
