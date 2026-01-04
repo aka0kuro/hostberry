@@ -4,9 +4,9 @@ API endpoints para estadísticas del sistema
 
 from fastapi import APIRouter, HTTPException, Depends
 from typing import Dict, Any, Optional
-import psutil
 import time
 import os
+# psutil se importa lazy cuando se necesita
 
 from core.security import get_current_active_user
 from core.hostberry_logging import logger
@@ -30,10 +30,14 @@ async def get_stat(
         Diccionario con la estadística solicitada
     """
     try:
+        # Lazy import de psutil
+        import psutil
+        
         if stat_type == "cpu":
+            cpu_percent = psutil.cpu_percent(interval=1)
             return {
-                "value": psutil.cpu_percent(interval=1),
-                "status": "healthy" if psutil.cpu_percent(interval=1) < 80 else "warning",
+                "value": cpu_percent,
+                "status": "healthy" if cpu_percent < 80 else "warning",
                 "timestamp": time.time()
             }
         
