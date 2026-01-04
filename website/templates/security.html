@@ -234,7 +234,7 @@
     if(!list) return;
     try{
       const resp = await HostBerry.apiRequest('/api/v1/security/backups');
-      if(!resp.ok) throw new Error('Backups request failed');
+      if(!resp.ok) throw new Error(HostBerry.t?.('backup.load_failed', 'Error al cargar backups') || 'Error al cargar backups');
       const payload = await resp.json();
       const backups = payload.data?.backups || payload.backups || [];
       if(!backups.length){
