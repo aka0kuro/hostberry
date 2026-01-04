@@ -489,7 +489,33 @@
       const payload = await resp.json();
       const info = payload.data?.backup_info || payload.backup_info || {};
       
-      const infoText = `${HostBerry.t?.('backup.name', 'Nombre')}: ${backupName} | ${HostBerry.t?.('backup.size', 'Tamaño')}: ${info.size ? formatBytes(info.size) : 'N/A'} | ${HostBerry.t?.('backup.created', 'Creado')}: ${info.created_at || info.timestamp || 'N/A'}`;
+      // Obtener tamaño del archivo real si está disponible
+      let sizeText = 'N/A';
+      if(info.size){
+        sizeText = formatBytes(info.size);
+      } else if(info.size_bytes){
+        sizeText = formatBytes(info.size_bytes);
+      } else {
+        // Intentar obtener el tamaño del archivo desde el sistema
+        try {
+          const backupsResp = await HostBerry.apiRequest('/api/v1/security/backups');
+          if(backupsResp.ok){
+            const backupsData = await backupsResp.json();
+            const backups = backupsData.data?.backups || backupsData.backups || [];
+            const backup = backups.find(b => (b.name || b.filename) === backupName);
+            if(backup && backup.size){
+              sizeText = formatBytes(backup.size);
+            }
+          }
+        } catch(e) {
+          console.error('Error getting backup size:', e);
+        }
+      }
+      
+      const dateText = info.created_at || info.timestamp || info.date || info.created || 'N/A';
+      const formattedDate = dateText !== 'N/A' ? new Date(dateText).toLocaleString() : 'N/A';
+      
+      const infoText = `${HostBerry.t?.('backup.name', 'Nombre')}: ${backupName} | ${HostBerry.t?.('backup.size', 'Tamaño')}: ${sizeText} | ${HostBerry.t?.('backup.created', 'Creado')}: ${formattedDate}`;
       
       showNotification(infoText, 'info');
     }catch(error){
