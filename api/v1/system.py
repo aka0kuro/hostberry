@@ -280,10 +280,10 @@ async def get_network_statistics(
             ip_address=ip_address,
             upload_speed=upload_speed,
             download_speed=download_speed,
-            bytes_sent=net_io.bytes_sent,
-            bytes_recv=net_io.bytes_recv,
-            packets_sent=net_io.packets_sent,
-            packets_recv=net_io.packets_recv,
+            bytes_sent=bytes_sent,
+            bytes_recv=bytes_recv,
+            packets_sent=packets_sent,
+            packets_recv=packets_recv,
             interfaces=available_interfaces
         )
         
