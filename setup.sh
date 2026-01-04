@@ -2099,21 +2099,41 @@ EOF
 setup_zram() {
     log "$ANSI_YELLOW" "INFO" "$(get_text 'setup_zram' 'Configurando ZRAM (compresión de memoria)...')"
     
+    # Verificar si el módulo zram está disponible (no crítico si falla)
+    if ! modprobe -n zram 2>/dev/null; then
+        log "$ANSI_YELLOW" "WARN" "ZRAM no está disponible en este sistema. Saltando configuración de ZRAM."
+        return 0
+    fi
+    
     if [[ $EUID -eq 0 ]]; then
-        # Crear script de inicio de ZRAM
+        # Crear script de inicio de ZRAM con manejo de errores
         cat > /usr/local/sbin/zram-config << 'EOF'
 #!/bin/bash
-modprobe zram num_devices=1
+set +e
+# Intentar cargar módulo zram (puede fallar si ya está cargado o no disponible)
+modprobe zram num_devices=1 2>/dev/null || true
+
+# Verificar que zram0 existe
+if [ ! -e /sys/block/zram0 ]; then
+    echo "ZRAM no disponible en este sistema" >&2
+    exit 0
+fi
+
 # Usar 50% de la RAM para ZRAM (ideal para RPi 3 con 1GB)
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk '{print $2 * 1024}')
 ZRAM_SIZE=$(($MEM_TOTAL / 2))
-echo "${ZRAM_SIZE}" > /sys/block/zram0/disksize
-mkswap /sys/block/zram0
-swapon -p 100 /sys/block/zram0
+
+# Verificar que el dispositivo existe antes de configurarlo
+if [ -e /sys/block/zram0/disksize ]; then
+    echo "${ZRAM_SIZE}" > /sys/block/zram0/disksize 2>/dev/null || exit 0
+    mkswap /dev/zram0 2>/dev/null || exit 0
+    swapon -p 100 /dev/zram0 2>/dev/null || exit 0
+fi
+exit 0
 EOF
         chmod +x /usr/local/sbin/zram-config
         
-        # Crear servicio systemd para ZRAM
+        # Crear servicio systemd para ZRAM (no crítico si falla)
         cat > /etc/systemd/system/zram-config.service << 'EOF'
 [Unit]
 Description=Configure ZRAM swap
@@ -2123,25 +2143,45 @@ After=local-fs.target
 Type=oneshot
 ExecStart=/usr/local/sbin/zram-config
 RemainAfterExit=yes
+# No fallar si zram no está disponible
+SuccessExitStatus=0 1
 
 [Install]
 WantedBy=multi-user.target
 EOF
         
-        systemctl daemon-reload
-        systemctl enable zram-config.service
-        systemctl start zram-config.service
+        systemctl daemon-reload 2>/dev/null || true
+        systemctl enable zram-config.service 2>/dev/null || true
+        if systemctl start zram-config.service 2>/dev/null; then
+            log "$ANSI_GREEN" "INFO" "ZRAM configurado y activo"
+        else
+            log "$ANSI_YELLOW" "WARN" "No se pudo iniciar zram-config.service. Continuando sin ZRAM (no crítico)."
+        fi
         
     else
         # Versión con sudo
         cat << 'EOF' | sudo tee /usr/local/sbin/zram-config > /dev/null
 #!/bin/bash
-modprobe zram num_devices=1
+set +e
+# Intentar cargar módulo zram (puede fallar si ya está cargado o no disponible)
+modprobe zram num_devices=1 2>/dev/null || true
+
+# Verificar que zram0 existe
+if [ ! -e /sys/block/zram0 ]; then
+    echo "ZRAM no disponible en este sistema" >&2
+    exit 0
+fi
+
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk '{print $2 * 1024}')
 ZRAM_SIZE=$(($MEM_TOTAL / 2))
-echo "${ZRAM_SIZE}" > /sys/block/zram0/disksize
-mkswap /sys/block/zram0
-swapon -p 100 /sys/block/zram0
+
+# Verificar que el dispositivo existe antes de configurarlo
+if [ -e /sys/block/zram0/disksize ]; then
+    echo "${ZRAM_SIZE}" > /sys/block/zram0/disksize 2>/dev/null || exit 0
+    mkswap /dev/zram0 2>/dev/null || exit 0
+    swapon -p 100 /dev/zram0 2>/dev/null || exit 0
+fi
+exit 0
 EOF
         sudo chmod +x /usr/local/sbin/zram-config
         
@@ -2154,17 +2194,21 @@ After=local-fs.target
 Type=oneshot
 ExecStart=/usr/local/sbin/zram-config
 RemainAfterExit=yes
+# No fallar si zram no está disponible
+SuccessExitStatus=0 1
 
 [Install]
 WantedBy=multi-user.target
 EOF
         
-        sudo systemctl daemon-reload
-        sudo systemctl enable zram-config.service
-        sudo systemctl start zram-config.service
+        sudo systemctl daemon-reload 2>/dev/null || true
+        sudo systemctl enable zram-config.service 2>/dev/null || true
+        if sudo systemctl start zram-config.service 2>/dev/null; then
+            log "$ANSI_GREEN" "INFO" "ZRAM configurado y activo"
+        else
+            log "$ANSI_YELLOW" "WARN" "No se pudo iniciar zram-config.service. Continuando sin ZRAM (no crítico)."
+        fi
     fi
-    
-    log "$ANSI_GREEN" "INFO" "ZRAM configurado y activo"
 }
 
 # Verificar instalación
