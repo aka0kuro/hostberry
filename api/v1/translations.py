@@ -9,7 +9,7 @@ import os
 
 from core.security import get_current_active_user
 from core.i18n import get_html_translations, get_language_list, get_text
-from core.logging import logger
+from core.hostberry_logging import logger
 
 router = APIRouter()
 
