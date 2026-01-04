@@ -310,7 +310,8 @@
         }
       }catch(_e){
         console.error('Error en first-login:', _e);
-        showError(t('errors.connection_error', 'Error de conexión: ') + (_e.message || 'Error desconocido'));
+        const errorMsg = _e.message || t('errors.unknown_error', 'Error desconocido');
+        showError(t('errors.connection_error', 'Error de conexión') + ': ' + errorMsg);
       }
     });
   });
