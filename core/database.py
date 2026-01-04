@@ -143,15 +143,16 @@ class Database:
                     check_same_thread=False
                 )
                 
-                # Configurar SQLite para RPi 3 (solo PRAGMAs esenciales para acelerar arranque)
+                # Configurar SQLite para RPi 3 (optimizado para rendimiento)
                 await self._connection.execute("PRAGMA journal_mode = WAL")
                 await self._connection.execute("PRAGMA synchronous = NORMAL")
                 await self._connection.execute("PRAGMA foreign_keys = ON")
-                # Otros PRAGMAs comentados para acelerar arranque (se pueden habilitar si es necesario)
-                # await self._connection.execute("PRAGMA cache_size = -4000")
-                # await self._connection.execute("PRAGMA temp_store = MEMORY")
-                # await self._connection.execute("PRAGMA mmap_size = 0")
-                # await self._connection.execute("PRAGMA page_size = 4096")
+                # Optimizaciones de rendimiento (habilitadas para mejor performance)
+                await self._connection.execute("PRAGMA cache_size = -2000")  # 2MB cache
+                await self._connection.execute("PRAGMA temp_store = MEMORY")
+                await self._connection.execute("PRAGMA mmap_size = 268435456")  # 256MB mmap
+                # Connection pooling implícito con aiosqlite (reutiliza conexiones)
+                await self._connection.execute("PRAGMA busy_timeout = 5000")  # 5 segundos timeout
                 
                 # Crear tablas
                 await self._create_tables(self._connection)
