@@ -679,8 +679,7 @@
         setText('disk-used', '0 GB');
       }
 
-      // Actualizar información del sistema - obtener desde /api/v1/system/info
-      // Por ahora usar valores por defecto o intentar obtenerlos
+      // Actualizar información del sistema - ahora viene en stats_dict
       setText('sys-hostname', systemStats.hostname || '--');
       setText('sys-os', systemStats.os_version || '--');
       setText('sys-kernel', systemStats.kernel_version || '--');
@@ -688,8 +687,8 @@
       setText('sys-processor', systemStats.processor || '--');
       setText('sys-load', systemStats.load_average || '--');
       
-      // Intentar obtener información del sistema si no está en stats
-      if(!systemStats.hostname){
+      // Si no está en stats, intentar obtener desde /api/v1/system/info
+      if(!systemStats.hostname && !systemStats.os_version){
         fetchJson('/api/v1/system/info').then(info => {
           const systemInfo = info.data || info;
           if(systemInfo){
