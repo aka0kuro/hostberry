@@ -39,16 +39,18 @@
                         <div class="mb-3">
                             <label for="theme" class="form-label text-white">{{ t('settings.theme', 'Theme') }}</label>
                             <select class="form-select bg-dark text-white border-secondary" id="theme" name="theme">
-                                <option value="light" {{ 'selected' if (settings.theme if settings else 'dark') == 'light' else '' }}>{{ t('settings.theme_light', 'Light') }}</option>
-                                <option value="dark" {{ 'selected' if (settings.theme if settings else 'dark') == 'dark' else '' }}>{{ t('settings.theme_dark', 'Dark') }}</option>
-                                <option value="auto" {{ 'selected' if (settings.theme if settings else 'dark') == 'auto' else '' }}>{{ t('settings.theme_auto', 'Auto') }}</option>
+                                {% set current_theme = (settings.theme if settings else 'dark') or 'dark' %}
+                                <option value="light" {{ 'selected' if current_theme == 'light' else '' }}>{{ t('settings.theme_light', 'Light') }}</option>
+                                <option value="dark" {{ 'selected' if current_theme == 'dark' else '' }}>{{ t('settings.theme_dark', 'Dark') }}</option>
+                                <option value="auto" {{ 'selected' if current_theme == 'auto' else '' }}>{{ t('settings.theme_auto', 'Auto') }}</option>
                             </select>
                         </div>
                         
                         <div class="mb-3">
                             <label for="timezone" class="form-label text-white">{{ t('settings.timezone', 'Timezone') }}</label>
                             <select class="form-select bg-dark text-white border-secondary" id="timezone" name="timezone">
-                                <option value="UTC" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'UTC' else '' }}>UTC</option>
+                                {% set current_tz = (settings.timezone if settings else 'UTC') or 'UTC' %}
+                                <option value="UTC" {{ 'selected' if current_tz == 'UTC' else '' }}>UTC</option>
                                 <option value="Europe/Madrid" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'Europe/Madrid' else '' }}>Europe/Madrid</option>
                                 <option value="Europe/London" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'Europe/London' else '' }}>Europe/London</option>
                                 <option value="America/New_York" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'America/New_York' else '' }}>America/New_York</option>
