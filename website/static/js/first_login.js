@@ -27,46 +27,105 @@
     return current || defaultValue || key;
   }
 
-  // Función para mostrar notificaciones toast
-  function showToast(title, message, type = 'info') {
-    let toastContainer = document.querySelector('.toast-container');
-    if (!toastContainer) {
-      toastContainer = document.createElement('div');
-      toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
-      toastContainer.style.zIndex = '9999';
-      document.body.appendChild(toastContainer);
-    }
-    
-    const toastId = 'toast-' + Date.now();
-    const toastHtml = `
-      <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-          <strong class="me-auto">${title}</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+  // Función para mostrar notificaciones (mismo estilo que otros templates)
+  function showNotification(message, type = 'info') {
+    // Crear elemento de notificación
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-message">${message}</span>
+            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
         </div>
-        <div class="toast-body">${message}</div>
-      </div>
     `;
     
-    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
-    const toastElement = document.getElementById(toastId);
-    
-    // Usar Bootstrap Toast si está disponible, sino crear uno simple
-    if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
-      const toast = new bootstrap.Toast(toastElement);
-      toast.show();
-    } else {
-      // Toast simple sin Bootstrap
-      toastElement.style.display = 'block';
-      toastElement.style.opacity = '1';
+    // Añadir estilos si no existen
+    if (!document.querySelector('#notification-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-styles';
+        style.textContent = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                min-width: 300px;
+                max-width: 400px;
+                padding: 1rem;
+                border-radius: 12px;
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                animation: slideInRight 0.3s ease;
+            }
+            
+            .dark-theme .notification {
+                background: rgba(30, 30, 30, 0.95);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .light-theme .notification {
+                background: rgba(255, 255, 255, 0.95);
+                border: 1px solid rgba(0, 0, 0, 0.1);
+            }
+            
+            .notification-content {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                color: #fff;
+            }
+            
+            .light-theme .notification-content {
+                color: #000;
+            }
+            
+            .notification-close {
+                background: none;
+                border: none;
+                color: inherit;
+                font-size: 1.5rem;
+                cursor: pointer;
+                padding: 0;
+                margin-left: 1rem;
+                line-height: 1;
+                opacity: 0.7;
+                transition: opacity 0.2s;
+            }
+            
+            .notification-close:hover {
+                opacity: 1;
+            }
+            
+            .notification-success { border-left: 4px solid #198754; }
+            .notification-error { border-left: 4px solid #dc3545; }
+            .notification-warning { border-left: 4px solid #ffc107; }
+            .notification-info { border-left: 4px solid #0dcaf0; }
+            
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
     }
+    
+    // Añadir al body
+    document.body.appendChild(notification);
     
     // Auto-remove after 5 seconds
     setTimeout(() => {
-      if (toastElement.parentNode) {
-        toastElement.remove();
-      }
+        if (notification.parentNode) {
+            notification.style.animation = 'slideInRight 0.3s ease reverse';
+            setTimeout(() => notification.remove(), 300);
+        }
     }, 5000);
+  }
+  
+  // Función para mostrar notificaciones toast (compatibilidad)
+  function showToast(title, message, type = 'info') {
+    showNotification(`${title}: ${message}`, type);
   }
 
   // Función para mostrar notificación de éxito
