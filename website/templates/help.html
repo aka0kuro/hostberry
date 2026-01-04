@@ -132,7 +132,7 @@
                 <div class="help-stat-card">
                     <span class="help-stat-label">{{ t(stat.label_key, stat.label_key) }}</span>
                     <h3 class="text-white">{{ stat.value }}</h3>
-                    <span class="badge bg-{% if stat.status == 'success' %}success{% elif stat.status == 'warning' %}warning text-dark{% else %}info{% endif %}">
+                    <span class="badge {{ 'bg-success' if stat.status == 'success' else ('bg-warning text-dark' if stat.status == 'warning' else 'bg-info') }}">
                         {{ stat.trend }}
                     </span>
                 </div>
