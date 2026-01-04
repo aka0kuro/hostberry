@@ -239,12 +239,3 @@ def log_security_event(event_type: str, details: Dict, ip_address: str = None):
             "details": details
         }
         logger.warning(f"Evento de seguridad: {log_entry}")
-
-def _log_suspicious_activity(self, ip: str, request: Request, reason: str):
-    """Registrar actividad sospechosa"""
-    log_security_event("suspicious_activity", {
-        "reason": reason,
-        "path": str(request.url.path),
-        "method": request.method,
-        "user_agent": request.headers.get("user-agent", "")
-    }, ip) 
