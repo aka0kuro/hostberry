@@ -1293,6 +1293,24 @@
   },
   "backup": {
     "subtitle": "Gestiona y restaura tus respaldos del sistema",
-    "last_check": "Última verificación"
+    "last_check": "Última verificación",
+    "actions_heading": "Acciones de backup",
+    "create_backup": "Crear backup",
+    "create_backup_desc": "Crear un respaldo del sistema",
+    "upload_backup": "Cargar backup",
+    "upload_backup_desc": "Subir un archivo de backup",
+    "list_backups": "Listar backups",
+    "list_backups_desc": "Ver todos los backups disponibles",
+    "inventory_heading": "Inventario de backups",
+    "inventory_caption": "Últimos backups almacenados en el dispositivo",
+    "no_backups": "Aún no hay backups listados",
+    "downloading": "Descargando backup...",
+    "downloaded": "Backup descargado exitosamente",
+    "download_error": "Error al descargar backup",
+    "uploading": "Cargando backup...",
+    "uploaded": "Backup cargado exitosamente",
+    "upload_error": "Error al cargar backup",
+    "no_file": "No se seleccionó ningún archivo",
+    "invalid_format": "El archivo debe ser un backup .tar.gz"
   }
 }
