@@ -92,7 +92,7 @@ async def run_subprocess_shell_async(
 
 
 def get_version() -> str:
-    """Obtiene la versión de la aplicación desde settings"""
-    from config.settings import settings
-    return getattr(settings, 'version', '2.0.0')
+    """Obtiene la versión de la aplicación desde settings (deprecated - usar core.version)"""
+    from core.version import get_version as get_app_version
+    return get_app_version()
 
