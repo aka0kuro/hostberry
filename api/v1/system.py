@@ -161,8 +161,6 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
         cache.set(cache_key, stats_dict)
         
         # Devolver stats pero incluir información adicional en la respuesta JSON
-        # FastAPI serializará el modelo y podemos agregar campos extra
-        from fastapi.responses import JSONResponse
         response_data = stats.dict() if hasattr(stats, 'dict') else {
             "cpu_usage": stats.cpu_usage,
             "cpu_cores": stats.cpu_cores,
