@@ -3,6 +3,22 @@
   // Global Namespace
   const HostBerry = window.HostBerry || {};
 
+  async function performLogout(event){
+    if(event){ event.preventDefault(); }
+    try{
+      await HostBerry.apiRequest('/api/v1/auth/logout', { method: 'POST' });
+    }catch(_e){
+      // ignore errors to ensure client-side logout proceeds
+    }finally{
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('user_info');
+      if(HostBerry.showAlert){
+        HostBerry.showAlert('info', HostBerry.t ? HostBerry.t('auth.logout_success', 'Logout successful') : 'Logout successful');
+      }
+      window.location.href = '/login';
+    }
+  }
+
   // Simple Dropdown without Bootstrap
   document.addEventListener('click', function(e){
     const toggle = e.target.closest('.dropdown-toggle');
@@ -122,10 +138,14 @@
     }catch(_e){
       // silent
     }
+
+    document.querySelectorAll('[data-action="logout"]').forEach(function(btn){
+      btn.addEventListener('click', performLogout);
+    });
   });
 
   // Compat: many views use showAlert() directly
   if(!window.showAlert){ window.showAlert = showAlert; }
+  HostBerry.performLogout = performLogout;
   window.HostBerry = HostBerry;
 })();
-
