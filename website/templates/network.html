@@ -210,7 +210,7 @@
 // Network functionality
 async function loadInterfaces(){
     try{
-        const resp = await fetch('/api/v1/network/interfaces', { headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
+        const resp = await fetch('/api/v1/system/network/interfaces', { headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
         if(resp.ok){ 
             displayInterfaces(await resp.json()); 
         } else { 
