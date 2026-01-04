@@ -596,6 +596,6 @@ window.dashboard = {
     backupSystem,
     checkUpdates,
     openMonitoring,
-    openSecurity,
+    openBackup,
     showNotification
 };
