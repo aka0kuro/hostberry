@@ -178,16 +178,34 @@ class Settings(BaseSettings):
             self.secret_key = os.urandom(32).hex()
         
         # Crear directorios necesarios usando rutas del sistema (solo si no existen)
+        # Intentar usar rutas del sistema, con fallback a directorio del proyecto si no hay permisos
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        
+        # Intentar rutas del sistema primero
         logs_dir = "/var/log/hostberry"
         uploads_dir = "/var/lib/hostberry/uploads"
         instance_dir = "/var/lib/hostberry/instance"
         
-        # Optimización: solo crear si no existen (evita I/O innecesario)
-        if not os.path.exists(logs_dir):
+        # Si no hay permisos, usar directorios en el proyecto
+        try:
+            if not os.path.exists(logs_dir):
+                os.makedirs(logs_dir, exist_ok=True)
+        except (PermissionError, OSError):
+            logs_dir = os.path.join(base_dir, "logs")
             os.makedirs(logs_dir, exist_ok=True)
-        if not os.path.exists(uploads_dir):
+        
+        try:
+            if not os.path.exists(uploads_dir):
+                os.makedirs(uploads_dir, exist_ok=True)
+        except (PermissionError, OSError):
+            uploads_dir = os.path.join(base_dir, "uploads")
             os.makedirs(uploads_dir, exist_ok=True)
-        if not os.path.exists(instance_dir):
+        
+        try:
+            if not os.path.exists(instance_dir):
+                os.makedirs(instance_dir, exist_ok=True)
+        except (PermissionError, OSError):
+            instance_dir = os.path.join(base_dir, "instance")
             os.makedirs(instance_dir, exist_ok=True)
         
         # Establecer rutas de archivos dinámicamente
