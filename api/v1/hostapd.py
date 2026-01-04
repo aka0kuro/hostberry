@@ -207,15 +207,23 @@ async def get_hostapd_config(
             except:
                 pass
         
-        # Configuración por defecto si no existe
+        # Configuración por defecto si no existe (desde base de datos o settings)
         if not config:
+            from core.database import db
+            from config.settings import settings
+            
+            # Intentar obtener desde base de datos
+            ap_ssid = await db.get_configuration("hostapd_ssid")
+            ap_channel = await db.get_configuration("hostapd_channel")
+            ap_interface = await db.get_configuration("hostapd_interface")
+            
             config = {
-                "interface": "wlan0",
-                "ssid": "HostBerry_AP",
-                "channel": "6",
+                "interface": ap_interface or "wlan0",
+                "ssid": ap_ssid or "HostBerry_AP",
+                "channel": ap_channel or "6",
                 "hw_mode": "g",
                 "wpa": "2",
-                "wpa_passphrase": "hostberry123",
+                "wpa_passphrase": "",  # No exponer contraseña por defecto
                 "wpa_key_mgmt": "WPA-PSK",
                 "wpa_pairwise": "TKIP CCMP",
                 "rsn_pairwise": "CCMP"
