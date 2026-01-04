@@ -95,6 +95,77 @@
     "theme": "Theme",
     "account": "Account"
   },
+  "help": {
+    "hero_kicker": "Support Center",
+    "hero_title": "We are here to keep your HostBerry running",
+    "hero_subtitle": "Find quick answers, detailed guides, and direct access to our support channels — all with the same dashboard look & feel.",
+    "hero_cta_contact": "Contact support",
+    "hero_cta_docs": "Explore guides",
+    "stats": {
+      "active_tickets": "Active tickets",
+      "resolution_rate": "Resolution rate",
+      "system_uptime": "System uptime",
+      "response_time": "Median response time"
+    },
+    "guides": {
+      "heading": "Guided setup journeys",
+      "caption": "Follow curated steps for every scenario",
+      "open": "Open guide",
+      "getting_started_title": "Getting started",
+      "getting_started_desc": "Initial setup checklist and best practices.",
+      "wifi_title": "WiFi configuration",
+      "wifi_desc": "Secure your network and manage SSIDs.",
+      "security_title": "Security hardening",
+      "security_desc": "Lock down ports, firewall, and VPN access.",
+      "advanced_title": "Advanced automation",
+      "advanced_desc": "Tweak services, cron jobs, and integrations."
+    },
+    "faqs": {
+      "heading": "Frequently asked questions",
+      "caption": "Short answers to unblock you quickly",
+      "monitoring_q": "Why are my monitoring stats stuck?",
+      "monitoring_a": "Ensure HostBerry services are running and the device clock is synchronized. A reboot of the monitoring service usually helps.",
+      "security_q": "How do I reapply the security rules?",
+      "security_a": "Go to Security → Firewall and tap “Apply rules”. The system will validate and reload UFW plus Fail2ban.",
+      "updates_q": "Is it safe to update while clients are connected?",
+      "updates_a": "Yes. Updates run in the background and only restart affected services when necessary. You will be notified before a disruptive change."
+    },
+    "links": {
+      "heading": "Quick resources",
+      "docs_title": "Product documentation",
+      "docs_desc": "Architecture, deployment, and maintenance handbook.",
+      "api_title": "API reference",
+      "api_desc": "Interactive OpenAPI specs with live testing.",
+      "troubleshoot_title": "Troubleshooting playbook",
+      "troubleshoot_desc": "Flowcharts to diagnose connectivity and security.",
+      "support_title": "Customer care portal",
+      "support_desc": "Open tickets, follow status, and escalate issues."
+    },
+    "contact": {
+      "heading": "Send us a message",
+      "caption": "We usually answer within a few minutes",
+      "response_time_desc": "Average response time: under 15 minutes",
+      "email": "Email",
+      "community": "Community",
+      "repo": "Source code"
+    },
+    "form": {
+      "name": "Your name",
+      "email": "Email",
+      "subject": "Subject",
+      "subject_placeholder": "Select an option",
+      "subject_general": "General inquiry",
+      "subject_technical": "Technical support",
+      "subject_bug": "Bug report",
+      "subject_feature": "Feature request",
+      "priority": "Priority",
+      "priority_normal": "Normal",
+      "priority_high": "High",
+      "priority_urgent": "Urgent",
+      "message": "Message",
+      "submit": "Send message"
+    }
+  },
   "dashboard": {
     "title": "Control Panel",
     "welcome": "Welcome to HostBerry",
