@@ -131,12 +131,17 @@
         <div class="row g-4">
             <div class="col-12">
                 <div class="glass-card p-4 stat-card h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <div>
                             <h5 class="text-white mb-1">{{ t('monitoring.network_heading', 'Network throughput') }}</h5>
                             <p class="text-white-50 mb-0">{{ t('monitoring.network_caption', 'Monitor primary interface usage') }}</p>
                         </div>
-                        <span class="badge bg-primary text-uppercase" id="net-interface">-</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary text-uppercase" id="net-interface">-</span>
+                            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="net-interface-select" style="min-width: 140px;">
+                                <option value="">{{ t('monitoring.network_auto', 'Auto detect') }}</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-6 col-md-3">
