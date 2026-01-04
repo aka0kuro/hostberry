@@ -30,8 +30,17 @@
   // Función para mostrar alertas (mismo estilo que login.js)
   function showAlert(type, message) {
     const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    alertDiv.style.cssText = 'top:20px; right:20px; z-index:9999; min-width:300px; max-width:400px;';
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    // Usar estilos inline con !important para asegurar posición
+    alertDiv.style.position = 'fixed';
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.style.minWidth = '300px';
+    alertDiv.style.maxWidth = '400px';
+    alertDiv.style.margin = '0';
+    alertDiv.style.left = 'auto';
+    alertDiv.style.transform = 'none';
     alertDiv.innerHTML = `
       ${message}
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
