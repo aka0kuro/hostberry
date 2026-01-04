@@ -196,20 +196,23 @@
       setText('cpu-cores', cpuCores ? String(cpuCores) : '-');
 
       // Actualizar Memoria
-      const memUsage = systemStats.memory_usage || 0;
-      setText('mem-usage', `${safeToFixed(memUsage)}%`);
-      updateProgress('mem-progress', memUsage);
+      const memUsage = systemStats.memory_usage || systemStats.memory_percent || 0;
+      const memUsageValue = typeof memUsage === 'number' ? memUsage : parseFloat(memUsage) || 0;
+      setText('mem-usage', `${safeToFixed(memUsageValue)}%`);
+      updateProgress('mem-progress', memUsageValue);
       
-      const memTotal = systemStats.memory_total;
+      const memTotal = systemStats.memory_total || systemStats.memory_total_bytes;
       if(memTotal && memTotal > 0){
-        setText('mem-total', `${safeToFixed(memTotal / (1024 ** 3),1)} GB`);
+        const memTotalGB = typeof memTotal === 'number' ? memTotal : parseFloat(memTotal) || 0;
+        setText('mem-total', `${safeToFixed(memTotalGB / (1024 ** 3),1)} GB`);
       } else {
         setText('mem-total', '0 GB');
       }
       
-      const memFree = systemStats.memory_free;
+      const memFree = systemStats.memory_free || systemStats.memory_available;
       if(memFree && memFree > 0){
-        setText('mem-free', `${safeToFixed(memFree / (1024 ** 3),1)} GB`);
+        const memFreeGB = typeof memFree === 'number' ? memFree : parseFloat(memFree) || 0;
+        setText('mem-free', `${safeToFixed(memFreeGB / (1024 ** 3),1)} GB`);
       } else {
         setText('mem-free', '0 GB');
       }
