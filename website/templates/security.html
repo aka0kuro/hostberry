@@ -300,14 +300,19 @@
       const formData = new FormData();
       formData.append('file', file);
       
-      const resp = await HostBerry.apiRequest('/api/v1/security/backup/upload', {
+      // Usar fetch directamente para FormData (no usar apiRequest que puede agregar headers incorrectos)
+      const token = localStorage.getItem('access_token');
+      const resp = await fetch('/api/v1/security/backup/upload', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData
       });
       
       if(!resp.ok){
-        const errorText = await resp.text();
-        throw new Error(errorText || 'Upload failed');
+        const errorData = await resp.json().catch(() => ({ detail: await resp.text() }));
+        throw new Error(errorData.detail || errorData.message || 'Upload failed');
       }
       
       const payload = await resp.json();
