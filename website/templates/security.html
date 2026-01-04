@@ -780,16 +780,27 @@
     // Actualizar última verificación inmediatamente (no bloquea)
     updateLastCheck();
     
-    // Cargar backups de forma asíncrona después de que la página se haya renderizado
-    // Esto evita bloquear el renderizado inicial
-    setTimeout(() => {
-      loadBackups();
-    }, 100);
+    // NO cargar backups automáticamente - solo cuando el usuario lo solicite
+    // Mostrar mensaje inicial
+    const list = document.getElementById('security-backup-list');
+    if(list){
+      list.innerHTML = `
+        <div class="text-center py-4 text-white-50">
+          <i class="bi bi-archive"></i>
+          <p class="mb-0 mt-2">${getTranslation('backup.click_to_load', 'Click "List backups" to load backups')}</p>
+        </div>`;
+    }
     
     // Configurar event listeners
-    document.getElementById('backupsListRefresh')?.addEventListener('click', loadBackups);
+    document.getElementById('backupsListRefresh')?.addEventListener('click', () => {
+      showNotification(getTranslation('backup.loading', 'Loading backups...'), 'info');
+      loadBackups();
+    });
     document.getElementById('action-create-backup')?.addEventListener('click', createBackup);
-    document.getElementById('action-list-backups')?.addEventListener('click', loadBackups);
+    document.getElementById('action-list-backups')?.addEventListener('click', () => {
+      showNotification(getTranslation('backup.loading', 'Loading backups...'), 'info');
+      loadBackups();
+    });
     document.getElementById('action-backup-stats')?.addEventListener('click', showBackupStats);
     
     // Manejar carga de archivo
@@ -805,8 +816,7 @@
       });
     }
     
-    // Actualizar backups cada 60 segundos (reducido de 30 para menos carga)
-    setInterval(loadBackups, 60000);
+    // NO actualizar automáticamente - solo cuando el usuario lo solicite
   });
 })();
 </script>
