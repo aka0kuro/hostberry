@@ -6,6 +6,7 @@ import os
 import time
 import platform
 import psutil
+import asyncio
 from typing import Dict, Any, List
 
 from fastapi import APIRouter, HTTPException, status, Depends
@@ -55,10 +56,25 @@ async def get_system_statistics():
             uptime=uptime
         )
         
-        # Guardar estadísticas en base de datos
-        await db.insert_statistic("cpu_usage", cpu_usage)
-        await db.insert_statistic("memory_usage", memory.percent)
-        await db.insert_statistic("disk_usage", disk.percent)
+        # Guardar estadísticas en base de datos (async, no bloquea)
+        asyncio.create_task(db.insert_statistic("cpu_usage", cpu_usage))
+        asyncio.create_task(db.insert_statistic("memory_usage", memory.percent))
+        asyncio.create_task(db.insert_statistic("disk_usage", disk.percent))
+        
+        # Guardar en caché (5 segundos TTL)
+        stats_dict = stats.dict() if hasattr(stats, 'dict') else {
+            "cpu_usage": stats.cpu_usage,
+            "cpu_cores": stats.cpu_cores,
+            "memory_usage": stats.memory_usage,
+            "memory_total": stats.memory_total,
+            "memory_free": stats.memory_free,
+            "disk_usage": stats.disk_usage,
+            "disk_total": stats.disk_total,
+            "disk_used": stats.disk_used,
+            "cpu_temperature": stats.cpu_temperature,
+            "uptime": stats.uptime
+        }
+        cache.set(cache_key, stats_dict)
         
         return stats
         
