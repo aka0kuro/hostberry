@@ -1319,6 +1319,16 @@
     "restoring": "Restoring backup...",
     "restored": "Backup restored successfully",
     "restore_error": "Error restoring backup",
-    "deleted": "Backup deleted successfully"
+    "restore_failed": "Error restoring backup",
+    "deleted": "Backup deleted successfully",
+    "delete_failed": "Error deleting backup",
+    "size_not_available": "Size not available",
+    "load_failed": "Error loading backups",
+    "load_error": "Error loading backups",
+    "info_failed": "Error getting information",
+    "stats_failed": "Error getting statistics",
+    "create_failed": "Error creating backup",
+    "upload_failed": "Error uploading backup",
+    "not_found": "Backup not found"
   }
 }
