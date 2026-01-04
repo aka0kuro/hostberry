@@ -733,11 +733,55 @@
     updateStats();
   });
 
-  // Inicializar
-  document.addEventListener('DOMContentLoaded', function(){
-    updateStats();
-    setInterval(updateStats, 5000);
-  });
+  // Inicializar cuando el DOM esté listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){
+      console.log('Monitoring page initialized');
+      // Esperar un poco para que Chart.js se cargue
+      setTimeout(function(){
+        updateStats();
+        setInterval(updateStats, 5000);
+      }, 500);
+    });
+  } else {
+    // DOM ya está listo
+    console.log('Monitoring page initialized (DOM ready)');
+    setTimeout(function(){
+      updateStats();
+      setInterval(updateStats, 5000);
+    }, 500);
+  }
+  
+  // Event listener para cambio de interfaz (después de que el DOM esté listo)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){
+      const select = document.getElementById('net-interface-select');
+      if(select){
+        select.addEventListener('change', function(e){
+          selectedInterface = e.target.value || '';
+          lastNetSnapshot = null;
+          netHistory.labels.length = 0;
+          netHistory.download.length = 0;
+          netHistory.upload.length = 0;
+          if(netChart){ netChart.update(); }
+          updateStats();
+        });
+      }
+    });
+  } else {
+    const select = document.getElementById('net-interface-select');
+    if(select){
+      select.addEventListener('change', function(e){
+        selectedInterface = e.target.value || '';
+        lastNetSnapshot = null;
+        netHistory.labels.length = 0;
+        netHistory.download.length = 0;
+        netHistory.upload.length = 0;
+        if(netChart){ netChart.update(); }
+        updateStats();
+      });
+    }
+  }
 })();
 </script>
 {% endblock %}
