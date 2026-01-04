@@ -391,6 +391,7 @@
     "running_services": "Running Services",
     "stopped_services": "Stopped Services",
     "failed_services": "Failed Services",
+    "unknown": "Unknown",
     "system_logs": "System Logs",
     "error_logs": "Error Logs",
     "access_logs": "Access Logs",
