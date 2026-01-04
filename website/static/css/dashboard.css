@@ -1058,10 +1058,18 @@ body:not(.light-theme) .form-select-sm {
         padding: 1rem;
     }
     
+    .status-card-header {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+    
     .status-icon {
         width: 35px;
         height: 35px;
         font-size: 1rem;
+        margin-right: 0 !important;
+        margin-bottom: 0.5rem !important;
     }
     
     .status-info h3 {
