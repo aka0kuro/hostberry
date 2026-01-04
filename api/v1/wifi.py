@@ -208,11 +208,12 @@ async def disconnect_wifi(
 ) -> Dict[str, Any]:
     """Desconecta de la red WiFi actual"""
     try:
-        # Desconectar WiFi
+        # Desconectar WiFi (async)
         try:
-            subprocess.run(["wpa_cli", "disconnect"], check=True)
-        except subprocess.CalledProcessError:
-            pass
+            from core.async_utils import run_subprocess_async
+            await run_subprocess_async(["wpa_cli", "disconnect"], timeout=5)
+        except Exception:
+            pass  # Ignorar errores de desconexión
         
         logger.info('disconnect_wifi')
         return {
