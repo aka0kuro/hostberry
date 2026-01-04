@@ -160,8 +160,30 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
         })
         cache.set(cache_key, stats_dict)
         
-        # Devolver stats pero con información adicional disponible en el dict
-        return stats
+        # Devolver stats pero incluir información adicional en la respuesta JSON
+        # FastAPI serializará el modelo y podemos agregar campos extra
+        from fastapi.responses import JSONResponse
+        response_data = stats.dict() if hasattr(stats, 'dict') else {
+            "cpu_usage": stats.cpu_usage,
+            "cpu_cores": stats.cpu_cores,
+            "memory_usage": stats.memory_usage,
+            "memory_total": stats.memory_total,
+            "memory_free": stats.memory_free,
+            "disk_usage": stats.disk_usage,
+            "disk_total": stats.disk_total,
+            "disk_used": stats.disk_used,
+            "cpu_temperature": stats.cpu_temperature,
+            "uptime": stats.uptime
+        }
+        response_data.update({
+            "hostname": hostname,
+            "os_version": os_version,
+            "kernel_version": kernel_version,
+            "architecture": architecture,
+            "processor": processor,
+            "load_average": load_average
+        })
+        return JSONResponse(content=response_data)
         
     except Exception as e:
         logger.error(f"Error obteniendo estadísticas del sistema: {str(e)}")
