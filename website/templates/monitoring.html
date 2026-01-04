@@ -625,8 +625,13 @@
       setText('uptime-value', formatUptime(uptime));
       
       // Actualizar CPU - usar los campos correctos del modelo
-      const cpuUsage = systemStats.cpu_usage || 0;
-      const cpuUsageValue = typeof cpuUsage === 'number' ? cpuUsage : parseFloat(cpuUsage) || 0;
+      const cpuUsage = systemStats.cpu_usage;
+      let cpuUsageValue = 0;
+      if(cpuUsage !== null && cpuUsage !== undefined){
+        cpuUsageValue = typeof cpuUsage === 'number' ? cpuUsage : parseFloat(cpuUsage);
+        if(Number.isNaN(cpuUsageValue)) cpuUsageValue = 0;
+      }
+      console.log('CPU Usage:', cpuUsage, '->', cpuUsageValue);
       setText('cpu-usage', `${safeToFixed(cpuUsageValue)}%`);
       updateProgress('cpu-progress', cpuUsageValue);
       
