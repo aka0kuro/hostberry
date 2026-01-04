@@ -459,7 +459,7 @@ function openMonitoring() {
     window.location.href = '/monitoring';
 }
 
-function openSecurity() {
+function openBackup() {
     window.location.href = '/security';
 }
 
