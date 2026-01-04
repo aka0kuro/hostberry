@@ -225,7 +225,10 @@
                             {% set icon_class = service_icons.get(normalized_name) or service_icons.get(alias) or 'bi bi-hdd service-icon default-icon' %}
                             {% set status_value = service_status.status if service_status is mapping and service_status.status is defined else service_status %}
                             {% set status_lower = (status_value|string)|lower %}
-                            {% set is_running = status_lower in ['running', 'active', 'online'] %}
+                            {% set is_running = status_lower in ['running', 'active', 'online', 'connected'] %}
+                            {% set is_stopped = status_lower in ['stopped', 'inactive', 'offline', 'disconnected'] %}
+                            {% set status_key = 'system.running' if is_running else ('system.stopped' if is_stopped else 'system.unknown') %}
+                            {% set status_text = t('system.active', 'Active') if status_lower == 'active' else (t('system.connected', 'Connected') if status_lower == 'connected' else (t('system.disconnected', 'Disconnected') if status_lower == 'disconnected' else (t('system.running', 'Running') if is_running else (t('system.stopped', 'Stopped') if is_stopped else t('system.unknown', 'Unknown'))))) %}
                             <div class="service-item">
                                 <div class="service-info">
                                     <i class="{{ icon_class }}"></i>
@@ -233,7 +236,7 @@
                                 </div>
                                 <div class="service-status">
                                     <span class="status-badge {{ 'status-running' if is_running else 'status-stopped' }}">
-                                        {{ t('system.running', 'Active') if is_running else t('system.stopped', 'Stopped') }}
+                                        {{ status_text }}
                                     </span>
                                 </div>
                             </div>
