@@ -761,6 +761,17 @@ download_application_from_github() {
         handle_error "$(get_text 'config_corrupted_download' 'El directorio config se corrompió durante la descarga')"
     fi
 
+    # Configurar Git safe.directory para evitar error de propiedad dudosa
+    if [ -d "$PROD_DIR/.git" ]; then
+        git config --global --add safe.directory "$PROD_DIR" 2>/dev/null || true
+        # Asegurar permisos correctos del directorio .git
+        if [[ $EUID -eq 0 ]]; then
+            chown -R "$USER:$GROUP" "$PROD_DIR/.git" 2>/dev/null || true
+        else
+            sudo chown -R "$USER:$GROUP" "$PROD_DIR/.git" 2>/dev/null || true
+        fi
+    fi
+
     # Permisos básicos
     chmod 755 "$PROD_DIR"
     [ -d "$PROD_DIR/config" ] && chmod 755 "$PROD_DIR/config" && chmod 644 "$PROD_DIR/config"/*.py 2>/dev/null || true
