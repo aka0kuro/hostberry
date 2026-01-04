@@ -22,7 +22,9 @@ class SystemInfo:
     def __init__(self):
         self._cache = {}
         self._cache_time = 0
-        self._cache_duration = 30  # Cache por 30 segundos
+        self._cache_duration = 10  # Cache por 10 segundos para datos estáticos
+        self._last_cpu_times = None
+        self._last_cpu_time_stamp = 0
     
     def _read_file(self, filepath: str) -> str:
         """Leer archivo de forma segura"""
@@ -107,36 +109,39 @@ class SystemInfo:
             return {"total": 0, "free": 0, "used": 0, "percent": 0}
     
     def get_cpu_usage_percent(self) -> float:
-        """Obtener porcentaje de uso de CPU"""
+        """Obtener porcentaje de uso de CPU de forma no bloqueante"""
         try:
-            # Leer tiempo de CPU de /proc/stat
             stat = self._read_file("/proc/stat")
-            if stat.startswith("cpu "):
-                times = list(map(int, stat.split()[1:5]))
-                idle = times[3]
-                total = sum(times)
-                if total == 0:
+            if not stat.startswith("cpu "):
+                return 0.0
+            
+            # user, nice, system, idle, iowait, irq, softirq, steal
+            parts = stat.split('\n')[0].split()
+            if len(parts) < 5:
+                return 0.0
+            
+            # Columna 4 es idle, 5 es iowait
+            idle = int(parts[4]) + int(parts[5])
+            total = sum(int(p) for p in parts[1:9])
+            
+            now = time.time()
+            if self._last_cpu_times:
+                last_idle, last_total = self._last_cpu_times
+                idle_diff = idle - last_idle
+                total_diff = total - last_total
+                
+                if total_diff <= 0:
                     return 0.0
                 
-                # Esperar un momento y volver a medir
-                time.sleep(0.1)
-                new_stat = self._read_file("/proc/stat")
-                if new_stat.startswith("cpu "):
-                    new_times = list(map(int, new_stat.split()[1:5]))
-                    new_idle = new_times[3]
-                    new_total = sum(new_times)
-                    
-                    idle_diff = new_idle - idle
-                    total_diff = new_total - total
-                    
-                    if total_diff == 0:
-                        return 0.0
-                    
-                    usage = 100.0 * (1.0 - idle_diff / total_diff)
-                    return min(100.0, max(0.0, usage))
+                usage = 100.0 * (1.0 - idle_diff / total_diff)
+                self._last_cpu_times = (idle, total)
+                self._last_cpu_time_stamp = now
+                return min(100.0, max(0.0, usage))
             
-            return 0.0
-        except:
+            self._last_cpu_times = (idle, total)
+            self._last_cpu_time_stamp = now
+            return 0.0  # Primera llamada devuelve 0
+        except Exception as e:
             return 0.0
     
     def get_system_info(self, use_cache: bool = True) -> Dict[str, Any]:
