@@ -108,6 +108,18 @@ async def authenticate_user(username: str, password: str) -> Optional[Dict[str, 
     if username in LOGIN_BLOCKED:
         if time.time() < LOGIN_BLOCKED[username]:
             remaining_time = int((LOGIN_BLOCKED[username] - time.time()) / 60)
+            logger.warning(f"🔒 Intento de login bloqueado - Usuario: {username}, Tiempo restante: {remaining_time} minutos")
+            # Registrar en base de datos
+            try:
+                from core.database import db
+                await db.insert_log(
+                    "WARNING",
+                    f"Intento de login bloqueado - Usuario: {username}, Tiempo restante: {remaining_time} minutos",
+                    source="auth",
+                    user_id=None
+                )
+            except Exception:
+                pass
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail=get_text("auth.account_locked_time", default=f"Usuario bloqueado. Intente nuevamente en {remaining_time} minutos.", minutes=remaining_time)
@@ -123,7 +135,14 @@ async def authenticate_user(username: str, password: str) -> Optional[Dict[str, 
         # Obtener usuario de la base de datos
         user = await db.get_user_by_username(username)
         if not user:
-            logger.info(f"🔑 Usuario no encontrado: {username}")
+            logger.warning(f"🔑 Usuario no encontrado: {username}")
+            # Registrar en base de datos
+            await db.insert_log(
+                "WARNING",
+                f"Intento de login - Usuario no encontrado: {username}",
+                source="auth",
+                user_id=None
+            )
             # Usuario no existe (404 para diferenciar en el cliente)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -133,16 +152,35 @@ async def authenticate_user(username: str, password: str) -> Optional[Dict[str, 
         logger.info(f"🔑 Usuario encontrado: {username}, verificando contraseña")
         
         if not verify_password(password, user["password_hash"]):
-            logger.info(f"🔑 Contraseña incorrecta para usuario: {username}")
             # Incrementar contador de intentos fallidos
             FAILED_LOGIN_ATTEMPTS[username] = FAILED_LOGIN_ATTEMPTS.get(username, 0) + 1
+            attempts = FAILED_LOGIN_ATTEMPTS[username]
+            
+            logger.warning(f"🔑 Contraseña incorrecta para usuario: {username}, Intentos fallidos: {attempts}")
+            
+            # Registrar en base de datos
+            await db.insert_log(
+                "WARNING",
+                f"Login fallido - Contraseña incorrecta: {username}, Intentos fallidos: {attempts}",
+                source="auth",
+                user_id=None
+            )
             
             # Bloquear usuario si excede el límite
             if FAILED_LOGIN_ATTEMPTS[username] >= settings.max_login_attempts:
                 LOGIN_BLOCKED[username] = time.time() + settings.login_block_duration
+                block_duration = settings.login_block_duration // 60
+                logger.error(f"🔒 Usuario bloqueado por demasiados intentos fallidos: {username}, Bloqueado por: {block_duration} minutos")
+                # Registrar bloqueo en base de datos
+                await db.insert_log(
+                    "ERROR",
+                    f"Usuario bloqueado - Demasiados intentos fallidos: {username}, Bloqueado por: {block_duration} minutos",
+                    source="auth",
+                    user_id=None
+                )
                 raise HTTPException(
                     status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                    detail=get_text("auth.too_many_attempts_time", default=f"Demasiados intentos fallidos. Usuario bloqueado por {settings.login_block_duration // 60} minutos.", minutes=settings.login_block_duration // 60)
+                    detail=get_text("auth.too_many_attempts_time", default=f"Demasiados intentos fallidos. Usuario bloqueado por {block_duration} minutos.", minutes=block_duration)
                 )
             
             # Contraseña incorrecta (401)
@@ -154,7 +192,7 @@ async def authenticate_user(username: str, password: str) -> Optional[Dict[str, 
         # Resetear contador de intentos fallidos
         FAILED_LOGIN_ATTEMPTS[username] = 0
         
-        logger.info(f"🔑 Usuario autenticado exitosamente: {username}")
+        logger.info(f"✅ Usuario autenticado exitosamente: {username}")
         
         return {
             "username": user["username"],
@@ -166,7 +204,18 @@ async def authenticate_user(username: str, password: str) -> Optional[Dict[str, 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error autenticando usuario: {e}")
+        logger.error(f"❌ Error autenticando usuario {username}: {e}")
+        # Registrar error en base de datos
+        try:
+            from core.database import db
+            await db.insert_log(
+                "ERROR",
+                f"Error interno en autenticación - Usuario: {username}, Error: {str(e)}",
+                source="auth",
+                user_id=None
+            )
+        except Exception:
+            pass
         return None
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict[str, Any]:
