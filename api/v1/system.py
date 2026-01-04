@@ -22,7 +22,7 @@ router = APIRouter()
 logger = get_logger("system")
 
 @router.get("/stats", response_model=SystemStats)
-async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_current_active_user)):
+async def get_system_statistics():
     """Obtiene estadísticas del sistema"""
     try:
         # Obtener estadísticas básicas
