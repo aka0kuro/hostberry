@@ -712,6 +712,19 @@ download_application_from_github() {
         # Actualizar repo existente en /opt/hostberry
         (
             cd "$PROD_DIR"
+            
+            # Configurar Git para confiar en este directorio (evitar error de propiedad dudosa)
+            git config --global --add safe.directory "$PROD_DIR" 2>/dev/null || true
+            
+            # Corregir permisos del directorio .git si es necesario
+            if [ -d ".git" ]; then
+                if [[ $EUID -eq 0 ]]; then
+                    chown -R "$USER:$GROUP" .git 2>/dev/null || true
+                else
+                    sudo chown -R "$USER:$GROUP" .git 2>/dev/null || true
+                fi
+            fi
+            
             # Backup de config (por seguridad)
             [ -d config ] && cp -r config "/tmp/hostberry_config_backup_$$" 2>/dev/null || true
             git fetch origin main || handle_error "$(get_text 'git_fetch_failed' 'No se pudo actualizar desde GitHub')"
