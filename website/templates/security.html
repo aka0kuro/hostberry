@@ -215,7 +215,7 @@
       const resp = await HostBerry.apiRequest('/api/v1/security/backup?include_logs=true&include_uploads=true', { method: 'POST' });
       if(!resp.ok){
         const errorText = await resp.text();
-        throw new Error(errorText || 'Backup failed');
+        throw new Error(errorText || (HostBerry.t?.('backup.create_failed', 'Error al crear backup') || 'Error al crear backup'));
       }
       const payload = await resp.json();
       const message = payload.message || payload.data?.message || HostBerry.t?.('backup.created', 'Backup creado exitosamente') || 'Backup creado exitosamente';
