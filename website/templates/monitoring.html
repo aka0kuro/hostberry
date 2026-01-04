@@ -785,34 +785,37 @@
   }
   
   // Event listener para cambio de interfaz (después de que el DOM esté listo)
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function(){
-      const select = document.getElementById('net-interface-select');
-      if(select){
-        select.addEventListener('change', function(e){
-          selectedInterface = e.target.value || '';
-          lastNetSnapshot = null;
-          netHistory.labels.length = 0;
-          netHistory.download.length = 0;
-          netHistory.upload.length = 0;
-          if(netChart){ netChart.update(); }
-          updateStats();
-        });
-      }
-    });
-  } else {
+  function setupInterfaceListener(){
     const select = document.getElementById('net-interface-select');
     if(select){
-      select.addEventListener('change', function(e){
+      // Remover listeners anteriores si existen
+      const newSelect = select.cloneNode(true);
+      select.parentNode.replaceChild(newSelect, select);
+      
+      newSelect.addEventListener('change', function(e){
         selectedInterface = e.target.value || '';
+        console.log('Interface changed to:', selectedInterface);
         lastNetSnapshot = null;
         netHistory.labels.length = 0;
         netHistory.download.length = 0;
         netHistory.upload.length = 0;
-        if(netChart){ netChart.update(); }
+        if(netChart){ 
+          netChart.data.labels = [];
+          netChart.data.datasets[0].data = [];
+          netChart.data.datasets[1].data = [];
+          netChart.update('none');
+        }
         updateStats();
       });
     }
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){
+      setupInterfaceListener();
+    });
+  } else {
+    setupInterfaceListener();
   }
 })();
 </script>
