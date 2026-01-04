@@ -1269,7 +1269,7 @@
     "ssid_valid": "SSID valid"
   },
   "backup": {
-    "subtitle": "Manage and restore your system backups",
+    "subtitle": "Manage and restore your configuration backups",
     "last_check": "Last check",
     "actions_heading": "Backup actions",
     "create_backup": "Create backup",
