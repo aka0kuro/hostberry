@@ -107,8 +107,13 @@ class WiFiStatus(BaseModel):
 # Modelos del sistema
 class SystemStats(BaseModel):
     cpu_usage: float = Field(..., ge=0, le=100)
+    cpu_cores: Optional[int] = None
     memory_usage: float = Field(..., ge=0, le=100)
+    memory_total: Optional[float] = None
+    memory_free: Optional[float] = None
     disk_usage: float = Field(..., ge=0, le=100)
+    disk_total: Optional[float] = None
+    disk_used: Optional[float] = None
     cpu_temperature: Optional[float] = None
     uptime: Optional[int] = None
 
@@ -119,6 +124,8 @@ class NetworkStats(BaseModel):
     download_speed: float
     bytes_sent: int
     bytes_recv: int
+    packets_sent: Optional[int] = None
+    packets_recv: Optional[int] = None
 
 class SystemInfo(BaseModel):
     hostname: str
