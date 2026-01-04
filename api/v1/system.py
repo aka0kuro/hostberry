@@ -276,37 +276,30 @@ async def get_network_statistics(
         upload_speed = 0.0  # Se calculará en el cliente basándose en bytes_sent
         download_speed = 0.0  # Se calculará en el cliente basándose en bytes_recv
 
-        stats = NetworkStats(
-            interface=interface,
-            ip_address=ip_address,
-            upload_speed=upload_speed,
-            download_speed=download_speed,
-            bytes_sent=bytes_sent,
-            bytes_recv=bytes_recv,
-            packets_sent=packets_sent,
-            packets_recv=packets_recv,
-            interfaces=available_interfaces
-        )
+        # Crear dict directamente (no usar modelo para permitir campos adicionales)
+        stats_dict = {
+            "interface": interface,
+            "ip_address": ip_address,
+            "upload_speed": upload_speed,
+            "download_speed": download_speed,
+            "bytes_sent": bytes_sent,
+            "bytes_recv": bytes_recv,
+            "packets_sent": packets_sent,
+            "packets_recv": packets_recv,
+            "interfaces": available_interfaces,
+            "errors": 0,
+            "drop": 0
+        }
         
         # Guardar estadísticas en base de datos (async, no bloquea)
         asyncio.create_task(db.insert_statistic("network_upload", upload_speed))
         asyncio.create_task(db.insert_statistic("network_download", download_speed))
         
         # Guardar en caché (5 segundos TTL)
-        stats_dict = stats.dict() if hasattr(stats, 'dict') else {
-            "interface": stats.interface,
-            "ip_address": stats.ip_address,
-            "upload_speed": stats.upload_speed,
-            "download_speed": stats.download_speed,
-            "bytes_sent": stats.bytes_sent,
-            "bytes_recv": stats.bytes_recv,
-            "packets_sent": stats.packets_sent,
-            "packets_recv": stats.packets_recv,
-            "interfaces": stats.interfaces
-        }
         cache.set(cache_key, stats_dict)
         
-        return stats
+        # Devolver dict directamente (no el modelo)
+        return stats_dict
         
     except Exception as e:
         logger.error(f"Error obteniendo estadísticas de red: {str(e)}")
