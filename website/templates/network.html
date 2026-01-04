@@ -230,17 +230,19 @@ function displayInterfaces(interfaces){
         return; 
     }
     
-    let html='';
+    let html='<div class="table-responsive"><table class="table table-dark table-hover"><thead><tr><th class="text-center">'+HostBerry.t('network.interface', 'Interface')+'</th><th class="text-center">'+HostBerry.t('network.status', 'Status')+'</th><th class="text-center">'+HostBerry.t('network.ip_address', 'IP Address')+'</th><th class="text-center">'+HostBerry.t('network.mac_address', 'MAC Address')+'</th></tr></thead><tbody>';
     interfaces.forEach(function(iface){
         const statusClass = iface.status==='up'?'success':'danger'; 
         const statusIcon = iface.status==='up'?'bi-check-circle':'bi-x-circle';
-        html += '<div class="row mb-3">'
-            +'<div class="col-md-3"><strong class="text-white">'+iface.name+'</strong></div>'
-            +'<div class="col-md-3"><span class="badge bg-'+statusClass+'"><i class="bi '+statusIcon+'"></i> '+iface.status+'</span></div>'
-            +'<div class="col-md-3 text-white">'+(iface.ip||'N/A')+'</div>'
-            +'<div class="col-md-3 text-white">'+(iface.mac||'N/A')+'</div>'
-            +'</div>';
+        const statusText = iface.status==='up'?HostBerry.t('network.connected', 'Connected'):HostBerry.t('network.disconnected', 'Disconnected');
+        html += '<tr>'
+            +'<td class="text-center text-white"><strong>'+iface.name+'</strong></td>'
+            +'<td class="text-center"><span class="badge bg-'+statusClass+'"><i class="bi '+statusIcon+'"></i> '+statusText+'</span></td>'
+            +'<td class="text-center text-white">'+(iface.ip||'N/A')+'</td>'
+            +'<td class="text-center text-white">'+(iface.mac||'N/A')+'</td>'
+            +'</tr>';
     });
+    html += '</tbody></table></div>';
     container.innerHTML = html;
 }
 
