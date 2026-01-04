@@ -87,8 +87,19 @@ async def get_system_statistics():
 
 @router.get("/network", response_model=NetworkStats)
 async def get_network_statistics(interface: str = None):
-    """Obtiene estadísticas de red"""
+    """Obtiene estadísticas de red (con caché)"""
     try:
+        from core.cache import cache
+        
+        # Verificar caché
+        cache_key = f"network_stats_{interface or 'default'}"
+        cached_stats = cache.get(cache_key)
+        if cached_stats:
+            return NetworkStats(**cached_stats)
+        
+        # Lazy import de psutil
+        import psutil
+        
         # Obtener información de red
         iface_info = get_network_interface(interface)
         interface = iface_info.get("interface") if isinstance(iface_info, dict) else None
@@ -136,9 +147,23 @@ async def get_network_statistics(interface: str = None):
             interfaces=available_interfaces
         )
         
-        # Guardar estadísticas en base de datos
-        await db.insert_statistic("network_upload", upload_speed)
-        await db.insert_statistic("network_download", download_speed)
+        # Guardar estadísticas en base de datos (async, no bloquea)
+        asyncio.create_task(db.insert_statistic("network_upload", upload_speed))
+        asyncio.create_task(db.insert_statistic("network_download", download_speed))
+        
+        # Guardar en caché (5 segundos TTL)
+        stats_dict = stats.dict() if hasattr(stats, 'dict') else {
+            "interface": stats.interface,
+            "ip_address": stats.ip_address,
+            "upload_speed": stats.upload_speed,
+            "download_speed": stats.download_speed,
+            "bytes_sent": stats.bytes_sent,
+            "bytes_recv": stats.bytes_recv,
+            "packets_sent": stats.packets_sent,
+            "packets_recv": stats.packets_recv,
+            "interfaces": stats.interfaces
+        }
+        cache.set(cache_key, stats_dict)
         
         return stats
         
