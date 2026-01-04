@@ -452,17 +452,41 @@ async def refresh_token(current_user: dict = Depends(get_current_active_user)):
 @router.post("/change-password")
 async def change_password(
     password_data: PasswordChange,
+    request: Request,
     current_user: Dict[str, Any] = Depends(get_current_active_user)
 ):
     """Cambiar contraseña del usuario"""
+    client_ip = _get_client_ip(request)
+    user_agent = _get_user_agent(request)
+    username = current_user.get('username')
+    
     try:
         start_time = time.time()
+        
+        logger.info(f"🔐 Intento de cambio de contraseña - Usuario: {username}, IP: {client_ip}")
+        await db.insert_log(
+            "INFO",
+            f"Intento de cambio de contraseña - Usuario: {username}, IP: {client_ip}",
+            source="auth",
+            user_id=None
+        )
         
         # Verificar contraseña actual
         from core.security import verify_password
         if not verify_password(password_data.current_password, current_user["hashed_password"]):
-            log_auth_event("change_password_failed", user_id=current_user.get('username'), 
+            logger.warning(f"❌ Cambio de contraseña fallido - Contraseña actual incorrecta: {username}, IP: {client_ip}")
+            await db.insert_log(
+                "WARNING",
+                f"Cambio de contraseña fallido - Contraseña actual incorrecta: {username}, IP: {client_ip}",
+                source="auth",
+                user_id=None
+            )
+            log_auth_event("change_password_failed", user_id=username, ip_address=client_ip,
                           details="Contraseña actual incorrecta", success=False)
+            audit_security_violation("incorrect_current_password", client_ip, {
+                "username": username,
+                "user_agent": user_agent
+            })
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=get_text("auth.current_password_incorrect", default="Contraseña actual incorrecta")
@@ -470,7 +494,14 @@ async def change_password(
         
         # Verificar que no sea la contraseña por defecto
         if is_default_password(current_user["username"], password_data.new_password):
-            log_auth_event("change_password_failed", user_id=current_user.get('username'), 
+            logger.warning(f"❌ Cambio de contraseña fallido - Intento de usar contraseña por defecto: {username}, IP: {client_ip}")
+            await db.insert_log(
+                "WARNING",
+                f"Cambio de contraseña fallido - Intento de usar contraseña por defecto: {username}, IP: {client_ip}",
+                source="auth",
+                user_id=None
+            )
+            log_auth_event("change_password_failed", user_id=username, ip_address=client_ip,
                           details="No puedes usar la contraseña por defecto", success=False)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -483,29 +514,52 @@ async def change_password(
         
         success = await db.update_user_password(current_user["username"], new_hashed_password)
         if not success:
-            log_auth_event("change_password_failed", user_id=current_user.get('username'), 
+            logger.error(f"❌ Cambio de contraseña fallido - Error al cambiar: {username}, IP: {client_ip}")
+            await db.insert_log(
+                "ERROR",
+                f"Cambio de contraseña fallido - Error al cambiar: {username}, IP: {client_ip}",
+                source="auth",
+                user_id=None
+            )
+            log_auth_event("change_password_failed", user_id=username, ip_address=client_ip,
                           details="Error al cambiar la contraseña", success=False)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=get_text("auth.password_change_error", default="Error al cambiar la contraseña")
             )
         
-        # Log del cambio de contraseña
-        await db.insert_log("INFO", f"Contraseña cambiada para usuario: {current_user['username']}")
-        
-        logger.info(f"Contraseña cambiada para usuario: {current_user['username']}")
-        
+        # Log del cambio de contraseña exitoso
         response_time = time.time() - start_time
-        
-        log_auth_event("change_password_success", user_id=current_user.get('username'), success=True)
-        log_user_action("change_password", user_id=current_user.get('username'), details=f"response_time={response_time:.3f}s")
+        success_message = f"✅ Cambio de contraseña exitoso - Usuario: {username}, IP: {client_ip}, User-Agent: {user_agent}, Tiempo: {response_time:.3f}s"
+        logger.info(success_message)
+        await db.insert_log(
+            "INFO",
+            f"Cambio de contraseña exitoso - Usuario: {username}, IP: {client_ip}, Tiempo: {response_time:.3f}s",
+            source="auth",
+            user_id=None
+        )
+        log_auth_event("change_password_success", user_id=username, ip_address=client_ip, success=True)
+        log_user_action("change_password", user_id=username, ip_address=client_ip, details=f"response_time={response_time:.3f}s, user_agent={user_agent}")
+        audit_sensitive_operation(
+            "password_changed",
+            username,
+            client_ip,
+            {"user_agent": user_agent}
+        )
         
         return {"message": "Contraseña cambiada exitosamente"}
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error('change_password_error', error=str(e), user_id=current_user.get('username'))
+        error_message = f"❌ Error en cambio de contraseña - Usuario: {username}, IP: {client_ip}, Error: {str(e)}"
+        logger.error(error_message)
+        await db.insert_log(
+            "ERROR",
+            f"Error en cambio de contraseña - Usuario: {username}, IP: {client_ip}, Error: {str(e)}",
+            source="auth",
+            user_id=None
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=get_text("errors.internal_server_error", default="Error interno del servidor")
