@@ -443,7 +443,7 @@ async def profile_page(request: Request, lang: str | None = Query(default=None))
         request,
         lang,
         extra={
-            "user": {"username": "admin", "role": "admin", "timezone": "UTC"},
+            "user": {"username": settings.default_username, "role": "admin", "timezone": "UTC"},
             "recent_activities": [],
         },
     )
@@ -567,7 +567,7 @@ async def dashboard_page(request: Request, lang: str | None = Query(default=None
             "services": _get_service_statuses(),
             "network_status": {
                 "eth0": {"status": "connected", "ip": "192.168.1.100", "gateway": "192.168.1.1"},
-                "wlan0": {"status": "connected", "ip": "192.168.1.101", "ssid": "HomeNetwork", "signal": 85},
+                "wlan0": {"status": "connected", "ip": "0.0.0.0", "ssid": "Unknown", "signal": 0},
             },
             "recent_activity": [],
             "system_health": {
