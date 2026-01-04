@@ -631,7 +631,7 @@
       const confirmMsg = getTranslation('backup.delete_confirm', 'Are you sure you want to delete this backup?');
       if(!confirm(confirmMsg)) return;
       
-      showNotification(HostBerry.t?.('backup.deleting', 'Eliminando backup...') || 'Eliminando backup...', 'info');
+      showNotification(getTranslation('backup.deleting', 'Deleting backup...'), 'info');
       
       const token = localStorage.getItem('access_token');
       const resp = await fetch(`/api/v1/security/backup/${encodeURIComponent(backupName)}`, {
