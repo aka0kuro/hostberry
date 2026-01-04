@@ -404,6 +404,82 @@
     }
   }
 
+  async function showBackupInfo(backupName){
+    try{
+      if(!backupName){
+        HostBerry.showAlert?.('danger', HostBerry.t?.('errors.backup_not_found', 'Backup not found') || 'Backup not found');
+        return;
+      }
+      
+      const resp = await HostBerry.apiRequest(`/api/v1/security/backup/${encodeURIComponent(backupName)}`);
+      if(!resp.ok) throw new Error('Info request failed');
+      
+      const payload = await resp.json();
+      const info = payload.data?.backup_info || payload.backup_info || {};
+      
+      const infoText = `
+        <strong>${HostBerry.t?.('backup.name', 'Nombre')}:</strong> ${backupName}<br>
+        <strong>${HostBerry.t?.('backup.size', 'Tamaño')}:</strong> ${info.size ? formatBytes(info.size) : 'N/A'}<br>
+        <strong>${HostBerry.t?.('backup.created', 'Creado')}:</strong> ${info.created_at || info.timestamp || 'N/A'}<br>
+        <strong>${HostBerry.t?.('backup.path', 'Ruta')}:</strong> ${info.path || 'N/A'}
+      `;
+      
+      HostBerry.showAlert?.('info', infoText);
+    }catch(error){
+      console.error('Backup info failed', error);
+      HostBerry.showAlert?.('danger', HostBerry.t?.('backup.info_error', 'Error al obtener información') || 'Error al obtener información');
+    }
+  }
+
+  async function deleteBackup(backupName){
+    try{
+      if(!backupName){
+        HostBerry.showAlert?.('danger', HostBerry.t?.('errors.backup_not_found', 'Backup not found') || 'Backup not found');
+        return;
+      }
+      
+      const confirmMsg = HostBerry.t?.('backup.delete_confirm', '¿Estás seguro de que quieres eliminar este backup?') || '¿Estás seguro de que quieres eliminar este backup?';
+      if(!confirm(confirmMsg)) return;
+      
+      HostBerry.showAlert?.('info', HostBerry.t?.('backup.deleting', 'Eliminando backup...') || 'Eliminando backup...');
+      
+      // Nota: Necesitarías crear un endpoint DELETE /api/v1/security/backup/{backup_name}
+      // Por ahora, mostramos un mensaje de que esta funcionalidad está en desarrollo
+      HostBerry.showAlert?.('warning', HostBerry.t?.('backup.delete_not_implemented', 'Función de eliminación en desarrollo') || 'Función de eliminación en desarrollo');
+      
+    }catch(error){
+      console.error('Backup delete failed', error);
+      HostBerry.showAlert?.('danger', HostBerry.t?.('backup.delete_error', 'Error al eliminar backup') || 'Error al eliminar backup');
+    }
+  }
+
+  async function showBackupStats(){
+    try{
+      const resp = await HostBerry.apiRequest('/api/v1/security/backups');
+      if(!resp.ok) throw new Error('Stats request failed');
+      
+      const payload = await resp.json();
+      const backups = payload.data?.backups || payload.backups || [];
+      
+      const totalBackups = backups.length;
+      const totalSize = backups.reduce((sum, b) => sum + (b.size || 0), 0);
+      const oldestBackup = backups.length > 0 ? backups[backups.length - 1] : null;
+      const newestBackup = backups.length > 0 ? backups[0] : null;
+      
+      const statsText = `
+        <strong>${HostBerry.t?.('backup.total', 'Total de backups')}:</strong> ${totalBackups}<br>
+        <strong>${HostBerry.t?.('backup.total_size', 'Tamaño total')}:</strong> ${formatBytes(totalSize)}<br>
+        ${oldestBackup ? `<strong>${HostBerry.t?.('backup.oldest', 'Backup más antiguo')}:</strong> ${oldestBackup.name || oldestBackup.filename || 'N/A'}<br>` : ''}
+        ${newestBackup ? `<strong>${HostBerry.t?.('backup.newest', 'Backup más reciente')}:</strong> ${newestBackup.name || newestBackup.filename || 'N/A'}` : ''}
+      `;
+      
+      HostBerry.showAlert?.('info', statsText);
+    }catch(error){
+      console.error('Backup stats failed', error);
+      HostBerry.showAlert?.('danger', HostBerry.t?.('backup.stats_error', 'Error al obtener estadísticas') || 'Error al obtener estadísticas');
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', function(){
     updateLastCheck();
     loadBackups();
@@ -412,6 +488,7 @@
     document.getElementById('backupsListRefresh')?.addEventListener('click', loadBackups);
     document.getElementById('action-create-backup')?.addEventListener('click', createBackup);
     document.getElementById('action-list-backups')?.addEventListener('click', loadBackups);
+    document.getElementById('action-backup-stats')?.addEventListener('click', showBackupStats);
     
     // Manejar carga de archivo
     const fileInput = document.getElementById('backup-file-input');
