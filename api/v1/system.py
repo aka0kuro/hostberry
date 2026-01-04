@@ -30,14 +30,20 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
         memory = psutil.virtual_memory()
         disk = psutil.disk_usage('/')
         cpu_temp = get_cpu_temp()
+        cpu_count = psutil.cpu_count()
         
         # Obtener uptime
         uptime = int(time.time() - psutil.boot_time())
         
         stats = SystemStats(
             cpu_usage=cpu_usage,
+            cpu_cores=cpu_count,
             memory_usage=memory.percent,
+            memory_total=memory.total,
+            memory_free=memory.available,
             disk_usage=disk.percent,
+            disk_total=disk.total,
+            disk_used=disk.used,
             cpu_temperature=cpu_temp,
             uptime=uptime
         )
@@ -61,8 +67,9 @@ async def get_network_statistics(current_user: Dict[str, Any] = Depends(get_curr
     """Obtiene estadísticas de red"""
     try:
         # Obtener información de red
-        interface = get_network_interface()
-        ip_address = get_ip_address()
+        iface_info = get_network_interface()
+        interface = iface_info.get("interface") if isinstance(iface_info, dict) else None
+        ip_address = iface_info.get("ip_address") if isinstance(iface_info, dict) else None
         
         # Obtener estadísticas de red
         net_io = psutil.net_io_counters()
@@ -70,14 +77,31 @@ async def get_network_statistics(current_user: Dict[str, Any] = Depends(get_curr
         # Calcular velocidades (simplificado)
         upload_speed = net_io.bytes_sent / 1024  # KB
         download_speed = net_io.bytes_recv / 1024  # KB
-        
+
+        # Fallbacks si no hay interfaz detectada
+        if not interface:
+            # elegir cualquier interfaz activa
+            ifaces = psutil.net_if_stats()
+            for name, st in ifaces.items():
+                if name == "lo":
+                    continue
+                if getattr(st, "isup", False):
+                    interface = name
+                    break
+        if not ip_address:
+            ip_address = get_ip_address(interface) if interface else None
+        interface = interface or "unknown"
+        ip_address = ip_address or "--"
+
         stats = NetworkStats(
             interface=interface,
             ip_address=ip_address,
             upload_speed=upload_speed,
             download_speed=download_speed,
             bytes_sent=net_io.bytes_sent,
-            bytes_recv=net_io.bytes_recv
+            bytes_recv=net_io.bytes_recv,
+            packets_sent=net_io.packets_sent,
+            packets_recv=net_io.packets_recv
         )
         
         # Guardar estadísticas en base de datos
