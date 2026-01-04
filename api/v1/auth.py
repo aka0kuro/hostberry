@@ -19,7 +19,7 @@ from core.security import (
     verify_token
 )
 from core.database import db
-from core.logging import logger, log_auth_event, log_user_action, log_security_event
+from core.hostberry_logging import logger, log_auth_event, log_user_action, log_security_event
 from core.i18n import get_text
 
 router = APIRouter()
