@@ -29,9 +29,9 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="actions-card-title">
                             <i class="bi bi-lightning-charge me-2"></i>
-                            {{ t('security.actions_heading', 'Quick actions') }}
+                            {{ t('backup.actions_heading', 'Acciones de backup') }}
                         </h5>
-                        <button class="btn btn-sm btn-outline-light" id="securityStatusRefresh">
+                        <button class="btn btn-sm btn-outline-light" id="backupsRefresh">
                             <i class="bi bi-arrow-clockwise me-1"></i>{{ t('common.refresh', 'Refresh') }}
                         </button>
                     </div>
@@ -44,11 +44,24 @@
                                     <i class="bi bi-hdd-network" style="font-size: 1.5rem;"></i>
                                 </div>
                                 <div class="text-start flex-grow-1">
-                                    <div class="fw-bold">{{ t('security.create_backup', 'Create encrypted backup') }}</div>
-                                    <small class="opacity-75">{{ t('security.create_backup_desc', 'Create a secure system backup') }}</small>
+                                    <div class="fw-bold">{{ t('backup.create_backup', 'Crear backup') }}</div>
+                                    <small class="opacity-75">{{ t('backup.create_backup_desc', 'Crear un respaldo del sistema') }}</small>
                                 </div>
                                 <i class="bi bi-arrow-right"></i>
                             </button>
+                        </div>
+                        <div class="col-lg-4 col-md-6 col-12">
+                            <label class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2 p-3 action-btn" id="action-upload-backup" style="border-radius: 16px; transition: all 0.3s ease; cursor: pointer; margin: 0;">
+                                <input type="file" id="backup-file-input" accept=".tar.gz,.tgz" style="display: none;">
+                                <div class="action-icon" style="width: 48px; height: 48px; background: rgba(255, 255, 255, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-cloud-upload" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div class="text-start flex-grow-1">
+                                    <div class="fw-bold">{{ t('backup.upload_backup', 'Cargar backup') }}</div>
+                                    <small class="opacity-75">{{ t('backup.upload_backup_desc', 'Subir un archivo de backup') }}</small>
+                                </div>
+                                <i class="bi bi-arrow-right"></i>
+                            </label>
                         </div>
                         <div class="col-lg-4 col-md-6 col-12">
                             <button class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2 p-3 action-btn" id="action-list-backups" style="border-radius: 16px; transition: all 0.3s ease;">
@@ -56,8 +69,8 @@
                                     <i class="bi bi-archive" style="font-size: 1.5rem;"></i>
                                 </div>
                                 <div class="text-start flex-grow-1">
-                                    <div class="fw-bold">{{ t('security.list_backups', 'List backups') }}</div>
-                                    <small class="opacity-75">{{ t('security.list_backups_desc', 'View all available backups') }}</small>
+                                    <div class="fw-bold">{{ t('backup.list_backups', 'Listar backups') }}</div>
+                                    <small class="opacity-75">{{ t('backup.list_backups_desc', 'Ver todos los backups disponibles') }}</small>
                                 </div>
                                 <i class="bi bi-arrow-right"></i>
                             </button>
@@ -132,22 +145,8 @@
     if(el){ el.textContent = value; }
   };
 
-  async function fetchSecurityStatus(){
-    try{
-      const resp = await HostBerry.apiRequest('/api/v1/security/status');
-      if(!resp.ok) throw new Error('Status request failed');
-      const payload = await resp.json();
-      const data = payload.data || payload;
-      
-      setStatusCard('status-audit', data.audit_logging_enabled);
-      setStatusCard('status-rate', data.rate_limiting_enabled);
-      setStatusCard('status-headers', data.security_headers_enabled);
-      setStatusCard('status-backup', data.backup_encryption_enabled);
-      setText('backup-last-check', new Date().toLocaleString());
-    }catch(error){
-      console.error('Security status failed', error);
-      HostBerry.showAlert?.('danger', HostBerry.t?.('errors.security_status', 'Unable to fetch security status') || 'Unable to fetch security status');
-    }
+  async function updateLastCheck(){
+    setText('backup-last-check', new Date().toLocaleString());
   }
 
 
