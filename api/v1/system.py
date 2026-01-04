@@ -311,7 +311,9 @@ async def get_network_statistics(
         return stats_dict
         
     except Exception as e:
-        logger.error(f"Error obteniendo estadísticas de red: {str(e)}")
+        logger.error(f"Error obteniendo estadísticas de red: {str(e)}", exc_info=True)
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=get_text("errors.network_stats_error", default="Error obteniendo estadísticas de red")
