@@ -355,16 +355,16 @@
               </div>
             </div>
             <div class="d-flex align-items-center gap-3 flex-shrink-0" style="margin-left: auto;">
-              <button class="btn btn-sm btn-outline-info info-backup-btn" data-backup-name="${name}" title="${HostBerry.t?.('backup.info', 'Información') || 'Información'}">
+              <button class="btn btn-sm btn-outline-info info-backup-btn" data-backup-name="${name}" title="${getTranslation('backup.info', 'Information')}">
                 <i class="bi bi-info-circle"></i>
               </button>
-              <button class="btn btn-sm btn-outline-primary download-backup-btn" data-backup-name="${name}" title="${HostBerry.t?.('backup.download', 'Descargar') || 'Descargar'}">
+              <button class="btn btn-sm btn-outline-primary download-backup-btn" data-backup-name="${name}" title="${getTranslation('backup.download', 'Download')}">
                 <i class="bi bi-download"></i>
               </button>
-              <button class="btn btn-sm btn-outline-warning restore-backup-btn" data-backup-name="${name}" title="${HostBerry.t?.('backup.restore', 'Restaurar') || 'Restaurar'}">
+              <button class="btn btn-sm btn-outline-warning restore-backup-btn" data-backup-name="${name}" title="${getTranslation('backup.restore', 'Restore')}">
                 <i class="bi bi-arrow-clockwise"></i>
               </button>
-              <button class="btn btn-sm btn-outline-danger delete-backup-btn" data-backup-name="${name}" title="${HostBerry.t?.('backup.delete', 'Eliminar') || 'Eliminar'}">
+              <button class="btn btn-sm btn-outline-danger delete-backup-btn" data-backup-name="${name}" title="${getTranslation('backup.delete', 'Delete')}">
                 <i class="bi bi-trash"></i>
               </button>
             </div>
