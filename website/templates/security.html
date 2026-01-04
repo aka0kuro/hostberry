@@ -540,13 +540,13 @@
       }
       
       // Confirmación doble para restauración
-      const confirmMsg1 = HostBerry.t?.('backup.restore_confirm', '¿Estás seguro de que quieres restaurar este backup? Esto reemplazará los datos actuales del sistema.') || '¿Estás seguro de que quieres restaurar este backup? Esto reemplazará los datos actuales del sistema.';
+      const confirmMsg1 = getTranslation('backup.restore_confirm', 'Are you sure you want to restore this backup? This will replace the current system data.');
       if(!confirm(confirmMsg1)) return;
       
-      const confirmMsg2 = HostBerry.t?.('backup.restore_confirm_final', '¡ADVERTENCIA! Esta acción restaurará el backup y reemplazará los datos actuales. ¿Estás absolutamente seguro?') || '¡ADVERTENCIA! Esta acción restaurará el backup y reemplazará los datos actuales. ¿Estás absolutamente seguro?';
+      const confirmMsg2 = getTranslation('backup.restore_confirm_final', 'WARNING! This action will restore the backup and replace current data. Are you absolutely sure?');
       if(!confirm(confirmMsg2)) return;
       
-      showNotification(HostBerry.t?.('backup.restoring', 'Restaurando backup...') || 'Restaurando backup...', 'warning');
+      showNotification(getTranslation('backup.restoring', 'Restoring backup...'), 'warning');
       
       const resp = await HostBerry.apiRequest(`/api/v1/security/backup/${encodeURIComponent(backupName)}/restore`, {
         method: 'POST'
