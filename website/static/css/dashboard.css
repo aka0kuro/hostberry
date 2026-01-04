@@ -428,6 +428,12 @@ body.light-theme .info-item-grid .info-value {
 .ufw-icon { background: linear-gradient(135deg, #0dcaf0 0%, #055160 100%); }
 .wifi-icon { background: linear-gradient(135deg, #6610f2 0%, #3d0a91 100%); }
 .ssh-icon { background: linear-gradient(135deg, #6c757d 0%, #343a40 100%); }
+.openvpn-icon { background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%); }
+.wireguard-icon { background: linear-gradient(135deg, #fd7e14 0%, #a04a00 100%); }
+.vpn-icon { background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%); }
+.dns-icon { background: linear-gradient(135deg, #20c997 0%, #0d6e5a 100%); }
+.adblock-icon { background: linear-gradient(135deg, #e83e8c 0%, #9d1b5a 100%); }
+.default-icon { background: linear-gradient(135deg, #6c757d 0%, #343a40 100%); }
 
 .service-name {
     color: #fff;
