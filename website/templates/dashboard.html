@@ -120,7 +120,15 @@
                     <div class="progress-bar temp-progress" style="width: {{ (system_stats.temperature | default(45, true) / 100 * 100) | round }}%"></div>
                 </div>
                 <div class="status-footer">
-                    <span class="status-text">{{ t('system.normal', 'Normal') }}</span>
+                    <span class="status-text status-{{ system_health.temperature }}">
+                        {% if system_health.temperature == 'critical' %}
+                            {{ t('system.critical', 'Critical') }}
+                        {% elif system_health.temperature == 'warning' %}
+                            {{ t('system.warning', 'Warning') }}
+                        {% else %}
+                            {{ t('system.normal', 'Normal') }}
+                        {% endif %}
+                    </span>
                 </div>
             </div>
         </div>
