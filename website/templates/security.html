@@ -540,22 +540,14 @@
 
   document.addEventListener('DOMContentLoaded', function(){
     fetchSecurityStatus();
-    loadServices();
-    loadLogs();
     loadBackups();
     
     document.getElementById('securityStatusRefresh')?.addEventListener('click', fetchSecurityStatus);
-    document.getElementById('servicesRefresh')?.addEventListener('click', loadServices);
-    document.getElementById('securityLogsRefresh')?.addEventListener('click', loadLogs);
-    document.getElementById('securityLogLevel')?.addEventListener('change', loadLogs);
     document.getElementById('securityBackupsRefresh')?.addEventListener('click', loadBackups);
     document.getElementById('action-create-backup')?.addEventListener('click', createBackup);
     document.getElementById('action-list-backups')?.addEventListener('click', loadBackups);
-    document.getElementById('action-validate-input')?.addEventListener('click', validateInput);
     
     setInterval(fetchSecurityStatus, 60000);
-    setInterval(loadServices, 60000);
-    setInterval(loadLogs, 20000);
     setInterval(loadBackups, 30000);
   });
 })();
