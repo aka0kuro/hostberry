@@ -241,6 +241,22 @@
     font-weight: 500;
 }
 
+.status-text.status-healthy {
+    color: #198754;
+}
+
+.status-text.status-warning {
+    color: #ffc107;
+}
+
+.status-text.status-critical {
+    color: #dc3545;
+}
+
+.status-text.status-normal {
+    color: #0dcaf0;
+}
+
 /* Info Cards - Efecto Cristal tipo Alas */
 .info-card, .services-card, .network-card, .activity-card, .logs-card, .actions-card {
     background: rgba(255, 255, 255, 0.08);
