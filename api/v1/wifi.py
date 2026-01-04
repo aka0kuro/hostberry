@@ -110,23 +110,33 @@ async def get_clients(
 ) -> List[Dict[str, Any]]:
     """Obtiene los clientes conectados a WiFi"""
     try:
-        # Simular clientes conectados
-        clients = [
-            {
-                "mac": "aa:bb:cc:dd:ee:ff",
-                "ip": "192.168.1.100",
-                "hostname": "android-phone",
-                "signal": -45,
-                "connected_time": "2h 15m"
-            },
-            {
-                "mac": "11:22:33:44:55:66",
-                "ip": "192.168.1.101",
-                "hostname": "laptop-user",
-                "signal": -52,
-                "connected_time": "1h 30m"
-            }
-        ]
+        # Obtener clientes reales desde el sistema
+        clients = []
+        try:
+            # Intentar obtener clientes desde arp o dhcp leases
+            import subprocess
+            result = subprocess.run(
+                ["arp", "-a"],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            if result.returncode == 0:
+                # Parsear salida de arp (simplificado)
+                for line in result.stdout.split('\n'):
+                    if 'ether' in line.lower():
+                        parts = line.split()
+                        if len(parts) >= 4:
+                            clients.append({
+                                "mac": parts[3] if len(parts) > 3 else "unknown",
+                                "ip": parts[1].strip('()') if len(parts) > 1 else "unknown",
+                                "hostname": parts[0] if parts[0] else "unknown",
+                                "signal": -50,  # Valor por defecto
+                                "connected_time": "unknown"
+                            })
+        except Exception as e:
+            logger.warning(f"No se pudieron obtener clientes reales: {e}")
+            # Lista vacía en lugar de datos simulados
         
         logger.info('get_clients', count=len(clients))
         return clients
