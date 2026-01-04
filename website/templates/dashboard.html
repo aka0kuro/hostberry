@@ -209,9 +209,14 @@
                         'wifi': 'bi bi-wifi service-icon wifi-icon',
                         'ssh': 'bi bi-terminal service-icon ssh-icon',
                         'hostapd': 'bi bi-wifi service-icon wifi-icon',
-                        'openvpn': 'bi bi-shield-lock service-icon vpn-icon',
-                        'wg-quick': 'bi bi-shield-lock service-icon vpn-icon',
-                        'dnsmasq': 'bi bi-diagram-3 service-icon dns-icon'
+                        'openvpn': 'bi bi-shield-check service-icon openvpn-icon',
+                        'wireguard': 'bi bi-shield-lock service-icon wireguard-icon',
+                        'wg-quick': 'bi bi-shield-lock service-icon wireguard-icon',
+                        'wg': 'bi bi-shield-lock service-icon wireguard-icon',
+                        'dnsmasq': 'bi bi-diagram-3 service-icon dns-icon',
+                        'dns': 'bi bi-diagram-3 service-icon dns-icon',
+                        'adblock': 'bi bi-shield-x service-icon adblock-icon',
+                        'pihole': 'bi bi-shield-x service-icon adblock-icon'
                     } %}
                     {% if services %}
                         {% for service_name, service_status in services.items() %}
