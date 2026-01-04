@@ -2512,6 +2512,7 @@ main() {
             --prefer-binary || handle_error "$(get_text 'deps_failed' 'No se pudieron instalar las dependencias')"
         
         write_app_env
+        setup_production_dirs
         setup_firewall
         setup_nginx
         
