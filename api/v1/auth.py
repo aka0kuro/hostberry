@@ -101,18 +101,76 @@ async def first_login_change(data: FirstLoginChange):
 security = HTTPBearer()
 
 @router.post("/login", response_model=TokenResponse)
-async def login(user_credentials: UserLogin):
+async def login(user_credentials: UserLogin, request: Request):
     """Iniciar sesión de usuario"""
+    client_ip = _get_client_ip(request)
+    user_agent = _get_user_agent(request)
+    username = user_credentials.username
+    
     try:
         start_time = time.time()
         
+        # Log de intento de login (antes de autenticar)
+        logger.info(f"🔐 Intento de login desde IP: {client_ip}, Usuario: {username}, User-Agent: {user_agent}")
+        await db.insert_log(
+            "INFO", 
+            f"Intento de login - Usuario: {username}, IP: {client_ip}",
+            source="auth",
+            user_id=None
+        )
+        
         # Autenticar usuario (puede lanzar HTTPException)
-        user = await authenticate_user(user_credentials.username, user_credentials.password)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=get_text("auth.invalid_credentials", default="Credenciales inválidas")
-            )
+        try:
+            user = await authenticate_user(username, user_credentials.password)
+            if not user:
+                # Log de error de autenticación
+                logger.warning(f"❌ Login fallido - Usuario no autenticado: {username}, IP: {client_ip}")
+                await db.insert_log(
+                    "WARNING",
+                    f"Login fallido - Usuario no autenticado: {username}, IP: {client_ip}, User-Agent: {user_agent}",
+                    source="auth",
+                    user_id=None
+                )
+                audit_login_attempt(username, client_ip, False)
+                audit_security_violation("failed_authentication", client_ip, {
+                    "username": username,
+                    "reason": "user_not_authenticated",
+                    "user_agent": user_agent
+                })
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=get_text("auth.invalid_credentials", default="Credenciales inválidas")
+                )
+        except HTTPException as auth_ex:
+            # Log de error de autenticación específico
+            error_detail = str(auth_ex.detail)
+            if auth_ex.status_code == status.HTTP_404_NOT_FOUND:
+                log_level = "WARNING"
+                log_message = f"Login fallido - Usuario no encontrado: {username}, IP: {client_ip}, User-Agent: {user_agent}"
+                violation_type = "user_not_found"
+            elif auth_ex.status_code == status.HTTP_401_UNAUTHORIZED:
+                log_level = "WARNING"
+                log_message = f"Login fallido - Contraseña incorrecta: {username}, IP: {client_ip}, User-Agent: {user_agent}"
+                violation_type = "incorrect_password"
+            elif auth_ex.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
+                log_level = "ERROR"
+                log_message = f"Login bloqueado - Demasiados intentos: {username}, IP: {client_ip}, User-Agent: {user_agent}"
+                violation_type = "too_many_attempts"
+            else:
+                log_level = "WARNING"
+                log_message = f"Login fallido - {error_detail}: {username}, IP: {client_ip}, User-Agent: {user_agent}"
+                violation_type = "authentication_failed"
+            
+            logger.warning(f"❌ {log_message}")
+            await db.insert_log(log_level, log_message, source="auth", user_id=None)
+            audit_login_attempt(username, client_ip, False)
+            audit_security_violation(violation_type, client_ip, {
+                "username": username,
+                "reason": error_detail,
+                "user_agent": user_agent,
+                "status_code": auth_ex.status_code
+            })
+            raise
         
         # Crear token de acceso
         access_token = create_access_token(data={"sub": user["username"]})
@@ -126,8 +184,17 @@ async def login(user_credentials: UserLogin):
         response_time = time.time() - start_time
         
         # Log de autenticación exitosa
-        log_auth_event("login_success", user_id=user["username"], success=True)
-        log_user_action("login", user_id=user["username"], details=f"response_time={response_time:.3f}s")
+        success_message = f"✅ Login exitoso - Usuario: {user['username']}, IP: {client_ip}, User-Agent: {user_agent}, Tiempo de respuesta: {response_time:.3f}s"
+        logger.info(success_message)
+        await db.insert_log(
+            "INFO",
+            f"Login exitoso - Usuario: {user['username']}, IP: {client_ip}, Tiempo: {response_time:.3f}s",
+            source="auth",
+            user_id=None
+        )
+        audit_login_attempt(user["username"], client_ip, True)
+        log_auth_event("login_success", user_id=user["username"], ip_address=client_ip, success=True)
+        log_user_action("login", user_id=user["username"], ip_address=client_ip, details=f"response_time={response_time:.3f}s, user_agent={user_agent}")
         
         from config.settings import settings
         # Solo requerir cambio de contraseña si es admin por defecto
@@ -143,7 +210,19 @@ async def login(user_credentials: UserLogin):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error('login_error', error=str(e))
+        error_message = f"❌ Error interno en login - Usuario: {username}, IP: {client_ip}, Error: {str(e)}"
+        logger.error(error_message)
+        await db.insert_log(
+            "ERROR",
+            f"Error interno en login - Usuario: {username}, IP: {client_ip}, Error: {str(e)}",
+            source="auth",
+            user_id=None
+        )
+        audit_security_violation("login_error", client_ip, {
+            "username": username,
+            "error": str(e),
+            "user_agent": user_agent
+        })
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=get_text("errors.internal_server_error", default="Error interno del servidor")
