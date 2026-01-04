@@ -147,6 +147,9 @@ async def get_all_stats(
         Diccionario con todas las estadísticas
     """
     try:
+        # Lazy import de psutil
+        import psutil
+        
         # CPU
         cpu_percent = psutil.cpu_percent(interval=1)
         
