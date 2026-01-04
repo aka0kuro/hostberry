@@ -293,6 +293,12 @@
       setText('disk-usage', '--');
       setText('net-download', '--');
       setText('net-upload', '--');
+      
+      // Intentar recargar después de un momento si el error persiste
+      setTimeout(() => {
+        console.log('Retrying monitoring stats...');
+        updateStats();
+      }, 5000);
     }
   }
 
