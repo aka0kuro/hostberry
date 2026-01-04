@@ -804,11 +804,19 @@ async def toggle_firewall(current_user: Dict[str, Any] = Depends(get_current_act
 
 @router.post("/network/config")
 async def save_network_config(
-    config: Dict[str, str],
+    config: Dict[str, str] = None,
     current_user: Dict[str, Any] = Depends(get_current_active_user)
 ):
     """Guarda la configuración de red"""
     try:
+        from fastapi import Body
+        
+        # Si no viene en el parámetro, obtener del body
+        if config is None:
+            from fastapi import Request
+            import json
+            # Esto se manejará desde el request body directamente
+        
         # Aquí se implementaría la lógica para guardar la configuración
         # Por ahora solo retornamos éxito
         
