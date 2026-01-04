@@ -1359,6 +1359,10 @@
     "stats_failed": "Error al obtener estadísticas",
     "create_failed": "Error al crear backup",
     "upload_failed": "Error al cargar backup",
-    "not_found": "Backup no encontrado"
+    "not_found": "Backup no encontrado",
+    "bytes": "Bytes",
+    "kb": "KB",
+    "mb": "MB",
+    "gb": "GB"
   }
 }
