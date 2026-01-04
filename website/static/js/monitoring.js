@@ -41,12 +41,76 @@
     }
   }
 
+  let netChart;
+  const netHistory = {
+    labels: [],
+    download: [],
+    upload: []
+  };
+  let lastNetSnapshot = null;
+
+  function ensureNetChart(){
+    if(netChart) return netChart;
+    const ctx = document.getElementById('net-chart');
+    if(!ctx) return null;
+    netChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: netHistory.labels,
+        datasets: [
+          {
+            label: 'Download KB/s',
+            data: netHistory.download,
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.25)',
+            tension: 0.25,
+            fill: true
+          },
+          {
+            label: 'Upload KB/s',
+            data: netHistory.upload,
+            borderColor: '#ec4899',
+            backgroundColor: 'rgba(236, 72, 153, 0.2)',
+            tension: 0.25,
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true, ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+          x: { ticks: { color: '#cbd5e1' }, grid: { display: false } }
+        },
+        plugins: { legend: { labels: { color: '#e2e8f0' } } }
+      }
+    });
+    return netChart;
+  }
+
+  function pushNetHistory(download, upload){
+    const now = new Date().toLocaleTimeString();
+    netHistory.labels.push(now);
+    netHistory.download.push(download);
+    netHistory.upload.push(upload);
+    const maxPoints = 20;
+    if(netHistory.labels.length > maxPoints){
+      netHistory.labels.shift();
+      netHistory.download.shift();
+      netHistory.upload.shift();
+    }
+    if(netChart){
+      netChart.update();
+    }
+  }
+
   async function updateStats(){
     try{
-      const [systemStats, networkStats] = await Promise.all([
+      const [systemStats, networkStatsRaw] = await Promise.all([
         fetchJson('/api/v1/system/stats'),
         fetchJson('/api/v1/system/network')
       ]);
+      const networkStats = computeNetworkRates(networkStatsRaw);
 
       setText('uptime-value', formatUptime(systemStats.uptime));
       setText('cpu-usage', `${safeToFixed(systemStats.cpu_usage)}%`);
@@ -81,73 +145,42 @@
       setText('net-bytes-recv', formatBytes(networkStats.bytes_recv || 0));
       setText('net-bytes-sent', formatBytes(networkStats.bytes_sent || 0));
       setText('net-packets', `${networkStats.packets_sent || 0} / ${networkStats.packets_recv || 0}`);
+      pushNetHistory(networkStats.download_speed || 0, networkStats.upload_speed || 0);
 
       setText('monitoring-last-update', new Date().toLocaleTimeString());
+      ensureNetChart();
     }catch(error){
       console.error('Error updating monitoring stats:', error);
       HostBerry.showAlert?.('danger', HostBerry.t?.('errors.monitoring_stats', 'Unable to refresh monitoring stats') || 'Unable to refresh monitoring stats');
     }
   }
 
-  async function loadLogs(){
-    const container = document.getElementById('monitoring-logs');
-    if(!container) return;
-    const levelSelect = document.getElementById('monitoringLogLevel');
-    const level = levelSelect ? levelSelect.value : 'all';
-    try{
-      const params = new URLSearchParams({ limit: '20' });
-      if(level && level !== 'all'){ params.set('level', level); }
-      const data = await fetchJson(`/api/v1/system/logs?${params.toString()}`);
-      const logs = Array.isArray(data.logs) ? data.logs : [];
-      if(!logs.length){
-        container.innerHTML = `
-          <div class="text-center py-4 text-white-50">
-            <i class="bi bi-journal-x"></i>
-            <p class="mb-0 mt-2">${HostBerry.t?.('monitoring.no_logs', 'No logs available') || 'No logs available'}</p>
-          </div>`;
-        return;
-      }
-      container.innerHTML = '';
-      logs.forEach((log)=>{
-        const item = document.createElement('div');
-        const levelLabel = (log.level || 'INFO').toUpperCase();
-        const timestamp = log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : '--:--:--';
-        item.className = 'log-item';
-        item.innerHTML = `
-          <span class="log-time text-white-50 small">${timestamp}</span>
-          <span class="badge bg-${getLevelColor(levelLabel)} log-level">${levelLabel}</span>
-          <span class="text-white flex-grow-1">${log.message || ''}</span>
-        `;
-        container.appendChild(item);
-      });
-    }catch(error){
-      console.error('Error loading monitoring logs:', error);
-      container.innerHTML = `
-        <div class="text-center py-4 text-danger">
-          <i class="bi bi-exclamation-triangle"></i>
-          <p class="mb-0 mt-2">${HostBerry.t?.('monitoring.logs_error_state', 'Unable to load logs') || 'Unable to load logs'}</p>
-        </div>`;
+  function computeNetworkRates(current){
+    if(!current || typeof current.bytes_recv !== 'number' || typeof current.bytes_sent !== 'number'){
+      return current || {};
     }
-  }
-
-  function getLevelColor(level){
-    switch(level){
-      case 'ERROR': return 'danger';
-      case 'WARNING': return 'warning text-dark';
-      case 'INFO': return 'info';
-      default: return 'secondary';
+    const now = Date.now();
+    if(!lastNetSnapshot){
+      lastNetSnapshot = { time: now, ...current };
+      return current;
     }
+    const elapsedSec = (now - lastNetSnapshot.time) / 1000;
+    if(elapsedSec <= 0){
+      return current;
+    }
+    const dlRate = (current.bytes_recv - (lastNetSnapshot.bytes_recv || 0)) / 1024 / elapsedSec;
+    const ulRate = (current.bytes_sent - (lastNetSnapshot.bytes_sent || 0)) / 1024 / elapsedSec;
+    lastNetSnapshot = { time: now, ...current };
+    return {
+      ...current,
+      download_speed: Math.max(0, dlRate),
+      upload_speed: Math.max(0, ulRate)
+    };
   }
 
   function initMonitoring(){
     updateStats();
-    loadLogs();
     setInterval(updateStats, 60000);
-    setInterval(loadLogs, 60000);
-    const refreshBtn = document.getElementById('monitoringLogsRefresh');
-    if(refreshBtn){ refreshBtn.addEventListener('click', loadLogs); }
-    const logLevelSelect = document.getElementById('monitoringLogLevel');
-    if(logLevelSelect){ logLevelSelect.addEventListener('change', loadLogs); }
   }
 
   document.addEventListener('DOMContentLoaded', initMonitoring);
