@@ -525,8 +525,10 @@ async def about_page(request: Request, lang: str | None = Query(default=None)) -
 
 @router.get("/first-login", response_class=HTMLResponse)
 async def first_login(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    # Simular usuario logueado (en una app real vendría del token/sesión)
-    current_user = {"username": "admin"}  # Reemplazar con lógica real de autenticación
+    from config.settings import settings
+    # Obtener usuario desde cookie o usar valor por defecto
+    username = request.cookies.get("username") or settings.default_username
+    current_user = {"username": username}
     
     context = _base_context(request, lang or request.cookies.get("lang", "en"))
     context.update({
