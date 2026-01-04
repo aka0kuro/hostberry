@@ -1349,6 +1349,16 @@
     "restoring": "Restaurando backup...",
     "restored": "Backup restaurado exitosamente",
     "restore_error": "Error al restaurar backup",
-    "deleted": "Backup eliminado exitosamente"
+    "restore_failed": "Error al restaurar backup",
+    "deleted": "Backup eliminado exitosamente",
+    "delete_failed": "Error al eliminar backup",
+    "size_not_available": "Tamaño no disponible",
+    "load_failed": "Error al cargar backups",
+    "load_error": "Error al cargar backups",
+    "info_failed": "Error al obtener información",
+    "stats_failed": "Error al obtener estadísticas",
+    "create_failed": "Error al crear backup",
+    "upload_failed": "Error al cargar backup",
+    "not_found": "Backup no encontrado"
   }
 }
