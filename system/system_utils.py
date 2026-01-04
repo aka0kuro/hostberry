@@ -4,10 +4,10 @@ Utilidades del sistema optimizadas para Raspberry Pi 3
 
 import os
 import subprocess
-import psutil
 import time
 from typing import Dict, Any, List, Optional
 import logging
+# psutil se importa lazy cuando se necesita
 
 from config.settings import settings
 from core.i18n import get_text
