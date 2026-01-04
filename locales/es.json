@@ -1290,5 +1290,9 @@
     "ssid_invalid_chars": "SSID contiene caracteres inválidos",
     "ssid_too_long": "SSID no puede tener más de 32 caracteres",
     "ssid_valid": "SSID válido"
+  },
+  "backup": {
+    "subtitle": "Gestiona y restaura tus respaldos del sistema",
+    "last_check": "Última verificación"
   }
 }
