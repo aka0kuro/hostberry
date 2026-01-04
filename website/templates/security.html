@@ -351,7 +351,7 @@
               </div>
               <div class="d-flex align-items-center gap-3 text-white-50 small">
                 ${formattedDate ? `<span><i class="bi bi-calendar3 me-1"></i>${formattedDate}</span>` : ''}
-                ${size ? `<span><i class="bi bi-hdd me-1"></i>${size}</span>` : `<span class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>${HostBerry.t?.('backup.size_not_available', 'Tamaño no disponible') || 'Tamaño no disponible'}</span>`}
+                ${size ? `<span><i class="bi bi-hdd me-1"></i>${size}</span>` : `<span class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>${getTranslation('backup.size_not_available', 'Size not available')}</span>`}
               </div>
             </div>
             <div class="d-flex align-items-center gap-3 flex-shrink-0" style="margin-left: auto;">
