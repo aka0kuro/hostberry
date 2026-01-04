@@ -98,65 +98,100 @@
         </div>
     </div>
 
-    <!-- Controls & Actions -->
+    <!-- Additional Security Controls -->
+    <div class="row mb-4 status-cards-row">
+        <div class="col-lg-6 col-md-6 col-12 mb-3">
+            <div class="status-card">
+                <div class="status-card-header">
+                    <div class="status-icon" style="background: linear-gradient(135deg, #dc3545 0%, #8b0000 100%);">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                    <div class="status-info">
+                        <h6>{{ t('security.two_factor', 'Two-factor auth') }}</h6>
+                        <h3 id="status-2fa-text">--</h3>
+                    </div>
+                </div>
+                <div class="status-footer">
+                    <span class="status-text" id="status-2fa-badge">
+                        <span class="badge bg-secondary">--</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-md-6 col-12 mb-3">
+            <div class="status-card">
+                <div class="status-card-header">
+                    <div class="status-icon" style="background: linear-gradient(135deg, #fd7e14 0%, #a04a00 100%);">
+                        <i class="bi bi-list-check"></i>
+                    </div>
+                    <div class="status-info">
+                        <h6>{{ t('security.ip_lists', 'IP blacklist / whitelist') }}</h6>
+                        <h3 id="status-ip-lists-text">--</h3>
+                    </div>
+                </div>
+                <div class="status-footer">
+                    <span class="status-text" id="status-ip-lists-badge">
+                        <span class="badge bg-secondary">--</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
     <div class="row mb-4">
-        <div class="col-lg-8 mb-4">
-            <div class="info-card">
-                <div class="info-card-header">
+        <div class="col-12">
+            <div class="actions-card">
+                <div class="actions-card-header">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="info-card-title">
-                            <i class="bi bi-shield-lock me-2"></i>
-                            {{ t('security.controls_heading', 'Controls status') }}
+                        <h5 class="actions-card-title">
+                            <i class="bi bi-lightning-charge me-2"></i>
+                            {{ t('security.actions_heading', 'Quick actions') }}
                         </h5>
                         <button class="btn btn-sm btn-outline-light" id="securityStatusRefresh">
                             <i class="bi bi-arrow-clockwise me-1"></i>{{ t('common.refresh', 'Refresh') }}
                         </button>
                     </div>
                 </div>
-                <div class="info-card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <div class="info-item-grid">
-                                <span class="info-label d-block">{{ t('security.two_factor', 'Two-factor auth') }}</span>
-                                <span class="info-value">
-                                    <span class="badge bg-secondary" id="status-2fa">--</span>
-                                </span>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="info-item-grid">
-                                <span class="info-label d-block">{{ t('security.ip_lists', 'IP blacklist / whitelist') }}</span>
-                                <span class="info-value">
-                                    <span class="badge bg-secondary" id="status-ip-lists">--</span>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 mb-4">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <h5 class="actions-card-title">
-                        <i class="bi bi-lightning me-2"></i>
-                        {{ t('security.actions_heading', 'Quick actions') }}
-                    </h5>
-                </div>
                 <div class="actions-card-body">
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-primary" id="action-create-backup">
-                            <i class="bi bi-hdd-network me-2"></i>
-                            {{ t('security.create_backup', 'Create encrypted backup') }}
-                        </button>
-                        <button class="btn btn-outline-light" id="action-list-backups">
-                            <i class="bi bi-archive me-2"></i>
-                            {{ t('security.list_backups', 'List backups') }}
-                        </button>
-                        <button class="btn btn-outline-light" id="action-validate-input">
-                            <i class="bi bi-search me-2"></i>
-                            {{ t('security.validate_input', 'Validate input sanitization') }}
-                        </button>
+                    <div class="row g-3">
+                        <div class="col-lg-4 col-md-6 col-12">
+                            <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 p-3 action-btn" id="action-create-backup" style="border-radius: 16px; transition: all 0.3s ease;">
+                                <div class="action-icon" style="width: 48px; height: 48px; background: rgba(255, 255, 255, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-hdd-network" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div class="text-start flex-grow-1">
+                                    <div class="fw-bold">{{ t('security.create_backup', 'Create encrypted backup') }}</div>
+                                    <small class="opacity-75">{{ t('security.create_backup_desc', 'Create a secure system backup') }}</small>
+                                </div>
+                                <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                        <div class="col-lg-4 col-md-6 col-12">
+                            <button class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2 p-3 action-btn" id="action-list-backups" style="border-radius: 16px; transition: all 0.3s ease;">
+                                <div class="action-icon" style="width: 48px; height: 48px; background: rgba(255, 255, 255, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-archive" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div class="text-start flex-grow-1">
+                                    <div class="fw-bold">{{ t('security.list_backups', 'List backups') }}</div>
+                                    <small class="opacity-75">{{ t('security.list_backups_desc', 'View all available backups') }}</small>
+                                </div>
+                                <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                        <div class="col-lg-4 col-md-6 col-12">
+                            <button class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2 p-3 action-btn" id="action-validate-input" style="border-radius: 16px; transition: all 0.3s ease;">
+                                <div class="action-icon" style="width: 48px; height: 48px; background: rgba(255, 255, 255, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-shield-check" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div class="text-start flex-grow-1">
+                                    <div class="fw-bold">{{ t('security.validate_input', 'Validate input sanitization') }}</div>
+                                    <small class="opacity-75">{{ t('security.validate_input_desc', 'Test input validation') }}</small>
+                                </div>
+                                <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -306,8 +341,8 @@
       setStatusCard('status-rate', data.rate_limiting_enabled);
       setStatusCard('status-headers', data.security_headers_enabled);
       setStatusCard('status-backup', data.backup_encryption_enabled);
-      setBadge('status-2fa', data.two_factor_enabled);
-      setBadge('status-ip-lists', data.ip_blacklist_enabled || data.ip_whitelist_enabled);
+      setStatusCard('status-2fa', data.two_factor_enabled);
+      setStatusCard('status-ip-lists', data.ip_blacklist_enabled || data.ip_whitelist_enabled);
       setText('security-last-check', new Date().toLocaleString());
     }catch(error){
       console.error('Security status failed', error);
@@ -599,6 +634,17 @@
 .logs-container {
     max-height: 380px;
     overflow-y: auto;
+}
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+.action-btn .action-icon {
+    transition: all 0.3s ease;
+}
+.action-btn:hover .action-icon {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.3) !important;
 }
 </style>
 {% endblock %}
