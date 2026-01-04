@@ -186,9 +186,13 @@ async def get_services_status(current_user: Dict[str, Any] = Depends(get_current
         
         for service in service_names:
             try:
-                # Verificar si el servicio está ejecutándose
-                result = os.system(f"systemctl is-active --quiet {service}")
-                status = "running" if result == 0 else "stopped"
+                # Verificar si el servicio está ejecutándose (async)
+                from core.async_utils import run_subprocess_async
+                returncode, stdout, stderr = await run_subprocess_async(
+                    ["systemctl", "is-active", service],
+                    timeout=5
+                )
+                status = "running" if returncode == 0 else "stopped"
                 
                 services[service] = {
                     "status": status,
@@ -392,9 +396,9 @@ async def restart_system(current_user: Dict[str, Any] = Depends(get_current_acti
         # Log de la acción
         await db.insert_log("WARNING", f"Sistema reiniciado por {current_user['username']}")
         
-        # Ejecutar comando de reinicio
-        import subprocess
-        subprocess.run(["sudo", "reboot"], check=False)
+        # Ejecutar comando de reinicio (async)
+        from core.async_utils import run_subprocess_async
+        await run_subprocess_async(["sudo", "reboot"], timeout=5)
         
         return {"message": "Sistema reiniciándose..."}
         
