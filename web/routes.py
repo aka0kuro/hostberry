@@ -218,7 +218,9 @@ def _base_context(request: Request, current_lang: str) -> dict:
     except Exception:
         cpu_cores = cpu_cores
 
-    username = request.cookies.get("username") or "admin"
+    # Obtener username desde cookie o usar valor por defecto desde settings
+    from config.settings import settings
+    username = request.cookies.get("username") or settings.default_username
 
     return {
         "request": request,
@@ -277,7 +279,8 @@ async def root_redirect(request: Request):
 async def root(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
     # Simular usuario logueado (en una app real vendría del token/sesión)
     # Usar un nombre de usuario dinámico - en producción esto vendría de la autenticación
-    current_user = {"username": "usuario"}  # Cambiado de 'admin' a 'usuario'
+    from config.settings import settings
+    current_user = {"username": settings.default_username}
     
     return _render(
         "index.html",
