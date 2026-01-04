@@ -234,14 +234,16 @@ async def toggle_wifi(
         status = get_wifi_status()
         current_state = status.get('enabled', False)
         
+        from core.async_utils import run_subprocess_async
+        
         if current_state:
-            # Desactivar WiFi
-            subprocess.run(["rfkill", "block", "wifi"], check=True)
+            # Desactivar WiFi (async)
+            await run_subprocess_async(["rfkill", "block", "wifi"], timeout=5)
             new_state = False
             message = get_text("wifi.disabled", default="WiFi deshabilitado")
         else:
-            # Activar WiFi
-            subprocess.run(["rfkill", "unblock", "wifi"], check=True)
+            # Activar WiFi (async)
+            await run_subprocess_async(["rfkill", "unblock", "wifi"], timeout=5)
             new_state = True
             message = get_text("wifi.enabled", default="WiFi habilitado")
         
