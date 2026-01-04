@@ -142,14 +142,31 @@ class Database:
                 logger.warning(f"Directorio de base de datos no existe: {db_dir}, creándolo...")
                 os.makedirs(db_dir, mode=0o755, exist_ok=True)
             
-            # Verificar permisos del directorio
+            # Verificar permisos del directorio (mejorado para detectar problemas reales)
             if os.path.exists(self.db_path):
+                # Verificar permisos del archivo
                 if not os.access(self.db_path, os.W_OK):
-                    logger.error(f"Sin permisos de escritura en: {self.db_path}")
-                    raise PermissionError(f"No se puede escribir en {self.db_path}")
-            elif db_dir and not os.access(db_dir, os.W_OK):
-                logger.error(f"Sin permisos de escritura en el directorio: {db_dir}")
-                raise PermissionError(f"No se puede escribir en el directorio {db_dir}")
+                    # Intentar corregir permisos si es posible
+                    try:
+                        os.chmod(self.db_path, 0o660)
+                        if not os.access(self.db_path, os.W_OK):
+                            logger.error(f"Sin permisos de escritura en: {self.db_path}")
+                            raise PermissionError(f"No se puede escribir en {self.db_path}")
+                    except (OSError, PermissionError):
+                        logger.error(f"Sin permisos de escritura en: {self.db_path}")
+                        raise PermissionError(f"No se puede escribir en {self.db_path}")
+            elif db_dir:
+                # Verificar permisos del directorio
+                if not os.access(db_dir, os.W_OK):
+                    # Intentar corregir permisos del directorio si es posible
+                    try:
+                        os.chmod(db_dir, 0o755)
+                        if not os.access(db_dir, os.W_OK):
+                            logger.error(f"Sin permisos de escritura en el directorio: {db_dir}")
+                            raise PermissionError(f"No se puede escribir en el directorio {db_dir}")
+                    except (OSError, PermissionError):
+                        logger.error(f"Sin permisos de escritura en el directorio: {db_dir}")
+                        raise PermissionError(f"No se puede escribir en el directorio {db_dir}")
             
             # Establecer conexión persistente
             if not self._connection:
