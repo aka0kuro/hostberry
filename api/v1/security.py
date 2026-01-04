@@ -348,7 +348,7 @@ async def delete_backup(
         logger.info(f"✅ Backup eliminado exitosamente: {backup_name} por usuario: {current_user.get('username')}")
         
         return SuccessResponse(
-            message=get_text("security.backup_deleted", default="Backup eliminado exitosamente"),
+            message=get_text("backup.deleted", default="Backup eliminado exitosamente"),
             data={"backup_name": backup_name, "deleted": True}
         )
         
