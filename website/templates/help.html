@@ -1,243 +1,285 @@
 {% extends "base.html" %}
 
+{% block extra_css %}
+<style>
+    .help-page .glass-card {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        position: relative;
+        overflow: hidden;
+    }
+    .help-page .help-hero {
+        padding: 2.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    .help-page .help-hero h1 {
+        font-size: clamp(1.8rem, 4vw, 2.6rem);
+    }
+    .help-page .help-hero-actions .btn {
+        min-width: 180px;
+        border-radius: 999px;
+    }
+    .help-page .help-stat-card {
+        padding: 1.25rem;
+        border-radius: 18px;
+        background: rgba(17, 24, 39, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        min-height: 140px;
+    }
+    .help-page .help-stat-label {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .help-page .help-stat-card h3 {
+        font-size: 2rem;
+        margin: 0.35rem 0;
+    }
+    .help-page .help-guides-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+    }
+    .help-page .help-guide-card {
+        padding: 1.5rem;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(8, 12, 24, 0.6);
+        text-align: center;
+    }
+    .help-page .help-guide-card i {
+        font-size: 2rem;
+    }
+    .help-page .help-link {
+        padding: 1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.2s ease;
+    }
+    .help-page .help-link:hover {
+        transform: translateX(6px);
+    }
+    .help-page .contact-form .form-control,
+    .help-page .contact-form .form-select {
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+    .help-page .contact-channel {
+        padding: 1rem 1.25rem;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.02);
+    }
+    .help-page .contact-channel i {
+        font-size: 1.2rem;
+    }
+    @media (max-width: 768px) {
+        .help-page .help-hero {
+            padding: 1.75rem;
+        }
+        .help-page .help-hero-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row">
-    <!-- Preguntas Frecuentes -->
-    <div class="col-md-8 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-question-circle"></i>
-                    {{ t('help.faq') }}
-                </h5>
+<div class="system-page help-page">
+    <div class="dashboard-container">
+        <section class="help-hero glass-card">
+            <div>
+                <p class="text-uppercase text-primary fw-semibold small mb-2">
+                    {{ t('help.hero_kicker', 'Support Center') }}
+                </p>
+                <h1 class="text-white fw-bold mb-3">
+                    {{ t('help.hero_title', 'We are here to keep your HostBerry running') }}
+                </h1>
+                <p class="text-white-50 lead mb-4">
+                    {{ t('help.hero_subtitle', 'Find quick answers, detailed guides, and direct access to our support channels — all with the same dashboard look & feel.') }}
+                </p>
+                <div class="help-hero-actions d-flex flex-wrap gap-3">
+                    <a href="#contact" class="btn btn-primary btn-lg">
+                        <i class="bi bi-chat-dots me-2"></i>{{ t('help.hero_cta_contact', 'Contact support') }}
+                    </a>
+                    <a href="#guides" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-journal-text me-2"></i>{{ t('help.hero_cta_docs', 'Explore guides') }}
+                    </a>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="accordion" id="faqAccordion">
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                                {{ t('help.faq_question_1') }}
+        </section>
+
+        {% if support_stats %}
+        <div class="row mt-4 g-4">
+            {% for stat in support_stats %}
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="help-stat-card">
+                    <span class="help-stat-label">{{ t(stat.label_key, stat.label_key) }}</span>
+                    <h3 class="text-white">{{ stat.value }}</h3>
+                    <span class="badge bg-{% if stat.status == 'success' %}success{% elif stat.status == 'warning' %}warning text-dark{% else %}info{% endif %}">
+                        {{ stat.trend }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row g-4 mt-1">
+            <div class="col-lg-6">
+                <div id="guides" class="glass-card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h4 class="text-white mb-1">{{ t('help.guides.heading', 'Guided setup journeys') }}</h4>
+                            <p class="text-white-50 mb-0">{{ t('help.guides.caption', 'Follow curated steps for every scenario') }}</p>
+                        </div>
+                    </div>
+                    <div class="help-guides-grid">
+                        {% for guide in guide_cards %}
+                        <div class="help-guide-card">
+                            <i class="{{ guide.icon }} text-{{ guide.variant }}"></i>
+                            <h6 class="text-white mt-3">{{ t(guide.title_key, guide.title_key) }}</h6>
+                            <p class="text-white-50 mb-3">{{ t(guide.description_key, guide.description_key) }}</p>
+                            <a href="{{ guide.link }}" class="btn btn-sm btn-outline-{{ guide.variant }}">
+                                {{ t('help.guides.open', 'Open guide') }}
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="glass-card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h4 class="text-white mb-1">{{ t('help.faqs.heading', 'Frequently asked questions') }}</h4>
+                            <p class="text-white-50 mb-0">{{ t('help.faqs.caption', 'Short answers to unblock you quickly') }}</p>
+                        </div>
+                    </div>
+                    <div class="accordion" id="helpFaqAccordion">
+                        {% for faq in faqs %}
+                        <div class="accordion-item bg-transparent border-0">
+                            <h2 class="accordion-header" id="heading-{{ faq.id }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{ faq.id }}">
+                                    {{ t(faq.question_key, faq.question_key) }}
+                                </button>
+                            </h2>
+                            <div id="{{ faq.id }}" class="accordion-collapse collapse" data-bs-parent="#helpFaqAccordion">
+                                <div class="accordion-body text-white-50">
+                                    {{ t(faq.answer_key, faq.answer_key) }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-1">
+            <div class="col-xl-5">
+                <div class="glass-card p-4 h-100">
+                    <h4 class="text-white mb-3">{{ t('help.links.heading', 'Quick resources') }}</h4>
+                    <div class="d-flex flex-column gap-3">
+                        {% for link in support_links %}
+                        <a href="{{ link.href }}" class="help-link text-white-75">
+                            <div class="icon-wrapper rounded-circle bg-white bg-opacity-10 p-3">
+                                <i class="{{ link.icon }} fs-4 text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-white mb-1">{{ t(link.title_key, link.title_key) }}</h6>
+                                <p class="text-white-50 mb-0 small">{{ t(link.desc_key, link.desc_key) }}</p>
+                            </div>
+                            <i class="bi bi-arrow-right text-white-50 ms-auto"></i>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-7">
+                <div id="contact" class="glass-card p-4 contact-form h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h4 class="text-white mb-1">{{ t('help.contact.heading', 'Send us a message') }}</h4>
+                            <p class="text-white-50 mb-0">{{ t('help.contact.caption', 'We usually answer within a few minutes') }}</p>
+                        </div>
+                    </div>
+                    <form id="contactForm" class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ t('help.form.name', 'Your name') }}</label>
+                            <input type="text" class="form-control" name="contact_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ t('help.form.email', 'Email') }}</label>
+                            <input type="email" class="form-control" name="contact_email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ t('help.form.subject', 'Subject') }}</label>
+                            <select class="form-select" name="contact_subject" required>
+                                <option value="">{{ t('help.form.subject_placeholder', 'Select an option') }}</option>
+                                <option value="general">{{ t('help.form.subject_general', 'General inquiry') }}</option>
+                                <option value="technical">{{ t('help.form.subject_technical', 'Technical support') }}</option>
+                                <option value="bug">{{ t('help.form.subject_bug', 'Bug report') }}</option>
+                                <option value="feature">{{ t('help.form.subject_feature', 'Feature request') }}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ t('help.form.priority', 'Priority') }}</label>
+                            <select class="form-select" name="contact_priority" required>
+                                <option value="normal">{{ t('help.form.priority_normal', 'Normal') }}</option>
+                                <option value="high">{{ t('help.form.priority_high', 'High') }}</option>
+                                <option value="urgent">{{ t('help.form.priority_urgent', 'Urgent') }}</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">{{ t('help.form.message', 'Message') }}</label>
+                            <textarea class="form-control" name="contact_message" rows="4" required></textarea>
+                        </div>
+                        <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <span class="text-white-50 small">
+                                {{ t('help.contact.response_time_desc', 'Average response time: under 15 minutes') }}
+                            </span>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-send-fill me-2"></i>{{ t('help.form.submit', 'Send message') }}
                             </button>
-                        </h2>
-                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                {{ t('help.faq_answer_1') }}
-                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                                {{ t('help.faq_question_2') }}
-                            </button>
-                        </h2>
-                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                {{ t('help.faq_answer_2') }}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                                {{ t('help.faq_question_3') }}
-                            </button>
-                        </h2>
-                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                {{ t('help.faq_answer_3') }}
-                            </div>
-                        </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Enlaces de Ayuda -->
-    <div class="col-md-4 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-link-45deg"></i>
-                    {{ t('help.useful_links') }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="list-group list-group-flush">
-                    <a href="/documentation" class="list-group-item list-group-item-action">
-                        <i class="bi bi-book"></i>
-                        {{ t('help.documentation') }}
-                    </a>
-                    <a href="/api/docs" class="list-group-item list-group-item-action">
-                        <i class="bi bi-code-slash"></i>
-                        {{ t('help.api_documentation') }}
-                    </a>
-                    <a href="/troubleshooting" class="list-group-item list-group-item-action">
-                        <i class="bi bi-tools"></i>
-                        {{ t('help.troubleshooting') }}
-                    </a>
-                    <a href="/support" class="list-group-item list-group-item-action">
-                        <i class="bi bi-headset"></i>
-                        {{ t('help.support') }}
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Guías de Usuario -->
-    <div class="col-12 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-journal-text"></i>
-                    {{ t('help.user_guides') }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <i class="bi bi-speedometer2 text-primary" style="font-size: 2rem;"></i>
-                                <h6 class="mt-2">{{ t('help.getting_started') }}</h6>
-                                <p class="text-muted">{{ t('help.getting_started_desc') }}</p>
-                                <a href="/guide/getting-started" class="btn btn-outline-primary btn-sm">
-                                    {{ t('help.read_guide') }}
-                                </a>
+        <div class="row g-4 mt-1">
+            <div class="col-12">
+                <div class="glass-card p-4">
+                    <div class="row g-3">
+                        {% for channel in contact_channels %}
+                        <div class="col-md-4">
+                            <div class="contact-channel">
+                                <i class="{{ channel.icon }} text-primary"></i>
+                                <div>
+                                    <span class="text-white-50 small d-block">{{ t(channel.label_key, channel.label_key) }}</span>
+                                    <strong class="text-white">{{ channel.value }}</strong>
+                                </div>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    
-                    <div class="col-md-3 mb-3">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <i class="bi bi-wifi text-success" style="font-size: 2rem;"></i>
-                                <h6 class="mt-2">{{ t('help.wifi_setup') }}</h6>
-                                <p class="text-muted">{{ t('help.wifi_setup_desc') }}</p>
-                                <a href="/guide/wifi-setup" class="btn btn-outline-success btn-sm">
-                                    {{ t('help.read_guide') }}
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-3 mb-3">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <i class="bi bi-shield-check text-warning" style="font-size: 2rem;"></i>
-                                <h6 class="mt-2">{{ t('help.security_setup') }}</h6>
-                                <p class="text-muted">{{ t('help.security_setup_desc') }}</p>
-                                <a href="/guide/security-setup" class="btn btn-outline-warning btn-sm">
-                                    {{ t('help.read_guide') }}
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-3 mb-3">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <i class="bi bi-gear text-info" style="font-size: 2rem;"></i>
-                                <h6 class="mt-2">{{ t('help.advanced_config') }}</h6>
-                                <p class="text-muted">{{ t('help.advanced_config_desc') }}</p>
-                                <a href="/guide/advanced-config" class="btn btn-outline-info btn-sm">
-                                    {{ t('help.read_guide') }}
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Contacto y Soporte -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-envelope"></i>
-                    {{ t('help.contact') }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <form id="contactForm">
-                    <div class="mb-3">
-                        <label for="contact_name" class="form-label">{{ t('help.your_name') }}</label>
-                        <input type="text" class="form-control" id="contact_name" name="contact_name" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="contact_email" class="form-label">{{ t('help.your_email') }}</label>
-                        <input type="email" class="form-control" id="contact_email" name="contact_email" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="contact_subject" class="form-label">{{ t('help.subject') }}</label>
-                        <select class="form-select" id="contact_subject" name="contact_subject" required>
-                            <option value="">{{ t('help.select_subject') }}</option>
-                            <option value="general">{{ t('help.general_inquiry') }}</option>
-                            <option value="technical">{{ t('help.technical_support') }}</option>
-                            <option value="bug">{{ t('help.bug_report') }}</option>
-                            <option value="feature">{{ t('help.feature_request') }}</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="contact_message" class="form-label">{{ t('help.message') }}</label>
-                        <textarea class="form-control" id="contact_message" name="contact_message" rows="4" required></textarea>
-                    </div>
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-send"></i>
-                            {{ t('help.send_message') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Información de Contacto -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-info-circle"></i>
-                    {{ t('help.contact_info') }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <h6><i class="bi bi-envelope text-primary"></i> {{ t('help.email') }}</h6>
-                    <p class="text-muted">support@hostberry.com</p>
-                </div>
-                
-                <div class="mb-3">
-                    <h6><i class="bi bi-globe text-success"></i> {{ t('help.website') }}</h6>
-                    <p class="text-muted">https://hostberry.com</p>
-                </div>
-                
-                <div class="mb-3">
-                    <h6><i class="bi bi-github text-dark"></i> {{ t('help.github') }}</h6>
-                    <p class="text-muted">https://github.com/hostberry</p>
-                </div>
-                
-                <div class="mb-3">
-                    <h6><i class="bi bi-discord text-info"></i> {{ t('help.discord') }}</h6>
-                    <p class="text-muted">https://discord.gg/hostberry</p>
-                </div>
-                
-                <hr>
-                
-                <div class="text-center">
-                    <h6>{{ t('help.response_time') }}</h6>
-                    <p class="text-muted">{{ t('help.response_time_desc') }}</p>
                 </div>
             </div>
         </div>
