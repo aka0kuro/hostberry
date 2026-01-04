@@ -650,7 +650,7 @@
           const errorText = await resp.text();
           errorData = { detail: errorText };
         }
-        throw new Error(errorData.detail || errorData.message || (HostBerry.t?.('backup.delete_failed', 'Error al eliminar backup') || 'Error al eliminar backup'));
+        throw new Error(errorData.detail || errorData.message || getTranslation('backup.delete_failed', 'Error deleting backup'));
       }
       
       const payload = await resp.json();
