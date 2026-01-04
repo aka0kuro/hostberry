@@ -308,26 +308,33 @@ setup_user_permissions() {
         fi
     fi
 
-    # Crear directorios necesarios
+    # Crear directorios necesarios (incluyendo /var/lib/hostberry para la base de datos)
+    DB_DATA_DIR="/var/lib/hostberry"
     if [[ $EUID -eq 0 ]]; then
-        mkdir -p "$PROD_DIR" "$BACKUP_DIR" "$SSL_DIR" "$LOG_DIR" "$UPLOADS_DIR" "$WEBSITE_DIR"
+        mkdir -p "$PROD_DIR" "$BACKUP_DIR" "$SSL_DIR" "$LOG_DIR" "$UPLOADS_DIR" "$WEBSITE_DIR" "$DB_DATA_DIR"
     else
-        sudo mkdir -p "$PROD_DIR" "$BACKUP_DIR" "$SSL_DIR" "$LOG_DIR" "$UPLOADS_DIR" "$WEBSITE_DIR"
+        sudo mkdir -p "$PROD_DIR" "$BACKUP_DIR" "$SSL_DIR" "$LOG_DIR" "$UPLOADS_DIR" "$WEBSITE_DIR" "$DB_DATA_DIR"
     fi
 
-    # Ajustar propietarios
+    # Ajustar propietarios (asegurar permisos correctos desde el principio)
     if [[ $EUID -eq 0 ]]; then
         chown -R "$USER:$GROUP" "$PROD_DIR"
         chown -R "$USER:$GROUP" "$LOG_DIR"
         chown -R "$USER:$GROUP" "$SSL_DIR"
         chown -R "$USER:$GROUP" "$WEBSITE_DIR"
         chown -R "$USER:www-data" "$UPLOADS_DIR" 2>/dev/null || true
+        # CRÍTICO: Asegurar permisos de /var/lib/hostberry
+        chown -R "$USER:$GROUP" "$DB_DATA_DIR" 2>/dev/null || true
+        chmod 755 "$DB_DATA_DIR"
     else
         sudo chown -R "$USER:$GROUP" "$PROD_DIR"
         sudo chown -R "$USER:$GROUP" "$LOG_DIR"
         sudo chown -R "$USER:$GROUP" "$SSL_DIR"
         sudo chown -R "$USER:$GROUP" "$WEBSITE_DIR"
         sudo chown -R "$USER:www-data" "$UPLOADS_DIR" 2>/dev/null || true
+        # CRÍTICO: Asegurar permisos de /var/lib/hostberry
+        sudo chown -R "$USER:$GROUP" "$DB_DATA_DIR" 2>/dev/null || true
+        sudo chmod 755 "$DB_DATA_DIR"
     fi
 
     # Permisos
