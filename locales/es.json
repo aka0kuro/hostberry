@@ -1306,6 +1306,7 @@
     "create_backup_desc": "Crear un respaldo del sistema",
     "upload_backup": "Cargar backup",
     "upload_backup_desc": "Subir un archivo de backup",
+    "config_backup": "Backup de configuración",
     "list_backups": "Listar backups",
     "list_backups_desc": "Ver todos los backups disponibles",
     "inventory_heading": "Inventario de backups",
