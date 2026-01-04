@@ -1,169 +1,197 @@
 {% extends "base.html" %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/dashboard.css">
+<style>
+    .monitoring-page .glass-card {
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(10, 12, 28, 0.7);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(20px);
+    }
+    .monitoring-page .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+    }
+    .monitoring-page .metric-card {
+        padding: 1.5rem;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(15, 17, 34, 0.85);
+    }
+    .monitoring-page .metric-card .metric-label {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, 0.6);
+    }
+    .monitoring-page .metric-card .metric-value {
+        font-size: 2rem;
+        font-weight: 600;
+    }
+    .monitoring-page .progress {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+    }
+    .monitoring-page .progress-bar {
+        background: linear-gradient(90deg, #6a11cb, #2575fc);
+        border-radius: 999px;
+    }
+    .monitoring-page .logs-container {
+        max-height: 360px;
+        overflow-y: auto;
+    }
+    .monitoring-page .log-item {
+        padding: 0.75rem 1rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+    .monitoring-page .log-item:last-child {
+        margin-bottom: 0;
+    }
+    .monitoring-page .log-level {
+        min-width: 70px;
+        text-transform: uppercase;
+    }
+    .monitoring-page .stat-card h6 {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, 0.6);
+    }
+    .monitoring-page .stat-card .stat-value {
+        font-size: 1.8rem;
+        font-weight: 600;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="system-page">
+<div class="system-page monitoring-page">
     <div class="dashboard-container">
-        <div class="dashboard-header">
-            <img src="/static/hostberry.png" alt="hostberry" class="logo-image" />
-            <h1>HostBerry</h1>
-            <p>{{ _('System Monitoring', 'System Monitoring') }}</p>
-        </div>
-    
-    <!-- Uptime Card -->
-    <div class="card h-100 glass-card border-0 mb-4">
-        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
-            <h5 class="card-title mb-0 fw-bold text-white">
-                <i class="bi bi-clock me-2"></i>{{ _('System Uptime', 'System Uptime') }}
-            </h5>
-        </div>
-        <div class="card-body">
-            <p class="mb-0"><i class="fas fa-hourglass-half me-2"></i><strong>{{ _('Uptime', 'Uptime') }}:</strong> <span id="uptime">0 days, 0 hours, 0 minutes</span></p>
-        </div>
-    </div>
-    
-    <div class="row">
-        <!-- CPU Stats -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 glass-card border-0">
-                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
-                    <h5 class="card-title mb-0 fw-bold text-white">
-                        <i class="bi bi-cpu me-2"></i>{{ _('CPU Information', 'CPU Information') }}
-                    </h5>
+        <section class="glass-card p-4 mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <p class="text-uppercase text-primary fw-semibold small mb-1">{{ t('monitoring.kicker', 'Live Ops') }}</p>
+                    <h2 class="text-white fw-bold mb-2">{{ t('monitoring.title', 'Monitoring Control Room') }}</h2>
+                    <p class="text-white-50 mb-0">{{ t('monitoring.subtitle', 'Real-time insight on your HostBerry performance data') }}</p>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-6">
-                            <p><i class="fas fa-tachometer-alt me-2"></i><strong>{{ _('Usage', 'Usage') }}:</strong> <span id="cpu-usage">0%</span></p>
-                            <p><i class="fas fa-thermometer-half me-2"></i><strong>{{ _('Temperature', 'Temperature') }}:</strong> <span id="cpu-temp">0°C</span></p>
-                        </div>
-                        <div class="col-6">
-                            <p><i class="fas fa-microchip me-2"></i><strong>{{ _('Cores', 'Cores') }}:</strong> <span id="cpu-cores">0</span></p>
-                            <p><i class="fas fa-bolt me-2"></i><strong>{{ _('Frequency', 'Frequency') }}:</strong> <span id="cpu-freq">0 MHz</span></p>
-                        </div>
+                <div class="text-white-50 small">
+                    {{ t('monitoring.last_update', 'Last sync') }}:
+                    <span id="monitoring-last-update">--:--</span>
+                </div>
+            </div>
+            <div class="metrics-grid mt-4">
+                <div class="metric-card">
+                    <span class="metric-label">{{ t('monitoring.uptime', 'Uptime') }}</span>
+                    <div class="metric-value text-white" id="uptime-value">--</div>
+                    <small class="text-white-50">{{ t('monitoring.since_boot', 'Since boot') }}</small>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">{{ t('monitoring.cpu_usage', 'CPU Usage') }}</span>
+                    <div class="metric-value text-white" id="cpu-usage">0%</div>
+                    <div class="progress mt-2">
+                        <div id="cpu-progress" class="progress-bar" style="width:0%"></div>
                     </div>
-                    <div class="progress">
-                        <div id="cpu-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    <div class="d-flex justify-content-between text-white-50 small mt-2">
+                        <span>{{ t('monitoring.cores', 'Cores') }}: <strong id="cpu-cores">-</strong></span>
+                        <span>{{ t('monitoring.temp', 'Temp') }}: <strong id="cpu-temp">--°C</strong></span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">{{ t('monitoring.memory_usage', 'Memory Usage') }}</span>
+                    <div class="metric-value text-white" id="mem-usage">0%</div>
+                    <div class="progress mt-2">
+                        <div id="mem-progress" class="progress-bar" style="width:0%"></div>
+                    </div>
+                    <div class="text-white-50 small mt-2">
+                        {{ t('monitoring.used_of', 'Used of') }} <strong id="mem-total">0 GB</strong> · <span id="mem-free">0 GB</span> {{ t('monitoring.free', 'free') }}
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">{{ t('monitoring.disk_usage', 'Disk Usage') }}</span>
+                    <div class="metric-value text-white" id="disk-usage">0%</div>
+                    <div class="progress mt-2">
+                        <div id="disk-progress" class="progress-bar" style="width:0%"></div>
+                    </div>
+                    <div class="text-white-50 small mt-2">
+                        {{ t('monitoring.used', 'Used') }} <strong id="disk-used">0 GB</strong> / <span id="disk-total">0 GB</span>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Memory Stats -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 glass-card border-0">
-                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
-                    <h5 class="card-title mb-0 fw-bold text-white">
-                        <i class="bi bi-memory me-2"></i>{{ _('Memory Information', 'Memory Information') }}
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-6">
-                            <p><i class="fas fa-database me-2"></i><strong>{{ _('Total', 'Total') }}:</strong> <span id="mem-total">0 GB</span></p>
-                            <p><i class="fas fa-hdd me-2"></i><strong>{{ _('Used', 'Used') }}:</strong> <span id="mem-used">0 GB</span></p>
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="glass-card p-4 stat-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="text-white mb-1">{{ t('monitoring.network_heading', 'Network throughput') }}</h5>
+                            <p class="text-white-50 mb-0">{{ t('monitoring.network_caption', 'Monitor primary interface usage') }}</p>
                         </div>
-                        <div class="col-6">
-                            <p><i class="fas fa-hdd me-2"></i><strong>{{ _('Free', 'Free') }}:</strong> <span id="mem-free">0 GB</span></p>
-                            <p><i class="fas fa-percentage me-2"></i><strong>{{ _('Usage', 'Usage') }}:</strong> <span id="mem-usage">0%</span></p>
-                        </div>
+                        <span class="badge bg-primary text-uppercase" id="net-interface">-</span>
                     </div>
-                    <div class="progress">
-                        <div id="mem-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Disk Stats -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 glass-card border-0">
-                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
-                    <h5 class="card-title mb-0 fw-bold text-white">
-                        <i class="bi bi-hdd me-2"></i>{{ _('Disk Information', 'Disk Information') }}
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
+                    <div class="row g-3">
                         <div class="col-6">
-                            <p><i class="fas fa-database me-2"></i><strong>{{ _('Total', 'Total') }}:</strong> <span id="disk-total">0 GB</span></p>
-                            <p><i class="fas fa-hdd me-2"></i><strong>{{ _('Used', 'Used') }}:</strong> <span id="disk-used">0 GB</span></p>
+                            <h6>{{ t('monitoring.ip_address', 'IP Address') }}</h6>
+                            <div class="stat-value text-white" id="net-ip">--</div>
+                            <small class="text-white-50">{{ t('monitoring.public_ip', 'Primary address') }}</small>
                         </div>
                         <div class="col-6">
-                            <p><i class="fas fa-hdd me-2"></i><strong>{{ _('Free', 'Free') }}:</strong> <span id="disk-free">0 GB</span></p>
-                            <p><i class="fas fa-percentage me-2"></i><strong>{{ _('Usage', 'Usage') }}:</strong> <span id="disk-usage">0%</span></p>
-                        </div>
-                    </div>
-                    <div class="progress">
-                        <div id="disk-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Network Stats -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 glass-card border-0">
-                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
-                    <h5 class="card-title mb-0 fw-bold text-white">
-                        <i class="bi bi-ethernet me-2"></i>{{ _('Network Information', 'Network Information') }}
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-6">
-                            <p><i class="fas fa-globe me-2"></i><strong>{{ _('IP Address', 'IP Address') }}:</strong> <span id="net-ip">-</span></p>
-                            <p><i class="fas fa-upload me-2"></i><strong>{{ _('Upload', 'Upload') }}:</strong> <span id="net-upload">0 KB/s</span></p>
+                            <h6>{{ t('monitoring.download', 'Download') }}</h6>
+                            <div class="stat-value text-white" id="net-download">0 KB/s</div>
+                            <small class="text-white-50">{{ t('monitoring.total_received', 'Total Rx') }}: <span id="net-bytes-recv">0 MB</span></small>
                         </div>
                         <div class="col-6">
-                            <p><i class="fas fa-ethernet me-2"></i><strong>{{ _('Interface', 'Interface') }}:</strong> <span id="net-interface">-</span></p>
-                            <p><i class="fas fa-download me-2"></i><strong>{{ _('Download', 'Download') }}:</strong> <span id="net-download">0 KB/s</span></p>
+                            <h6>{{ t('monitoring.upload', 'Upload') }}</h6>
+                            <div class="stat-value text-white" id="net-upload">0 KB/s</div>
+                            <small class="text-white-50">{{ t('monitoring.total_sent', 'Total Tx') }}: <span id="net-bytes-sent">0 MB</span></small>
+                        </div>
+                        <div class="col-6">
+                            <h6>{{ t('monitoring.packets', 'Packets') }}</h6>
+                            <div class="stat-value text-white" id="net-packets">-</div>
+                            <small class="text-white-50">{{ t('monitoring.packet_info', 'Sent / Received') }}</small>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- System Logs -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card h-100 glass-card border-0 mb-4">
-                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
-                    <h5 class="card-title mb-0 fw-bold text-white">
-                        <i class="bi bi-journal-text me-2"></i>{{ _('System Logs', 'System Logs') }}
-                    </h5>
-                    <div class="logs-controls">
-                        <select class="form-select form-select-sm me-2" id="logLevel">
-                            <option value="all">{{ _('All Levels', 'All Levels') }}</option>
-                            <option value="error">{{ _('Errors', 'Errors') }}</option>
-                            <option value="warning">{{ _('Warnings', 'Warnings') }}</option>
-                            <option value="info">{{ _('Info', 'Info') }}</option>
-                        </select>
-                        <button class="btn btn-sm btn-outline-primary" onclick="refreshLogs()">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
+            <div class="col-lg-6">
+                <div class="glass-card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="text-white mb-1">{{ t('monitoring.logs_heading', 'System logs') }}</h5>
+                            <p class="text-white-50 mb-0">{{ t('monitoring.logs_caption', 'Filter by level to diagnose quickly') }}</p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="monitoringLogLevel">
+                                <option value="all">{{ t('monitoring.logs_all', 'All levels') }}</option>
+                                <option value="error">{{ t('monitoring.logs_error', 'Errors') }}</option>
+                                <option value="warning">{{ t('monitoring.logs_warning', 'Warnings') }}</option>
+                                <option value="info">{{ t('monitoring.logs_info', 'Info') }}</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-light" id="monitoringLogsRefresh">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <div class="card-body">
-                    <div class="logs-container">
-                        <div class="text-center py-4 text-muted">
+                    <div class="logs-container" id="monitoring-logs">
+                        <div class="text-center py-4 text-white-50">
                             <i class="bi bi-arrow-clockwise spinning"></i>
-                            <p class="mb-0 mt-2">{{ _('Loading logs...', 'Loading logs...') }}</p>
+                            <p class="mb-0 mt-2">{{ t('monitoring.loading_logs', 'Loading logs...') }}</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    </div>
 </div>
-</div>
-</div>
-
 {% endblock %}
 
 {% block extra_js %}
