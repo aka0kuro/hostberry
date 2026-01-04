@@ -235,6 +235,14 @@
       });
       
       // Agregar event listeners a los botones
+      document.querySelectorAll('.info-backup-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const backupName = btn.getAttribute('data-backup-name');
+          showBackupInfo(backupName);
+        });
+      });
+      
       document.querySelectorAll('.download-backup-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -248,6 +256,14 @@
           e.stopPropagation();
           const backupName = btn.getAttribute('data-backup-name');
           restoreBackup(backupName);
+        });
+      });
+      
+      document.querySelectorAll('.delete-backup-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const backupName = btn.getAttribute('data-backup-name');
+          deleteBackup(backupName);
         });
       });
     }catch(error){
