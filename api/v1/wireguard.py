@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 from models.schemas import WireGuardConfig, WireGuardStatus, SuccessResponse
 from core.security import get_current_active_user
 from core.database import db
-from core.logging import get_logger
+from core.hostberry_logging import get_logger
 from core.i18n import get_text
 
 router = APIRouter()
