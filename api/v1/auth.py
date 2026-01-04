@@ -106,7 +106,7 @@ async def first_login_change(data: FirstLoginChange, request: Request):
             )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, 
-                detail=get_text("auth.new_user_cannot_be_admin", default="El nuevo usuario no puede ser 'admin'")
+                detail=get_text("auth.new_user_cannot_be_admin", language=language, default="El nuevo usuario no puede ser 'admin'")
             )
 
         # Verificar que no exista ya el nuevo usuario
@@ -124,7 +124,7 @@ async def first_login_change(data: FirstLoginChange, request: Request):
             )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, 
-                detail=get_text("auth.user_exists", default="El usuario ya existe")
+                detail=get_text("auth.user_exists", language=language, default="El usuario ya existe")
             )
 
         # Crear nuevo usuario con la nueva contraseña
