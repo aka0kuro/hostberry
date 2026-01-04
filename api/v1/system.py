@@ -165,7 +165,9 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
         return stats_dict
         
     except Exception as e:
-        logger.error(f"Error obteniendo estadísticas del sistema: {str(e)}")
+        logger.error(f"Error obteniendo estadísticas del sistema: {str(e)}", exc_info=True)
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=get_text("errors.system_stats_error", default="Error obteniendo estadísticas del sistema")
