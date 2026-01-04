@@ -21,6 +21,5 @@
       set('net-ip', data.network.ip); set('net-interface', data.network.interface); set('net-upload', data.network.upload); set('net-download', data.network.download);
     }catch(_e){ /* ignore */ }
   }
-  setInterval(updateStats, 5000); updateStats();
+  setInterval(updateStats, 60000); updateStats();
 })();
-
