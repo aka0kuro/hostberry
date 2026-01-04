@@ -1317,6 +1317,26 @@
     "uploaded": "Backup cargado exitosamente",
     "upload_error": "Error al cargar backup",
     "no_file": "No se seleccionó ningún archivo",
-    "invalid_format": "El archivo debe ser un backup .tar.gz"
+    "invalid_format": "El archivo debe ser un backup .tar.gz",
+    "stats": "Estadísticas",
+    "stats_desc": "Ver estadísticas de backups",
+    "info": "Información",
+    "download": "Descargar",
+    "restore": "Restaurar",
+    "delete": "Eliminar",
+    "delete_confirm": "¿Estás seguro de que quieres eliminar este backup?",
+    "deleting": "Eliminando backup...",
+    "delete_error": "Error al eliminar backup",
+    "delete_not_implemented": "Función de eliminación en desarrollo",
+    "info_error": "Error al obtener información",
+    "name": "Nombre",
+    "size": "Tamaño",
+    "created": "Creado",
+    "path": "Ruta",
+    "total": "Total de backups",
+    "total_size": "Tamaño total",
+    "oldest": "Backup más antiguo",
+    "newest": "Backup más reciente",
+    "stats_error": "Error al obtener estadísticas"
   }
 }
