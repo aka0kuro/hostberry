@@ -293,6 +293,80 @@ async def upload_backup(
             detail=get_text("errors.backup_upload_failed", default="Error cargando backup")
         )
 
+@router.delete("/security/backup/{backup_name}")
+async def delete_backup(
+    backup_name: str,
+    current_user: Dict[str, Any] = Depends(get_current_active_user)
+):
+    """Eliminar un backup específico"""
+    try:
+        # Obtener ruta del backup
+        from core.backup import backup_manager
+        backup_path = backup_manager.backup_dir / backup_name
+        
+        # Verificar que el archivo existe
+        if not backup_path.exists():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=get_text("errors.backup_not_found", default="Backup no encontrado")
+            )
+        
+        # Registrar inicio de eliminación
+        await db.insert_log(
+            "WARNING",
+            f"Iniciando eliminación de backup: {backup_name} por usuario: {current_user.get('username')}",
+            source="security",
+            user_id=current_user.get("username")
+        )
+        
+        logger.warning(f"⚠️ Eliminando backup: {backup_name} por usuario: {current_user.get('username')}")
+        
+        # Eliminar archivo
+        try:
+            backup_path.unlink()
+        except Exception as e:
+            logger.error(f"Error eliminando archivo: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=get_text("errors.backup_delete_failed", default="Error eliminando archivo de backup")
+            )
+        
+        await db.insert_log(
+            "INFO",
+            f"Backup eliminado exitosamente: {backup_name} por usuario: {current_user.get('username')}",
+            source="security",
+            user_id=current_user.get("username")
+        )
+        
+        audit_sensitive_operation(
+            "backup_deleted",
+            current_user.get("username"),
+            None,
+            {"backup_name": backup_name, "success": True}
+        )
+        
+        logger.info(f"✅ Backup eliminado exitosamente: {backup_name} por usuario: {current_user.get('username')}")
+        
+        return SuccessResponse(
+            message=get_text("security.backup_deleted", default="Backup eliminado exitosamente"),
+            data={"backup_name": backup_name, "deleted": True}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error eliminando backup: {e}")
+        await db.insert_log(
+            "ERROR",
+            f"Error eliminando backup {backup_name}: {str(e)}",
+            source="security",
+            user_id=current_user.get("username")
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=get_text("errors.backup_delete_failed", default="Error eliminando backup")
+        )
+
 @router.post("/security/backup/{backup_name}/restore")
 async def restore_backup(
     backup_name: str,
