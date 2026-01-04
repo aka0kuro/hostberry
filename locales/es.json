@@ -1313,6 +1313,7 @@
     "inventory_caption": "Últimos backups almacenados en el dispositivo",
     "no_backups": "Aún no hay backups listados",
     "loading": "Cargando backups...",
+    "click_to_load": "Haz clic en \"Listar backups\" para cargar los backups",
     "downloading": "Descargando backup...",
     "downloaded": "Backup descargado exitosamente",
     "download_error": "Error al descargar backup",
