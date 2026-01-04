@@ -1068,15 +1068,46 @@ setup_production_dirs() {
 
     # Reubicar base de datos SQLite fuera de /opt (solo lectura) a /var/lib/hostberry
     DB_FILE="/var/lib/hostberry/hostberry.db"
-    # Asegurar archivo y permisos
-    touch "$DB_FILE"
-    chown "$USER:$GROUP" "$DB_FILE"
-    chmod 0640 "$DB_FILE"
+    DB_DIR="/var/lib/hostberry"
+    
+    # Asegurar que el directorio existe con permisos correctos
+    if [[ $EUID -eq 0 ]]; then
+        install -d -m 0755 -o "$USER" -g "$GROUP" "$DB_DIR"
+    else
+        sudo install -d -m 0755 -o "$USER" -g "$GROUP" "$DB_DIR"
+    fi
+    
+    # Asegurar archivo y permisos (crear si no existe)
+    if [[ $EUID -eq 0 ]]; then
+        if [ ! -f "$DB_FILE" ]; then
+            touch "$DB_FILE"
+        fi
+        chown "$USER:$GROUP" "$DB_FILE"
+        chmod 0660 "$DB_FILE"  # Permisos de lectura/escritura para usuario y grupo
+    else
+        if [ ! -f "$DB_FILE" ]; then
+            sudo touch "$DB_FILE"
+        fi
+        sudo chown "$USER:$GROUP" "$DB_FILE"
+        sudo chmod 0660 "$DB_FILE"  # Permisos de lectura/escritura para usuario y grupo
+    fi
+    
     # Enlazar desde /opt/hostberry para compatibilidad con el código actual
     if [ -e "$PROD_DIR/hostberry.db" ] && [ ! -L "$PROD_DIR/hostberry.db" ]; then
-        mv -f "$PROD_DIR/hostberry.db" "$DB_FILE" 2>/dev/null || true
+        if [[ $EUID -eq 0 ]]; then
+            mv -f "$PROD_DIR/hostberry.db" "$DB_FILE" 2>/dev/null || true
+            chown "$USER:$GROUP" "$DB_FILE"
+        else
+            sudo mv -f "$PROD_DIR/hostberry.db" "$DB_FILE" 2>/dev/null || true
+            sudo chown "$USER:$GROUP" "$DB_FILE"
+        fi
     fi
-    ln -sf "$DB_FILE" "$PROD_DIR/hostberry.db"
+    
+    if [[ $EUID -eq 0 ]]; then
+        ln -sf "$DB_FILE" "$PROD_DIR/hostberry.db"
+    else
+        sudo ln -sf "$DB_FILE" "$PROD_DIR/hostberry.db"
+    fi
     
     log "$ANSI_GREEN" "INFO" "$(get_text "dirs_configured" "Directorios de producción configurados")"
 }
