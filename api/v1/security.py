@@ -165,9 +165,9 @@ async def download_backup(
 ):
     """Descargar un backup específico"""
     try:
-        # Obtener ruta del backup
-        app_dir = Path(__file__).parent.parent.parent
-        backup_path = app_dir / "backups" / backup_name
+        # Obtener ruta del backup (usar la misma lógica que BackupManager)
+        from core.backup import backup_manager
+        backup_path = backup_manager.backup_dir / backup_name
         
         # Verificar que el archivo existe
         if not backup_path.exists():
@@ -222,9 +222,9 @@ async def restore_backup(
 ):
     """Restaurar un backup específico"""
     try:
-        # Obtener ruta del backup
-        app_dir = Path(__file__).parent.parent.parent
-        backup_path = app_dir / "backups" / backup_name
+        # Obtener ruta del backup (usar la misma lógica que BackupManager)
+        from core.backup import backup_manager
+        backup_path = backup_manager.backup_dir / backup_name
         
         # Verificar que el archivo existe
         if not backup_path.exists():
