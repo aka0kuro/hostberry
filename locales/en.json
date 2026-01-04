@@ -209,6 +209,7 @@
     "general": "Overall",
     "healthy": "Healthy",
     "warning": "Warning",
+    "normal": "Normal",
     "log_loaded": "Dashboard loaded successfully",
     "log_services_ok": "All services running correctly",
     "log_cpu_warning": "CPU Usage: 60% - Monitoring",
