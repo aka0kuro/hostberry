@@ -1287,6 +1287,26 @@
     "uploaded": "Backup uploaded successfully",
     "upload_error": "Error uploading backup",
     "no_file": "No file selected",
-    "invalid_format": "File must be a .tar.gz backup"
+    "invalid_format": "File must be a .tar.gz backup",
+    "stats": "Statistics",
+    "stats_desc": "View backup statistics",
+    "info": "Information",
+    "download": "Download",
+    "restore": "Restore",
+    "delete": "Delete",
+    "delete_confirm": "Are you sure you want to delete this backup?",
+    "deleting": "Deleting backup...",
+    "delete_error": "Error deleting backup",
+    "delete_not_implemented": "Delete function in development",
+    "info_error": "Error getting information",
+    "name": "Name",
+    "size": "Size",
+    "created": "Created",
+    "path": "Path",
+    "total": "Total backups",
+    "total_size": "Total size",
+    "oldest": "Oldest backup",
+    "newest": "Newest backup",
+    "stats_error": "Error getting statistics"
   }
 }
