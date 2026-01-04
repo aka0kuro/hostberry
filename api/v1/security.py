@@ -11,7 +11,7 @@ from core.security import get_current_active_user
 from core.audit import audit_security_violation, audit_sensitive_operation
 from core.backup import create_system_backup, list_system_backups, get_backup_details
 from core.security_middleware import validate_input_sanitization, generate_secure_token
-from core.logging import logger
+from core.hostberry_logging import logger
 from core.i18n import get_text
 
 router = APIRouter()
