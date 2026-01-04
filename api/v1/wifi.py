@@ -250,30 +250,54 @@ async def scan_networks(
 ) -> List[Dict[str, Any]]:
     """Escanea redes WiFi disponibles"""
     try:
-        # Simular escaneo de redes
-        networks = [
-            {
-                "ssid": "MiWiFi",
-                "signal": -45,
-                "security": "WPA2",
-                "channel": 6,
-                "frequency": "2.4 GHz"
-            },
-            {
-                "ssid": "Neighbor_WiFi",
-                "signal": -60,
-                "security": "WPA2",
-                "channel": 11,
-                "frequency": "2.4 GHz"
-            },
-            {
-                "ssid": "Guest_Network",
-                "signal": -70,
-                "security": "Open",
-                "channel": 1,
-                "frequency": "2.4 GHz"
-            }
-        ]
+        # Escanear redes reales usando iwlist (async)
+        networks = []
+        try:
+            from core.async_utils import run_subprocess_async
+            
+            status = get_wifi_status()
+            if status.get('interfaces'):
+                interface = status['interfaces'][0]
+                returncode, stdout, stderr = await run_subprocess_async(
+                    ["iwlist", interface, "scan"],
+                    timeout=10
+                )
+                
+                if returncode == 0:
+                    current_network = {}
+                    for line in stdout.split('\n'):
+                        if 'ESSID:' in line:
+                            ssid = line.split('"')[1] if '"' in line else line.split(':')[1].strip()
+                            if ssid and ssid != '""':
+                                current_network['ssid'] = ssid
+                        elif 'Signal level=' in line:
+                            try:
+                                signal_str = line.split('Signal level=')[1].split()[0]
+                                signal = int(signal_str)
+                                current_network['signal'] = signal
+                            except:
+                                current_network['signal'] = -70
+                        elif 'Channel:' in line:
+                            try:
+                                channel = int(line.split('Channel:')[1].strip())
+                                current_network['channel'] = channel
+                            except:
+                                pass
+                        elif 'Encryption key:' in line:
+                            current_network['security'] = 'WPA2' if 'on' in line.lower() else 'Open'
+                        
+                        if current_network.get('ssid') and current_network not in networks:
+                            networks.append({
+                                "ssid": current_network.get('ssid', 'Unknown'),
+                                "signal": current_network.get('signal', -70),
+                                "security": current_network.get('security', 'Unknown'),
+                                "channel": current_network.get('channel', 1),
+                                "frequency": "2.4 GHz"
+                            })
+                            current_network = {}
+        except Exception as e:
+            logger.warning(f"Error escaneando redes WiFi: {e}")
+            # Retornar lista vacía en lugar de datos simulados
         
         logger.info('scan_networks', count=len(networks))
         return networks
