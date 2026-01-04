@@ -165,16 +165,27 @@ network={{
         
         # Guardar configuración
         try:
-            with open(settings.wpa_supplicant_path, 'w') as f:
-                f.write(wpa_config)
+            import aiofiles
+            async with aiofiles.open(settings.wpa_supplicant_path, 'w') as f:
+                await f.write(wpa_config)
         except PermissionError:
             raise HTTPException(status_code=403, detail=get_text("wifi.config_permission_error", default="Permiso denegado para escribir configuración WiFi"))
+        except ImportError:
+            # Fallback a modo síncrono si aiofiles no está disponible
+            with open(settings.wpa_supplicant_path, 'w') as f:
+                f.write(wpa_config)
         
-        # Reiniciar wpa_supplicant
+        # Reiniciar wpa_supplicant (async)
         try:
-            subprocess.run(["systemctl", "restart", "wpa_supplicant"], check=True)
-            time.sleep(2)
-        except subprocess.CalledProcessError:
+            from core.async_utils import run_subprocess_async
+            returncode, stdout, stderr = await run_subprocess_async(
+                ["systemctl", "restart", "wpa_supplicant"],
+                timeout=10
+            )
+            if returncode != 0:
+                raise HTTPException(status_code=500, detail=get_text("wifi.service_restart_error", default="Error reiniciando servicio WiFi"))
+            await asyncio.sleep(2)
+        except Exception as e:
             raise HTTPException(status_code=500, detail=get_text("wifi.service_restart_error", default="Error reiniciando servicio WiFi"))
         
         logger.info('connect_wifi', ssid=ssid)
