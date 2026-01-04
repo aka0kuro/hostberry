@@ -485,7 +485,7 @@
       
       // Validar extensión
       if(!file.name.endsWith('.tar.gz') && !file.name.endsWith('.tgz')){
-        showNotification(HostBerry.t?.('backup.invalid_format', 'El archivo debe ser un backup .tar.gz') || 'El archivo debe ser un backup .tar.gz', 'error');
+        showNotification(getTranslation('backup.invalid_format', 'File must be a .tar.gz backup'), 'error');
         return;
       }
       
