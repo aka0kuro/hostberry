@@ -89,7 +89,10 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
         )
 
 @router.get("/network", response_model=NetworkStats)
-async def get_network_statistics(interface: str = None):
+async def get_network_statistics(
+    interface: str = None,
+    current_user: Dict[str, Any] = Depends(get_current_active_user)
+):
     """Obtiene estadísticas de red (con caché)"""
     try:
         from core.cache import cache
