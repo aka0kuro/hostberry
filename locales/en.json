@@ -1284,6 +1284,7 @@
     "no_backups": "No backups listed yet",
     "loading": "Loading backups...",
     "click_to_load": "Click \"List backups\" to load backups",
+    "loaded": "Backups loaded successfully",
     "downloading": "Downloading backup...",
     "downloaded": "Backup downloaded successfully",
     "download_error": "Error downloading backup",
