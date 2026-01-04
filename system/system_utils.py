@@ -25,6 +25,9 @@ class RPISystemMonitor:
     def get_system_stats(self) -> Dict[str, Any]:
         """Obtener estadísticas del sistema optimizadas para RPi 3"""
         try:
+            # Lazy import de psutil
+            import psutil
+            
             # Información básica del sistema
             cpu_percent = psutil.cpu_percent(interval=1)
             memory = psutil.virtual_memory()
