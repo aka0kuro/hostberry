@@ -117,52 +117,107 @@
 
   async function updateStats(){
     try{
-      const [systemStats, networkStatsRaw] = await Promise.all([
+      const [systemStatsResp, networkStatsResp] = await Promise.all([
         fetchJson('/api/v1/system/stats'),
         fetchJson(`/api/v1/system/network${selectedInterface ? `?interface=${encodeURIComponent(selectedInterface)}` : ''}`)
       ]);
+      
+      // Manejar respuesta de system stats (puede venir directamente o envuelta)
+      const systemStats = systemStatsResp.data || systemStatsResp;
+      
+      // Manejar respuesta de network stats (puede venir directamente o envuelta)
+      const networkStatsRaw = networkStatsResp.data || networkStatsResp;
       const networkStats = computeNetworkRates(networkStatsRaw);
-      populateInterfaceSelect(networkStats.interfaces || []);
-
-      setText('uptime-value', formatUptime(systemStats.uptime));
-      setText('cpu-usage', `${safeToFixed(systemStats.cpu_usage)}%`);
-      updateProgress('cpu-progress', systemStats.cpu_usage);
-      if(typeof systemStats.cpu_temperature === 'number'){
-        setText('cpu-temp', `${safeToFixed(systemStats.cpu_temperature)}°C`);
-      }
-      setText('cpu-cores', systemStats.cpu_cores ? String(systemStats.cpu_cores) : '-');
-
-      setText('mem-usage', `${safeToFixed(systemStats.memory_usage)}%`);
-      updateProgress('mem-progress', systemStats.memory_usage);
-      if(systemStats.memory_total){
-        setText('mem-total', `${safeToFixed(systemStats.memory_total / (1024 ** 3),1)} GB`);
-      }
-      if(systemStats.memory_free){
-        setText('mem-free', `${safeToFixed(systemStats.memory_free / (1024 ** 3),1)} GB`);
+      
+      // Populate interface select
+      if(networkStats.interfaces && Array.isArray(networkStats.interfaces)){
+        populateInterfaceSelect(networkStats.interfaces);
+      } else if(networkStatsRaw.interfaces && Array.isArray(networkStatsRaw.interfaces)){
+        populateInterfaceSelect(networkStatsRaw.interfaces);
       }
 
-      setText('disk-usage', `${safeToFixed(systemStats.disk_usage)}%`);
-      updateProgress('disk-progress', systemStats.disk_usage);
-      if(systemStats.disk_total){
-        setText('disk-total', `${safeToFixed(systemStats.disk_total / (1024 ** 3),1)} GB`);
+      // Actualizar uptime
+      const uptime = systemStats.uptime || 0;
+      setText('uptime-value', formatUptime(uptime));
+      
+      // Actualizar CPU
+      const cpuUsage = systemStats.cpu_usage || 0;
+      setText('cpu-usage', `${safeToFixed(cpuUsage)}%`);
+      updateProgress('cpu-progress', cpuUsage);
+      
+      const cpuTemp = systemStats.cpu_temperature;
+      if(typeof cpuTemp === 'number' && cpuTemp > 0){
+        setText('cpu-temp', `${safeToFixed(cpuTemp)}°C`);
+      } else {
+        setText('cpu-temp', '--°C');
       }
-      if(systemStats.disk_used){
-        setText('disk-used', `${safeToFixed(systemStats.disk_used / (1024 ** 3),1)} GB`);
+      
+      const cpuCores = systemStats.cpu_cores;
+      setText('cpu-cores', cpuCores ? String(cpuCores) : '-');
+
+      // Actualizar Memoria
+      const memUsage = systemStats.memory_usage || 0;
+      setText('mem-usage', `${safeToFixed(memUsage)}%`);
+      updateProgress('mem-progress', memUsage);
+      
+      const memTotal = systemStats.memory_total;
+      if(memTotal && memTotal > 0){
+        setText('mem-total', `${safeToFixed(memTotal / (1024 ** 3),1)} GB`);
+      } else {
+        setText('mem-total', '0 GB');
+      }
+      
+      const memFree = systemStats.memory_free;
+      if(memFree && memFree > 0){
+        setText('mem-free', `${safeToFixed(memFree / (1024 ** 3),1)} GB`);
+      } else {
+        setText('mem-free', '0 GB');
       }
 
-      setText('net-interface', networkStats.interface || '-');
-      setText('net-ip', networkStats.ip_address || '--');
-      setText('net-download', `${safeToFixed(networkStats.download_speed || 0, 2)} KB/s`);
-      setText('net-upload', `${safeToFixed(networkStats.upload_speed || 0, 2)} KB/s`);
-      setText('net-bytes-recv', formatBytes(networkStats.bytes_recv || 0));
-      setText('net-bytes-sent', formatBytes(networkStats.bytes_sent || 0));
-      setText('net-packets', `${networkStats.packets_sent || 0} / ${networkStats.packets_recv || 0}`);
-      pushNetHistory(networkStats.download_speed || 0, networkStats.upload_speed || 0);
+      // Actualizar Disco
+      const diskUsage = systemStats.disk_usage || 0;
+      setText('disk-usage', `${safeToFixed(diskUsage)}%`);
+      updateProgress('disk-progress', diskUsage);
+      
+      const diskTotal = systemStats.disk_total;
+      if(diskTotal && diskTotal > 0){
+        setText('disk-total', `${safeToFixed(diskTotal / (1024 ** 3),1)} GB`);
+      } else {
+        setText('disk-total', '0 GB');
+      }
+      
+      const diskUsed = systemStats.disk_used;
+      if(diskUsed && diskUsed > 0){
+        setText('disk-used', `${safeToFixed(diskUsed / (1024 ** 3),1)} GB`);
+      } else {
+        setText('disk-used', '0 GB');
+      }
+
+      // Actualizar Red
+      setText('net-interface', networkStats.interface || networkStatsRaw.interface || '-');
+      setText('net-ip', networkStats.ip_address || networkStatsRaw.ip_address || '--');
+      
+      const downloadSpeed = networkStats.download_speed || 0;
+      const uploadSpeed = networkStats.upload_speed || 0;
+      setText('net-download', `${safeToFixed(downloadSpeed, 2)} KB/s`);
+      setText('net-upload', `${safeToFixed(uploadSpeed, 2)} KB/s`);
+      
+      const bytesRecv = networkStats.bytes_recv || networkStatsRaw.bytes_recv || 0;
+      const bytesSent = networkStats.bytes_sent || networkStatsRaw.bytes_sent || 0;
+      setText('net-bytes-recv', formatBytes(bytesRecv));
+      setText('net-bytes-sent', formatBytes(bytesSent));
+      
+      const packetsSent = networkStats.packets_sent || networkStatsRaw.packets_sent || 0;
+      const packetsRecv = networkStats.packets_recv || networkStatsRaw.packets_recv || 0;
+      setText('net-packets', `${packetsSent} / ${packetsRecv}`);
+      
+      pushNetHistory(downloadSpeed, uploadSpeed);
 
       setText('monitoring-last-update', new Date().toLocaleTimeString());
       ensureNetChart();
     }catch(error){
       console.error('Error updating monitoring stats:', error);
+      console.error('Error details:', error.message, error.stack);
       const errorMsg = HostBerry.t?.('errors.monitoring_stats', 'No se pudieron actualizar las estadísticas de monitoreo') || 'No se pudieron actualizar las estadísticas de monitoreo';
       HostBerry.showAlert?.('danger', errorMsg);
     }
