@@ -199,11 +199,22 @@
     color: white;
 }
 
+.status-info {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    margin-top: 0 !important;
+}
+
 .status-info h6 {
     color: rgba(255, 255, 255, 0.8);
     font-size: 0.75rem;
     margin-bottom: 0.2rem;
+    margin-top: 0;
     font-weight: 600;
+    text-align: center !important;
 }
 
 .status-info h3 {
@@ -211,6 +222,7 @@
     font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
+    text-align: center !important;
 }
 
 .progress {
