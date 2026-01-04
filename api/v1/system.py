@@ -63,11 +63,11 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
         )
 
 @router.get("/network", response_model=NetworkStats)
-async def get_network_statistics(current_user: Dict[str, Any] = Depends(get_current_active_user)):
+async def get_network_statistics(interface: str = None, current_user: Dict[str, Any] = Depends(get_current_active_user)):
     """Obtiene estadísticas de red"""
     try:
         # Obtener información de red
-        iface_info = get_network_interface()
+        iface_info = get_network_interface(interface)
         interface = iface_info.get("interface") if isinstance(iface_info, dict) else None
         ip_address = iface_info.get("ip_address") if isinstance(iface_info, dict) else None
         
@@ -93,6 +93,14 @@ async def get_network_statistics(current_user: Dict[str, Any] = Depends(get_curr
         interface = interface or "unknown"
         ip_address = ip_address or "--"
 
+        # recopilar lista de interfaces disponibles (sin loopback)
+        available_interfaces = [
+            name for name, st in psutil.net_if_stats().items()
+            if name != "lo" and getattr(st, "isup", False)
+        ] or [
+            name for name in psutil.net_if_stats().keys() if name != "lo"
+        ]
+
         stats = NetworkStats(
             interface=interface,
             ip_address=ip_address,
@@ -101,7 +109,8 @@ async def get_network_statistics(current_user: Dict[str, Any] = Depends(get_curr
             bytes_sent=net_io.bytes_sent,
             bytes_recv=net_io.bytes_recv,
             packets_sent=net_io.packets_sent,
-            packets_recv=net_io.packets_recv
+            packets_recv=net_io.packets_recv,
+            interfaces=available_interfaces
         )
         
         # Guardar estadísticas en base de datos
