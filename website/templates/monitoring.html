@@ -392,7 +392,13 @@
       }
       
       const data = await resp.json();
-      return data.data || data;
+      // El modelo Pydantic devuelve los datos directamente, no envueltos en 'data'
+      // Pero algunos endpoints pueden devolverlos envueltos
+      if(data && typeof data === 'object'){
+        // Si tiene 'data', usarlo; si no, usar directamente
+        return data.data !== undefined ? data.data : data;
+      }
+      return data;
     } catch(error){
       console.error('fetchJson error:', url, error);
       throw error;
