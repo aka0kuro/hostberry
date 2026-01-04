@@ -365,15 +365,26 @@
   }
 
   document.addEventListener('DOMContentLoaded', function(){
-    fetchSecurityStatus();
+    updateLastCheck();
     loadBackups();
     
-    document.getElementById('securityStatusRefresh')?.addEventListener('click', fetchSecurityStatus);
-    document.getElementById('securityBackupsRefresh')?.addEventListener('click', loadBackups);
+    document.getElementById('backupsRefresh')?.addEventListener('click', loadBackups);
     document.getElementById('action-create-backup')?.addEventListener('click', createBackup);
     document.getElementById('action-list-backups')?.addEventListener('click', loadBackups);
     
-    setInterval(fetchSecurityStatus, 60000);
+    // Manejar carga de archivo
+    const fileInput = document.getElementById('backup-file-input');
+    if(fileInput){
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if(file){
+          uploadBackup(file);
+          // Resetear input
+          e.target.value = '';
+        }
+      });
+    }
+    
     setInterval(loadBackups, 30000);
   });
 })();
