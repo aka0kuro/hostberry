@@ -121,6 +121,8 @@ class RPISystemMonitor:
         """Obtener información de interfaz de red.
         Si no se proporciona, selecciona la primera interfaz activa distinta de loopback."""
         try:
+            # Lazy import de psutil
+            import psutil
             addrs = psutil.net_if_addrs()
             stats = psutil.net_if_stats()
 
