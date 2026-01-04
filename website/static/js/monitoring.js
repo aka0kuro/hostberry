@@ -218,7 +218,7 @@
     }catch(error){
       console.error('Error updating monitoring stats:', error);
       console.error('Error details:', error.message, error.stack);
-      const errorMsg = HostBerry.t?.('errors.monitoring_stats', 'No se pudieron actualizar las estadísticas de monitoreo') || 'No se pudieron actualizar las estadísticas de monitoreo';
+      const errorMsg = HostBerry.t?.('errors.monitoring_stats', 'Unable to refresh monitoring stats') || 'Unable to refresh monitoring stats';
       HostBerry.showAlert?.('danger', errorMsg);
     }
   }
