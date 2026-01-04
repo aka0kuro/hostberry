@@ -91,29 +91,6 @@
         font-size: 1.8rem;
         font-weight: 600;
     }
-    .monitoring-page .status-pill {
-        border-radius: 999px;
-        padding: 0.35rem 1rem;
-        font-weight: 600;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-    }
-    .monitoring-page .backup-list {
-        max-height: 340px;
-        overflow-y: auto;
-    }
-    .monitoring-page .backup-item {
-        padding: 0.85rem 1rem;
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        margin-bottom: 0.75rem;
-    }
-    .monitoring-page .backup-item:last-child {
-        margin-bottom: 0;
-    }
-    .monitoring-page .backup-item .badge {
-        font-size: 0.75rem;
-    }
 </style>
 {% endblock %}
 
@@ -229,56 +206,6 @@
                         <div class="text-center py-4 text-white-50">
                             <i class="bi bi-arrow-clockwise spinning"></i>
                             <p class="mb-0 mt-2">{{ t('monitoring.loading_logs', 'Loading logs...') }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row g-4 mt-1">
-            <div class="col-lg-5">
-                <div class="glass-card p-4 h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <h5 class="text-white mb-1">{{ t('monitoring.backup_heading', 'Backup status') }}</h5>
-                            <p class="text-white-50 mb-0">{{ t('monitoring.backup_caption', 'Ensure your data is protected') }}</p>
-                        </div>
-                        <span class="status-pill bg-dark text-white" id="backup-status-pill">{{ t('monitoring.backup_status', 'Status') }}</span>
-                    </div>
-                    <div class="mb-3">
-                        <span class="text-white-50 small">{{ t('monitoring.last_backup', 'Last backup') }}</span>
-                        <div class="stat-value text-white" id="backup-last-run">--</div>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <span class="text-white-50 small">{{ t('monitoring.backup_size', 'Last size') }}</span>
-                            <p class="text-white fw-semibold mb-0" id="backup-last-size">--</p>
-                        </div>
-                        <div class="col-6">
-                            <span class="text-white-50 small">{{ t('monitoring.backup_count', 'Stored backups') }}</span>
-                            <p class="text-white fw-semibold mb-0" id="backup-count">0</p>
-                        </div>
-                    </div>
-                    <button class="btn btn-light w-100 mt-4" id="monitoringBackupRun">
-                        <i class="bi bi-hdd-network me-2"></i>{{ t('monitoring.backup_run_now', 'Create encrypted backup') }}
-                    </button>
-                    <p class="text-white-50 small text-center mt-2">{{ t('monitoring.backup_note', 'Backups include configs and logs with AES encryption.') }}</p>
-                </div>
-            </div>
-            <div class="col-lg-7">
-                <div class="glass-card p-4 h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <h5 class="text-white mb-1">{{ t('monitoring.backup_history_heading', 'Backup history') }}</h5>
-                            <p class="text-white-50 mb-0">{{ t('monitoring.backup_history_caption', 'Most recent encrypted archives') }}</p>
-                        </div>
-                        <button class="btn btn-sm btn-outline-light" id="monitoringBackupRefresh">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
-                    </div>
-                    <div class="backup-list" id="monitoring-backup-list">
-                        <div class="text-center py-4 text-white-50">
-                            <i class="bi bi-archive"></i>
-                            <p class="mb-0 mt-2">{{ t('monitoring.backup_empty', 'No backups recorded yet') }}</p>
                         </div>
                     </div>
                 </div>
