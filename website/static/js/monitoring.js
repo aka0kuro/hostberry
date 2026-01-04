@@ -90,7 +90,7 @@
   }
 
   async function loadBackups(){
-    await Promise.all([refreshBackupList(), fetchBackupStatus()]);
+    await refreshBackupList();
   }
 
   async function refreshBackupList(){
@@ -156,14 +156,6 @@
       const ok = (latest.status || '').toLowerCase() === 'success';
       pill.className = `status-pill ${ok ? 'bg-success text-white' : 'bg-warning text-dark'}`;
       pill.textContent = ok ? HostBerry.t?.('monitoring.backup_ok', 'Healthy') : HostBerry.t?.('monitoring.backup_attention', 'Needs attention');
-    }
-  }
-
-  async function fetchBackupStatus(){
-    try{
-      await refreshBackupList();
-    }catch(error){
-      console.error('Error refreshing backup status', error);
     }
   }
 
