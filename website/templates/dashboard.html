@@ -183,7 +183,8 @@
                     } %}
                     {% if services %}
                         {% for service_name, service_status in services.items() %}
-                            {% set icon_class = service_icons.get(service_name|lower, 'bi bi-hdd service-icon default-icon') %}
+                            {% set normalized_name = service_name|lower %}
+                    {% set icon_class = service_icons.get(normalized_name, service_icons.get(normalized_name.replace('dnsmasq', 'dnsmask'), 'bi bi-hdd service-icon default-icon')) %}
                             {% set status_value = service_status.status if service_status is mapping and service_status.status is defined else service_status %}
                             {% set status_lower = (status_value|string)|lower %}
                             {% set is_running = status_lower in ['running', 'active', 'online'] %}
