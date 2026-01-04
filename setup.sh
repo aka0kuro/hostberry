@@ -2230,29 +2230,54 @@ verify_installation() {
         fi
     done
     
-    # Verificar respuesta HTTP (con múltiples intentos y más tiempo)
+    # Verificar respuesta HTTP (con múltiples intentos y más tiempo para servicios lentos)
     log "$ANSI_YELLOW" "INFO" "$(get_text 'checking_http' 'Comprobando respuesta HTTP...')"
+    log "$ANSI_YELLOW" "INFO" "Esperando a que el servicio esté completamente iniciado (puede tardar hasta 90 segundos)..."
+    
     local http_ok=false
-    for i in {1..6}; do
-        sleep 5
-        if curl -s -o /dev/null -w "%{http_code}" http://localhost 2>/dev/null | grep -q "200\|301\|302"; then
-            log "$ANSI_GREEN" "SUCCESS" "$(get_text 'http_ok' 'Respuesta HTTP OK')"
+    local max_attempts=18  # 18 intentos x 5 segundos = 90 segundos totales
+    local attempt=0
+    
+    # Esperar un poco antes del primer intento
+    sleep 3
+    
+    while [ $attempt -lt $max_attempts ]; do
+        attempt=$((attempt + 1))
+        
+        # Verificar primero si el servicio está activo
+        if ! systemctl is-active --quiet hostberry.service 2>/dev/null; then
+            log "$ANSI_YELLOW" "INFO" "Intento $attempt/$max_attempts: Servicio aún no activo, esperando..."
+            sleep 5
+            continue
+        fi
+        
+        # Si el servicio está activo, verificar HTTP
+        local http_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost 2>/dev/null || echo "000")
+        
+        if echo "$http_code" | grep -q "200\|301\|302"; then
+            log "$ANSI_GREEN" "SUCCESS" "$(get_text 'http_ok' 'Respuesta HTTP OK') (código: $http_code)"
             http_ok=true
             break
         else
-            log "$ANSI_YELLOW" "INFO" "Intento $i/6: Esperando respuesta HTTP..."
+            if [ $((attempt % 3)) -eq 0 ]; then
+                log "$ANSI_YELLOW" "INFO" "Intento $attempt/$max_attempts: Servicio activo pero HTTP aún no responde (código: $http_code)..."
+            fi
+            sleep 5
         fi
     done
     
     if [ "$http_ok" = false ]; then
-        log "$ANSI_RED" "ERROR" "$(get_text 'http_failed' 'Fallo en respuesta HTTP')"
+        log "$ANSI_RED" "ERROR" "$(get_text 'http_failed' 'Fallo en respuesta HTTP después de $max_attempts intentos')"
         log "$ANSI_YELLOW" "INFO" "Verificando estado del servicio hostberry..."
+        
         if systemctl is-active --quiet hostberry.service; then
-            log "$ANSI_YELLOW" "INFO" "El servicio está activo. Puede que necesite más tiempo para iniciar."
+            log "$ANSI_YELLOW" "INFO" "El servicio está activo pero no responde HTTP. Revisando logs..."
+            journalctl -u hostberry.service -n 50 --no-pager | tail -20 || true
             log "$ANSI_YELLOW" "INFO" "Intenta acceder manualmente: http://localhost"
+            log "$ANSI_YELLOW" "INFO" "O verifica los logs con: journalctl -u hostberry.service -f"
         else
             log "$ANSI_RED" "ERROR" "El servicio hostberry no está activo. Revisa los logs:"
-            journalctl -u hostberry.service -n 30 --no-pager || true
+            journalctl -u hostberry.service -n 50 --no-pager || true
         fi
     fi
 }
