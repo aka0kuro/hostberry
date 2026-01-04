@@ -13,6 +13,10 @@
                 <p class="dashboard-subtitle">{{ t('backup.subtitle', 'Gestiona y restaura tus respaldos del sistema') }}</p>
                 <div class="dashboard-time">
                     <i class="bi bi-clock me-1"></i>
+                    {{ t('backup.last_check', 'Última verificación') }}: <span id="backup-last-check">--</span>
+                </div>
+                <div class="dashboard-time">
+                    <i class="bi bi-clock me-1"></i>
                     {{ t('security.last_check', 'Last check') }}: <span id="security-last-check">--</span>
                 </div>
             </div>
