@@ -874,6 +874,7 @@
     "invalid_string": "Not a valid string",
     "invalid_integer": "Not a valid integer",
     "unknown_error": "Unknown error",
+    "monitoring_stats": "Unable to refresh monitoring stats",
     "hardware_error": "Hardware error",
     "software_error": "Software error",
     "driver_error": "Driver error",
