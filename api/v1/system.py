@@ -145,17 +145,17 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
             stats_dict = stats.dict()
         else:
             stats_dict = {
-            "cpu_usage": stats.cpu_usage,
-            "cpu_cores": stats.cpu_cores,
-            "memory_usage": stats.memory_usage,
-            "memory_total": stats.memory_total,
-            "memory_free": stats.memory_free,
-            "disk_usage": stats.disk_usage,
-            "disk_total": stats.disk_total,
-            "disk_used": stats.disk_used,
-            "cpu_temperature": stats.cpu_temperature,
-            "uptime": stats.uptime
-        }
+                "cpu_usage": stats.cpu_usage,
+                "cpu_cores": stats.cpu_cores,
+                "memory_usage": stats.memory_usage,
+                "memory_total": stats.memory_total,
+                "memory_free": stats.memory_free,
+                "disk_usage": stats.disk_usage,
+                "disk_total": stats.disk_total,
+                "disk_used": stats.disk_used,
+                "cpu_temperature": stats.cpu_temperature,
+                "uptime": stats.uptime
+            }
         # Agregar información adicional del sistema
         stats_dict.update({
             "hostname": hostname,
