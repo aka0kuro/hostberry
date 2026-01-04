@@ -255,17 +255,41 @@ class BackupManager:
             logger.error(f"❌ Error limpiando backups antiguos: {e}")
     
     def list_backups(self) -> list:
-        """Listar backups disponibles"""
+        """Listar backups disponibles (optimizado)"""
         backups = []
-        for backup_file in self.backup_dir.glob("*.tar.gz*"):
-            stat = backup_file.stat()
-            backups.append({
-                "name": backup_file.name,
-                "size": stat.st_size,
-                "created": datetime.fromtimestamp(stat.st_mtime).isoformat(),
-                "encrypted": backup_file.suffix == '.enc'
-            })
-        return sorted(backups, key=lambda x: x["created"], reverse=True)
+        try:
+            # Usar listdir en lugar de glob para mejor rendimiento
+            if not self.backup_dir.exists():
+                return backups
+                
+            # Obtener todos los archivos de una vez
+            files = list(self.backup_dir.iterdir())
+            
+            for backup_file in files:
+                # Filtrar solo archivos de backup
+                if not backup_file.is_file():
+                    continue
+                if not (backup_file.name.endswith('.tar.gz') or backup_file.name.endswith('.tar.gz.enc')):
+                    continue
+                
+                try:
+                    stat = backup_file.stat()
+                    backups.append({
+                        "name": backup_file.name,
+                        "size": stat.st_size,
+                        "created": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                        "encrypted": backup_file.suffix == '.enc'
+                    })
+                except (OSError, ValueError) as e:
+                    # Ignorar archivos que no se pueden leer
+                    logger.warning(f"No se pudo leer información de {backup_file.name}: {e}")
+                    continue
+            
+            # Ordenar por fecha (más reciente primero)
+            return sorted(backups, key=lambda x: x["created"], reverse=True)
+        except Exception as e:
+            logger.error(f"Error listando backups: {e}")
+            return backups
     
     def get_backup_info(self, backup_path: str) -> Optional[Dict[str, Any]]:
         """Obtener información de un backup"""
