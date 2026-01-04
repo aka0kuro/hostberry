@@ -524,9 +524,13 @@
                       now.getMinutes().toString().padStart(2, '0') + ':' + 
                       now.getSeconds().toString().padStart(2, '0');
     
+    // Asegurar que los valores son números válidos
+    const downloadVal = typeof download === 'number' && !isNaN(download) ? download : 0;
+    const uploadVal = typeof upload === 'number' && !isNaN(upload) ? upload : 0;
+    
     netHistory.labels.push(timeLabel);
-    netHistory.download.push(download);
-    netHistory.upload.push(upload);
+    netHistory.download.push(downloadVal);
+    netHistory.upload.push(uploadVal);
     
     if(netHistory.labels.length > 30){
       netHistory.labels.shift();
