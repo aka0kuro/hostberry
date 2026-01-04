@@ -300,14 +300,7 @@
   };
 
   const setStatusCard = (idPrefix, enabled) => {
-    const textEl = document.getElementById(idPrefix + '-text');
     const badgeEl = document.getElementById(idPrefix + '-badge');
-    if(textEl) {
-      const statusText = enabled 
-        ? (HostBerry.t?.('security.enabled', 'Enabled') || 'Enabled')
-        : (HostBerry.t?.('security.disabled', 'Disabled') || 'Disabled');
-      textEl.textContent = statusText;
-    }
     if(badgeEl) {
       const badge = badgeEl.querySelector('.badge');
       if(badge) {
