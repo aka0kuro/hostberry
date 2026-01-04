@@ -71,6 +71,13 @@ templates = Jinja2Templates(directory="website/templates")
 templates.env = env
 
 
+class DummyForm:
+    csrf_token = ""
+
+    def hidden_tag(self):
+        return ""
+
+
 def _resolve_language(request: Request, lang: str | None) -> tuple[str, bool]:
     if lang:
         i18n.set_context_language(lang)
@@ -509,13 +516,19 @@ async def security_page(request: Request, lang: str | None = Query(default=None)
     
     cfg = SimpleNamespace(
         FIREWALL_ENABLED=True,
+        BLOCK_ICMP=True,
         TIMEZONE="UTC",
+        TIME_FORMAT="%Y-%m-%d %H:%M:%S",
     )
     sec = SimpleNamespace(
         blocked_ips=12,
         last_attack=None,
         last_check=datetime.now(timezone.utc),
     )
+    dummy_form = DummyForm()
+    timezones = ["UTC", "Europe/Madrid", "America/Mexico_City", "America/Bogota"]
+    time_formats = ["%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M", "%H:%M:%S"]
+    current_time = datetime.now(timezone.utc)
     
     return _render(
         "security.html",
@@ -524,6 +537,10 @@ async def security_page(request: Request, lang: str | None = Query(default=None)
         extra={
             "config": cfg,
             "security_status": sec,
+            "form": dummy_form,
+            "timezones": timezones,
+            "time_formats": time_formats,
+            "current_time": current_time,
             "system_info": {
                 "hostname": "hostberry",
                 "os_version": "Raspberry Pi OS",
