@@ -1090,9 +1090,21 @@ setup_production_dirs() {
     fi
     
     # Crear archivos de log y enlazar directorio de logs dentro de /opt
-    touch "$LOG_DIR/access.log" "$LOG_DIR/error.log" "$LOG_DIR/app.log" "$LOG_DIR/hostberry.log"
-    chown "$USER:$GROUP" "$LOG_DIR"/*.log
-    chmod 644 "$LOG_DIR"/*.log
+    if [[ $EUID -eq 0 ]]; then
+        touch "$LOG_DIR/access.log" "$LOG_DIR/error.log" "$LOG_DIR/app.log" "$LOG_DIR/hostberry.log"
+        chown "$USER:$GROUP" "$LOG_DIR"/*.log
+        chmod 644 "$LOG_DIR"/*.log
+        # Asegurar permisos del directorio de logs
+        chown -R "$USER:$GROUP" "$LOG_DIR" 2>/dev/null || true
+        chmod 755 "$LOG_DIR"
+    else
+        sudo touch "$LOG_DIR/access.log" "$LOG_DIR/error.log" "$LOG_DIR/app.log" "$LOG_DIR/hostberry.log"
+        sudo chown "$USER:$GROUP" "$LOG_DIR"/*.log
+        sudo chmod 644 "$LOG_DIR"/*.log
+        # Asegurar permisos del directorio de logs
+        sudo chown -R "$USER:$GROUP" "$LOG_DIR" 2>/dev/null || true
+        sudo chmod 755 "$LOG_DIR"
+    fi
     
     # Asegurar que /opt/hostberry/logs apunta a /var/log/hostberry para evitar errores de FS de solo lectura
     if [ -L "$PROD_DIR/logs" ] || [ -d "$PROD_DIR/logs" ]; then
