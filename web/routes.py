@@ -444,13 +444,7 @@ async def first_login(request: Request, lang: str | None = Query(default=None)) 
     context = _base_context(request, lang or request.cookies.get("lang", "en"))
     context.update({
         "current_user": current_user,
-        "services": {
-            "hostberry": "running",
-            "nginx": "running",
-            "ssh": "running",
-            "ufw": "running",
-            "fail2ban": "running"
-        },
+        "services": _get_service_statuses(),
         "recent_activities": [
             {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
             {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
@@ -481,14 +475,7 @@ async def dashboard_page(request: Request, lang: str | None = Query(default=None
                 "disk_percent": 60,
                 "temperature": 45,
             },
-            "services": {
-                "hostberry": "running",
-                "nginx": "running",
-                "ssh": "running",
-                "ufw": "running",
-                "fail2ban": "running",
-                "wifi": "running",
-            },
+            "services": _get_service_statuses(),
             "network_status": {
                 "eth0": {"status": "connected", "ip": "192.168.1.100", "gateway": "192.168.1.1"},
                 "wlan0": {"status": "connected", "ip": "192.168.1.101", "ssid": "HomeNetwork", "signal": 85},
