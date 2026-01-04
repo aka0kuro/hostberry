@@ -277,7 +277,7 @@ function displayRoutingTable(routes){
 
 async function toggleFirewall(){
     try{
-        const resp = await fetch('/api/v1/network/firewall/toggle', { method:'POST', headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
+        const resp = await fetch('/api/v1/system/network/firewall/toggle', { method:'POST', headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
         if(resp.ok){ 
             HostBerry.showAlert('success', HostBerry.t('messages.operation_successful', 'Operation successful')); 
             setTimeout(()=>window.location.reload(), 1000); 
