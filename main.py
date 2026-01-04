@@ -248,21 +248,10 @@ async def internal_server_error_handler(request: Request, exc: Exception):
 # Montar archivos estáticos (carpeta consolidada en website/static)
 app.mount("/static", StaticFiles(directory="website/static"), name="static")
 
-# Incluir routers
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
-app.include_router(system.router, prefix="/api/v1/system", tags=["system"])
-app.include_router(wifi.router, prefix="/api/v1/wifi", tags=["wifi"])
-app.include_router(vpn.router, prefix="/api/v1/vpn", tags=["vpn"])
-app.include_router(wireguard.router, prefix="/api/v1/wireguard", tags=["wireguard"])
-app.include_router(adblock.router, prefix="/api/v1/adblock", tags=["adblock"])
-app.include_router(hostapd.router, prefix="/api/v1/hostapd", tags=["hostapd"])
-
-# Incluir router de seguridad
-from api.v1 import security
-app.include_router(security.router, prefix="/api/v1", tags=["security"])
+# Incluir router principal de API v1 (blueprint principal)
+app.include_router(api_v1_router)
 
 # Incluir rutas web
-
 app.include_router(web_routes.router, tags=["web"])
 
 # Endpoints básicos (mantener healthcheck)
