@@ -1,172 +1,234 @@
 {% extends "base.html" %}
 
-{% block extra_css %}
-<style>
-    .monitoring-page .glass-card {
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        background: rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(22px);
-        box-shadow:
-            0 8px 32px rgba(0, 0, 0, 0.35),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2),
-            inset 0 -1px 0 rgba(255, 255, 255, 0.05);
-    }
-    .monitoring-page .metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 1rem;
-    }
-    .monitoring-page .metric-card {
-        position: relative;
-        padding: 1.5rem;
-        border-radius: 22px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: #2d2d2d;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        overflow: hidden;
-    }
-    .monitoring-page .metric-card::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        border-radius: 22px;
-        background: rgba(255, 255, 255, 0.05);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    .monitoring-page .metric-card:hover::before {
-        opacity: 1;
-    }
-    .monitoring-page .metric-card > * {
-        position: relative;
-        z-index: 1;
-    }
-    .monitoring-page .metric-card .metric-label {
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: rgba(255, 255, 255, 0.6);
-    }
-    .monitoring-page .metric-card .metric-value {
-        font-size: 2rem;
-        font-weight: 600;
-    }
-    .monitoring-page .progress {
-        height: 6px;
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 999px;
-    }
-    .monitoring-page .progress-bar {
-        background: linear-gradient(90deg, #ec4899, #6366f1);
-        border-radius: 999px;
-    }
-    .monitoring-page .stat-card h6 {
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: rgba(255, 255, 255, 0.6);
-    }
-    .monitoring-page .stat-card .stat-value {
-        font-size: 1.8rem;
-        font-weight: 600;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="system-page monitoring-page">
-    <div class="dashboard-container">
-        <section class="glass-card p-4 mb-4">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-                <div>
-                    <p class="text-uppercase text-primary fw-semibold small mb-1">{{ t('monitoring.kicker', 'Live Ops') }}</p>
-                    <h2 class="text-white fw-bold mb-2">{{ t('monitoring.title', 'Monitoring Control Room') }}</h2>
-                    <p class="text-white-50 mb-0">{{ t('monitoring.subtitle', 'Real-time insight on your HostBerry performance data') }}</p>
-                </div>
-                <div class="text-white-50 small">
-                    {{ t('monitoring.last_update', 'Last sync') }}:
-                    <span id="monitoring-last-update">--:--</span>
-                </div>
-            </div>
-            <div class="metrics-grid mt-4">
-                <div class="metric-card">
-                    <span class="metric-label">{{ t('monitoring.uptime', 'Uptime') }}</span>
-                    <div class="metric-value text-white" id="uptime-value">--</div>
-                    <small class="text-white-50">{{ t('monitoring.since_boot', 'Since boot') }}</small>
-                </div>
-                <div class="metric-card">
-                    <span class="metric-label">{{ t('monitoring.cpu_usage', 'CPU Usage') }}</span>
-                    <div class="metric-value text-white" id="cpu-usage">0%</div>
-                    <div class="progress mt-2">
-                        <div id="cpu-progress" class="progress-bar" style="width:0%"></div>
-                    </div>
-                    <div class="d-flex justify-content-between text-white-50 small mt-2">
-                        <span>{{ t('monitoring.cores', 'Cores') }}: <strong id="cpu-cores">-</strong></span>
-                        <span>{{ t('monitoring.temp', 'Temp') }}: <strong id="cpu-temp">--°C</strong></span>
-                    </div>
-                </div>
-                <div class="metric-card">
-                    <span class="metric-label">{{ t('monitoring.memory_usage', 'Memory Usage') }}</span>
-                    <div class="metric-value text-white" id="mem-usage">0%</div>
-                    <div class="progress mt-2">
-                        <div id="mem-progress" class="progress-bar" style="width:0%"></div>
-                    </div>
-                    <div class="text-white-50 small mt-2">
-                        {{ t('monitoring.used_of', 'Used of') }} <strong id="mem-total">0 GB</strong> · <span id="mem-free">0 GB</span> {{ t('monitoring.free', 'free') }}
-                    </div>
-                </div>
-                <div class="metric-card">
-                    <span class="metric-label">{{ t('monitoring.disk_usage', 'Disk Usage') }}</span>
-                    <div class="metric-value text-white" id="disk-usage">0%</div>
-                    <div class="progress mt-2">
-                        <div id="disk-progress" class="progress-bar" style="width:0%"></div>
-                    </div>
-                    <div class="text-white-50 small mt-2">
-                        {{ t('monitoring.used', 'Used') }} <strong id="disk-used">0 GB</strong> / <span id="disk-total">0 GB</span>
-                    </div>
+<div class="dashboard-container">
+    <!-- Header Section -->
+    <div class="dashboard-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-12 text-center">
+                <h1 class="dashboard-title">
+                    <i class="bi bi-activity me-2"></i>
+                    {{ t('navigation.monitoring', 'Monitoring') }}
+                </h1>
+                <p class="dashboard-subtitle">{{ t('monitoring.subtitle', 'Real-time system monitoring and network statistics') }}</p>
+                <div class="dashboard-time">
+                    <i class="bi bi-clock me-1"></i>
+                    {{ t('monitoring.last_update', 'Last update') }}: <span id="monitoring-last-update">--:--</span>
                 </div>
             </div>
-        </section>
+        </div>
+    </div>
 
-        <div class="row g-4">
-            <div class="col-12">
-                <div class="glass-card p-4 stat-card h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                        <div>
-                            <h5 class="text-white mb-1">{{ t('monitoring.network_heading', 'Network throughput') }}</h5>
-                            <p class="text-white-50 mb-0">{{ t('monitoring.network_caption', 'Monitor primary interface usage') }}</p>
+    <!-- System Status Cards -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <h5 class="actions-card-title">
+                        <i class="bi bi-cpu me-2"></i>
+                        {{ t('monitoring.system_status', 'System Status') }}
+                    </h5>
+                </div>
+                <div class="actions-card-body">
+                    <div class="row g-3">
+                        <!-- Uptime -->
+                        <div class="col-lg-3 col-md-6">
+                            <div class="status-card cpu-card">
+                                <div class="status-card-header">
+                                    <div class="status-icon cpu-icon">
+                                        <i class="bi bi-clock-history"></i>
+                                    </div>
+                                    <div class="status-info">
+                                        <h6>{{ t('monitoring.uptime', 'Uptime') }}</h6>
+                                        <h3 id="uptime-value">--</h3>
+                                    </div>
+                                </div>
+                                <div class="status-footer">
+                                    <span class="status-text text-white-50">{{ t('monitoring.since_boot', 'Since boot') }}</span>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- CPU Usage -->
+                        <div class="col-lg-3 col-md-6">
+                            <div class="status-card cpu-card">
+                                <div class="status-card-header">
+                                    <div class="status-icon cpu-icon">
+                                        <i class="bi bi-cpu"></i>
+                                    </div>
+                                    <div class="status-info">
+                                        <h6>{{ t('monitoring.cpu_usage', 'CPU Usage') }}</h6>
+                                        <h3 id="cpu-usage">0%</h3>
+                                    </div>
+                                </div>
+                                <div class="progress">
+                                    <div id="cpu-progress" class="progress-bar cpu-progress" style="width:0%"></div>
+                                </div>
+                                <div class="status-footer">
+                                    <span class="status-text text-white-50">
+                                        {{ t('monitoring.cores', 'Cores') }}: <strong id="cpu-cores">-</strong> | 
+                                        {{ t('monitoring.temp', 'Temp') }}: <strong id="cpu-temp">--°C</strong>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Memory Usage -->
+                        <div class="col-lg-3 col-md-6">
+                            <div class="status-card memory-card">
+                                <div class="status-card-header">
+                                    <div class="status-icon memory-icon">
+                                        <i class="bi bi-memory"></i>
+                                    </div>
+                                    <div class="status-info">
+                                        <h6>{{ t('monitoring.memory_usage', 'Memory Usage') }}</h6>
+                                        <h3 id="mem-usage">0%</h3>
+                                    </div>
+                                </div>
+                                <div class="progress">
+                                    <div id="mem-progress" class="progress-bar memory-progress" style="width:0%"></div>
+                                </div>
+                                <div class="status-footer">
+                                    <span class="status-text text-white-50">
+                                        {{ t('monitoring.used_of', 'Used of') }} <strong id="mem-total">0 GB</strong> · 
+                                        <span id="mem-free">0 GB</span> {{ t('monitoring.free', 'free') }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Disk Usage -->
+                        <div class="col-lg-3 col-md-6">
+                            <div class="status-card disk-card">
+                                <div class="status-card-header">
+                                    <div class="status-icon disk-icon">
+                                        <i class="bi bi-hdd"></i>
+                                    </div>
+                                    <div class="status-info">
+                                        <h6>{{ t('monitoring.disk_usage', 'Disk Usage') }}</h6>
+                                        <h3 id="disk-usage">0%</h3>
+                                    </div>
+                                </div>
+                                <div class="progress">
+                                    <div id="disk-progress" class="progress-bar disk-progress" style="width:0%"></div>
+                                </div>
+                                <div class="status-footer">
+                                    <span class="status-text text-white-50">
+                                        {{ t('monitoring.used', 'Used') }} <strong id="disk-used">0 GB</strong> / 
+                                        <span id="disk-total">0 GB</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Information -->
+    <div class="row mb-4">
+        <div class="col-lg-6 col-md-12">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <h5 class="actions-card-title">
+                        <i class="bi bi-info-circle me-2"></i>
+                        {{ t('monitoring.system_info', 'System Information') }}
+                    </h5>
+                </div>
+                <div class="actions-card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.hostname', 'Hostname') }}</h6>
+                            <p class="text-white mb-3" id="sys-hostname">--</p>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.os_version', 'OS Version') }}</h6>
+                            <p class="text-white mb-3" id="sys-os">--</p>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.kernel', 'Kernel') }}</h6>
+                            <p class="text-white mb-3" id="sys-kernel">--</p>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.architecture', 'Architecture') }}</h6>
+                            <p class="text-white mb-3" id="sys-arch">--</p>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.processor', 'Processor') }}</h6>
+                            <p class="text-white mb-3" id="sys-processor">--</p>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.load_average', 'Load Average') }}</h6>
+                            <p class="text-white mb-3" id="sys-load">--</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Statistics -->
+        <div class="col-lg-6 col-md-12">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="actions-card-title mb-0">
+                            <i class="bi bi-wifi me-2"></i>
+                            {{ t('monitoring.network_stats', 'Network Statistics') }}
+                        </h5>
                         <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-primary text-uppercase" id="net-interface">-</span>
-                            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="net-interface-select" style="min-width: 140px;">
+                            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="net-interface-select" style="min-width: 150px;">
                                 <option value="">{{ t('monitoring.network_auto', 'Auto detect') }}</option>
                             </select>
                         </div>
                     </div>
+                </div>
+                <div class="actions-card-body">
                     <div class="row g-3 mb-3">
-                        <div class="col-6 col-md-3">
-                            <h6>{{ t('monitoring.ip_address', 'IP Address') }}</h6>
-                            <div class="stat-value text-white" id="net-ip">--</div>
-                            <small class="text-white-50">{{ t('monitoring.public_ip', 'Primary address') }}</small>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.interface', 'Interface') }}</h6>
+                            <p class="text-white mb-3" id="net-interface">--</p>
                         </div>
-                        <div class="col-6 col-md-3">
-                            <h6>{{ t('monitoring.download', 'Download') }}</h6>
-                            <div class="stat-value text-white" id="net-download">0 KB/s</div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.ip_address', 'IP Address') }}</h6>
+                            <p class="text-white mb-3" id="net-ip">--</p>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.download', 'Download') }}</h6>
+                            <p class="text-white mb-2" id="net-download" style="font-size: 1.2rem; font-weight: 600;">0 KB/s</p>
                             <small class="text-white-50">{{ t('monitoring.total_received', 'Total Rx') }}: <span id="net-bytes-recv">0 MB</span></small>
                         </div>
-                        <div class="col-6 col-md-3">
-                            <h6>{{ t('monitoring.upload', 'Upload') }}</h6>
-                            <div class="stat-value text-white" id="net-upload">0 KB/s</div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.upload', 'Upload') }}</h6>
+                            <p class="text-white mb-2" id="net-upload" style="font-size: 1.2rem; font-weight: 600;">0 KB/s</p>
                             <small class="text-white-50">{{ t('monitoring.total_sent', 'Total Tx') }}: <span id="net-bytes-sent">0 MB</span></small>
                         </div>
-                        <div class="col-6 col-md-3">
-                            <h6>{{ t('monitoring.packets', 'Packets') }}</h6>
-                            <div class="stat-value text-white" id="net-packets">-</div>
-                            <small class="text-white-50">{{ t('monitoring.packet_info', 'Sent / Received') }}</small>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.packets', 'Packets') }}</h6>
+                            <p class="text-white mb-3" id="net-packets">--</p>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.errors', 'Errors') }}</h6>
+                            <p class="text-white mb-3" id="net-errors">--</p>
                         </div>
                     </div>
-                    <canvas id="net-chart" height="120"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Network Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <h5 class="actions-card-title">
+                        <i class="bi bi-graph-up me-2"></i>
+                        {{ t('monitoring.network_chart', 'Network Traffic Chart') }}
+                    </h5>
+                </div>
+                <div class="actions-card-body">
+                    <canvas id="net-chart" height="100"></canvas>
                 </div>
             </div>
         </div>
@@ -176,5 +238,477 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="/static/js/monitoring.js?v={{ last_update }}"></script>
+<script>
+(function(){
+  // Función para obtener traducciones
+  function getTranslation(key, defaultValue) {
+    if (!key) return defaultValue || '';
+    
+    const keys = String(key).split('.');
+    
+    // 1. Intentar desde HostBerry.translations
+    if (window.HostBerry?.translations) {
+      let current = window.HostBerry.translations;
+      for (const k of keys) {
+        if (current && typeof current === 'object' && k in current) {
+          current = current[k];
+        } else {
+          current = null;
+          break;
+        }
+      }
+      if (typeof current === 'string' && current) return current;
+    }
+    
+    // 2. Intentar desde window.translations
+    if (window.translations) {
+      let current = window.translations;
+      for (const k of keys) {
+        if (current && typeof current === 'object' && k in current) {
+          current = current[k];
+        } else {
+          current = null;
+          break;
+        }
+      }
+      if (typeof current === 'string' && current) return current;
+    }
+    
+    // 3. Intentar desde el JSON embebido
+    try {
+      const i18nEl = document.getElementById('i18n-json');
+      if (i18nEl) {
+        const translations = JSON.parse(i18nEl.textContent || i18nEl.innerText || '{}');
+        let current = translations;
+        for (const k of keys) {
+          if (current && typeof current === 'object' && k in current) {
+            current = current[k];
+          } else {
+            current = null;
+            break;
+          }
+        }
+        if (typeof current === 'string' && current) return current;
+      }
+    } catch (e) {
+      // Ignorar errores
+    }
+    
+    // 4. Usar HostBerry.t si está disponible
+    if (window.HostBerry?.t) {
+      try {
+        const result = window.HostBerry.t(key, defaultValue);
+        if (result && result !== key && typeof result === 'string') return result;
+      } catch (e) {
+        // Ignorar errores
+      }
+    }
+    
+    // 5. Fallback al valor por defecto
+    return defaultValue || key;
+  }
+
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = value;
+  };
+
+  function safeToFixed(value, digits = 1){
+    if(typeof value !== 'number' || Number.isNaN(value)) return '0.0';
+    return value.toFixed(digits);
+  }
+
+  function formatUptime(seconds){
+    if(!Number.isFinite(seconds) || seconds < 0) return '--';
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 86400) / 3600) % 60;
+    if(days > 0) return `${days}d ${hours}h ${minutes}m`;
+    if(hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+  }
+
+  function formatBytes(bytes){
+    if(!Number.isFinite(bytes) || bytes < 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${safeToFixed(bytes / Math.pow(k, i), 1)} ${sizes[i]}`;
+  }
+
+  async function fetchJson(url){
+    try {
+      if(!HostBerry || !HostBerry.apiRequest){
+        throw new Error('HostBerry.apiRequest is not available');
+      }
+      
+      const resp = await HostBerry.apiRequest(url);
+      if(!resp){
+        throw new Error('No response from server');
+      }
+      
+      if(resp.status === 401){
+        window.location.href = '/login';
+        throw new Error('Unauthorized');
+      }
+      
+      if(!resp.ok){
+        let errText = '';
+        try {
+          errText = await resp.text();
+        } catch(e) {
+          errText = `HTTP ${resp.status} ${resp.statusText}`;
+        }
+        throw new Error(errText);
+      }
+      
+      const data = await resp.json();
+      return data.data || data;
+    } catch(error){
+      console.error('fetchJson error:', error);
+      throw error;
+    }
+  }
+
+  let selectedInterface = '';
+  let lastNetSnapshot = null;
+  let netChart = null;
+  const netHistory = { labels: [], download: [], upload: [] };
+
+  function updateProgress(id, percent){
+    const el = document.getElementById(id);
+    if(el){
+      const safePercent = Math.min(100, Math.max(0, percent));
+      el.style.width = safePercent + '%';
+    }
+  }
+
+  function populateInterfaceSelect(interfaces){
+    const select = document.getElementById('net-interface-select');
+    if(!select || !interfaces || !Array.isArray(interfaces)) return;
+    
+    // Limpiar opciones existentes excepto "Auto detect"
+    while(select.options.length > 1){
+      select.remove(1);
+    }
+    
+    interfaces.forEach(iface => {
+      if(iface && iface.name){
+        const option = document.createElement('option');
+        option.value = iface.name;
+        option.textContent = iface.name;
+        if(iface.name === selectedInterface){
+          option.selected = true;
+        }
+        select.appendChild(option);
+      }
+    });
+  }
+
+  function computeNetworkRates(current){
+    if(!current || typeof current !== 'object'){
+      return {
+        download_speed: 0.0,
+        upload_speed: 0.0,
+        bytes_recv: 0,
+        bytes_sent: 0,
+        packets_sent: 0,
+        packets_recv: 0,
+        errors: 0,
+        interface: selectedInterface || '',
+        ip_address: '--',
+        interfaces: []
+      };
+    }
+    
+    const bytesRecv = typeof current.bytes_recv === 'number' && !isNaN(current.bytes_recv) ? current.bytes_recv : 0;
+    const bytesSent = typeof current.bytes_sent === 'number' && !isNaN(current.bytes_sent) ? current.bytes_sent : 0;
+    
+    if(lastNetSnapshot && current.interface && lastNetSnapshot.interface && current.interface !== lastNetSnapshot.interface){
+      lastNetSnapshot = null;
+      netHistory.labels.length = 0;
+      netHistory.download.length = 0;
+      netHistory.upload.length = 0;
+      if(netChart){ netChart.update(); }
+    }
+    
+    const now = Date.now();
+    if(!lastNetSnapshot){
+      lastNetSnapshot = { 
+        time: now, 
+        bytes_recv: bytesRecv,
+        bytes_sent: bytesSent,
+        interface: current.interface || selectedInterface || ''
+      };
+      return {
+        ...current,
+        download_speed: 0.0,
+        upload_speed: 0.0,
+        bytes_recv: bytesRecv,
+        bytes_sent: bytesSent
+      };
+    }
+    
+    const timeDelta = (now - lastNetSnapshot.time) / 1000;
+    if(timeDelta <= 0) return { ...current, download_speed: 0.0, upload_speed: 0.0 };
+    
+    const bytesRecvDelta = bytesRecv - lastNetSnapshot.bytes_recv;
+    const bytesSentDelta = bytesSent - lastNetSnapshot.bytes_sent;
+    
+    const downloadSpeed = bytesRecvDelta / timeDelta;
+    const uploadSpeed = bytesSentDelta / timeDelta;
+    
+    lastNetSnapshot = {
+      time: now,
+      bytes_recv: bytesRecv,
+      bytes_sent: bytesSent,
+      interface: current.interface || selectedInterface || ''
+    };
+    
+    return {
+      ...current,
+      download_speed: downloadSpeed,
+      upload_speed: uploadSpeed,
+      bytes_recv: bytesRecv,
+      bytes_sent: bytesSent
+    };
+  }
+
+  function pushNetHistory(download, upload){
+    const now = new Date();
+    const timeLabel = now.getHours().toString().padStart(2, '0') + ':' + 
+                      now.getMinutes().toString().padStart(2, '0') + ':' + 
+                      now.getSeconds().toString().padStart(2, '0');
+    
+    netHistory.labels.push(timeLabel);
+    netHistory.download.push(download);
+    netHistory.upload.push(upload);
+    
+    if(netHistory.labels.length > 30){
+      netHistory.labels.shift();
+      netHistory.download.shift();
+      netHistory.upload.shift();
+    }
+  }
+
+  function ensureNetChart(){
+    const canvas = document.getElementById('net-chart');
+    if(!canvas) return;
+    
+    if(netChart) return;
+    
+    const ctx = canvas.getContext('2d');
+    netChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: netHistory.labels,
+        datasets: [
+          {
+            label: getTranslation('monitoring.download', 'Download'),
+            data: netHistory.download,
+            borderColor: '#0dcaf0',
+            backgroundColor: 'rgba(13, 202, 240, 0.1)',
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: getTranslation('monitoring.upload', 'Upload'),
+            data: netHistory.upload,
+            borderColor: '#198754',
+            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+            tension: 0.4,
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: { color: '#fff' }
+          }
+        },
+        scales: {
+          x: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+          y: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+        }
+      }
+    });
+  }
+
+  async function updateStats(){
+    try{
+      const [systemStatsResp, networkStatsResp] = await Promise.all([
+        fetchJson('/api/v1/system/stats'),
+        fetchJson(`/api/v1/system/network${selectedInterface ? `?interface=${encodeURIComponent(selectedInterface)}` : ''}`)
+      ]);
+      
+      let systemStats = systemStatsResp;
+      if(systemStatsResp && typeof systemStatsResp === 'object'){
+        systemStats = systemStatsResp.data || systemStatsResp;
+      }
+      
+      if(!systemStats || typeof systemStats !== 'object'){
+        console.error('Invalid system stats response:', systemStatsResp);
+        throw new Error('Invalid system stats response');
+      }
+      
+      let networkStatsRaw = networkStatsResp;
+      if(networkStatsResp && typeof networkStatsResp === 'object'){
+        networkStatsRaw = networkStatsResp.data || networkStatsResp;
+      }
+      
+      if(!networkStatsRaw || typeof networkStatsRaw !== 'object'){
+        console.error('Invalid network stats response:', networkStatsResp);
+        throw new Error('Invalid network stats response');
+      }
+      
+      const networkStats = computeNetworkRates(networkStatsRaw);
+      
+      if(networkStats.interfaces && Array.isArray(networkStats.interfaces)){
+        populateInterfaceSelect(networkStats.interfaces);
+      } else if(networkStatsRaw.interfaces && Array.isArray(networkStatsRaw.interfaces)){
+        populateInterfaceSelect(networkStatsRaw.interfaces);
+      }
+
+      // Actualizar uptime
+      const uptime = systemStats.uptime || systemStats.uptime_seconds || 0;
+      setText('uptime-value', formatUptime(uptime));
+      
+      // Actualizar CPU
+      const cpuUsage = systemStats.cpu_usage || systemStats.cpu_percent || 0;
+      const cpuUsageValue = typeof cpuUsage === 'number' ? cpuUsage : parseFloat(cpuUsage) || 0;
+      setText('cpu-usage', `${safeToFixed(cpuUsageValue)}%`);
+      updateProgress('cpu-progress', cpuUsageValue);
+      
+      const cpuTemp = systemStats.cpu_temperature || systemStats.temperature;
+      if(typeof cpuTemp === 'number' && cpuTemp > 0){
+        setText('cpu-temp', `${safeToFixed(cpuTemp)}°C`);
+      } else {
+        setText('cpu-temp', '--°C');
+      }
+      
+      const cpuCores = systemStats.cpu_cores || systemStats.cpu_count;
+      setText('cpu-cores', cpuCores ? String(cpuCores) : '-');
+
+      // Actualizar Memoria
+      const memUsage = systemStats.memory_usage || systemStats.memory_percent || 0;
+      const memUsageValue = typeof memUsage === 'number' ? memUsage : parseFloat(memUsage) || 0;
+      setText('mem-usage', `${safeToFixed(memUsageValue)}%`);
+      updateProgress('mem-progress', memUsageValue);
+      
+      const memTotal = systemStats.memory_total || systemStats.memory_total_bytes;
+      if(memTotal && memTotal > 0){
+        const memTotalGB = typeof memTotal === 'number' ? memTotal : parseFloat(memTotal) || 0;
+        setText('mem-total', formatBytes(memTotalGB));
+      } else {
+        setText('mem-total', '0 GB');
+      }
+      
+      const memFree = systemStats.memory_free || systemStats.memory_available;
+      if(memFree && memFree > 0){
+        const memFreeGB = typeof memFree === 'number' ? memFree : parseFloat(memFree) || 0;
+        setText('mem-free', formatBytes(memFreeGB));
+      } else {
+        setText('mem-free', '0 GB');
+      }
+
+      // Actualizar Disco
+      const diskUsage = systemStats.disk_usage || systemStats.disk_percent || 0;
+      const diskUsageValue = typeof diskUsage === 'number' ? diskUsage : parseFloat(diskUsage) || 0;
+      setText('disk-usage', `${safeToFixed(diskUsageValue)}%`);
+      updateProgress('disk-progress', diskUsageValue);
+      
+      const diskTotal = systemStats.disk_total || systemStats.disk_total_bytes;
+      if(diskTotal && diskTotal > 0){
+        const diskTotalGB = typeof diskTotal === 'number' ? diskTotal : parseFloat(diskTotal) || 0;
+        setText('disk-total', formatBytes(diskTotalGB));
+      } else {
+        setText('disk-total', '0 GB');
+      }
+      
+      const diskUsed = systemStats.disk_used || systemStats.disk_used_bytes;
+      if(diskUsed && diskUsed > 0){
+        const diskUsedGB = typeof diskUsed === 'number' ? diskUsed : parseFloat(diskUsed) || 0;
+        setText('disk-used', formatBytes(diskUsedGB));
+      } else {
+        setText('disk-used', '0 GB');
+      }
+
+      // Actualizar información del sistema
+      setText('sys-hostname', systemStats.hostname || '--');
+      setText('sys-os', systemStats.os_version || '--');
+      setText('sys-kernel', systemStats.kernel_version || '--');
+      setText('sys-arch', systemStats.architecture || '--');
+      setText('sys-processor', systemStats.processor || '--');
+      setText('sys-load', systemStats.load_average || '--');
+
+      // Actualizar estadísticas de red
+      setText('net-interface', networkStats.interface || networkStatsRaw.interface || '--');
+      setText('net-ip', networkStats.ip_address || networkStatsRaw.ip_address || '--');
+      
+      const downloadSpeed = networkStats.download_speed || 0;
+      const uploadSpeed = networkStats.upload_speed || 0;
+      setText('net-download', formatBytes(downloadSpeed) + '/s');
+      setText('net-upload', formatBytes(uploadSpeed) + '/s');
+      
+      const bytesRecv = networkStats.bytes_recv || networkStatsRaw.bytes_recv || 0;
+      const bytesSent = networkStats.bytes_sent || networkStatsRaw.bytes_sent || 0;
+      setText('net-bytes-recv', formatBytes(bytesRecv));
+      setText('net-bytes-sent', formatBytes(bytesSent));
+      
+      const packetsSent = networkStats.packets_sent || networkStatsRaw.packets_sent || 0;
+      const packetsRecv = networkStats.packets_recv || networkStatsRaw.packets_recv || 0;
+      setText('net-packets', `${packetsSent} / ${packetsRecv}`);
+      
+      const errors = (networkStats.errors || networkStatsRaw.errors || 0) + 
+                     (networkStats.drop || networkStatsRaw.drop || 0);
+      setText('net-errors', errors || '0');
+
+      pushNetHistory(downloadSpeed, uploadSpeed);
+
+      setText('monitoring-last-update', new Date().toLocaleTimeString());
+      ensureNetChart();
+      
+      if(netChart){
+        netChart.update();
+      }
+    }catch(error){
+      console.error('Error updating monitoring stats:', error);
+      
+      // Establecer valores por defecto
+      setText('uptime-value', '--');
+      setText('cpu-usage', '--');
+      setText('mem-usage', '--');
+      setText('disk-usage', '--');
+      setText('net-download', '--');
+      setText('net-upload', '--');
+      
+      // Reintentar después de 5 segundos
+      setTimeout(() => {
+        console.log('Retrying monitoring stats...');
+        updateStats();
+      }, 5000);
+    }
+  }
+
+  // Event listener para cambio de interfaz
+  document.getElementById('net-interface-select')?.addEventListener('change', function(e){
+    selectedInterface = e.target.value || '';
+    lastNetSnapshot = null;
+    netHistory.labels.length = 0;
+    netHistory.download.length = 0;
+    netHistory.upload.length = 0;
+    if(netChart){ netChart.update(); }
+    updateStats();
+  });
+
+  // Inicializar
+  document.addEventListener('DOMContentLoaded', function(){
+    updateStats();
+    setInterval(updateStats, 5000);
+  });
+})();
+</script>
 {% endblock %}
