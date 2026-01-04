@@ -40,7 +40,7 @@ class Database:
         self._lock = asyncio.Lock()
 
     async def _create_tables(self, db):
-        """Crear tablas de la base de datos"""
+        """Crear tablas de la base de datos con índices optimizados"""
         try:
             # Tabla de usuarios
             await db.execute("""
@@ -51,6 +51,11 @@ class Database:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     last_login TIMESTAMP
                 )
+            """)
+            
+            # Índice para búsquedas por username (muy frecuente)
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)
             """)
             
             # Tabla de logs
@@ -66,6 +71,17 @@ class Database:
                 )
             """)
             
+            # Índices para logs (queries frecuentes)
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON logs(timestamp DESC)
+            """)
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_logs_level ON logs(level)
+            """)
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_logs_user_id ON logs(user_id)
+            """)
+            
             # Tabla de estadísticas
             await db.execute("""
                 CREATE TABLE IF NOT EXISTS statistics (
@@ -74,6 +90,17 @@ class Database:
                     metric_value REAL NOT NULL,
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
+            """)
+            
+            # Índices para estadísticas (queries frecuentes)
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_statistics_metric_name ON statistics(metric_name)
+            """)
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_statistics_timestamp ON statistics(timestamp DESC)
+            """)
+            await db.execute("""
+                CREATE INDEX IF NOT EXISTS idx_statistics_metric_timestamp ON statistics(metric_name, timestamp DESC)
             """)
             
             # Tabla de configuraciones
