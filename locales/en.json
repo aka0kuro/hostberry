@@ -1015,6 +1015,7 @@
   "messages": {
     "operation_successful": "Operation successful",
     "changes_saved": "Changes saved",
+    "config_updated": "Configuration updated successfully",
     "changes_not_saved": "Changes not saved",
     "data_loaded": "Data loaded",
     "data_not_loaded": "Data not loaded",
