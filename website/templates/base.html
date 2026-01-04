@@ -169,14 +169,22 @@
                 
                 refreshScheduled = true;
                 // Prevenir layout shift fijando la altura antes del reload
-                const currentHeight = document.documentElement.scrollHeight;
+                const currentHeight = Math.max(
+                    document.documentElement.scrollHeight,
+                    document.documentElement.clientHeight,
+                    document.body.scrollHeight,
+                    document.body.clientHeight
+                );
+                
+                // Fijar altura para evitar cambios visuales durante el reload
                 document.documentElement.style.minHeight = currentHeight + 'px';
                 document.body.style.minHeight = currentHeight + 'px';
+                document.documentElement.style.overflow = 'hidden';
                 
-                // Usar requestAnimationFrame para suavizar la transición
-                requestAnimationFrame(function() {
+                // Pequeño delay para que el navegador aplique los estilos antes del reload
+                setTimeout(function() {
                     window.location.reload();
-                });
+                }, 50);
             }
         }, 60000); // 60 segundos = 60000 milisegundos
     })();
