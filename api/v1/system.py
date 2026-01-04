@@ -352,23 +352,37 @@ async def get_system_config(current_user: Dict[str, Any] = Depends(get_current_a
 
 @router.post("/config")
 async def update_system_config(
-    key: str,
-    value: str,
+    config: Dict[str, Any],
     current_user: Dict[str, Any] = Depends(get_current_active_user)
 ):
-    """Actualiza la configuración del sistema"""
+    """Actualiza la configuración del sistema (acepta múltiples valores en un objeto JSON)"""
     try:
-        success = await db.set_configuration(key, value)
-        if not success:
+        if not config or not isinstance(config, dict):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=get_text("errors.invalid_config", default="Invalid configuration data")
+            )
+        
+        updated_keys = []
+        for key, value in config.items():
+            # Convertir valores a string para almacenar
+            value_str = str(value) if value is not None else ""
+            success = await db.set_configuration(key, value_str)
+            if success:
+                updated_keys.append(key)
+                # Log del cambio de configuración
+                await db.insert_log("INFO", f"Configuración actualizada: {key}={value_str} por {current_user.get('username', 'unknown')}")
+        
+        if not updated_keys:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=get_text("errors.config_update_error", default="Error actualizando configuración")
             )
         
-        # Log del cambio de configuración
-        await db.insert_log("INFO", f"Configuración actualizada: {key}={value} por {current_user['username']}")
-        
-        return {"message": get_text("messages.config_updated", default="Configuración actualizada exitosamente")}
+        return {
+            "message": get_text("messages.config_updated", default="Configuración actualizada exitosamente"),
+            "updated_keys": updated_keys
+        }
         
     except HTTPException:
         raise
