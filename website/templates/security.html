@@ -612,7 +612,7 @@
       const dateText = info.created_at || info.timestamp || info.date || info.created || 'N/A';
       const formattedDate = dateText !== 'N/A' ? new Date(dateText).toLocaleString() : 'N/A';
       
-      const infoText = `${HostBerry.t?.('backup.name', 'Nombre')}: ${backupName} | ${HostBerry.t?.('backup.size', 'Tamaño')}: ${sizeText} | ${HostBerry.t?.('backup.created', 'Creado')}: ${formattedDate}`;
+      const infoText = `${getTranslation('backup.name', 'Name')}: ${backupName} | ${getTranslation('backup.size', 'Size')}: ${sizeText} | ${getTranslation('backup.created', 'Created')}: ${formattedDate}`;
       
       showNotification(infoText, 'info');
     }catch(error){
