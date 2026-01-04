@@ -176,9 +176,18 @@ async def restart_hostapd(
 ) -> Dict[str, Any]:
     """Reinicia el servicio HostAPD"""
     try:
-        # Reiniciar HostAPD
-        subprocess.run(["systemctl", "restart", "hostapd"], check=True)
-        time.sleep(2)
+        # Reiniciar HostAPD (async)
+        from core.async_utils import run_subprocess_async
+        returncode, stdout, stderr = await run_subprocess_async(
+            ["systemctl", "restart", "hostapd"],
+            timeout=10
+        )
+        if returncode != 0:
+            raise HTTPException(
+                status_code=500,
+                detail=get_text("hostapd.restart_error", default="Error restarting HostAPD")
+            )
+        await asyncio.sleep(2)
         
         # Verificar estado
         status = get_hostapd_status()
@@ -266,10 +275,16 @@ async def update_hostapd_config(
         except PermissionError:
             raise HTTPException(status_code=403, detail=get_text("hostapd.permission_denied", default="Permission denied to write HostAPD config"))
         
-        # Reiniciar servicio
+        # Reiniciar servicio (async)
         try:
-            subprocess.run(["systemctl", "restart", "hostapd"], check=True)
-        except subprocess.CalledProcessError:
+            from core.async_utils import run_subprocess_async
+            returncode, stdout, stderr = await run_subprocess_async(
+                ["systemctl", "restart", "hostapd"],
+                timeout=10
+            )
+            if returncode != 0:
+                raise HTTPException(status_code=500, detail=get_text("hostapd.restart_service_error", default="Error restarting HostAPD service"))
+        except Exception as e:
             raise HTTPException(status_code=500, detail=get_text("hostapd.restart_service_error", default="Error restarting HostAPD service"))
         
         logger.info('update_hostapd_config', config_keys=list(config.keys()))
