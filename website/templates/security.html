@@ -414,18 +414,18 @@
   async function restoreBackup(backupName){
     try{
       if(!backupName){
-        HostBerry.showAlert?.('danger', HostBerry.t?.('errors.backup_not_found', 'Backup not found') || 'Backup not found');
+        showNotification(HostBerry.t?.('errors.backup_not_found', 'Backup no encontrado') || 'Backup no encontrado', 'error');
         return;
       }
       
       // Confirmación doble para restauración
-      const confirmMsg1 = HostBerry.t?.('security.backup_restore_confirm', 'Are you sure you want to restore this backup? This will replace the current system data.') || 'Are you sure you want to restore this backup? This will replace the current system data.';
+      const confirmMsg1 = HostBerry.t?.('backup.restore_confirm', '¿Estás seguro de que quieres restaurar este backup? Esto reemplazará los datos actuales del sistema.') || '¿Estás seguro de que quieres restaurar este backup? Esto reemplazará los datos actuales del sistema.';
       if(!confirm(confirmMsg1)) return;
       
-      const confirmMsg2 = HostBerry.t?.('security.backup_restore_confirm_final', 'WARNING! This action will restore the backup and replace current data. Are you absolutely sure?') || 'WARNING! This action will restore the backup and replace current data. Are you absolutely sure?';
+      const confirmMsg2 = HostBerry.t?.('backup.restore_confirm_final', '¡ADVERTENCIA! Esta acción restaurará el backup y reemplazará los datos actuales. ¿Estás absolutamente seguro?') || '¡ADVERTENCIA! Esta acción restaurará el backup y reemplazará los datos actuales. ¿Estás absolutamente seguro?';
       if(!confirm(confirmMsg2)) return;
       
-      HostBerry.showAlert?.('warning', HostBerry.t?.('security.backup_restoring', 'Restoring backup...') || 'Restoring backup...');
+      showNotification(HostBerry.t?.('backup.restoring', 'Restaurando backup...') || 'Restaurando backup...', 'warning');
       
       const resp = await HostBerry.apiRequest(`/api/v1/security/backup/${encodeURIComponent(backupName)}/restore`, {
         method: 'POST'
@@ -437,8 +437,8 @@
       }
       
       const payload = await resp.json();
-      const message = payload.message || payload.data?.message || HostBerry.t?.('security.backup_restored', 'Backup restored successfully') || 'Backup restored successfully';
-      HostBerry.showAlert?.('success', message);
+      const message = payload.message || payload.data?.message || HostBerry.t?.('backup.restored', 'Backup restaurado exitosamente') || 'Backup restaurado exitosamente';
+      showNotification(message, 'success');
       
       // Recargar la lista de backups después de un momento
       setTimeout(() => {
@@ -447,8 +447,8 @@
       
     }catch(error){
       console.error('Backup restore failed', error);
-      const errorMsg = HostBerry.t?.('security.backup_restore_error', 'Unable to restore backup') || 'Unable to restore backup';
-      HostBerry.showAlert?.('danger', errorMsg);
+      const errorMsg = HostBerry.t?.('backup.restore_error', 'Error al restaurar backup') || 'Error al restaurar backup';
+      showNotification(errorMsg, 'error');
     }
   }
 
