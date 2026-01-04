@@ -142,71 +142,10 @@
         </div>
     </div>
 
-    <!-- Services, Logs & Backups -->
+    <!-- Backup Inventory -->
     <div class="row services-network-row">
-        <!-- Active Services -->
-        <div class="col-lg-4 mb-4">
-            <div class="services-card">
-                <div class="services-card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="services-card-title">
-                            <i class="bi bi-server me-2"></i>
-                            {{ t('security.active_services', 'Active Services') }}
-                        </h5>
-                        <button class="btn btn-sm btn-outline-light" id="servicesRefresh">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="services-card-body">
-                    <div id="services-list">
-                        <div class="text-center py-4 text-white-50">
-                            <i class="bi bi-arrow-clockwise spinning"></i>
-                            <p class="mb-0 mt-2">{{ t('security.loading_services', 'Loading services...') }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Security Logs -->
-        <div class="col-lg-4 mb-4">
-            <div class="logs-card">
-                <div class="logs-card-header">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <div>
-                            <h5 class="logs-card-title">
-                                <i class="bi bi-journal-text me-2"></i>
-                                {{ t('security.logs_heading', 'Security logs') }}
-                            </h5>
-                            <p class="text-white-50 mb-0 small">{{ t('security.logs_caption', 'Filter critical events in real time') }}</p>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="securityLogLevel">
-                                <option value="warning">{{ t('security.logs_warnings', 'Warnings') }}</option>
-                                <option value="error">{{ t('security.logs_errors', 'Errors') }}</option>
-                                <option value="info">{{ t('security.logs_info', 'Info') }}</option>
-                                <option value="all">{{ t('security.logs_all', 'All') }}</option>
-                            </select>
-                            <button class="btn btn-sm btn-outline-light" id="securityLogsRefresh">
-                                <i class="bi bi-arrow-clockwise"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="logs-card-body">
-                    <div class="logs-container" id="security-logs">
-                        <div class="text-center py-4 text-white-50">
-                            <i class="bi bi-arrow-clockwise spinning"></i>
-                            <p class="mb-0 mt-2">{{ t('security.loading_logs', 'Loading logs...') }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Backup Inventory -->
-        <div class="col-lg-4 mb-4">
+        <div class="col-lg-12 mb-4">
             <div class="network-card">
                 <div class="network-card-header">
                     <div class="d-flex justify-content-between align-items-center">
