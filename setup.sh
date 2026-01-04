@@ -2491,6 +2491,7 @@ TimeoutStopSec=10
 # Kill mode para terminar procesos rápidamente
 KillMode=mixed
 KillSignal=SIGTERM
+Type=simple
 # Limits for RPi 3
 MemoryMax=300M
 CPUQuota=50%
