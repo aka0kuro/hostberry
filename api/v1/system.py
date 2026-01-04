@@ -34,7 +34,8 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
         cache_key = "system_stats"
         cached_stats = cache.get(cache_key)
         if cached_stats:
-            return SystemStats(**cached_stats)
+            # Devolver directamente el dict del caché (tiene información adicional)
+            return cached_stats
         # Lazy import de psutil (solo cuando se necesita)
         import psutil
         
