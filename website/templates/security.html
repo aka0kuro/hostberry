@@ -344,21 +344,38 @@
       
       showNotification(HostBerry.t?.('backup.downloading', 'Descargando backup...') || 'Descargando backup...', 'info');
       
-      // Crear enlace de descarga
+      // Usar fetch con autenticación para descargar
+      const token = localStorage.getItem('access_token');
       const downloadUrl = `/api/v1/security/backup/${encodeURIComponent(backupName)}/download`;
+      
+      const resp = await fetch(downloadUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if(!resp.ok){
+        throw new Error(`Error ${resp.status}: ${resp.statusText}`);
+      }
+      
+      // Obtener el blob del archivo
+      const blob = await resp.blob();
+      
+      // Crear enlace de descarga
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = downloadUrl;
+      link.href = url;
       link.download = backupName;
       link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
       
-      // Esperar un momento y mostrar mensaje de éxito
-      setTimeout(() => {
-        showNotification(HostBerry.t?.('backup.downloaded', 'Backup descargado exitosamente') || 'Backup descargado exitosamente', 'success');
-        updateLastCheck();
-      }, 500);
+      // Mostrar mensaje de éxito
+      showNotification(HostBerry.t?.('backup.downloaded', 'Backup descargado exitosamente') || 'Backup descargado exitosamente', 'success');
+      updateLastCheck();
       
     }catch(error){
       console.error('Backup download failed', error);
