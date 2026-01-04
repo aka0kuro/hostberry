@@ -270,9 +270,10 @@ app.include_router(web_routes.router, tags=["web"])
 @app.get("/health")
 async def health_check():
     """Health check endpoint optimizado para RPi 3"""
+    from core.async_utils import get_version
     return {
         "status": "healthy",
-        "version": "2.0.0"
+        "version": get_version()
     }
 
 @app.get("/system/info")
