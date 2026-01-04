@@ -314,8 +314,10 @@
   };
 
   function safeToFixed(value, digits = 1){
-    if(typeof value !== 'number' || Number.isNaN(value)) return '0.0';
-    return value.toFixed(digits);
+    if(value === null || value === undefined) return '0.0';
+    const num = typeof value === 'number' ? value : parseFloat(value);
+    if(Number.isNaN(num) || !Number.isFinite(num)) return '0.0';
+    return num.toFixed(digits);
   }
 
   function formatUptime(seconds){
