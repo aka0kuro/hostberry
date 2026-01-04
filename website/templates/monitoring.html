@@ -524,13 +524,9 @@
                       now.getMinutes().toString().padStart(2, '0') + ':' + 
                       now.getSeconds().toString().padStart(2, '0');
     
-    // Asegurar que los valores son números válidos
-    const downloadVal = typeof download === 'number' && !isNaN(download) ? download : 0;
-    const uploadVal = typeof upload === 'number' && !isNaN(upload) ? upload : 0;
-    
     netHistory.labels.push(timeLabel);
-    netHistory.download.push(downloadVal);
-    netHistory.upload.push(uploadVal);
+    netHistory.download.push(download);
+    netHistory.upload.push(upload);
     
     if(netHistory.labels.length > 30){
       netHistory.labels.shift();
@@ -733,16 +729,13 @@
                      (networkStats.drop || networkStatsRaw.drop || 0);
       setText('net-errors', errors || '0');
 
-      // Convertir velocidades a KB/s para el gráfico
-      const downloadSpeedKB = downloadSpeed / 1024;
-      const uploadSpeedKB = uploadSpeed / 1024;
-      pushNetHistory(downloadSpeedKB, uploadSpeedKB);
+      pushNetHistory(downloadSpeed, uploadSpeed);
 
       setText('monitoring-last-update', new Date().toLocaleTimeString());
       ensureNetChart();
       
       if(netChart){
-        netChart.update('none'); // 'none' para actualización suave sin animación
+        netChart.update();
       }
     }catch(error){
       console.error('Error updating monitoring stats:', error);
@@ -763,7 +756,16 @@
     }
   }
 
-  // Event listener para cambio de interfaz - se inicializa después del DOM
+  // Event listener para cambio de interfaz
+  document.getElementById('net-interface-select')?.addEventListener('change', function(e){
+    selectedInterface = e.target.value || '';
+    lastNetSnapshot = null;
+    netHistory.labels.length = 0;
+    netHistory.download.length = 0;
+    netHistory.upload.length = 0;
+    if(netChart){ netChart.update(); }
+    updateStats();
+  });
 
   // Inicializar cuando el DOM esté listo
   if (document.readyState === 'loading') {
@@ -785,37 +787,34 @@
   }
   
   // Event listener para cambio de interfaz (después de que el DOM esté listo)
-  function setupInterfaceListener(){
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){
+      const select = document.getElementById('net-interface-select');
+      if(select){
+        select.addEventListener('change', function(e){
+          selectedInterface = e.target.value || '';
+          lastNetSnapshot = null;
+          netHistory.labels.length = 0;
+          netHistory.download.length = 0;
+          netHistory.upload.length = 0;
+          if(netChart){ netChart.update(); }
+          updateStats();
+        });
+      }
+    });
+  } else {
     const select = document.getElementById('net-interface-select');
     if(select){
-      // Remover listeners anteriores si existen
-      const newSelect = select.cloneNode(true);
-      select.parentNode.replaceChild(newSelect, select);
-      
-      newSelect.addEventListener('change', function(e){
+      select.addEventListener('change', function(e){
         selectedInterface = e.target.value || '';
-        console.log('Interface changed to:', selectedInterface);
         lastNetSnapshot = null;
         netHistory.labels.length = 0;
         netHistory.download.length = 0;
         netHistory.upload.length = 0;
-        if(netChart){ 
-          netChart.data.labels = [];
-          netChart.data.datasets[0].data = [];
-          netChart.data.datasets[1].data = [];
-          netChart.update('none');
-        }
+        if(netChart){ netChart.update(); }
         updateStats();
       });
     }
-  }
-  
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function(){
-      setupInterfaceListener();
-    });
-  } else {
-    setupInterfaceListener();
   }
 })();
 </script>
