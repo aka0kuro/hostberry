@@ -514,13 +514,16 @@ fi
 EOF
     chmod 750 /usr/local/sbin/hostberry-safe/reload-nginx
 
-    # Wrapper para reiniciar servicio de hostberry validando existencia
-    cat > /usr/local/sbin/hostberry-safe/restart-app << EOF
+  # Wrapper para reiniciar servicio de hostberry validando existencia (optimizado)
+  cat > /usr/local/sbin/hostberry-safe/restart-app << EOF
 #!/usr/bin/env bash
 set -euo pipefail
 SERVICE="hostberry.service"
 if systemctl list-units --full -all | grep -q "\b$SERVICE\b"; then
-  exec /usr/bin/systemctl restart "$SERVICE"
+  # Usar stop y start en lugar de restart para mayor control y velocidad
+  /usr/bin/systemctl stop "$SERVICE" --no-block || true
+  sleep 1
+  exec /usr/bin/systemctl start "$SERVICE"
 else
   echo "Servicio $SERVICE no existe" >&2
   exit 1
