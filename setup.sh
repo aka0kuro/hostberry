@@ -1047,7 +1047,11 @@ setup_production_dirs() {
     )
     
     for dir in "${dirs[@]}"; do
-        install -d -m 0755 -o "$USER" -g "$GROUP" "$dir"
+        if [[ $EUID -eq 0 ]]; then
+            install -d -m 0755 -o "$USER" -g "$GROUP" "$dir"
+        else
+            sudo install -d -m 0755 -o "$USER" -g "$GROUP" "$dir"
+        fi
     done
     
     # Endurecer permisos de la caché de Jinja2
