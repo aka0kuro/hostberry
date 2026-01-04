@@ -63,7 +63,7 @@ async def get_system_statistics():
         )
 
 @router.get("/network", response_model=NetworkStats)
-async def get_network_statistics(interface: str = None, current_user: Dict[str, Any] = Depends(get_current_active_user)):
+async def get_network_statistics(interface: str = None):
     """Obtiene estadísticas de red"""
     try:
         # Obtener información de red
