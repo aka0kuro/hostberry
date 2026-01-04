@@ -27,125 +27,47 @@
     return current || defaultValue || key;
   }
 
-  // Función para mostrar notificaciones (mismo estilo que otros templates)
-  function showNotification(message, type = 'info') {
-    // Crear elemento de notificación
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <span class="notification-message">${message}</span>
-            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
-        </div>
+  // Función para mostrar alertas (mismo estilo que login.js)
+  function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top:20px; right:20px; z-index:9999; min-width:300px; max-width:400px;';
+    alertDiv.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
-    
-    // Añadir estilos si no existen
-    if (!document.querySelector('#notification-styles')) {
-        const style = document.createElement('style');
-        style.id = 'notification-styles';
-        style.textContent = `
-            .notification {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                z-index: 9999;
-                min-width: 300px;
-                max-width: 400px;
-                padding: 1rem;
-                border-radius: 12px;
-                background: rgba(255, 255, 255, 0.1);
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-                animation: slideInRight 0.3s ease;
-            }
-            
-            .dark-theme .notification {
-                background: rgba(30, 30, 30, 0.95);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-            }
-            
-            .light-theme .notification {
-                background: rgba(255, 255, 255, 0.95);
-                border: 1px solid rgba(0, 0, 0, 0.1);
-            }
-            
-            .notification-content {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                color: #fff;
-            }
-            
-            .light-theme .notification-content {
-                color: #000;
-            }
-            
-            .notification-close {
-                background: none;
-                border: none;
-                color: inherit;
-                font-size: 1.5rem;
-                cursor: pointer;
-                padding: 0;
-                margin-left: 1rem;
-                line-height: 1;
-                opacity: 0.7;
-                transition: opacity 0.2s;
-            }
-            
-            .notification-close:hover {
-                opacity: 1;
-            }
-            
-            .notification-success { border-left: 4px solid #198754; }
-            .notification-error { border-left: 4px solid #dc3545; }
-            .notification-warning { border-left: 4px solid #ffc107; }
-            .notification-info { border-left: 4px solid #0dcaf0; }
-            
-            @keyframes slideInRight {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-    
-    // Añadir al body
-    document.body.appendChild(notification);
-    
-    // Auto-remove after 5 seconds
+    document.body.appendChild(alertDiv);
     setTimeout(() => {
-        if (notification.parentNode) {
-            notification.style.animation = 'slideInRight 0.3s ease reverse';
-            setTimeout(() => notification.remove(), 300);
-        }
+      if (alertDiv.parentNode) {
+        alertDiv.remove();
+      }
     }, 5000);
-  }
-  
-  // Función para mostrar notificaciones toast (compatibilidad)
-  function showToast(title, message, type = 'info') {
-    showNotification(`${title}: ${message}`, type);
   }
 
   // Función para mostrar notificación de éxito
   function showSuccess(message) {
-    showNotification(message, 'success');
+    showAlert('success', message);
   }
 
   // Función para mostrar notificación de error
   function showError(message) {
-    showNotification(message, 'error');
+    showAlert('danger', message);
   }
 
   // Función para mostrar notificación de información
   function showInfo(message) {
-    showNotification(message, 'info');
+    showAlert('info', message);
   }
   
   // Función para mostrar notificación de advertencia
   function showWarning(message) {
-    showNotification(message, 'warning');
+    showAlert('warning', message);
+  }
+  
+  // Función para mostrar notificaciones toast (compatibilidad)
+  function showToast(title, message, type = 'info') {
+    const alertType = type === 'success' ? 'success' : type === 'error' || type === 'danger' ? 'danger' : type === 'warning' ? 'warning' : 'info';
+    showAlert(alertType, `${title}: ${message}`);
   }
 
   // Función para procesar errores de validación de Pydantic
