@@ -532,11 +532,20 @@ async def about_page(request: Request, lang: str | None = Query(default=None)) -
 @router.get("/first-login", response_class=HTMLResponse)
 async def first_login(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
     from config.settings import settings
+    # Resolver idioma desde query, cookie o usar el del contexto (middleware)
+    # Si viene por query, forzamos el cambio y seteamos cookie
+    if lang:
+        i18n.set_context_language(lang)
+    elif request.cookies.get("lang"):
+        i18n.set_context_language(request.cookies.get("lang"))
+    
+    current_lang = i18n.get_current_language()
+    
     # Obtener usuario desde cookie o usar valor por defecto
     username = request.cookies.get("username") or settings.default_username
     current_user = {"username": username}
     
-    context = _base_context(request, lang or request.cookies.get("lang", "en"))
+    context = _base_context(request, current_lang)
     context.update({
         "current_user": current_user,
         "services": _get_service_statuses(),
