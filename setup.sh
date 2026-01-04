@@ -2481,6 +2481,8 @@ Group=$GROUP
 WorkingDirectory=$PROD_DIR
 Environment="PATH=$VENV_DIR/bin:/usr/local/bin:/usr/bin:/bin"
 EnvironmentFile=$CONFIG_DIR/app.env
+Environment="DB_PATH=/var/lib/hostberry/hostberry.db"
+Environment="DATABASE_URL=sqlite:///var/lib/hostberry/hostberry.db"
 ExecStart=$VENV_DIR/bin/python -m uvicorn --app-dir $PROD_DIR main:app --host $PROD_HOST --port $PROD_PORT --workers $WORKERS --log-level warning
 Restart=always
 RestartSec=2
@@ -2513,6 +2515,8 @@ Group=$GROUP
 WorkingDirectory=$PROD_DIR
 Environment="PATH=$VENV_DIR/bin:/usr/local/bin:/usr/bin:/bin"
 EnvironmentFile=$CONFIG_DIR/app.env
+Environment="DB_PATH=/var/lib/hostberry/hostberry.db"
+Environment="DATABASE_URL=sqlite:///var/lib/hostberry/hostberry.db"
 ExecStart=$VENV_DIR/bin/python -m uvicorn --app-dir $PROD_DIR main:app --host $PROD_HOST --port $PROD_PORT --workers $WORKERS --log-level warning
 Restart=always
 RestartSec=2
