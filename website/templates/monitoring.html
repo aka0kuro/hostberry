@@ -671,8 +671,13 @@
       }
 
       // Actualizar Disco - usar los campos correctos del modelo
-      const diskUsage = systemStats.disk_usage || 0;
-      const diskUsageValue = typeof diskUsage === 'number' ? diskUsage : parseFloat(diskUsage) || 0;
+      const diskUsage = systemStats.disk_usage;
+      let diskUsageValue = 0;
+      if(diskUsage !== null && diskUsage !== undefined){
+        diskUsageValue = typeof diskUsage === 'number' ? diskUsage : parseFloat(diskUsage);
+        if(Number.isNaN(diskUsageValue)) diskUsageValue = 0;
+      }
+      console.log('Disk Usage:', diskUsage, '->', diskUsageValue);
       setText('disk-usage', `${safeToFixed(diskUsageValue)}%`);
       updateProgress('disk-progress', diskUsageValue);
       
