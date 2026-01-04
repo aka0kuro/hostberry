@@ -63,7 +63,7 @@ class RPISystemMonitor:
                 'temperature': temperature,
                 'network': network_stats,
                 'processes': process_count,
-                'uptime': time.time() - psutil.boot_time(),
+                'uptime': time.time() - psutil.boot_time(),  # psutil ya importado arriba
                 'timestamp': time.time()
             }
             
