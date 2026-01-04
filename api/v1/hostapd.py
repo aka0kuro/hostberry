@@ -96,33 +96,34 @@ async def get_clients(
 ) -> List[Dict[str, Any]]:
     """Obtiene los clientes conectados al punto de acceso"""
     try:
-        # Simular clientes conectados
-        clients = [
-            {
-                "mac": "aa:bb:cc:dd:ee:ff",
-                "ip": "192.168.4.100",
-                "hostname": "android-phone",
-                "signal": -45,
-                "connected_time": "2h 15m",
-                "ssid": "HostBerry_AP"
-            },
-            {
-                "mac": "11:22:33:44:55:66",
-                "ip": "192.168.4.101",
-                "hostname": "laptop-user",
-                "signal": -52,
-                "connected_time": "1h 30m",
-                "ssid": "HostBerry_AP"
-            },
-            {
-                "mac": "ff:ee:dd:cc:bb:aa",
-                "ip": "192.168.4.102",
-                "hostname": "guest-device",
-                "signal": -60,
-                "connected_time": "0h 45m",
-                "ssid": "HostBerry_Guest"
-            }
-        ]
+        # Obtener clientes reales desde hostapd_cli o arp
+        clients = []
+        try:
+            from core.async_utils import run_subprocess_async
+            
+            # Intentar obtener desde hostapd_cli si está disponible
+            returncode, stdout, stderr = await run_subprocess_async(
+                ["hostapd_cli", "all_sta"],
+                timeout=5
+            )
+            
+            if returncode == 0 and stdout:
+                for line in stdout.split('\n'):
+                    if line.strip():
+                        # Parsear salida de hostapd_cli
+                        parts = line.split()
+                        if len(parts) >= 1:
+                            clients.append({
+                                "mac": parts[0],
+                                "ip": "unknown",
+                                "hostname": "unknown",
+                                "signal": -50,
+                                "connected_time": "unknown",
+                                "ssid": "HostBerry_AP"
+                            })
+        except Exception as e:
+            logger.warning(f"No se pudieron obtener clientes reales de HostAPD: {e}")
+            # Lista vacía en lugar de datos simulados
         
         logger.info('get_clients', count=len(clients))
         return clients
