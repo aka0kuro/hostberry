@@ -518,12 +518,12 @@
         const date = backup.created_at || backup.timestamp || backup.date || backup.created || '';
         const formattedDate = date ? new Date(date).toLocaleString() : '';
         item.innerHTML = `
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="flex-grow-1">
-              <strong class="d-block">${name}</strong>
+          <div class="d-flex justify-content-between align-items-center gap-2">
+            <div class="flex-grow-1 min-w-0">
+              <strong class="d-block backup-name" title="${name}">${name}</strong>
               <span class="text-white-50 small">${formattedDate}</span>
             </div>
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 flex-shrink-0">
               ${size ? `<span class="text-white-50 small">${size}</span>` : ''}
               <button class="btn btn-sm btn-outline-primary download-backup-btn" data-backup-name="${name}" title="${HostBerry.t?.('security.download_backup', 'Download') || 'Download'}">
                 <i class="bi bi-download"></i>
