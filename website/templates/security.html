@@ -628,7 +628,7 @@
         return;
       }
       
-      const confirmMsg = HostBerry.t?.('backup.delete_confirm', '¿Estás seguro de que quieres eliminar este backup?') || '¿Estás seguro de que quieres eliminar este backup?';
+      const confirmMsg = getTranslation('backup.delete_confirm', 'Are you sure you want to delete this backup?');
       if(!confirm(confirmMsg)) return;
       
       showNotification(HostBerry.t?.('backup.deleting', 'Eliminando backup...') || 'Eliminando backup...', 'info');
