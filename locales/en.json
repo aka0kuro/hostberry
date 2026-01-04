@@ -1282,6 +1282,7 @@
     "inventory_heading": "Backup inventory",
     "inventory_caption": "Latest backups stored on device",
     "no_backups": "No backups listed yet",
+    "loading": "Loading backups...",
     "downloading": "Downloading backup...",
     "downloaded": "Backup downloaded successfully",
     "download_error": "Error downloading backup",
