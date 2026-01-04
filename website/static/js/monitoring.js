@@ -26,19 +26,39 @@
 
   async function fetchJson(url){
     try {
+      if(!HostBerry || !HostBerry.apiRequest){
+        throw new Error('HostBerry.apiRequest is not available');
+      }
+      
       const resp = await HostBerry.apiRequest(url);
+      if(!resp){
+        throw new Error('No response from server');
+      }
+      
       if(resp.status === 401){
         // token inválido, redirige a login
         window.location.href = '/login';
         throw new Error('Unauthorized');
       }
+      
       if(!resp.ok){
-        const errText = await resp.text();
+        let errText = '';
+        try {
+          errText = await resp.text();
+        } catch(e) {
+          errText = `HTTP ${resp.status} ${resp.statusText}`;
+        }
         throw new Error(`Request failed ${resp.status}: ${errText}`);
       }
-      return await resp.json();
+      
+      const data = await resp.json();
+      if(!data){
+        throw new Error('Empty response from server');
+      }
+      
+      return data;
     } catch (error) {
-      console.error('Error en fetchJson:', error);
+      console.error('Error en fetchJson:', url, error);
       throw error;
     }
   }
