@@ -9,7 +9,7 @@ import asyncio
 from typing import Dict, Any, List
 # psutil se importa lazy cuando se necesita
 
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from fastapi.responses import JSONResponse
 
 from models.schemas import SystemStats, NetworkStats, SystemInfo, SuccessResponse
