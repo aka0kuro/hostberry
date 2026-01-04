@@ -1,346 +1,610 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
-    <!-- Configuración General -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-gear"></i>
-                    {{ t('settings.general') }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <form id="generalConfigForm">
-                    <div class="mb-3">
-                        <label for="language" class="form-label">{{ t('settings.language') }}</label>
-                        <select class="form-select" id="language" name="language">
-                            <option value="es" {{ 'selected' if settings.language == 'es' else '' }}>Español</option>
-                            <option value="en" {{ 'selected' if settings.language == 'en' else '' }}>English</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="theme" class="form-label">{{ t('settings.theme') }}</label>
-                        <select class="form-select" id="theme" name="theme">
-                            <option value="light" {{ 'selected' if settings.theme == 'light' else '' }}>Light</option>
-                            <option value="dark" {{ 'selected' if settings.theme == 'dark' else '' }}>Dark</option>
-                            <option value="auto" {{ 'selected' if settings.theme == 'auto' else '' }}>Auto</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="timezone" class="form-label">{{ t('settings.timezone') }}</label>
-                        <select class="form-select" id="timezone" name="timezone">
-                            <option value="UTC" {{ 'selected' if settings.timezone == 'UTC' else '' }}>UTC</option>
-                            <option value="Europe/Madrid" {{ 'selected' if settings.timezone == 'Europe/Madrid' else '' }}>Europe/Madrid</option>
-                            <option value="America/New_York" {{ 'selected' if settings.timezone == 'America/New_York' else '' }}>America/New_York</option>
-                        </select>
-                    </div>
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i>
-                            {{ t('common.save') }}
-                        </button>
-                    </div>
-                </form>
+<div class="dashboard-container">
+    <!-- Header Section -->
+    <div class="dashboard-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-12 text-center">
+                <h1 class="dashboard-title">
+                    <i class="bi bi-gear me-2"></i>
+                    {{ t('navigation.settings', 'Settings') }}
+                </h1>
+                <p class="dashboard-subtitle">{{ t('settings.subtitle', 'Configure your HostBerry system preferences') }}</p>
             </div>
         </div>
     </div>
 
-    <!-- Configuración del Sistema -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-cpu"></i>
-                    {{ t('settings.system') }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <form id="systemConfigForm">
-                    <div class="mb-3">
-                        <label for="log_level" class="form-label">{{ t('system.log_level') }}</label>
-                        <select class="form-select" id="log_level" name="log_level">
-                            <option value="DEBUG" {{ 'selected' if system_config.log_level == 'DEBUG' else '' }}>DEBUG</option>
-                            <option value="INFO" {{ 'selected' if system_config.log_level == 'INFO' else '' }}>INFO</option>
-                            <option value="WARNING" {{ 'selected' if system_config.log_level == 'WARNING' else '' }}>WARNING</option>
-                            <option value="ERROR" {{ 'selected' if system_config.log_level == 'ERROR' else '' }}>ERROR</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="auto_backup" class="form-label">{{ t('settings.auto_backup') }}</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="auto_backup" name="auto_backup" {{ 'checked' if system_config.auto_backup else '' }}>
-                            <label class="form-check-label" for="auto_backup">
-                                {{ t('settings.enable_auto_backup') }}
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="backup_interval" class="form-label">{{ t('settings.backup_interval') }}</label>
-                        <select class="form-select" id="backup_interval" name="backup_interval">
-                            <option value="daily" {{ 'selected' if system_config.backup_interval == 'daily' else '' }}>Daily</option>
-                            <option value="weekly" {{ 'selected' if system_config.backup_interval == 'weekly' else '' }}>Weekly</option>
-                            <option value="monthly" {{ 'selected' if system_config.backup_interval == 'monthly' else '' }}>Monthly</option>
-                        </select>
-                    </div>
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i>
-                            {{ t('common.save') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Configuración de Red -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-wifi"></i>
-                    {{ t('settings.network') }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <form id="networkConfigForm">
-                    <div class="mb-3">
-                        <label for="dhcp_enabled" class="form-label">{{ t('settings.dhcp_server') }}</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="dhcp_enabled" name="dhcp_enabled" {{ 'checked' if network_config.dhcp_enabled else '' }}>
-                            <label class="form-check-label" for="dhcp_enabled">
-                                {{ t('settings.enable_dhcp') }}
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="dns_server" class="form-label">{{ t('settings.dns_server') }}</label>
-                        <input type="text" class="form-control" id="dns_server" name="dns_server" value="{{ network_config.dns_server | default('8.8.8.8') }}">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="firewall_enabled" class="form-label">{{ t('settings.firewall') }}</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="firewall_enabled" name="firewall_enabled" {{ 'checked' if network_config.firewall_enabled else '' }}>
-                            <label class="form-check-label" for="firewall_enabled">
-                                {{ t('settings.enable_firewall') }}
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i>
-                            {{ t('common.save') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Configuración de Seguridad -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-shield-check"></i>
-                    {{ t('settings.security') }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <form id="securityConfigForm">
-                    <div class="mb-3">
-                        <label for="ssl_enabled" class="form-label">{{ t('settings.ssl') }}</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="ssl_enabled" name="ssl_enabled" {{ 'checked' if security_config.ssl_enabled else '' }}>
-                            <label class="form-check-label" for="ssl_enabled">
-                                {{ t('settings.enable_ssl') }}
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="max_login_attempts" class="form-label">{{ t('settings.max_login_attempts') }}</label>
-                        <input type="number" class="form-control" id="max_login_attempts" name="max_login_attempts" value="{{ security_config.max_login_attempts | default(3) }}" min="1" max="10">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="session_timeout" class="form-label">{{ t('settings.session_timeout') }}</label>
-                        <input type="number" class="form-control" id="session_timeout" name="session_timeout" value="{{ security_config.session_timeout | default(30) }}" min="5" max="1440">
-                        <small class="text-muted">{{ t('settings.minutes') }}</small>
-                    </div>
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i>
-                            {{ t('common.save') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Configuración de Rendimiento -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-speedometer2"></i>
-                    {{ t('settings.performance') }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <form id="performanceConfigForm">
-                    <div class="mb-3">
-                        <label for="cache_enabled" class="form-label">{{ t('settings.cache') }}</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="cache_enabled" name="cache_enabled" {{ 'checked' if performance_config.cache_enabled else '' }}>
-                            <label class="form-check-label" for="cache_enabled">
-                                {{ t('settings.enable_cache') }}
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="cache_size" class="form-label">{{ t('settings.cache_size') }}</label>
-                        <input type="number" class="form-control" id="cache_size" name="cache_size" value="{{ performance_config.cache_size | default(50) }}" min="10" max="500">
-                        <small class="text-muted">{{ t('settings.mb') }}</small>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="compression_enabled" class="form-label">{{ t('settings.compression') }}</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="compression_enabled" name="compression_enabled" {{ 'checked' if performance_config.compression_enabled else '' }}>
-                            <label class="form-check-label" for="compression_enabled">
-                                {{ t('settings.enable_compression') }}
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i>
-                            {{ t('common.save') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Configuración de Notificaciones -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-bell"></i>
-                    {{ t('settings.notifications') }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <form id="notificationConfigForm">
-                    <div class="mb-3">
-                        <label for="email_notifications" class="form-label">{{ t('settings.email_notifications') }}</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {{ 'checked' if notification_config.email_enabled else '' }}>
-                            <label class="form-check-label" for="email_notifications">
-                                {{ t('settings.enable_email_notifications') }}
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="email_address" class="form-label">{{ t('settings.email_address') }}</label>
-                        <input type="email" class="form-control" id="email_address" name="email_address" value="{{ notification_config.email_address | default('') }}">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="system_alerts" class="form-label">{{ t('settings.system_alerts') }}</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="system_alerts" name="system_alerts" {{ 'checked' if notification_config.system_alerts else '' }}>
-                            <label class="form-check-label" for="system_alerts">
-                                {{ t('settings.enable_system_alerts') }}
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i>
-                            {{ t('common.save') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Información del Sistema -->
-    <div class="col-12 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-info-circle"></i>
-                    {{ t('settings.about') }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>{{ t('settings.version') }}</h6>
-                        <p class="text-muted">{{ system_info.version | default('1.0.0') }}</p>
-                        
-                        <h6>{{ t('settings.build') }}</h6>
-                        <p class="text-muted">{{ system_info.build | default('2023.10.27') }}</p>
-                        
-                        <h6>{{ t('settings.release_date') }}</h6>
-                        <p class="text-muted">{{ system_info.release_date | default('2023-10-27') }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>{{ t('settings.license') }}</h6>
-                        <p class="text-muted">{{ system_info.license | default('MIT License') }}</p>
-                        
-                        <h6>{{ t('settings.author') }}</h6>
-                        <p class="text-muted">{{ system_info.author | default('HostBerry Team') }}</p>
-                        
-                        <h6>{{ t('settings.website') }}</h6>
-                        <p class="text-muted">{{ system_info.website | default('https://hostberry.com') }}</p>
-                    </div>
+    <div class="row g-4">
+        <!-- Configuración General -->
+        <div class="col-lg-6 col-md-12">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <h5 class="actions-card-title">
+                        <i class="bi bi-gear me-2"></i>
+                        {{ t('settings.general', 'General') }}
+                    </h5>
                 </div>
-                
-                <hr>
-                
-                <div class="text-center">
-                    <a href="/help" class="btn btn-outline-info me-2">
-                        <i class="bi bi-question-circle"></i>
-                        {{ t('settings.help') }}
-                    </a>
-                    <a href="/documentation" class="btn btn-outline-secondary me-2">
-                        <i class="bi bi-book"></i>
-                        {{ t('settings.documentation') }}
-                    </a>
-                    <a href="/support" class="btn btn-outline-primary">
-                        <i class="bi bi-headset"></i>
-                        {{ t('settings.support') }}
-                    </a>
+                <div class="actions-card-body">
+                    <form id="generalConfigForm">
+                        <div class="mb-3">
+                            <label for="language" class="form-label text-white">{{ t('settings.language', 'Language') }}</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="language" name="language">
+                                <option value="es" {{ 'selected' if (settings.language if settings else 'es') == 'es' else '' }}>🇪🇸 Español</option>
+                                <option value="en" {{ 'selected' if (settings.language if settings else 'es') == 'en' else '' }}>🇺🇸 English</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="theme" class="form-label text-white">{{ t('settings.theme', 'Theme') }}</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="theme" name="theme">
+                                <option value="light" {{ 'selected' if (settings.theme if settings else 'dark') == 'light' else '' }}>{{ t('settings.theme_light', 'Light') }}</option>
+                                <option value="dark" {{ 'selected' if (settings.theme if settings else 'dark') == 'dark' else '' }}>{{ t('settings.theme_dark', 'Dark') }}</option>
+                                <option value="auto" {{ 'selected' if (settings.theme if settings else 'dark') == 'auto' else '' }}>{{ t('settings.theme_auto', 'Auto') }}</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="timezone" class="form-label text-white">{{ t('settings.timezone', 'Timezone') }}</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="timezone" name="timezone">
+                                <option value="UTC" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'UTC' else '' }}>UTC</option>
+                                <option value="Europe/Madrid" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'Europe/Madrid' else '' }}>Europe/Madrid</option>
+                                <option value="Europe/London" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'Europe/London' else '' }}>Europe/London</option>
+                                <option value="America/New_York" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'America/New_York' else '' }}>America/New_York</option>
+                                <option value="America/Los_Angeles" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'America/Los_Angeles' else '' }}>America/Los_Angeles</option>
+                                <option value="America/Mexico_City" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'America/Mexico_City' else '' }}>America/Mexico_City</option>
+                                <option value="America/Bogota" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'America/Bogota' else '' }}>America/Bogota</option>
+                                <option value="Asia/Tokyo" {{ 'selected' if (settings.timezone if settings else 'UTC') == 'Asia/Tokyo' else '' }}>Asia/Tokyo</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {{ t('common.save', 'Save') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración del Sistema -->
+        <div class="col-lg-6 col-md-12">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <h5 class="actions-card-title">
+                        <i class="bi bi-cpu me-2"></i>
+                        {{ t('settings.system', 'System') }}
+                    </h5>
+                </div>
+                <div class="actions-card-body">
+                    <form id="systemConfigForm">
+                        <div class="mb-3">
+                            <label for="log_level" class="form-label text-white">{{ t('system.log_level', 'Log Level') }}</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="log_level" name="log_level">
+                                <option value="DEBUG" {{ 'selected' if (system_config.log_level if system_config else 'INFO') == 'DEBUG') else '' }}>DEBUG</option>
+                                <option value="INFO" {{ 'selected' if (system_config.log_level if system_config else 'INFO') == 'INFO' else '' }}>INFO</option>
+                                <option value="WARNING" {{ 'selected' if (system_config.log_level if system_config else 'INFO') == 'WARNING' else '' }}>WARNING</option>
+                                <option value="ERROR" {{ 'selected' if (system_config.log_level if system_config else 'INFO') == 'ERROR' else '' }}>ERROR</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ t('settings.auto_backup', 'Auto Backup') }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="auto_backup" name="auto_backup" {{ 'checked' if (system_config.auto_backup if system_config else False) else '' }}>
+                                <label class="form-check-label text-white" for="auto_backup">
+                                    {{ t('settings.enable_auto_backup', 'Enable automatic backups') }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="backup_interval" class="form-label text-white">{{ t('settings.backup_interval', 'Backup Interval') }}</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="backup_interval" name="backup_interval">
+                                <option value="daily" {{ 'selected' if (system_config.backup_interval if system_config else 'daily') == 'daily' else '' }}>{{ t('settings.daily', 'Daily') }}</option>
+                                <option value="weekly" {{ 'selected' if (system_config.backup_interval if system_config else 'daily') == 'weekly' else '' }}>{{ t('settings.weekly', 'Weekly') }}</option>
+                                <option value="monthly" {{ 'selected' if (system_config.backup_interval if system_config else 'daily') == 'monthly' else '' }}>{{ t('settings.monthly', 'Monthly') }}</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {{ t('common.save', 'Save') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración de Red -->
+        <div class="col-lg-6 col-md-12">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <h5 class="actions-card-title">
+                        <i class="bi bi-wifi me-2"></i>
+                        {{ t('settings.network', 'Network') }}
+                    </h5>
+                </div>
+                <div class="actions-card-body">
+                    <form id="networkConfigForm">
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ t('settings.dhcp_server', 'DHCP Server') }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="dhcp_enabled" name="dhcp_enabled" {{ 'checked' if (network_config.dhcp_enabled if network_config else False) else '' }}>
+                                <label class="form-check-label text-white" for="dhcp_enabled">
+                                    {{ t('settings.enable_dhcp', 'Enable DHCP server') }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="dns_server" class="form-label text-white">{{ t('settings.dns_server', 'DNS Server') }}</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="dns_server" name="dns_server" value="{{ network_config.dns_server if network_config else '8.8.8.8' }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ t('settings.firewall', 'Firewall') }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="firewall_enabled" name="firewall_enabled" {{ 'checked' if (network_config.firewall_enabled if network_config else True) else '' }}>
+                                <label class="form-check-label text-white" for="firewall_enabled">
+                                    {{ t('settings.enable_firewall', 'Enable firewall') }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {{ t('common.save', 'Save') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración de Seguridad -->
+        <div class="col-lg-6 col-md-12">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <h5 class="actions-card-title">
+                        <i class="bi bi-shield-check me-2"></i>
+                        {{ t('settings.security', 'Security') }}
+                    </h5>
+                </div>
+                <div class="actions-card-body">
+                    <form id="securityConfigForm">
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ t('settings.ssl', 'SSL/TLS') }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="ssl_enabled" name="ssl_enabled" {{ 'checked' if (security_config.ssl_enabled if security_config else False) else '' }}>
+                                <label class="form-check-label text-white" for="ssl_enabled">
+                                    {{ t('settings.enable_ssl', 'Enable SSL/TLS') }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="max_login_attempts" class="form-label text-white">{{ t('settings.max_login_attempts', 'Max Login Attempts') }}</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" id="max_login_attempts" name="max_login_attempts" value="{{ security_config.max_login_attempts if security_config else 3 }}" min="1" max="10">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="session_timeout" class="form-label text-white">{{ t('settings.session_timeout', 'Session Timeout') }}</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" id="session_timeout" name="session_timeout" value="{{ security_config.session_timeout if security_config else 30 }}" min="5" max="1440">
+                            <small class="text-white-50">{{ t('settings.minutes', 'minutes') }}</small>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {{ t('common.save', 'Save') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración de Rendimiento -->
+        <div class="col-lg-6 col-md-12">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <h5 class="actions-card-title">
+                        <i class="bi bi-speedometer2 me-2"></i>
+                        {{ t('settings.performance', 'Performance') }}
+                    </h5>
+                </div>
+                <div class="actions-card-body">
+                    <form id="performanceConfigForm">
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ t('settings.cache', 'Cache') }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="cache_enabled" name="cache_enabled" {{ 'checked' if (performance_config.cache_enabled if performance_config else True) else '' }}>
+                                <label class="form-check-label text-white" for="cache_enabled">
+                                    {{ t('settings.enable_cache', 'Enable cache') }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="cache_size" class="form-label text-white">{{ t('settings.cache_size', 'Cache Size') }}</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" id="cache_size" name="cache_size" value="{{ performance_config.cache_size if performance_config else 50 }}" min="10" max="500">
+                            <small class="text-white-50">{{ t('settings.mb', 'MB') }}</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ t('settings.compression', 'Compression') }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="compression_enabled" name="compression_enabled" {{ 'checked' if (performance_config.compression_enabled if performance_config else True) else '' }}>
+                                <label class="form-check-label text-white" for="compression_enabled">
+                                    {{ t('settings.enable_compression', 'Enable compression') }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {{ t('common.save', 'Save') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración de Notificaciones -->
+        <div class="col-lg-6 col-md-12">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <h5 class="actions-card-title">
+                        <i class="bi bi-bell me-2"></i>
+                        {{ t('settings.notifications', 'Notifications') }}
+                    </h5>
+                </div>
+                <div class="actions-card-body">
+                    <form id="notificationConfigForm">
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ t('settings.email_notifications', 'Email Notifications') }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {{ 'checked' if (notification_config.email_enabled if notification_config else False) else '' }}>
+                                <label class="form-check-label text-white" for="email_notifications">
+                                    {{ t('settings.enable_email_notifications', 'Enable email notifications') }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email_address" class="form-label text-white">{{ t('settings.email_address', 'Email Address') }}</label>
+                            <input type="email" class="form-control bg-dark text-white border-secondary" id="email_address" name="email_address" value="{{ notification_config.email_address if notification_config else '' }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ t('settings.system_alerts', 'System Alerts') }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="system_alerts" name="system_alerts" {{ 'checked' if (notification_config.system_alerts if notification_config else True) else '' }}>
+                                <label class="form-check-label text-white" for="system_alerts">
+                                    {{ t('settings.enable_system_alerts', 'Enable system alerts') }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {{ t('common.save', 'Save') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del Sistema -->
+        <div class="col-12">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <h5 class="actions-card-title">
+                        <i class="bi bi-info-circle me-2"></i>
+                        {{ t('settings.about', 'About') }}
+                    </h5>
+                </div>
+                <div class="actions-card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-white">{{ t('settings.version', 'Version') }}</h6>
+                            <p class="text-white-50">{{ system_info.version if system_info else '1.0.0' }}</p>
+                            
+                            <h6 class="text-white">{{ t('settings.build', 'Build') }}</h6>
+                            <p class="text-white-50">{{ system_info.build if system_info else '2023.10.27' }}</p>
+                            
+                            <h6 class="text-white">{{ t('settings.release_date', 'Release Date') }}</h6>
+                            <p class="text-white-50">{{ system_info.release_date if system_info else '2023-10-27' }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-white">{{ t('settings.license', 'License') }}</h6>
+                            <p class="text-white-50">{{ system_info.license if system_info else 'MIT License' }}</p>
+                            
+                            <h6 class="text-white">{{ t('settings.author', 'Author') }}</h6>
+                            <p class="text-white-50">{{ system_info.author if system_info else 'HostBerry Team' }}</p>
+                            
+                            <h6 class="text-white">{{ t('settings.website', 'Website') }}</h6>
+                            <p class="text-white-50">{{ system_info.website if system_info else 'https://hostberry.com' }}</p>
+                        </div>
+                    </div>
+                    
+                    <hr class="border-secondary">
+                    
+                    <div class="text-center">
+                        <a href="/help" class="btn btn-outline-info me-2">
+                            <i class="bi bi-question-circle me-2"></i>
+                            {{ t('settings.help', 'Help') }}
+                        </a>
+                        <a href="/documentation" class="btn btn-outline-secondary me-2">
+                            <i class="bi bi-book me-2"></i>
+                            {{ t('settings.documentation', 'Documentation') }}
+                        </a>
+                        <a href="/support" class="btn btn-outline-primary">
+                            <i class="bi bi-headset me-2"></i>
+                            {{ t('settings.support', 'Support') }}
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
 {% block extra_js %}
-<script src="/static/js/settings.js?v={{ last_update }}"></script>
-{% endblock %}
+<script>
+(function(){
+  // Función de notificaciones como en dashboard
+  function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+      <div class="notification-content">
+        <span class="notification-message">${message}</span>
+        <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+      </div>
+    `;
+    
+    if (!document.querySelector('#notification-styles')) {
+      const style = document.createElement('style');
+      style.id = 'notification-styles';
+      style.textContent = `
+        .notification {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 9999;
+          min-width: 300px;
+          padding: 1rem;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+          animation: slideInRight 0.3s ease;
+        }
+        .notification-content {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          color: #fff;
+        }
+        .notification-close {
+          background: none;
+          border: none;
+          color: #fff;
+          font-size: 1.2rem;
+          cursor: pointer;
+          padding: 0;
+          margin-left: 1rem;
+        }
+        .notification-success { border-left: 4px solid #198754; }
+        .notification-error { border-left: 4px solid #dc3545; }
+        .notification-warning { border-left: 4px solid #ffc107; }
+        .notification-info { border-left: 4px solid #0dcaf0; }
+        @keyframes slideInRight {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        body.light-theme .notification {
+          background: rgba(255, 255, 255, 0.95);
+          color: #212529;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        body.light-theme .notification-content {
+          color: #212529;
+        }
+        body.light-theme .notification-close {
+          color: #212529;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.remove();
+      }
+    }, 5000);
+  }
+
+  // Función para obtener traducciones
+  function getTranslation(key, defaultValue) {
+    if (!key) return defaultValue || '';
+    
+    const keys = String(key).split('.');
+    
+    // 1. Intentar desde HostBerry.translations
+    if (window.HostBerry?.translations) {
+      let current = window.HostBerry.translations;
+      for (const k of keys) {
+        if (current && typeof current === 'object' && k in current) {
+          current = current[k];
+        } else {
+          current = null;
+          break;
+        }
+      }
+      if (typeof current === 'string' && current) return current;
+    }
+    
+    // 2. Intentar desde window.translations
+    if (window.translations) {
+      let current = window.translations;
+      for (const k of keys) {
+        if (current && typeof current === 'object' && k in current) {
+          current = current[k];
+        } else {
+          current = null;
+          break;
+        }
+      }
+      if (typeof current === 'string' && current) return current;
+    }
+    
+    // 3. Intentar desde el JSON embebido
+    try {
+      const i18nEl = document.getElementById('i18n-json');
+      if (i18nEl) {
+        const translations = JSON.parse(i18nEl.textContent || i18nEl.innerText || '{}');
+        let current = translations;
+        for (const k of keys) {
+          if (current && typeof current === 'object' && k in current) {
+            current = current[k];
+          } else {
+            current = null;
+            break;
+          }
+        }
+        if (typeof current === 'string' && current) return current;
+      }
+    } catch (e) {
+      // Ignorar errores
+    }
+    
+    // 4. Usar HostBerry.t si está disponible
+    if (window.HostBerry?.t) {
+      try {
+        const result = window.HostBerry.t(key, defaultValue);
+        if (result && result !== key && typeof result === 'string') return result;
+      } catch (e) {
+        // Ignorar errores
+      }
+    }
+    
+    // 5. Fallback al valor por defecto
+    return defaultValue || key;
+  }
+
+  // Función para bindear formularios
+  function bindForm(formId, endpoint){
+    const form = document.getElementById(formId);
+    if(!form) return;
+    
+    form.addEventListener('submit', async function(e){
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const obj = {};
+      formData.forEach((v, k) => { 
+        obj[k] = v;
+      });
+      
+      // Normalizaciones básicas
+      ['max_login_attempts', 'session_timeout', 'cache_size'].forEach(function(k){
+        if(obj[k] !== undefined) obj[k] = parseInt(obj[k]);
+      });
+      
+      ['auto_backup', 'firewall_enabled', 'ssl_enabled', 'cache_enabled', 
+       'compression_enabled', 'email_notifications', 'system_alerts', 'dhcp_enabled'].forEach(function(k){
+        if(obj[k] !== undefined) obj[k] = (obj[k] === 'on');
+      });
+      
+      // Mostrar notificación de guardado
+      showNotification(getTranslation('settings.saving', 'Saving...'), 'info');
+      
+      try{
+        const token = localStorage.getItem('access_token');
+        const resp = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(obj)
+        });
+        
+        if(resp.ok){
+          const data = await resp.json();
+          const message = data.message || getTranslation('settings.saved', 'Settings saved successfully');
+          showNotification(message, 'success');
+          
+          // Si es el formulario general (idioma o tema), recargar después de un momento
+          if(formId === 'generalConfigForm'){
+            setTimeout(() => {
+              // Si cambió el idioma, recargar con el nuevo idioma
+              if(obj.language){
+                const currentUrl = new URL(window.location);
+                currentUrl.searchParams.set('lang', obj.language);
+                window.location.href = currentUrl.toString();
+              } else if(obj.theme){
+                // Si cambió el tema, aplicar el tema
+                if(obj.theme === 'light'){
+                  document.body.classList.add('light-theme');
+                  document.body.classList.remove('dark-theme');
+                } else if(obj.theme === 'dark'){
+                  document.body.classList.add('dark-theme');
+                  document.body.classList.remove('light-theme');
+                } else {
+                  // Auto - detectar preferencia del sistema
+                  if(window.matchMedia('(prefers-color-scheme: light)').matches){
+                    document.body.classList.add('light-theme');
+                    document.body.classList.remove('dark-theme');
+                  } else {
+                    document.body.classList.add('dark-theme');
+                    document.body.classList.remove('light-theme');
+                  }
+                }
+                localStorage.setItem('theme', obj.theme);
+              }
+              
+              // Si cambió timezone, mostrar notificación
+              if(obj.timezone){
+                showNotification(getTranslation('settings.timezone_updated', 'Timezone updated. Changes will take effect on next page reload.'), 'info');
+              }
+            }, 1000);
+          }
+        } else {
+          const errorData = await resp.json().catch(() => ({ detail: await resp.text() }));
+          const errorMsg = errorData.detail || errorData.message || getTranslation('errors.configuration_error', 'Error saving configuration');
+          showNotification(errorMsg, 'error');
+        }
+      } catch(error){
+        console.error('Error saving settings:', error);
+        showNotification(getTranslation('errors.network_error', 'Network error. Please try again.'), 'error');
+      }
+    });
+  }
+
+  // Bindear todos los formularios
+  bindForm('generalConfigForm', '/api/v1/system/config');
+  bindForm('systemConfigForm', '/api/v1/system/config');
+  bindForm('networkConfigForm', '/api/v1/system/config');
+  bindForm('securityConfigForm', '/api/v1/system/config');
+  bindForm('performanceConfigForm', '/api/v1/system/config');
+  bindForm('notificationConfigForm', '/api/v1/system/config');
+})();
+</script>
 {% endblock %}
