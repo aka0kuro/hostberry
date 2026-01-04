@@ -24,7 +24,7 @@ from core.i18n import get_text
 router = APIRouter()
 logger = get_logger("system")
 
-@router.get("/stats", response_model=SystemStats)
+@router.get("/stats")
 async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_current_active_user)):
     """Obtiene estadísticas del sistema (con caché)"""
     try:
