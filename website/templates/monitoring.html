@@ -689,12 +689,14 @@
           const systemInfo = info.data || info;
           if(systemInfo){
             setText('sys-hostname', systemInfo.hostname || '--');
-            setText('sys-os', systemInfo.platform || '--');
+            setText('sys-os', systemInfo.os_name || systemInfo.platform || '--');
             setText('sys-kernel', systemInfo.kernel_version || '--');
-            setText('sys-arch', systemInfo.architecture || '--');
+            setText('sys-arch', systemInfo.processor || '--');
             setText('sys-processor', systemInfo.processor || '--');
             if(systemInfo.load_average && Array.isArray(systemInfo.load_average)){
               setText('sys-load', systemInfo.load_average.map(l => safeToFixed(l, 2)).join(', '));
+            } else {
+              setText('sys-load', '--');
             }
           }
         }).catch(err => {
