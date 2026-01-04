@@ -114,13 +114,13 @@
     showAlert(alertType, `${title}: ${message}`);
   }
 
-  // Función para procesar errores de validación de Pydantic
+  // Función para procesar errores de validación de Pydantic (con traducciones)
   function processValidationError(errorDetail) {
     if (Array.isArray(errorDetail)) {
       // Es un array de errores de validación de Pydantic
       const messages = errorDetail.map(error => {
-        const field = error.loc && error.loc.length > 1 ? error.loc[1] : 'campo';
-        const message = error.msg || 'Error de validación';
+        const field = error.loc && error.loc.length > 1 ? error.loc[1] : 'field';
+        let message = error.msg || t('errors.validation_error', 'Error de validación');
         
         // Traducir nombres de campos
         const fieldNames = {
@@ -129,15 +129,68 @@
           'confirm_password': t('auth.confirm_password', 'Confirmar contraseña')
         };
         
+        // Traducir mensajes de error comunes de Pydantic
+        const errorMessages = {
+          'field required': t('errors.field_required', 'Este campo es requerido'),
+          'string does not match expected pattern': t('errors.invalid_format', 'Formato inválido'),
+          'string too short': t('errors.too_short', 'Demasiado corto'),
+          'string too long': t('errors.too_long', 'Demasiado largo'),
+          'value is not a valid string': t('errors.invalid_string', 'No es un texto válido'),
+          'value is not a valid integer': t('errors.invalid_integer', 'No es un número válido'),
+        };
+        
+        // Intentar traducir el mensaje de error
+        const lowerMsg = message.toLowerCase();
+        for (const [key, translation] of Object.entries(errorMessages)) {
+          if (lowerMsg.includes(key)) {
+            message = translation;
+            break;
+          }
+        }
+        
+        // Si el mensaje contiene información sobre el campo, traducirlo
         const fieldName = fieldNames[field] || field;
+        
+        // Traducir mensajes específicos de validación
+        if (message.includes('required')) {
+          message = t('errors.field_required', 'Este campo es requerido');
+        } else if (message.includes('too short') || message.includes('minimum')) {
+          if (field === 'new_username') {
+            message = t('errors.username_too_short', 'El nombre de usuario debe tener al menos 3 caracteres');
+          } else if (field === 'new_password' || field === 'confirm_password') {
+            message = t('errors.password_length', 'La contraseña debe tener al menos 8 caracteres');
+          }
+        } else if (message.includes('too long') || message.includes('maximum')) {
+          if (field === 'new_username') {
+            message = t('errors.username_too_long', 'El nombre de usuario no puede exceder 50 caracteres');
+          }
+        }
+        
         return `${fieldName}: ${message}`;
       });
       
       return messages.join('\n');
     } else if (typeof errorDetail === 'string') {
+      // Intentar traducir mensajes de error comunes
+      const lowerMsg = errorDetail.toLowerCase();
+      if (lowerMsg.includes('password') && lowerMsg.includes('match')) {
+        return t('auth.passwords_dont_match', 'Las contraseñas no coinciden');
+      }
+      if (lowerMsg.includes('connection') || lowerMsg.includes('network')) {
+        return t('errors.connection_error', 'Error de conexión');
+      }
+      if (lowerMsg.includes('validation')) {
+        return t('errors.validation_error', 'Error de validación');
+      }
       return errorDetail;
     } else if (typeof errorDetail === 'object') {
-      return errorDetail.message || errorDetail.error || JSON.stringify(errorDetail);
+      if (errorDetail.message) {
+        return processValidationError(errorDetail.message);
+      }
+      if (errorDetail.error) {
+        return processValidationError(errorDetail.error);
+      }
+      return t('errors.validation_error', 'Error de validación');
     }
     
     return t('errors.validation_error', 'Error de validación');
