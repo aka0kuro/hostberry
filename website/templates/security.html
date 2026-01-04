@@ -217,8 +217,6 @@
       setStatusCard('status-rate', data.rate_limiting_enabled);
       setStatusCard('status-headers', data.security_headers_enabled);
       setStatusCard('status-backup', data.backup_encryption_enabled);
-      setStatusCard('status-2fa', data.two_factor_enabled);
-      setStatusCard('status-ip-lists', data.ip_blacklist_enabled || data.ip_whitelist_enabled);
       setText('security-last-check', new Date().toLocaleString());
     }catch(error){
       console.error('Security status failed', error);
