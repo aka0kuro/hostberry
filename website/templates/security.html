@@ -129,12 +129,88 @@
   }
 
 
+  // Función de notificaciones como en dashboard
+  function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+      <div class="notification-content">
+        <span class="notification-message">${message}</span>
+        <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+      </div>
+    `;
+    
+    if (!document.querySelector('#notification-styles')) {
+      const style = document.createElement('style');
+      style.id = 'notification-styles';
+      style.textContent = `
+        .notification {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 9999;
+          min-width: 300px;
+          padding: 1rem;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+          animation: slideInRight 0.3s ease;
+        }
+        .notification-content {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          color: #fff;
+        }
+        .notification-close {
+          background: none;
+          border: none;
+          color: #fff;
+          font-size: 1.2rem;
+          cursor: pointer;
+          padding: 0;
+          margin-left: 1rem;
+        }
+        .notification-success { border-left: 4px solid #198754; }
+        .notification-error { border-left: 4px solid #dc3545; }
+        .notification-warning { border-left: 4px solid #ffc107; }
+        .notification-info { border-left: 4px solid #0dcaf0; }
+        @keyframes slideInRight {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        body.light-theme .notification {
+          background: rgba(255, 255, 255, 0.95);
+          color: #212529;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        body.light-theme .notification-content {
+          color: #212529;
+        }
+        body.light-theme .notification-close {
+          color: #212529;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.remove();
+      }
+    }, 5000);
+  }
+
   async function createBackup(){
     try{
-      const confirmMsg = HostBerry.t?.('security.backup_confirm', 'Are you sure you want to create a backup?') || 'Are you sure you want to create a backup?';
+      const confirmMsg = HostBerry.t?.('backup.create_confirm', '¿Estás seguro de que quieres crear un backup?') || '¿Estás seguro de que quieres crear un backup?';
       if(!confirm(confirmMsg)) return;
       
-      HostBerry.showAlert?.('info', HostBerry.t?.('security.backup_creating', 'Creating backup...') || 'Creating backup...');
+      showNotification(HostBerry.t?.('backup.creating', 'Creando backup...') || 'Creando backup...', 'info');
       
       const resp = await HostBerry.apiRequest('/api/v1/security/backup?include_logs=true&include_uploads=true', { method: 'POST' });
       if(!resp.ok){
@@ -142,13 +218,14 @@
         throw new Error(errorText || 'Backup failed');
       }
       const payload = await resp.json();
-      const message = payload.message || payload.data?.message || HostBerry.t?.('security.backup_success', 'Backup created successfully') || 'Backup created successfully';
-      HostBerry.showAlert?.('success', message);
+      const message = payload.message || payload.data?.message || HostBerry.t?.('backup.created', 'Backup creado exitosamente') || 'Backup creado exitosamente';
+      showNotification(message, 'success');
+      updateLastCheck();
       await loadBackups();
     }catch(error){
       console.error('Backup failed', error);
-      const errorMsg = HostBerry.t?.('security.backup_error', 'Unable to create backup') || 'Unable to create backup';
-      HostBerry.showAlert?.('danger', errorMsg);
+      const errorMsg = HostBerry.t?.('backup.create_error', 'Error al crear backup') || 'Error al crear backup';
+      showNotification(errorMsg, 'error');
     }
   }
 
