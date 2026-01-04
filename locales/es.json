@@ -1347,6 +1347,7 @@
     "restore_confirm_final": "¡ADVERTENCIA! Esta acción restaurará el backup y reemplazará los datos actuales. ¿Estás absolutamente seguro?",
     "restoring": "Restaurando backup...",
     "restored": "Backup restaurado exitosamente",
-    "restore_error": "Error al restaurar backup"
+    "restore_error": "Error al restaurar backup",
+    "deleted": "Backup eliminado exitosamente"
   }
 }

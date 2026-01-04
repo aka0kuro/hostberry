@@ -1317,6 +1317,7 @@
     "restore_confirm_final": "WARNING! This action will restore the backup and replace current data. Are you absolutely sure?",
     "restoring": "Restoring backup...",
     "restored": "Backup restored successfully",
-    "restore_error": "Error restoring backup"
+    "restore_error": "Error restoring backup",
+    "deleted": "Backup deleted successfully"
   }
 }
