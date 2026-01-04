@@ -1077,8 +1077,14 @@ setup_production_dirs() {
     # Asegurar que el directorio existe con permisos correctos
     if [[ $EUID -eq 0 ]]; then
         install -d -m 0755 -o "$USER" -g "$GROUP" "$DB_DIR"
+        # Corregir permisos si el directorio ya existía con permisos incorrectos
+        chown -R "$USER:$GROUP" "$DB_DIR" 2>/dev/null || true
+        chmod 755 "$DB_DIR"
     else
         sudo install -d -m 0755 -o "$USER" -g "$GROUP" "$DB_DIR"
+        # Corregir permisos si el directorio ya existía con permisos incorrectos
+        sudo chown -R "$USER:$GROUP" "$DB_DIR" 2>/dev/null || true
+        sudo chmod 755 "$DB_DIR"
     fi
     
     # Asegurar archivo y permisos (crear si no existe)
