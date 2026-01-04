@@ -22,14 +22,14 @@ logger = get_logger("vpn")
 async def get_vpn_status(current_user: Dict[str, Any] = Depends(get_current_active_user)):
     """Obtiene el estado de la conexión VPN"""
     try:
-        # Verificar si OpenVPN está ejecutándose
-        result = subprocess.run(
+        # Verificar si OpenVPN está ejecutándose (async)
+        from core.async_utils import run_subprocess_async
+        returncode, stdout, stderr = await run_subprocess_async(
             ["systemctl", "is-active", "openvpn"],
-            capture_output=True,
-            text=True
+            timeout=5
         )
         
-        running = result.returncode == 0
+        running = returncode == 0
         
         # Obtener información de la conexión si está activa
         server = None
