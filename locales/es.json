@@ -1017,6 +1017,7 @@
   "messages": {
     "operation_successful": "Operación exitosa",
     "changes_saved": "Cambios guardados",
+    "config_updated": "Configuración actualizada exitosamente",
     "changes_not_saved": "Cambios no guardados",
     "data_loaded": "Datos cargados",
     "data_not_loaded": "Datos no cargados",
