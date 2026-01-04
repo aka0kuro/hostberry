@@ -169,6 +169,15 @@ class SecurityMiddleware:
                 logger.warning(f"Actividad sospechosa detectada de IP: {ip}")
                 # Opcional: agregar a blacklist temporal
                 # self.ip_blacklist.add(ip)
+    
+    def _log_suspicious_activity(self, ip: str, request: Request, reason: str):
+        """Registrar actividad sospechosa"""
+        log_security_event("suspicious_activity", {
+            "reason": reason,
+            "path": str(request.url.path),
+            "method": request.method,
+            "user_agent": request.headers.get("user-agent", "")
+        }, ip)
 
 def create_security_middleware():
     """Crear instancia del middleware de seguridad"""
