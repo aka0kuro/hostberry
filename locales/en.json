@@ -54,6 +54,7 @@
     "running": "Running",
     "stopped": "Stopped",
     "starting": "Starting",
+    "unknown": "Unknown",
     "stopping": "Stopping",
     "restarting": "Restarting",
     "healthy": "Healthy",

@@ -55,6 +55,7 @@
     "running": "Ejecutándose",
     "stopped": "Detenido",
     "starting": "Iniciando",
+    "unknown": "Desconocido",
     "stopping": "Deteniendo",
     "restarting": "Reiniciando",
     "healthy": "Saludable",
