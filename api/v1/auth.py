@@ -39,11 +39,22 @@ def _get_user_agent(request: Request) -> str:
     """Obtener User-Agent del cliente"""
     return request.headers.get("user-agent", "unknown")
 @router.post("/first-login/change")
-async def first_login_change(data: FirstLoginChange):
+async def first_login_change(data: FirstLoginChange, request: Request):
     """Cambiar usuario/contraseña en primer login y eliminar admin por defecto"""
+    client_ip = _get_client_ip(request)
+    user_agent = _get_user_agent(request)
+    
     try:
         from config.settings import settings
         from core.security import get_password_hash
+        
+        logger.info(f"🔐 Cambio de credenciales en primer login - Nuevo usuario: {data.new_username}, IP: {client_ip}")
+        await db.insert_log(
+            "INFO",
+            f"Intento de cambio de credenciales en primer login - Nuevo usuario: {data.new_username}, IP: {client_ip}",
+            source="auth",
+            user_id=None
+        )
         
         # Verificar que el usuario admin por defecto existe
         admin_user = await db.execute_query(
@@ -52,6 +63,13 @@ async def first_login_change(data: FirstLoginChange):
         )
         
         if not admin_user:
+            logger.warning(f"❌ Cambio de credenciales fallido - Admin por defecto no existe, IP: {client_ip}")
+            await db.insert_log(
+                "WARNING",
+                f"Cambio de credenciales fallido - Admin por defecto no existe, IP: {client_ip}",
+                source="auth",
+                user_id=None
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, 
                 detail=get_text("auth.default_admin_missing", default="El usuario admin por defecto ya no existe")
@@ -59,6 +77,13 @@ async def first_login_change(data: FirstLoginChange):
 
         # Validaciones básicas
         if data.new_username == settings.default_username:
+            logger.warning(f"❌ Cambio de credenciales fallido - Intento de usar 'admin' como nuevo usuario, IP: {client_ip}")
+            await db.insert_log(
+                "WARNING",
+                f"Cambio de credenciales fallido - Intento de usar 'admin' como nuevo usuario, IP: {client_ip}",
+                source="auth",
+                user_id=None
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, 
                 detail=get_text("auth.new_user_cannot_be_admin", default="El nuevo usuario no puede ser 'admin'")
@@ -70,6 +95,13 @@ async def first_login_change(data: FirstLoginChange):
             (data.new_username,)
         )
         if existing:
+            logger.warning(f"❌ Cambio de credenciales fallido - Usuario ya existe: {data.new_username}, IP: {client_ip}")
+            await db.insert_log(
+                "WARNING",
+                f"Cambio de credenciales fallido - Usuario ya existe: {data.new_username}, IP: {client_ip}",
+                source="auth",
+                user_id=None
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, 
                 detail=get_text("auth.user_exists", default="El usuario ya existe")
@@ -84,15 +116,35 @@ async def first_login_change(data: FirstLoginChange):
             (settings.default_username,)
         )
 
-        # Log opcional
-        await db.insert_log("INFO", f"Usuario por defecto reemplazado por: {data.new_username}")
+        # Log de éxito
+        success_message = f"✅ Cambio de credenciales exitoso - Usuario por defecto reemplazado por: {data.new_username}, IP: {client_ip}, User-Agent: {user_agent}"
+        logger.info(success_message)
+        await db.insert_log(
+            "INFO",
+            f"Cambio de credenciales exitoso - Usuario por defecto reemplazado por: {data.new_username}, IP: {client_ip}",
+            source="auth",
+            user_id=None
+        )
+        audit_sensitive_operation(
+            "first_login_credentials_changed",
+            data.new_username,
+            client_ip,
+            {"old_username": settings.default_username, "new_username": data.new_username}
+        )
 
         return {"message": get_text("auth.user_updated_relogin", default="Usuario actualizado. Vuelve a iniciar sesión con tus nuevas credenciales.")}
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error('first_login_change_error', error=str(e))
+        error_message = f"❌ Error en cambio de credenciales - Error: {str(e)}, IP: {client_ip}"
+        logger.error(error_message)
+        await db.insert_log(
+            "ERROR",
+            f"Error en cambio de credenciales - Error: {str(e)}, IP: {client_ip}",
+            source="auth",
+            user_id=None
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
             detail=get_text("errors.internal_server_error", default="Error interno del servidor")
