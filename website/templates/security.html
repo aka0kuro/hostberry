@@ -431,7 +431,7 @@
   async function downloadBackup(backupName){
     try{
       if(!backupName){
-        showNotification(HostBerry.t?.('errors.backup_not_found', 'Backup no encontrado') || HostBerry.t?.('backup.not_found', 'Backup no encontrado') || 'Backup no encontrado', 'error');
+        showNotification(getTranslation('backup.not_found', 'Backup not found'), 'error');
         return;
       }
       
@@ -535,7 +535,7 @@
   async function restoreBackup(backupName){
     try{
       if(!backupName){
-        showNotification(HostBerry.t?.('errors.backup_not_found', 'Backup no encontrado') || HostBerry.t?.('backup.not_found', 'Backup no encontrado') || 'Backup no encontrado', 'error');
+        showNotification(getTranslation('backup.not_found', 'Backup not found'), 'error');
         return;
       }
       
@@ -576,7 +576,7 @@
   async function showBackupInfo(backupName){
     try{
       if(!backupName){
-        showNotification(HostBerry.t?.('errors.backup_not_found', 'Backup no encontrado') || HostBerry.t?.('backup.not_found', 'Backup no encontrado') || 'Backup no encontrado', 'error');
+        showNotification(getTranslation('backup.not_found', 'Backup not found'), 'error');
         return;
       }
       
@@ -624,7 +624,7 @@
   async function deleteBackup(backupName){
     try{
       if(!backupName){
-        showNotification(HostBerry.t?.('errors.backup_not_found', 'Backup no encontrado') || HostBerry.t?.('backup.not_found', 'Backup no encontrado') || 'Backup no encontrado', 'error');
+        showNotification(getTranslation('backup.not_found', 'Backup not found'), 'error');
         return;
       }
       
