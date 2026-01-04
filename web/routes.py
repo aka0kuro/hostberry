@@ -386,12 +386,27 @@ async def login_page(request: Request, response: Response, lang: str | None = Qu
 
 @router.get("/system", response_class=HTMLResponse)
 async def system_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    current_lang, _ = _resolve_language(request, lang)
+    
+    # Obtener información del sistema
+    system_stats = _get_system_stats()
+    services = _get_service_statuses()
+    
     return _render(
         "system.html",
         request,
-        lang,
+        current_lang,
         extra={
-            "system_info": {},
+            "system_info": {
+                "hostname": platform.node(),
+                "os_version": f"{platform.system()} {platform.release()}",
+                "kernel_version": platform.release(),
+                "architecture": platform.machine(),
+                "uptime": boot_time(),
+                "cpu_cores": psutil.cpu_count(),
+            },
+            "system_stats": system_stats,
+            "services": services,
         },
     )
 
