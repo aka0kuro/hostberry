@@ -1,8 +1,10 @@
 // JS para la página first-login con estética igual al login
 (function(){
-  // Sistema de traducciones
+  // Sistema de traducciones mejorado
   function t(key, defaultValue = '') {
-    // Primero intentar obtener del elemento i18n-data
+    if (!key) return defaultValue || '';
+    
+    // 1. Primero intentar obtener del elemento i18n-data (atributos data-*)
     const i18nData = document.getElementById('i18n-data');
     if (i18nData) {
       const dataKey = key.replace(/\./g, '-');
@@ -12,7 +14,29 @@
       }
     }
     
-    // Fallback al sistema anterior
+    // 2. Intentar obtener del JSON embebido (como en common.js)
+    try {
+      const i18nJson = document.getElementById('i18n-json');
+      if (i18nJson) {
+        const translations = JSON.parse(i18nJson.textContent || i18nJson.innerText || '{}');
+        const keys = String(key).split('.');
+        let current = translations;
+        for (const k of keys) {
+          if (current && Object.prototype.hasOwnProperty.call(current, k)) {
+            current = current[k];
+          } else {
+            break;
+          }
+        }
+        if (typeof current === 'string') {
+          return current;
+        }
+      }
+    } catch (e) {
+      // Ignorar errores de parsing
+    }
+    
+    // 3. Fallback al sistema anterior (window.i18nData)
     const keys = key.split('.');
     let current = window.i18nData || {};
     
@@ -24,7 +48,7 @@
       }
     }
     
-    return current || defaultValue || key;
+    return (typeof current === 'string' ? current : null) || defaultValue || key;
   }
 
   // Función para mostrar alertas (mismo estilo que login.js)
