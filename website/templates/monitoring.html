@@ -338,14 +338,41 @@
 
   async function fetchJson(url){
     try {
-      if(!HostBerry || !HostBerry.apiRequest){
-        throw new Error('HostBerry.apiRequest is not available');
+      // Intentar usar HostBerry.apiRequest si está disponible
+      if(window.HostBerry && window.HostBerry.apiRequest){
+        const resp = await window.HostBerry.apiRequest(url);
+        if(!resp){
+          throw new Error('No response from server');
+        }
+        
+        if(resp.status === 401){
+          window.location.href = '/login';
+          throw new Error('Unauthorized');
+        }
+        
+        if(!resp.ok){
+          let errText = '';
+          try {
+            errText = await resp.text();
+          } catch(e) {
+            errText = `HTTP ${resp.status} ${resp.statusText}`;
+          }
+          throw new Error(errText);
+        }
+        
+        const data = await resp.json();
+        return data.data || data;
       }
       
-      const resp = await HostBerry.apiRequest(url);
-      if(!resp){
-        throw new Error('No response from server');
-      }
+      // Fallback: usar fetch directamente
+      const token = localStorage.getItem('access_token');
+      const resp = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       
       if(resp.status === 401){
         window.location.href = '/login';
@@ -365,7 +392,7 @@
       const data = await resp.json();
       return data.data || data;
     } catch(error){
-      console.error('fetchJson error:', error);
+      console.error('fetchJson error:', url, error);
       throw error;
     }
   }
