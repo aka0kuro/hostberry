@@ -467,7 +467,7 @@
       window.URL.revokeObjectURL(url);
       
       // Mostrar mensaje de éxito
-      showNotification(HostBerry.t?.('backup.downloaded', 'Backup descargado exitosamente') || 'Backup descargado exitosamente', 'success');
+      showNotification(getTranslation('backup.downloaded', 'Backup downloaded successfully'), 'success');
       updateLastCheck();
       
     }catch(error){
