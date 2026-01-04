@@ -603,59 +603,22 @@
     max-height: 380px;
     overflow-y: auto;
 }
-.backup-action-btn {
-    height: 140px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 20px;
-    border-radius: 16px;
-    transition: all 0.3s ease;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.03);
+/* Estilos para botones de backup - iguales al dashboard */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
 }
 
-.backup-action-btn:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
-    border-color: rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.05);
+body.light-theme .action-btn {
+    background: rgba(0, 0, 0, 0.05);
+    color: #212529;
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.backup-btn-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.75rem;
-    background: rgba(255, 255, 255, 0.1);
-    transition: all 0.3s ease;
-}
-
-.backup-action-btn:hover .backup-btn-icon {
-    transform: scale(1.1) rotate(5deg);
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.backup-btn-content {
-    text-align: center;
-    width: 100%;
-}
-
-.backup-btn-title {
-    font-weight: 600;
-    font-size: 1rem;
-    margin-bottom: 4px;
-}
-
-.backup-btn-desc {
-    font-size: 0.85rem;
-    opacity: 0.75;
-    line-height: 1.3;
+body.light-theme .action-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 0, 0, 0.2);
 }
 
 .backup-item {
