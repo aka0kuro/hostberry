@@ -455,7 +455,71 @@ async def profile_page(request: Request, lang: str | None = Query(default=None))
 
 @router.get("/help", response_class=HTMLResponse)
 async def help_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    return _render("help.html", request, lang)
+    current_lang, _ = _resolve_language(request, lang)
+    support_stats = [
+        {"label_key": "help.stats.active_tickets", "value": "128", "trend": "+8%", "status": "warning"},
+        {"label_key": "help.stats.resolution_rate", "value": "94%", "trend": "+2%", "status": "success"},
+        {"label_key": "help.stats.system_uptime", "value": "99.98%", "trend": "24h", "status": "info"},
+        {"label_key": "help.stats.response_time", "value": "12m", "trend": "-3m", "status": "success"},
+    ]
+    faqs = [
+        {"id": "faq_monitoring", "question_key": "help.faqs.monitoring_q", "answer_key": "help.faqs.monitoring_a"},
+        {"id": "faq_security", "question_key": "help.faqs.security_q", "answer_key": "help.faqs.security_a"},
+        {"id": "faq_updates", "question_key": "help.faqs.updates_q", "answer_key": "help.faqs.updates_a"},
+    ]
+    guide_cards = [
+        {
+            "icon": "bi bi-speedometer2",
+            "title_key": "help.guides.getting_started_title",
+            "description_key": "help.guides.getting_started_desc",
+            "link": "/guide/getting-started",
+            "variant": "primary",
+        },
+        {
+            "icon": "bi bi-wifi",
+            "title_key": "help.guides.wifi_title",
+            "description_key": "help.guides.wifi_desc",
+            "link": "/guide/wifi-setup",
+            "variant": "success",
+        },
+        {
+            "icon": "bi bi-shield-check",
+            "title_key": "help.guides.security_title",
+            "description_key": "help.guides.security_desc",
+            "link": "/guide/security-setup",
+            "variant": "warning",
+        },
+        {
+            "icon": "bi bi-gear",
+            "title_key": "help.guides.advanced_title",
+            "description_key": "help.guides.advanced_desc",
+            "link": "/guide/advanced-config",
+            "variant": "info",
+        },
+    ]
+    support_links = [
+        {"icon": "bi bi-book", "title_key": "help.links.docs_title", "desc_key": "help.links.docs_desc", "href": "/documentation"},
+        {"icon": "bi bi-code-slash", "title_key": "help.links.api_title", "desc_key": "help.links.api_desc", "href": "/api/docs"},
+        {"icon": "bi bi-tools", "title_key": "help.links.troubleshoot_title", "desc_key": "help.links.troubleshoot_desc", "href": "/troubleshooting"},
+        {"icon": "bi bi-headset", "title_key": "help.links.support_title", "desc_key": "help.links.support_desc", "href": "/support"},
+    ]
+    contact_channels = [
+        {"icon": "bi bi-envelope", "label_key": "help.contact.email", "value": "support@hostberry.com"},
+        {"icon": "bi bi-discord", "label_key": "help.contact.community", "value": "discord.gg/hostberry"},
+        {"icon": "bi bi-github", "label_key": "help.contact.repo", "value": "github.com/hostberry"},
+    ]
+    return _render(
+        "help.html",
+        request,
+        current_lang,
+        extra={
+            "support_stats": support_stats,
+            "faqs": faqs,
+            "guide_cards": guide_cards,
+            "support_links": support_links,
+            "contact_channels": contact_channels,
+        },
+    )
 
 
 @router.get("/about", response_class=HTMLResponse)
