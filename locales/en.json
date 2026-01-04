@@ -1263,6 +1263,24 @@
   },
   "backup": {
     "subtitle": "Manage and restore your system backups",
-    "last_check": "Last check"
+    "last_check": "Last check",
+    "actions_heading": "Backup actions",
+    "create_backup": "Create backup",
+    "create_backup_desc": "Create a system backup",
+    "upload_backup": "Upload backup",
+    "upload_backup_desc": "Upload a backup file",
+    "list_backups": "List backups",
+    "list_backups_desc": "View all available backups",
+    "inventory_heading": "Backup inventory",
+    "inventory_caption": "Latest backups stored on device",
+    "no_backups": "No backups listed yet",
+    "downloading": "Downloading backup...",
+    "downloaded": "Backup downloaded successfully",
+    "download_error": "Error downloading backup",
+    "uploading": "Uploading backup...",
+    "uploaded": "Backup uploaded successfully",
+    "upload_error": "Error uploading backup",
+    "no_file": "No file selected",
+    "invalid_format": "File must be a .tar.gz backup"
   }
 }
