@@ -163,7 +163,8 @@
       ensureNetChart();
     }catch(error){
       console.error('Error updating monitoring stats:', error);
-      HostBerry.showAlert?.('danger', HostBerry.t?.('errors.monitoring_stats', 'Unable to refresh monitoring stats') || 'Unable to refresh monitoring stats');
+      const errorMsg = HostBerry.t?.('errors.monitoring_stats', 'No se pudieron actualizar las estadísticas de monitoreo') || 'No se pudieron actualizar las estadísticas de monitoreo';
+      HostBerry.showAlert?.('danger', errorMsg);
     }
   }
 
