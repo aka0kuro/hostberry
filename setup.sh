@@ -2186,13 +2186,30 @@ verify_installation() {
         fi
     done
     
-    # Verificar respuesta HTTP
+    # Verificar respuesta HTTP (con múltiples intentos y más tiempo)
     log "$ANSI_YELLOW" "INFO" "$(get_text 'checking_http' 'Comprobando respuesta HTTP...')"
-    sleep 5
-    if curl -s -o /dev/null -w "%{http_code}" http://localhost | grep -q "200\|301\|302"; then
-        log "$ANSI_GREEN" "SUCCESS" "$(get_text 'http_ok' 'Respuesta HTTP OK')"
-    else
+    local http_ok=false
+    for i in {1..6}; do
+        sleep 5
+        if curl -s -o /dev/null -w "%{http_code}" http://localhost 2>/dev/null | grep -q "200\|301\|302"; then
+            log "$ANSI_GREEN" "SUCCESS" "$(get_text 'http_ok' 'Respuesta HTTP OK')"
+            http_ok=true
+            break
+        else
+            log "$ANSI_YELLOW" "INFO" "Intento $i/6: Esperando respuesta HTTP..."
+        fi
+    done
+    
+    if [ "$http_ok" = false ]; then
         log "$ANSI_RED" "ERROR" "$(get_text 'http_failed' 'Fallo en respuesta HTTP')"
+        log "$ANSI_YELLOW" "INFO" "Verificando estado del servicio hostberry..."
+        if systemctl is-active --quiet hostberry.service; then
+            log "$ANSI_YELLOW" "INFO" "El servicio está activo. Puede que necesite más tiempo para iniciar."
+            log "$ANSI_YELLOW" "INFO" "Intenta acceder manualmente: http://localhost"
+        else
+            log "$ANSI_RED" "ERROR" "El servicio hostberry no está activo. Revisa los logs:"
+            journalctl -u hostberry.service -n 30 --no-pager || true
+        fi
     fi
 }
 
