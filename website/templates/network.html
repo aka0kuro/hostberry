@@ -306,7 +306,7 @@ if(configForm){
             gateway: fd.get('gateway') 
         };
         try{
-            const resp = await fetch('/api/v1/network/config', {
+            const resp = await fetch('/api/v1/system/network/config', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
