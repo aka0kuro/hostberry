@@ -507,7 +507,7 @@ async def check_updates(current_user: Dict[str, Any] = Depends(get_current_activ
                 detail="Error buscando actualizaciones"
             )
         
-    except subprocess.TimeoutExpired:
+    except TimeoutError:
         await db.insert_log("ERROR", "Timeout buscando actualizaciones")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
