@@ -435,7 +435,7 @@
         return;
       }
       
-      showNotification(HostBerry.t?.('backup.downloading', 'Descargando backup...') || 'Descargando backup...', 'info');
+      showNotification(getTranslation('backup.downloading', 'Downloading backup...'), 'info');
       
       // Usar fetch con autenticación para descargar
       const token = localStorage.getItem('access_token');
