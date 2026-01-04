@@ -182,6 +182,20 @@ handle_error() {
     exit 1
 }
 
+# Crear venv evitando que el directorio actual "sombree" módulos stdlib (p.ej. logging.py)
+# Esto previene errores tipo: ModuleNotFoundError: No module named 'logging.handlers'; 'logging' is not a package
+run_python_venv() {
+    local venv_path="$1"
+
+    # Ejecutar desde un cwd seguro (no el directorio desde donde se lanzó setup.sh)
+    # y sin PYTHONPATH/PYTHONHOME/PYTHONSTARTUP para minimizar interferencias.
+    if python3 -P -c "import sys" >/dev/null 2>&1; then
+        ( cd /tmp && env -u PYTHONPATH -u PYTHONHOME -u PYTHONSTARTUP PYTHONSAFEPATH=1 python3 -P -m venv "$venv_path" )
+    else
+        ( cd /tmp && env -u PYTHONPATH -u PYTHONHOME -u PYTHONSTARTUP python3 -m venv "$venv_path" )
+    fi
+}
+
 # Función de salida rápida para errores críticos
 die() { handle_error "$@"; }
 
@@ -904,7 +918,7 @@ setup_production_venv() {
             rm -rf "$VENV_DIR"
         fi
 
-python3 -m venv "$VENV_DIR" || handle_error "$(get_text 'venv_failed' 'No se pudo crear el entorno virtual')"
+run_python_venv "$VENV_DIR" || handle_error "$(get_text 'venv_failed' 'No se pudo crear el entorno virtual')"
 
         # Permisos del venv
         chown -R "$USER:$GROUP" "$VENV_DIR"
@@ -962,7 +976,7 @@ EOF
             log "$ANSI_YELLOW" "INFO" "$(get_text 'venv_exists' 'Se detectó un entorno virtual existente. No será eliminado.')"
         else
             log "$ANSI_YELLOW" "INFO" "$(get_text 'venv_creating' 'No existe un entorno virtual. Creándolo...')"
-python3 -m venv "$VENV_DIR" || handle_error "$(get_text 'venv_failed' 'No se pudo crear el entorno virtual')"
+run_python_venv "$VENV_DIR" || handle_error "$(get_text 'venv_failed' 'No se pudo crear el entorno virtual')"
             chown -R "$USER:$GROUP" "$VENV_DIR"
             chmod -R 755 "$VENV_DIR"
         fi
@@ -2296,7 +2310,7 @@ main() {
         
         # Configurar venv e instalar dependencias python
         log "$ANSI_YELLOW" "INFO" "Configurando entorno Python..."
-        python3 -m venv "$VENV_DIR" || handle_error "$(get_text 'venv_failed' 'No se pudo crear el entorno virtual')"
+        run_python_venv "$VENV_DIR" || handle_error "$(get_text 'venv_failed' 'No se pudo crear el entorno virtual')"
         chown -R "$USER:$GROUP" "$VENV_DIR"
         
         # Actualizar pip con opciones optimizadas
