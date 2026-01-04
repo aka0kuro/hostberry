@@ -646,8 +646,13 @@
       setText('cpu-cores', cpuCores ? String(cpuCores) : '-');
 
       // Actualizar Memoria - usar los campos correctos del modelo
-      const memUsage = systemStats.memory_usage || 0;
-      const memUsageValue = typeof memUsage === 'number' ? memUsage : parseFloat(memUsage) || 0;
+      const memUsage = systemStats.memory_usage;
+      let memUsageValue = 0;
+      if(memUsage !== null && memUsage !== undefined){
+        memUsageValue = typeof memUsage === 'number' ? memUsage : parseFloat(memUsage);
+        if(Number.isNaN(memUsageValue)) memUsageValue = 0;
+      }
+      console.log('Memory Usage:', memUsage, '->', memUsageValue);
       setText('mem-usage', `${safeToFixed(memUsageValue)}%`);
       updateProgress('mem-progress', memUsageValue);
       
