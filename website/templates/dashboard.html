@@ -227,8 +227,23 @@
                             {% set status_lower = (status_value|string)|lower %}
                             {% set is_running = status_lower in ['running', 'active', 'online', 'connected'] %}
                             {% set is_stopped = status_lower in ['stopped', 'inactive', 'offline', 'disconnected'] %}
-                            {% set status_key = 'system.running' if is_running else ('system.stopped' if is_stopped else 'system.unknown') %}
-                            {% set status_text = t('system.active', 'Active') if status_lower == 'active' else (t('system.connected', 'Connected') if status_lower == 'connected' else (t('system.disconnected', 'Disconnected') if status_lower == 'disconnected' else (t('system.running', 'Running') if is_running else (t('system.stopped', 'Stopped') if is_stopped else t('system.unknown', 'Unknown'))))) %}
+                            {% if status_lower == 'active' %}
+                                {% set status_text = t('system.active', 'Active') %}
+                            {% elif status_lower == 'connected' %}
+                                {% set status_text = t('system.connected', 'Connected') %}
+                            {% elif status_lower == 'disconnected' %}
+                                {% set status_text = t('system.disconnected', 'Disconnected') %}
+                            {% elif status_lower == 'online' %}
+                                {% set status_text = t('system.online', 'Online') %}
+                            {% elif status_lower == 'offline' %}
+                                {% set status_text = t('system.offline', 'Offline') %}
+                            {% elif is_running %}
+                                {% set status_text = t('system.running', 'Running') %}
+                            {% elif is_stopped %}
+                                {% set status_text = t('system.stopped', 'Stopped') %}
+                            {% else %}
+                                {% set status_text = t('system.unknown', 'Unknown') %}
+                            {% endif %}
                             <div class="service-item">
                                 <div class="service-info">
                                     <i class="{{ icon_class }}"></i>
