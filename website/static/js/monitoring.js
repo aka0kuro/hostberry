@@ -237,8 +237,35 @@
     }catch(error){
       console.error('Error updating monitoring stats:', error);
       console.error('Error details:', error.message, error.stack);
-      const errorMsg = HostBerry.t?.('errors.monitoring_stats', 'Unable to refresh monitoring stats') || 'Unable to refresh monitoring stats';
-      HostBerry.showAlert?.('danger', errorMsg);
+      
+      // Mostrar error más descriptivo
+      let errorMsg = 'Unable to refresh monitoring stats';
+      if(error.message){
+        errorMsg += ': ' + error.message;
+      }
+      
+      // Intentar usar traducción si está disponible
+      if(HostBerry && HostBerry.t){
+        const translated = HostBerry.t('errors.monitoring_stats', errorMsg);
+        if(translated && translated !== 'errors.monitoring_stats'){
+          errorMsg = translated;
+        }
+      }
+      
+      // Mostrar alerta si está disponible, sino usar console
+      if(HostBerry && HostBerry.showAlert){
+        HostBerry.showAlert('danger', errorMsg);
+      } else {
+        console.error(errorMsg);
+      }
+      
+      // Establecer valores por defecto para evitar mostrar 0s
+      setText('uptime-value', '--');
+      setText('cpu-usage', '--');
+      setText('mem-usage', '--');
+      setText('disk-usage', '--');
+      setText('net-download', '--');
+      setText('net-upload', '--');
     }
   }
 
