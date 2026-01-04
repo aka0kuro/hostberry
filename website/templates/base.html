@@ -115,6 +115,22 @@
     <script src="/static/js/common.js"></script>
     <script src="/static/js/theme.js"></script>
     
+    <!-- Auto-refresh global cada 60 segundos -->
+    <script>
+    (function() {
+        // Recargar la página cada 60 segundos
+        setInterval(function() {
+            // Solo recargar si no hay modales abiertos y no hay formularios en proceso
+            if (!document.querySelector('.modal.show') && 
+                !document.querySelector('form:has(input:focus)') &&
+                !document.querySelector('textarea:focus') &&
+                document.readyState === 'complete') {
+                window.location.reload();
+            }
+        }, 60000); // 60 segundos = 60000 milisegundos
+    })();
+    </script>
+    
     {% block extra_js %}{% endblock %}
 </body>
 </html>
