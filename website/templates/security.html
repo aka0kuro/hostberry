@@ -665,7 +665,7 @@
       
     }catch(error){
       console.error('Backup delete failed', error);
-      showNotification(HostBerry.t?.('backup.delete_error', 'Error al eliminar backup') || 'Error al eliminar backup', 'error');
+      showNotification(getTranslation('backup.delete_error', 'Error deleting backup'), 'error');
     }
   }
 
