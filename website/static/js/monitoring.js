@@ -224,16 +224,27 @@
   }
 
   function computeNetworkRates(current){
-    if(!current){
-      return {};
+    // Si no hay datos, devolver objeto con valores por defecto
+    if(!current || typeof current !== 'object'){
+      return {
+        download_speed: 0.0,
+        upload_speed: 0.0,
+        bytes_recv: 0,
+        bytes_sent: 0,
+        packets_sent: 0,
+        packets_recv: 0,
+        interface: selectedInterface || '',
+        ip_address: '--',
+        interfaces: []
+      };
     }
     
     // Asegurar que tenemos bytes_recv y bytes_sent como números
-    const bytesRecv = typeof current.bytes_recv === 'number' ? current.bytes_recv : 0;
-    const bytesSent = typeof current.bytes_sent === 'number' ? current.bytes_sent : 0;
+    const bytesRecv = typeof current.bytes_recv === 'number' && !isNaN(current.bytes_recv) ? current.bytes_recv : 0;
+    const bytesSent = typeof current.bytes_sent === 'number' && !isNaN(current.bytes_sent) ? current.bytes_sent : 0;
     
     // reset snapshot if cambia interfaz
-    if(lastNetSnapshot && current.interface !== lastNetSnapshot.interface){
+    if(lastNetSnapshot && current.interface && lastNetSnapshot.interface && current.interface !== lastNetSnapshot.interface){
       lastNetSnapshot = null;
       netHistory.labels.length = 0;
       netHistory.download.length = 0;
@@ -247,47 +258,53 @@
         time: now, 
         bytes_recv: bytesRecv,
         bytes_sent: bytesSent,
-        interface: current.interface
+        interface: current.interface || selectedInterface || ''
       };
       // Primera vez, no hay velocidad calculable
       return {
         ...current,
-        download_speed: 0,
-        upload_speed: 0
+        download_speed: 0.0,
+        upload_speed: 0.0,
+        bytes_recv: bytesRecv,
+        bytes_sent: bytesSent
       };
     }
     
     const elapsedSec = (now - lastNetSnapshot.time) / 1000;
-    if(elapsedSec <= 0 || elapsedSec > 300){
-      // Si pasó mucho tiempo, resetear snapshot
+    if(elapsedSec <= 0 || elapsedSec > 300 || !Number.isFinite(elapsedSec)){
+      // Si pasó mucho tiempo o tiempo inválido, resetear snapshot
       lastNetSnapshot = { 
         time: now, 
         bytes_recv: bytesRecv,
         bytes_sent: bytesSent,
-        interface: current.interface
+        interface: current.interface || selectedInterface || ''
       };
       return {
         ...current,
-        download_speed: 0,
-        upload_speed: 0
+        download_speed: 0.0,
+        upload_speed: 0.0,
+        bytes_recv: bytesRecv,
+        bytes_sent: bytesSent
       };
     }
     
     // Calcular velocidades en KB/s
-    const dlRate = (bytesRecv - (lastNetSnapshot.bytes_recv || 0)) / 1024 / elapsedSec;
-    const ulRate = (bytesSent - (lastNetSnapshot.bytes_sent || 0)) / 1024 / elapsedSec;
+    const prevBytesRecv = typeof lastNetSnapshot.bytes_recv === 'number' ? lastNetSnapshot.bytes_recv : 0;
+    const prevBytesSent = typeof lastNetSnapshot.bytes_sent === 'number' ? lastNetSnapshot.bytes_sent : 0;
+    const dlRate = (bytesRecv - prevBytesRecv) / 1024 / elapsedSec;
+    const ulRate = (bytesSent - prevBytesSent) / 1024 / elapsedSec;
     
     lastNetSnapshot = { 
       time: now, 
       bytes_recv: bytesRecv,
       bytes_sent: bytesSent,
-      interface: current.interface
+      interface: current.interface || selectedInterface || ''
     };
     
     return {
       ...current,
-      download_speed: Math.max(0, dlRate),
-      upload_speed: Math.max(0, ulRate),
+      download_speed: Math.max(0, Number.isFinite(dlRate) ? dlRate : 0),
+      upload_speed: Math.max(0, Number.isFinite(ulRate) ? ulRate : 0),
       bytes_recv: bytesRecv,
       bytes_sent: bytesSent
     };
