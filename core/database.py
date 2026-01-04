@@ -133,8 +133,24 @@ class Database:
     async def init_database(self):
         """Inicializar base de datos con conexión persistente"""
         logger.info("🗄️ Inicializando base de datos optimizada para Raspberry Pi 3")
+        logger.info(f"🗄️ Ruta de base de datos: {self.db_path}")
         
         try:
+            # Asegurar que el directorio padre existe
+            db_dir = os.path.dirname(os.path.abspath(self.db_path))
+            if db_dir and not os.path.exists(db_dir):
+                logger.warning(f"Directorio de base de datos no existe: {db_dir}, creándolo...")
+                os.makedirs(db_dir, mode=0o755, exist_ok=True)
+            
+            # Verificar permisos del directorio
+            if os.path.exists(self.db_path):
+                if not os.access(self.db_path, os.W_OK):
+                    logger.error(f"Sin permisos de escritura en: {self.db_path}")
+                    raise PermissionError(f"No se puede escribir en {self.db_path}")
+            elif db_dir and not os.access(db_dir, os.W_OK):
+                logger.error(f"Sin permisos de escritura en el directorio: {db_dir}")
+                raise PermissionError(f"No se puede escribir en el directorio {db_dir}")
+            
             # Establecer conexión persistente
             if not self._connection:
                 self._connection = await aiosqlite.connect(
