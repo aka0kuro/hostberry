@@ -950,6 +950,8 @@
     "adblock_update_timeout": "Timeout actualizando listas AdBlock",
     "backup_creation_failed": "Error creando backup",
     "backup_not_found": "Backup no encontrado",
+    "backup_download_failed": "Error descargando backup",
+    "backup_restore_failed": "Error restaurando backup",
     "config_error": "Error obteniendo configuración",
     "config_update_error": "Error actualizando configuración",
     "language_not_supported": "Idioma '{language}' no soportado",
