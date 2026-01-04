@@ -37,42 +37,50 @@
                     </div>
                 </div>
                 <div class="actions-card-body">
-                    <div class="row g-3">
-                        <div class="col-lg-4 col-md-6 col-12">
-                            <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 p-3 action-btn" id="action-create-backup" style="border-radius: 16px; transition: all 0.3s ease;">
-                                <div class="action-icon" style="width: 48px; height: 48px; background: rgba(255, 255, 255, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="bi bi-hdd-network" style="font-size: 1.5rem;"></i>
+                    <div class="row g-3 justify-content-center">
+                        <div class="col-lg-3 col-md-4 col-sm-6 col-12">
+                            <button class="btn btn-primary w-100 backup-action-btn" id="action-create-backup">
+                                <div class="backup-btn-icon">
+                                    <i class="bi bi-hdd-network"></i>
                                 </div>
-                                <div class="text-start flex-grow-1">
-                                    <div class="fw-bold">{{ t('backup.create_backup', 'Crear backup') }}</div>
-                                    <small class="opacity-75">{{ t('backup.create_backup_desc', 'Crear un respaldo del sistema') }}</small>
+                                <div class="backup-btn-content">
+                                    <div class="backup-btn-title">{{ t('backup.create_backup', 'Crear backup') }}</div>
+                                    <div class="backup-btn-desc">{{ t('backup.create_backup_desc', 'Crear un respaldo del sistema') }}</div>
                                 </div>
-                                <i class="bi bi-arrow-right"></i>
                             </button>
                         </div>
-                        <div class="col-lg-4 col-md-6 col-12">
-                            <label class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2 p-3 action-btn" id="action-upload-backup" style="border-radius: 16px; transition: all 0.3s ease; cursor: pointer; margin: 0;">
+                        <div class="col-lg-3 col-md-4 col-sm-6 col-12">
+                            <label class="btn btn-outline-light w-100 backup-action-btn" id="action-upload-backup" style="cursor: pointer; margin: 0;">
                                 <input type="file" id="backup-file-input" accept=".tar.gz,.tgz" style="display: none;">
-                                <div class="action-icon" style="width: 48px; height: 48px; background: rgba(255, 255, 255, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="bi bi-cloud-upload" style="font-size: 1.5rem;"></i>
+                                <div class="backup-btn-icon">
+                                    <i class="bi bi-cloud-upload"></i>
                                 </div>
-                                <div class="text-start flex-grow-1">
-                                    <div class="fw-bold">{{ t('backup.upload_backup', 'Cargar backup') }}</div>
-                                    <small class="opacity-75">{{ t('backup.upload_backup_desc', 'Subir un archivo de backup') }}</small>
+                                <div class="backup-btn-content">
+                                    <div class="backup-btn-title">{{ t('backup.upload_backup', 'Cargar backup') }}</div>
+                                    <div class="backup-btn-desc">{{ t('backup.upload_backup_desc', 'Subir un archivo de backup') }}</div>
                                 </div>
-                                <i class="bi bi-arrow-right"></i>
                             </label>
                         </div>
-                        <div class="col-lg-4 col-md-6 col-12">
-                            <button class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2 p-3 action-btn" id="action-list-backups" style="border-radius: 16px; transition: all 0.3s ease;">
-                                <div class="action-icon" style="width: 48px; height: 48px; background: rgba(255, 255, 255, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="bi bi-archive" style="font-size: 1.5rem;"></i>
+                        <div class="col-lg-3 col-md-4 col-sm-6 col-12">
+                            <button class="btn btn-outline-light w-100 backup-action-btn" id="action-list-backups">
+                                <div class="backup-btn-icon">
+                                    <i class="bi bi-archive"></i>
                                 </div>
-                                <div class="text-start flex-grow-1">
-                                    <div class="fw-bold">{{ t('backup.list_backups', 'Listar backups') }}</div>
-                                    <small class="opacity-75">{{ t('backup.list_backups_desc', 'Ver todos los backups disponibles') }}</small>
+                                <div class="backup-btn-content">
+                                    <div class="backup-btn-title">{{ t('backup.list_backups', 'Listar backups') }}</div>
+                                    <div class="backup-btn-desc">{{ t('backup.list_backups_desc', 'Ver todos los backups disponibles') }}</div>
                                 </div>
-                                <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-sm-6 col-12">
+                            <button class="btn btn-outline-light w-100 backup-action-btn" id="action-backup-stats">
+                                <div class="backup-btn-icon">
+                                    <i class="bi bi-graph-up"></i>
+                                </div>
+                                <div class="backup-btn-content">
+                                    <div class="backup-btn-title">{{ t('backup.stats', 'Estadísticas') }}</div>
+                                    <div class="backup-btn-desc">{{ t('backup.stats_desc', 'Ver estadísticas de backups') }}</div>
+                                </div>
                             </button>
                         </div>
                     </div>
