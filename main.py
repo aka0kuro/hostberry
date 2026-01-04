@@ -22,7 +22,7 @@ from jinja2.bccache import FileSystemBytecodeCache
 # Imports locales optimizados
 from config.settings import settings
 from core.database import db
-from core.logging import (
+from core.hostberry_logging import (
     setup_logging, log_system_info, logger, 
     log_system_event, cleanup_old_logs,
     log_api_request, log_api_response
