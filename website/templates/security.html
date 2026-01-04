@@ -407,14 +407,27 @@
       if(!resp.ok) throw new Error(getTranslation('backup.load_failed', 'Error loading backups'));
       const payload = await resp.json();
       const backups = payload.data?.backups || payload.backups || [];
+      
+      // Ocultar notificación de carga
+      const loadingNotifications = document.querySelectorAll('.notification');
+      loadingNotifications.forEach(n => {
+        if(n.textContent.includes(getTranslation('backup.loading', 'Loading backups...'))){
+          n.remove();
+        }
+      });
+      
       if(!backups.length){
         list.innerHTML = `
           <div class="text-center py-4 text-white-50">
             <i class="bi bi-archive"></i>
             <p class="mb-0 mt-2">${getTranslation('backup.no_backups', 'No backups listed yet')}</p>
           </div>`;
+        showNotification(getTranslation('backup.no_backups', 'No backups listed yet'), 'info');
         return;
       }
+      
+      // Mostrar notificación de éxito
+      showNotification(getTranslation('backup.loaded', 'Backups loaded successfully'), 'success');
       list.innerHTML = '';
       backups.slice(0, 10).forEach(backup => {
         const item = document.createElement('div');
