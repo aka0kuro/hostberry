@@ -63,25 +63,29 @@ async def get_access_points(
 ) -> List[Dict[str, Any]]:
     """Obtiene los puntos de acceso configurados"""
     try:
-        # Simular puntos de acceso
-        access_points = [
-            {
-                "ssid": "HostBerry_AP",
-                "channel": 6,
-                "frequency": "2.4 GHz",
-                "security": "WPA2",
-                "clients": 3,
-                "max_clients": 20
-            },
-            {
-                "ssid": "HostBerry_Guest",
-                "channel": 11,
-                "frequency": "2.4 GHz",
-                "security": "Open",
-                "clients": 1,
-                "max_clients": 10
-            }
-        ]
+        # Obtener puntos de acceso reales desde configuración
+        access_points = []
+        try:
+            from core.database import db
+            
+            # Obtener configuración principal
+            main_ap = await db.get_configuration("hostapd_main_ap")
+            guest_ap = await db.get_configuration("hostapd_guest_ap")
+            
+            if main_ap != "false":
+                status = get_hostapd_status()
+                config = status.get('config', {})
+                access_points.append({
+                    "ssid": config.get('ssid', 'HostBerry_AP'),
+                    "channel": int(config.get('channel', 6)),
+                    "frequency": "2.4 GHz",
+                    "security": "WPA2" if config.get('wpa') == '2' else "Open",
+                    "clients": 0,  # Se obtendría de hostapd_cli
+                    "max_clients": 20
+                })
+        except Exception as e:
+            logger.warning(f"Error obteniendo puntos de acceso: {e}")
+            # Lista vacía en lugar de datos simulados
         
         logger.info('get_access_points', count=len(access_points))
         return access_points
