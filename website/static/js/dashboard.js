@@ -114,15 +114,103 @@ async function updateServices() {
         const response = await HostBerry.apiRequest('/api/v1/system/services');
         if (response.ok) {
             const data = await response.json();
-            const services = data.services;
+            const services = data.services || data;
+            
+            // Limpiar contenedor de servicios
+            const servicesBody = document.querySelector('.services-card-body');
+            if (!servicesBody) return;
+            
+            // Si no hay servicios, mostrar mensaje
+            if (!services || Object.keys(services).length === 0) {
+                servicesBody.innerHTML = `
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-inbox"></i>
+                        <p class="mb-0 mt-2">${HostBerry.t?.('system.no_services', 'No services to display') || 'No services to display'}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Reconstruir lista de servicios
+            servicesBody.innerHTML = '';
             
             Object.keys(services).forEach(serviceName => {
-                updateServiceStatus(serviceName, services[serviceName].status);
+                const service = services[serviceName];
+                const status = service.status || service;
+                const statusLower = (typeof status === 'string' ? status : 'unknown').toLowerCase();
+                const isRunning = statusLower === 'running' || statusLower === 'active' || statusLower === 'online' || statusLower === 'connected';
+                
+                const serviceItem = document.createElement('div');
+                serviceItem.className = 'service-item';
+                
+                // Iconos por servicio
+                const serviceIcons = {
+                    'hostberry': 'bi-gear-fill hostberry-icon',
+                    'nginx': 'bi-shield-check nginx-icon',
+                    'fail2ban': 'bi-shield-fill fail2ban-icon',
+                    'ufw': 'bi-shield-lock ufw-icon',
+                    'wifi': 'bi-wifi wifi-icon',
+                    'ssh': 'bi-terminal ssh-icon',
+                    'hostapd': 'bi-wifi wifi-icon',
+                    'openvpn': 'bi-shield-check openvpn-icon',
+                    'wireguard': 'bi-shield-lock wireguard-icon',
+                    'wg-quick': 'bi-shield-lock wireguard-icon',
+                    'wg': 'bi-shield-lock wireguard-icon',
+                    'dnsmasq': 'bi-diagram-3 dns-icon',
+                    'dns': 'bi-diagram-3 dns-icon',
+                    'adblock': 'bi-shield-x adblock-icon',
+                    'pihole': 'bi-shield-x adblock-icon'
+                };
+                
+                const normalizedName = serviceName.toLowerCase().replace(/[_-]/g, '');
+                const iconClass = serviceIcons[normalizedName] || serviceIcons[serviceName.toLowerCase()] || 'bi-gear-fill default-icon';
+                
+                let statusText = 'Unknown';
+                if (statusLower === 'active' || statusLower === 'running') {
+                    statusText = HostBerry.t?.('system.running', 'Running') || 'Running';
+                } else if (statusLower === 'connected') {
+                    statusText = HostBerry.t?.('system.connected', 'Connected') || 'Connected';
+                } else if (statusLower === 'online') {
+                    statusText = HostBerry.t?.('system.online', 'Online') || 'Online';
+                } else if (statusLower === 'stopped' || statusLower === 'inactive') {
+                    statusText = HostBerry.t?.('system.stopped', 'Stopped') || 'Stopped';
+                } else if (statusLower === 'disconnected') {
+                    statusText = HostBerry.t?.('system.disconnected', 'Disconnected') || 'Disconnected';
+                } else if (statusLower === 'offline') {
+                    statusText = HostBerry.t?.('system.offline', 'Offline') || 'Offline';
+                }
+                
+                serviceItem.innerHTML = `
+                    <div class="service-info">
+                        <i class="bi ${iconClass} service-icon"></i>
+                        <span class="service-name">${serviceName}</span>
+                    </div>
+                    <div class="service-status">
+                        <span class="status-badge ${isRunning ? 'status-running' : 'status-stopped'}">${statusText}</span>
+                    </div>
+                `;
+                
+                servicesBody.appendChild(serviceItem);
             });
         }
     } catch (error) {
         console.error('Error updating services:', error);
+        const servicesBody = document.querySelector('.services-card-body');
+        if (servicesBody) {
+            servicesBody.innerHTML = `
+                <div class="text-center py-4 text-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <p class="mb-0 mt-2">${HostBerry.t?.('system.services_error', 'Error loading services') || 'Error loading services'}</p>
+                </div>
+            `;
+        }
     }
+}
+
+// Función para refrescar servicios manualmente
+function refreshServices() {
+    updateServices();
+    showNotification(HostBerry.t?.('system.services_refreshed', 'Services refreshed') || 'Services refreshed', 'info');
 }
 
 // Actualizar estado de un servicio
