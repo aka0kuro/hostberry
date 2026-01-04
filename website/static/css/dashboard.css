@@ -150,20 +150,33 @@
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
+    justify-content: center !important;
     text-align: center !important;
     margin-bottom: 1rem;
+    width: 100% !important;
 }
 
 .status-icon {
-    width: 40px;
-    height: 40px;
+    width: 40px !important;
+    height: 40px !important;
     border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     margin-right: 0 !important;
+    margin-left: 0 !important;
     margin-bottom: 0.5rem !important;
+    margin-top: 0 !important;
     font-size: 1.2rem;
+    order: -1 !important;
+}
+
+.status-info {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
 }
 
 .cpu-icon {
