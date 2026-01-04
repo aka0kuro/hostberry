@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse
 from models.schemas import SystemStats, NetworkStats, SystemInfo, SuccessResponse
 from core.security import get_current_active_user
 from core.database import db
-from core.logging import get_logger
+from core.hostberry_logging import get_logger
 from system.system_utils import get_system_stats, get_network_interface, get_ip_address, get_cpu_temp
 from core.i18n import get_text
 
