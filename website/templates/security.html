@@ -258,7 +258,7 @@
         return;
       }
       
-      HostBerry.showAlert?.('info', HostBerry.t?.('security.backup_downloaded', 'Downloading backup...') || 'Downloading backup...');
+      HostBerry.showAlert?.('info', HostBerry.t?.('backup.downloading', 'Descargando backup...') || 'Descargando backup...');
       
       // Crear enlace de descarga
       const downloadUrl = `/api/v1/security/backup/${encodeURIComponent(backupName)}/download`;
@@ -272,12 +272,54 @@
       
       // Esperar un momento y mostrar mensaje de éxito
       setTimeout(() => {
-        HostBerry.showAlert?.('success', HostBerry.t?.('security.backup_downloaded', 'Backup downloaded successfully') || 'Backup downloaded successfully');
+        HostBerry.showAlert?.('success', HostBerry.t?.('backup.downloaded', 'Backup descargado exitosamente') || 'Backup descargado exitosamente');
+        updateLastCheck();
       }, 500);
       
     }catch(error){
       console.error('Backup download failed', error);
-      HostBerry.showAlert?.('danger', HostBerry.t?.('security.backup_download_error', 'Unable to download backup') || 'Unable to download backup');
+      HostBerry.showAlert?.('danger', HostBerry.t?.('backup.download_error', 'Error al descargar backup') || 'Error al descargar backup');
+    }
+  }
+
+  async function uploadBackup(file){
+    try{
+      if(!file){
+        HostBerry.showAlert?.('danger', HostBerry.t?.('backup.no_file', 'No se seleccionó ningún archivo') || 'No se seleccionó ningún archivo');
+        return;
+      }
+      
+      // Validar extensión
+      if(!file.name.endsWith('.tar.gz') && !file.name.endsWith('.tgz')){
+        HostBerry.showAlert?.('danger', HostBerry.t?.('backup.invalid_format', 'El archivo debe ser un backup .tar.gz') || 'El archivo debe ser un backup .tar.gz');
+        return;
+      }
+      
+      HostBerry.showAlert?.('info', HostBerry.t?.('backup.uploading', 'Cargando backup...') || 'Cargando backup...');
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const resp = await HostBerry.apiRequest('/api/v1/security/backup/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if(!resp.ok){
+        const errorText = await resp.text();
+        throw new Error(errorText || 'Upload failed');
+      }
+      
+      const payload = await resp.json();
+      const message = payload.message || payload.data?.message || HostBerry.t?.('backup.uploaded', 'Backup cargado exitosamente') || 'Backup cargado exitosamente';
+      HostBerry.showAlert?.('success', message);
+      updateLastCheck();
+      await loadBackups();
+      
+    }catch(error){
+      console.error('Backup upload failed', error);
+      const errorMsg = HostBerry.t?.('backup.upload_error', 'Error al cargar backup') || 'Error al cargar backup';
+      HostBerry.showAlert?.('danger', errorMsg);
     }
   }
 
