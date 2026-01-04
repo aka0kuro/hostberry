@@ -258,9 +258,9 @@ async def get_services_status(current_user: Dict[str, Any] = Depends(get_current
         for service in service_names:
             try:
                 # Verificar si el servicio está ejecutándose (async)
-                from core.async_utils import run_subprocess_async
-                returncode, stdout, stderr = await run_subprocess_async(
-                    ["systemctl", "is-active", service],
+                from core.async_utils import run_command_async
+                returncode, stdout, stderr = await run_command_async(
+                    "systemctl", "is-active", service,
                     timeout=5
                 )
                 status = "running" if returncode == 0 else "stopped"
