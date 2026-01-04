@@ -113,14 +113,13 @@ async def get_clients(
         # Obtener clientes reales desde el sistema
         clients = []
         try:
-            # Intentar obtener clientes desde arp o dhcp leases
-            import subprocess
-            result = subprocess.run(
+            # Intentar obtener clientes desde arp o dhcp leases (async)
+            from core.async_utils import run_subprocess_async
+            returncode, stdout, stderr = await run_subprocess_async(
                 ["arp", "-a"],
-                capture_output=True,
-                text=True,
                 timeout=5
             )
+            result = type('obj', (object,), {'returncode': returncode, 'stdout': stdout})()
             if result.returncode == 0:
                 # Parsear salida de arp (simplificado)
                 for line in result.stdout.split('\n'):
