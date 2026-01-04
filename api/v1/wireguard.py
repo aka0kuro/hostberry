@@ -22,14 +22,14 @@ logger = get_logger("wireguard")
 async def get_wireguard_status(current_user: Dict[str, Any] = Depends(get_current_active_user)):
     """Obtiene el estado de WireGuard"""
     try:
-        # Verificar si WireGuard está ejecutándose
-        result = subprocess.run(
+        # Verificar si WireGuard está ejecutándose (async)
+        from core.async_utils import run_subprocess_async
+        returncode, stdout, stderr = await run_subprocess_async(
             ["systemctl", "is-active", "wg-quick@wg0"],
-            capture_output=True,
-            text=True
+            timeout=5
         )
         
-        running = result.returncode == 0
+        running = returncode == 0
         
         # Obtener información de la interfaz
         interface = "wg0"
@@ -39,14 +39,14 @@ async def get_wireguard_status(current_user: Dict[str, Any] = Depends(get_curren
         
         if running:
             try:
-                # Obtener información de la interfaz
-                result = subprocess.run(
+                # Obtener información de la interfaz (async)
+                returncode2, stdout2, stderr2 = await run_subprocess_async(
                     ["wg", "show", "wg0"],
-                    capture_output=True,
-                    text=True
+                    timeout=5
                 )
                 
-                if result.returncode == 0:
+                if returncode2 == 0:
+                    result = type('obj', (object,), {'stdout': stdout2})()
                     lines = result.stdout.split('\n')
                     for line in lines:
                         if 'public key:' in line:
