@@ -906,7 +906,8 @@
     "saving": "Guardando...",
     "saved": "Configuración guardada exitosamente",
     "timezone_updated": "Zona horaria actualizada. Los cambios tendrán efecto al recargar la página.",
-    "author": "Autor"
+    "author": "Autor",
+    "invalid_config": "Datos de configuración inválidos"
   },
   "errors": {
     "general_error": "Ha ocurrido un error",
