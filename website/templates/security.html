@@ -90,13 +90,106 @@
 
 {% block extra_js %}
 <script>
+// Cargar traducciones de backup desde el JSON embebido o API
+(function() {
+  // Función mejorada para cargar traducciones
+  function loadBackupTranslations() {
+    try {
+      // Intentar cargar desde el JSON embebido
+      const i18nEl = document.getElementById('i18n-json');
+      if (i18nEl) {
+        const translations = JSON.parse(i18nEl.textContent || i18nEl.innerText || '{}');
+        if (translations.backup) {
+          // Asegurar que HostBerry.t puede acceder a las traducciones
+          if (!window.HostBerry) window.HostBerry = {};
+          if (!window.HostBerry.translations) window.HostBerry.translations = {};
+          window.HostBerry.translations.backup = translations.backup;
+          
+          // También actualizar el objeto translations en common.js
+          if (window.translations) {
+            window.translations.backup = translations.backup;
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error loading backup translations:', e);
+    }
+  }
+  
+  // Cargar traducciones cuando el DOM esté listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadBackupTranslations);
+  } else {
+    loadBackupTranslations();
+  }
+})();
+</script>
+<script>
 (function(){
+  // Mejorar la función t para que busque en múltiples lugares
+  function getTranslation(key, defaultValue) {
+    if (!key) return defaultValue || '';
+    
+    // 1. Intentar desde HostBerry.translations
+    if (window.HostBerry?.translations) {
+      const keys = String(key).split('.');
+      let current = window.HostBerry.translations;
+      for (const k of keys) {
+        if (current && typeof current === 'object' && k in current) {
+          current = current[k];
+        } else {
+          break;
+        }
+      }
+      if (typeof current === 'string') return current;
+    }
+    
+    // 2. Intentar desde el JSON embebido
+    try {
+      const i18nEl = document.getElementById('i18n-json');
+      if (i18nEl) {
+        const translations = JSON.parse(i18nEl.textContent || i18nEl.innerText || '{}');
+        const keys = String(key).split('.');
+        let current = translations;
+        for (const k of keys) {
+          if (current && typeof current === 'object' && k in current) {
+            current = current[k];
+          } else {
+            break;
+          }
+        }
+        if (typeof current === 'string') return current;
+      }
+    } catch (e) {
+      // Ignorar errores
+    }
+    
+    // 3. Usar HostBerry.t si está disponible
+    if (window.HostBerry?.t) {
+      const result = window.HostBerry.t(key, defaultValue);
+      if (result && result !== key) return result;
+    }
+    
+    // 4. Fallback al valor por defecto
+    return defaultValue || key;
+  }
+  
+  // Sobrescribir HostBerry.t si no funciona correctamente
+  if (!window.HostBerry) window.HostBerry = {};
+  const originalT = window.HostBerry.t;
+  window.HostBerry.t = function(key, defaultValue) {
+    const result = getTranslation(key, defaultValue);
+    if (result && result !== key) return result;
+    if (originalT) return originalT(key, defaultValue);
+    return defaultValue || key;
+  };
+  
   const setBadge = (id, enabled) => {
     const el = document.getElementById(id);
     if(!el) return;
     const isOn = !!enabled;
-    const enabledText = HostBerry.t?.('security.enabled', 'Enabled') || 'Enabled';
-    const disabledText = HostBerry.t?.('security.disabled', 'Disabled') || 'Disabled';
+    const enabledText = getTranslation('security.enabled', 'Enabled');
+    const disabledText = getTranslation('security.disabled', 'Disabled');
     el.className = 'badge ' + (isOn ? 'bg-success' : 'bg-danger');
     el.textContent = isOn ? enabledText : disabledText;
   };
