@@ -1,3 +1,31 @@
+SERVICE_NAMES = [
+    "hostberry",
+    "nginx",
+    "ssh",
+    "ufw",
+    "fail2ban",
+    "hostapd",
+    "openvpn",
+    "wg-quick",
+    "dnsmasq",
+]
+
+
+def _get_service_statuses() -> dict[str, str]:
+    statuses: dict[str, str] = {}
+    for service in SERVICE_NAMES:
+        try:
+            result = os.system(f"systemctl is-active --quiet {service}")
+            statuses[service] = "running" if result == 0 else "stopped"
+        except Exception:
+            statuses[service] = "unknown"
+    if not statuses:
+        return {
+            "hostberry": "running",
+            "nginx": "running",
+            "ssh": "running",
+        }
+    return statuses
 """
 Router web mínimo para asegurar arranque del backend.
 """
@@ -264,13 +292,7 @@ async def login_page(request: Request, response: Response, lang: str | None = Qu
             "network": "healthy",
             "temperature": "healthy"
         },
-        "services": {
-            "hostberry": "running",
-            "nginx": "running",
-            "ssh": "running",
-            "ufw": "running",
-            "fail2ban": "running"
-        },
+        "services": _get_service_statuses(),
         "recent_activities": [
             {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
             {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
