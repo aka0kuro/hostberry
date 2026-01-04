@@ -228,7 +228,7 @@
                             {% set is_running = status_lower in ['running', 'active', 'online', 'connected'] %}
                             {% set is_stopped = status_lower in ['stopped', 'inactive', 'offline', 'disconnected'] %}
                             {% if status_lower == 'active' %}
-                                {% set status_text = t('system.active', 'Active') %}
+                                {% set status_text = t('system.running', 'Running') %}
                             {% elif status_lower == 'connected' %}
                                 {% set status_text = t('system.connected', 'Connected') %}
                             {% elif status_lower == 'disconnected' %}
