@@ -124,9 +124,15 @@
       
       // Manejar respuesta de system stats (puede venir directamente o envuelta)
       const systemStats = systemStatsResp.data || systemStatsResp;
+      if(!systemStats || typeof systemStats !== 'object'){
+        throw new Error('Invalid system stats response');
+      }
       
       // Manejar respuesta de network stats (puede venir directamente o envuelta)
       const networkStatsRaw = networkStatsResp.data || networkStatsResp;
+      if(!networkStatsRaw || typeof networkStatsRaw !== 'object'){
+        throw new Error('Invalid network stats response');
+      }
       const networkStats = computeNetworkRates(networkStatsRaw);
       
       // Populate interface select
