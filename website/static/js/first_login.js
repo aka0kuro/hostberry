@@ -130,17 +130,22 @@
 
   // Función para mostrar notificación de éxito
   function showSuccess(message) {
-    showToast(t('common.success', 'Éxito'), message, 'success');
+    showNotification(message, 'success');
   }
 
   // Función para mostrar notificación de error
   function showError(message) {
-    showToast(t('common.error', 'Error'), message, 'danger');
+    showNotification(message, 'error');
   }
 
   // Función para mostrar notificación de información
   function showInfo(message) {
-    showToast(t('common.info', 'Información'), message, 'info');
+    showNotification(message, 'info');
+  }
+  
+  // Función para mostrar notificación de advertencia
+  function showWarning(message) {
+    showNotification(message, 'warning');
   }
 
   // Función para procesar errores de validación de Pydantic
