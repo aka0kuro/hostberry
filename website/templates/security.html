@@ -418,10 +418,10 @@
     if(!bytes || bytes === 0) return '';
     const k = 1024;
     const sizes = [
-      HostBerry.t?.('backup.bytes', 'Bytes') || 'Bytes',
-      HostBerry.t?.('backup.kb', 'KB') || 'KB',
-      HostBerry.t?.('backup.mb', 'MB') || 'MB',
-      HostBerry.t?.('backup.gb', 'GB') || 'GB'
+      getTranslation('backup.bytes', 'Bytes'),
+      getTranslation('backup.kb', 'KB'),
+      getTranslation('backup.mb', 'MB'),
+      getTranslation('backup.gb', 'GB')
     ];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
