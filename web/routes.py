@@ -246,14 +246,7 @@ def _base_context(request: Request, current_lang: str) -> dict:
             "network": "healthy",
             "temperature": "healthy",
         },
-        "services": {
-            "hostberry": "running",
-            "nginx": "running",
-            "ssh": "running",
-            "ufw": "running",
-            "fail2ban": "running",
-            "wifi": "running",
-        },
+        "services": _get_service_statuses(),
     }
 
 
