@@ -2605,14 +2605,26 @@ EOF
     elif [[ "$UPDATE_MODE" = true ]]; then
         log "$ANSI_GREEN" "INFO" "Iniciando actualización de HostBerry..."
         
-        # Pull updates
-        download_application_from_github "true"
+        # Detectar si estamos en un directorio local con git (desarrollo)
+        CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        if [ -d "$CURRENT_DIR/.git" ] && [ "$CURRENT_DIR" != "$PROD_DIR" ]; then
+            log "$ANSI_YELLOW" "INFO" "Detectado directorio local con git. Actualizando desde directorio local..."
+            # Usar copy_application_to_production para actualizar desde local
+            copy_application_to_production "true"
+        else
+            # Pull updates desde GitHub
+            download_application_from_github "true"
+        fi
         
         # Configurar venv en modo update (instalar/verificar deps)
         setup_production_venv "update"
         
         # Reiniciar servicio
-        systemctl restart hostberry.service
+        if [[ $EUID -eq 0 ]]; then
+            systemctl restart hostberry.service
+        else
+            sudo systemctl restart hostberry.service
+        fi
         
         # Mostrar información de actualización exitosa
         show_update_info
