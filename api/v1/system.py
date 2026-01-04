@@ -33,6 +33,9 @@ async def get_system_statistics():
         cached_stats = cache.get(cache_key)
         if cached_stats:
             return SystemStats(**cached_stats)
+        # Lazy import de psutil (solo cuando se necesita)
+        import psutil
+        
         # Obtener estadísticas básicas
         cpu_usage = psutil.cpu_percent(interval=1)
         memory = psutil.virtual_memory()
@@ -176,20 +179,40 @@ async def get_network_statistics(interface: str = None):
 
 @router.get("/info", response_model=SystemInfo)
 async def get_system_info(current_user: Dict[str, Any] = Depends(get_current_active_user)):
-    """Obtiene información del sistema"""
+    """Obtiene información del sistema (con caché)"""
     try:
-        # Información básica del sistema
+        from core.cache import cache
+        
+        # Verificar caché (información estática, cache más largo)
+        cache_key = "system_info"
+        cached_info = cache.get(cache_key)
+        if cached_info:
+            return SystemInfo(**cached_info)
+        
+        # Información básica del sistema (sin psutil para acelerar)
         hostname = os.uname().nodename
         kernel = os.uname().release
         os_name = "Linux"  # Simplificado
         
-        return SystemInfo(
+        info = SystemInfo(
             hostname=hostname,
             os_name=os_name,
             kernel_version=kernel,
             processor=os.uname().machine,
             python_version=platform.python_version()
         )
+        
+        # Guardar en caché (60 segundos TTL - información estática)
+        info_dict = info.dict() if hasattr(info, 'dict') else {
+            "hostname": info.hostname,
+            "os_name": info.os_name,
+            "kernel_version": info.kernel_version,
+            "processor": info.processor,
+            "python_version": info.python_version
+        }
+        cache.set(cache_key, info_dict)
+        
+        return info
         
     except Exception as e:
         logger.error(f"Error obteniendo información del sistema: {str(e)}")
