@@ -88,23 +88,25 @@ class SecurityMiddleware:
         return ip in self.ip_whitelist
     
     def _check_rate_limit(self, ip: str) -> bool:
-        """Verificar rate limiting (síncrono para compatibilidad)"""
-        from core.rate_limiter import rate_limiter
-        import asyncio
+        """Verificar rate limiting (versión síncrona mejorada)"""
+        current_time = time.time()
         
-        # Ejecutar de forma síncrona si es necesario
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # Si el loop está corriendo, crear una tarea
-                task = asyncio.create_task(rate_limiter.is_allowed(ip))
-                # Esto no es ideal pero funciona para middleware
-                return True  # Permitir por defecto si no podemos esperar
-            else:
-                return loop.run_until_complete(rate_limiter.is_allowed(ip))
-        except Exception:
-            # Fallback: permitir si hay error
-            return True
+        if ip not in self.rate_limit_store:
+            self.rate_limit_store[ip] = []
+        
+        # Limpiar requests antiguos
+        self.rate_limit_store[ip] = [
+            req_time for req_time in self.rate_limit_store[ip]
+            if current_time - req_time < settings.rate_limit_window
+        ]
+        
+        # Verificar límite
+        if len(self.rate_limit_store[ip]) >= settings.rate_limit_requests:
+            return False
+        
+        # Agregar request actual
+        self.rate_limit_store[ip].append(current_time)
+        return True
         current_time = time.time()
         
         if ip not in self.rate_limit_store:
