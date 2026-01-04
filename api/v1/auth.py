@@ -152,7 +152,7 @@ async def first_login_change(data: FirstLoginChange, request: Request):
             {"old_username": settings.default_username, "new_username": data.new_username}
         )
 
-        return {"message": get_text("auth.user_updated_relogin", default="Usuario actualizado. Vuelve a iniciar sesión con tus nuevas credenciales.")}
+        return {"message": get_text("auth.user_updated_relogin", language=language, default="Usuario actualizado. Vuelve a iniciar sesión con tus nuevas credenciales.")}
 
     except HTTPException:
         raise
