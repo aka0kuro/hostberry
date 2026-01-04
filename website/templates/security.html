@@ -320,6 +320,19 @@
   async function loadBackups(){
     const list = document.getElementById('security-backup-list');
     if(!list) return;
+    
+    // Mostrar indicador de carga
+    const isLoading = list.querySelector('.loading-indicator');
+    if(!isLoading){
+      list.innerHTML = `
+        <div class="text-center py-4 text-white-50 loading-indicator">
+          <div class="spinner-border spinner-border-sm me-2" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <span>${getTranslation('backup.loading', 'Loading backups...')}</span>
+        </div>`;
+    }
+    
     try{
       const resp = await HostBerry.apiRequest('/api/v1/security/backups');
       if(!resp.ok) throw new Error(getTranslation('backup.load_failed', 'Error loading backups'));
