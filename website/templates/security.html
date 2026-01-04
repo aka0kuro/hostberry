@@ -617,7 +617,7 @@
       showNotification(infoText, 'info');
     }catch(error){
       console.error('Backup info failed', error);
-      showNotification(HostBerry.t?.('backup.info_error', 'Error al obtener información') || 'Error al obtener información', 'error');
+      showNotification(getTranslation('backup.info_error', 'Error getting information'), 'error');
     }
   }
 
