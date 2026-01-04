@@ -489,7 +489,7 @@
         return;
       }
       
-      showNotification(HostBerry.t?.('backup.uploading', 'Cargando backup...') || 'Cargando backup...', 'info');
+      showNotification(getTranslation('backup.uploading', 'Uploading backup...'), 'info');
       
       const formData = new FormData();
       formData.append('file', file);
