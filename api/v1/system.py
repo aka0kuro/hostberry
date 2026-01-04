@@ -5,9 +5,9 @@ Router del sistema para FastAPI
 import os
 import time
 import platform
-import psutil
 import asyncio
 from typing import Dict, Any, List
+# psutil se importa lazy cuando se necesita
 
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import JSONResponse
