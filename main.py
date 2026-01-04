@@ -31,8 +31,8 @@ from core.cache import cache
 from core.i18n import i18n, get_text
 from system.system_utils import optimize_system_for_rpi
 
-# Importar routers
-from api.v1 import auth, system, wifi, vpn, wireguard, adblock, hostapd
+# Importar router principal de API v1 (blueprint principal)
+from api.v1 import api_v1_router
 from web import routes as web_routes
 
 # Configurar templates con caché optimizada para RPi 3
