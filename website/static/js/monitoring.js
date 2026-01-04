@@ -25,17 +25,22 @@
   }
 
   async function fetchJson(url){
-    const resp = await HostBerry.apiRequest(url);
-    if(resp.status === 401){
-      // token inválido, redirige a login
-      window.location.href = '/login';
-      throw new Error('Unauthorized');
+    try {
+      const resp = await HostBerry.apiRequest(url);
+      if(resp.status === 401){
+        // token inválido, redirige a login
+        window.location.href = '/login';
+        throw new Error('Unauthorized');
+      }
+      if(!resp.ok){
+        const errText = await resp.text();
+        throw new Error(`Request failed ${resp.status}: ${errText}`);
+      }
+      return await resp.json();
+    } catch (error) {
+      console.error('Error en fetchJson:', error);
+      throw error;
     }
-    if(!resp.ok){
-      const errText = await resp.text();
-      throw new Error(`Request failed ${resp.status}: ${errText}`);
-    }
-    return resp.json();
   }
 
   function updateProgress(id, percent){
