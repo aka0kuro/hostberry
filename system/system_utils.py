@@ -112,47 +112,55 @@ class RPISystemMonitor:
         if len(self.stats_history) > self.max_history:
             self.stats_history.pop(0)
     
-    def get_network_interface(self, interface: str = "wlan0") -> Dict[str, Any]:
-        """Obtener información de interfaz de red"""
+    def get_network_interface(self, interface: str = None) -> Dict[str, Any]:
+        """Obtener información de interfaz de red.
+        Si no se proporciona, selecciona la primera interfaz activa distinta de loopback."""
         try:
-            # Obtener información de la interfaz
             addrs = psutil.net_if_addrs()
             stats = psutil.net_if_stats()
-            
-            if interface not in addrs:
+
+            # Seleccionar interfaz activa si no se pasó una explícita
+            candidate = interface
+            if not candidate:
+                for name, st in stats.items():
+                    if name == "lo":
+                        continue
+                    if getattr(st, "isup", False):
+                        candidate = name
+                        break
+                if not candidate and stats:
+                    # fallback a cualquier interfaz no loopback
+                    candidate = next((name for name in stats.keys() if name != "lo"), None)
+
+            if not candidate or candidate not in addrs:
                 return {}
-            
-            addr_info = addrs[interface]
-            stat_info = stats.get(interface, {})
-            
-            # Obtener dirección IP
+
+            addr_info = addrs[candidate]
+            stat_info = stats.get(candidate, {})
+
             ip_address = None
             for addr in addr_info:
                 if addr.family == psutil.AF_INET:  # IPv4
                     ip_address = addr.address
                     break
-            
+
             return {
-                'interface': interface,
+                'interface': candidate,
                 'ip_address': ip_address,
                 'is_up': stat_info.get('isup', False),
                 'speed': stat_info.get('speed', 0),
                 'mtu': stat_info.get('mtu', 0)
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Error obteniendo información de red: {e}")
             return {}
     
-    def get_ip_address(self, interface: str = "wlan0") -> Optional[str]:
-        """Obtener dirección IP de una interfaz"""
+    def get_ip_address(self, interface: str = None) -> Optional[str]:
+        """Obtener dirección IP de una interfaz (elige activa por defecto)."""
         try:
-            addrs = psutil.net_if_addrs()
-            if interface in addrs:
-                for addr in addrs[interface]:
-                    if addr.family == psutil.AF_INET:  # IPv4
-                        return addr.address
-            return None
+            iface = self.get_network_interface(interface)
+            return iface.get('ip_address')
         except Exception as e:
             logger.error(f"❌ Error obteniendo IP: {e}")
             return None
