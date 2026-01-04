@@ -773,9 +773,15 @@ download_application_from_github() {
     fi
 
     # Permisos básicos
-    chmod 755 "$PROD_DIR"
-    [ -d "$PROD_DIR/config" ] && chmod 755 "$PROD_DIR/config" && chmod 644 "$PROD_DIR/config"/*.py 2>/dev/null || true
-    chown -R "$USER:$GROUP" "$PROD_DIR" 2>/dev/null || true
+    if [[ $EUID -eq 0 ]]; then
+        chmod 755 "$PROD_DIR"
+        [ -d "$PROD_DIR/config" ] && chmod 755 "$PROD_DIR/config" && chmod 644 "$PROD_DIR/config"/*.py 2>/dev/null || true
+        chown -R "$USER:$GROUP" "$PROD_DIR" 2>/dev/null || true
+    else
+        sudo chmod 755 "$PROD_DIR"
+        [ -d "$PROD_DIR/config" ] && sudo chmod 755 "$PROD_DIR/config" && sudo chmod 644 "$PROD_DIR/config"/*.py 2>/dev/null || true
+        sudo chown -R "$USER:$GROUP" "$PROD_DIR" 2>/dev/null || true
+    fi
 
     # .env por defecto si falta
     if [ ! -f "$PROD_DIR/.env" ]; then
