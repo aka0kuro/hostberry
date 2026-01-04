@@ -141,19 +141,23 @@ function updateServiceStatus(serviceName, status) {
                     statusBadge.className = 'status-badge status-running';
                     // Usar traducción correcta
                     if (statusLower === 'active') {
-                        statusBadge.textContent = HostBerry.t('system.running', 'Ejecutándose');
+                        statusBadge.textContent = HostBerry.t('system.running', 'Running');
                     } else if (statusLower === 'connected') {
-                        statusBadge.textContent = HostBerry.t('system.connected', 'Conectado');
+                        statusBadge.textContent = HostBerry.t('system.connected', 'Connected');
+                    } else if (statusLower === 'online') {
+                        statusBadge.textContent = HostBerry.t('system.online', 'Online');
                     } else {
-                        statusBadge.textContent = HostBerry.t('system.running', 'Ejecutándose');
+                        statusBadge.textContent = HostBerry.t('system.running', 'Running');
                     }
                 } else {
                     statusBadge.className = 'status-badge status-stopped';
                     // Usar traducción correcta
                     if (statusLower === 'disconnected') {
-                        statusBadge.textContent = HostBerry.t('system.disconnected', 'Desconectado');
+                        statusBadge.textContent = HostBerry.t('system.disconnected', 'Disconnected');
+                    } else if (statusLower === 'offline') {
+                        statusBadge.textContent = HostBerry.t('system.offline', 'Offline');
                     } else {
-                        statusBadge.textContent = HostBerry.t('system.stopped', 'Detenido');
+                        statusBadge.textContent = HostBerry.t('system.stopped', 'Stopped');
                     }
                 }
             }
