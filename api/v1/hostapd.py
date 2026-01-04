@@ -8,6 +8,7 @@ import subprocess
 import json
 import time
 import os
+import asyncio
 
 from core.security import get_current_active_user
 from core.hostberry_logging import logger
@@ -145,14 +146,16 @@ async def toggle_hostapd(
         status = get_hostapd_status()
         current_state = status.get('running', False)
         
+        from core.async_utils import run_subprocess_async
+        
         if current_state:
-            # Detener HostAPD
-            subprocess.run(["systemctl", "stop", "hostapd"], check=True)
+            # Detener HostAPD (async)
+            await run_subprocess_async(["systemctl", "stop", "hostapd"], timeout=10)
             new_state = False
             message = "HostAPD stopped"
         else:
-            # Iniciar HostAPD
-            subprocess.run(["systemctl", "start", "hostapd"], check=True)
+            # Iniciar HostAPD (async)
+            await run_subprocess_async(["systemctl", "start", "hostapd"], timeout=10)
             new_state = True
             message = "HostAPD started"
         
