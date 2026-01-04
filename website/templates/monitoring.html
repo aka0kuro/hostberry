@@ -592,26 +592,21 @@
       console.log('System stats response:', systemStatsResp);
       console.log('Network stats response:', networkStatsResp);
       
-      // Los modelos Pydantic devuelven los datos directamente
+      // Los datos vienen directamente del endpoint (ya no están envueltos en 'data')
       let systemStats = systemStatsResp;
-      if(systemStatsResp && typeof systemStatsResp === 'object' && systemStatsResp.data !== undefined){
-        systemStats = systemStatsResp.data;
-      }
-      
       if(!systemStats || typeof systemStats !== 'object'){
         console.error('Invalid system stats response:', systemStatsResp);
         throw new Error('Invalid system stats response');
       }
       
       let networkStatsRaw = networkStatsResp;
-      if(networkStatsResp && typeof networkStatsResp === 'object' && networkStatsResp.data !== undefined){
-        networkStatsRaw = networkStatsResp.data;
-      }
-      
       if(!networkStatsRaw || typeof networkStatsRaw !== 'object'){
         console.error('Invalid network stats response:', networkStatsResp);
         throw new Error('Invalid network stats response');
       }
+      
+      console.log('Parsed system stats:', systemStats);
+      console.log('Parsed network stats:', networkStatsRaw);
       
       const networkStats = computeNetworkRates(networkStatsRaw);
       
