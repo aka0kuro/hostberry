@@ -579,14 +579,19 @@
 
   async function updateStats(){
     try{
+      console.log('Fetching monitoring stats...');
       const [systemStatsResp, networkStatsResp] = await Promise.all([
         fetchJson('/api/v1/system/stats'),
         fetchJson(`/api/v1/system/network${selectedInterface ? `?interface=${encodeURIComponent(selectedInterface)}` : ''}`)
       ]);
       
+      console.log('System stats response:', systemStatsResp);
+      console.log('Network stats response:', networkStatsResp);
+      
+      // Los modelos Pydantic devuelven los datos directamente
       let systemStats = systemStatsResp;
-      if(systemStatsResp && typeof systemStatsResp === 'object'){
-        systemStats = systemStatsResp.data || systemStatsResp;
+      if(systemStatsResp && typeof systemStatsResp === 'object' && systemStatsResp.data !== undefined){
+        systemStats = systemStatsResp.data;
       }
       
       if(!systemStats || typeof systemStats !== 'object'){
@@ -595,8 +600,8 @@
       }
       
       let networkStatsRaw = networkStatsResp;
-      if(networkStatsResp && typeof networkStatsResp === 'object'){
-        networkStatsRaw = networkStatsResp.data || networkStatsResp;
+      if(networkStatsResp && typeof networkStatsResp === 'object' && networkStatsResp.data !== undefined){
+        networkStatsRaw = networkStatsResp.data;
       }
       
       if(!networkStatsRaw || typeof networkStatsRaw !== 'object'){
