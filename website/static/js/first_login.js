@@ -29,18 +29,29 @@
 
   // Función para mostrar alertas (mismo estilo que login.js)
   function showAlert(type, message) {
+    // Añadir estilos CSS específicos si no existen
+    if (!document.querySelector('#first-login-alert-styles')) {
+      const style = document.createElement('style');
+      style.id = 'first-login-alert-styles';
+      style.textContent = `
+        .first-login-alert {
+          position: fixed !important;
+          top: 20px !important;
+          right: 20px !important;
+          left: auto !important;
+          bottom: auto !important;
+          z-index: 9999 !important;
+          min-width: 300px;
+          max-width: 400px;
+          margin: 0 !important;
+          transform: none !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
     const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-    // Usar estilos inline con !important para asegurar posición
-    alertDiv.style.position = 'fixed';
-    alertDiv.style.top = '20px';
-    alertDiv.style.right = '20px';
-    alertDiv.style.zIndex = '9999';
-    alertDiv.style.minWidth = '300px';
-    alertDiv.style.maxWidth = '400px';
-    alertDiv.style.margin = '0';
-    alertDiv.style.left = 'auto';
-    alertDiv.style.transform = 'none';
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show first-login-alert`;
     alertDiv.innerHTML = `
       ${message}
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
