@@ -484,7 +484,7 @@
       }
       
       const resp = await HostBerry.apiRequest(`/api/v1/security/backup/${encodeURIComponent(backupName)}`);
-      if(!resp.ok) throw new Error('Info request failed');
+      if(!resp.ok) throw new Error(HostBerry.t?.('backup.info_failed', 'Error al obtener información') || 'Error al obtener información');
       
       const payload = await resp.json();
       const info = payload.data?.backup_info || payload.backup_info || {};
