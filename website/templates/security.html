@@ -67,6 +67,7 @@
     .security-page .log-level {
         min-width: 80px;
         text-transform: uppercase;
+        font-size: 0.7rem;
     }
     .security-page .backup-list .backup-item {
         padding: 0.75rem 1rem;
@@ -74,9 +75,38 @@
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.05);
         margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+    }
+    .security-page .backup-list .backup-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.1);
     }
     .security-page .backup-list .backup-item:last-child {
         margin-bottom: 0;
+    }
+    .security-page .service-item {
+        padding: 0.5rem 0.75rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .security-page .service-item:last-child {
+        margin-bottom: 0;
+    }
+    .security-page .service-name {
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.9);
+    }
+    .security-page .spinning {
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
 </style>
 {% endblock %}
@@ -110,27 +140,27 @@
                     <ul class="metric-list text-white">
                         <li>
                             <span class="metric-label">{{ t('security.audit_logging', 'Audit logging') }}</span>
-                            <span class="badge-status bg-secondary" id="status-audit"></span>
+                            <span class="badge-status bg-secondary" id="status-audit">--</span>
                         </li>
                         <li>
                             <span class="metric-label">{{ t('security.rate_limit', 'Rate limiting') }}</span>
-                            <span class="badge-status bg-secondary" id="status-rate"></span>
+                            <span class="badge-status bg-secondary" id="status-rate">--</span>
                         </li>
                         <li>
                             <span class="metric-label">{{ t('security.security_headers', 'Security headers') }}</span>
-                            <span class="badge-status bg-secondary" id="status-headers"></span>
+                            <span class="badge-status bg-secondary" id="status-headers">--</span>
                         </li>
                         <li>
                             <span class="metric-label">{{ t('security.backup_encryption', 'Backup encryption') }}</span>
-                            <span class="badge-status bg-secondary" id="status-backup"></span>
+                            <span class="badge-status bg-secondary" id="status-backup">--</span>
                         </li>
                         <li>
                             <span class="metric-label">{{ t('security.two_factor', 'Two-factor auth') }}</span>
-                            <span class="badge-status bg-secondary" id="status-2fa"></span>
+                            <span class="badge-status bg-secondary" id="status-2fa">--</span>
                         </li>
                         <li>
                             <span class="metric-label">{{ t('security.ip_lists', 'IP blacklist / whitelist') }}</span>
-                            <span class="badge-status bg-secondary" id="status-ip-lists"></span>
+                            <span class="badge-status bg-secondary" id="status-ip-lists">--</span>
                         </li>
                     </ul>
                 </div>
@@ -157,12 +187,28 @@
         </div>
 
         <div class="row g-4 mt-1">
-            <div class="col-xl-6">
+            <div class="col-xl-4">
+                <div class="glass-card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-white mb-0">{{ t('security.active_services', 'Active Services') }}</h5>
+                        <button class="btn btn-sm btn-outline-light" id="servicesRefresh">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                    <div id="services-list">
+                        <div class="text-center py-4 text-white-50">
+                            <i class="bi bi-arrow-clockwise spinning"></i>
+                            <p class="mb-0 mt-2">{{ t('security.loading_services', 'Loading services...') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4">
                 <div class="glass-card p-4 h-100">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
                             <h5 class="text-white mb-1">{{ t('security.logs_heading', 'Security logs') }}</h5>
-                            <p class="text-white-50 mb-0">{{ t('security.logs_caption', 'Filter critical events in real time') }}</p>
+                            <p class="text-white-50 mb-0 small">{{ t('security.logs_caption', 'Filter critical events in real time') }}</p>
                         </div>
                         <div class="d-flex gap-2">
                             <select class="form-select form-select-sm bg-dark text-white border-secondary" id="securityLogLevel">
@@ -182,12 +228,12 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-6">
+            <div class="col-xl-4">
                 <div class="glass-card p-4 h-100">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
                             <h5 class="text-white mb-1">{{ t('security.backups_heading', 'Backup inventory') }}</h5>
-                            <p class="text-white-50 mb-0">{{ t('security.backups_caption', 'Latest encrypted backups stored on device') }}</p>
+                            <p class="text-white-50 mb-0 small">{{ t('security.backups_caption', 'Latest encrypted backups stored on device') }}</p>
                         </div>
                         <button class="btn btn-sm btn-outline-light" id="securityBackupsRefresh">
                             <i class="bi bi-arrow-clockwise"></i>
@@ -214,7 +260,7 @@
     if(!el) return;
     const isOn = !!enabled;
     el.className = 'badge-status ' + (isOn ? 'bg-success text-white' : 'bg-danger text-white');
-    el.textContent = isOn ? HostBerry.t?.('security.enabled', 'Enabled') : HostBerry.t?.('security.disabled', 'Disabled');
+    el.textContent = isOn ? (HostBerry.t?.('security.enabled', 'Enabled') || 'Enabled') : (HostBerry.t?.('security.disabled', 'Disabled') || 'Disabled');
   };
 
   const setText = (id, value) => {
@@ -225,6 +271,7 @@
   async function fetchSecurityStatus(){
     try{
       const resp = await HostBerry.apiRequest('/api/v1/security/status');
+      if(!resp.ok) throw new Error('Status request failed');
       const payload = await resp.json();
       const data = payload.data || payload;
       setBadge('status-audit', data.audit_logging_enabled);
@@ -234,10 +281,61 @@
       setBadge('status-2fa', data.two_factor_enabled);
       setBadge('status-ip-lists', data.ip_blacklist_enabled || data.ip_whitelist_enabled);
       setText('security-last-check', new Date().toLocaleString());
-      document.getElementById('security-overall-pill')?.classList.toggle('bg-success', true);
+      const pill = document.getElementById('security-overall-pill');
+      if(pill){
+        pill.className = 'status-pill bg-opacity-25 bg-success text-white mt-2';
+        pill.textContent = HostBerry.t?.('security.status_ok', 'All systems nominal') || 'All systems nominal';
+      }
     }catch(error){
       console.error('Security status failed', error);
       HostBerry.showAlert?.('danger', HostBerry.t?.('errors.security_status', 'Unable to fetch security status') || 'Unable to fetch security status');
+    }
+  }
+
+  async function loadServices(){
+    const container = document.getElementById('services-list');
+    if(!container) return;
+    try{
+      const resp = await HostBerry.apiRequest('/api/v1/system/services');
+      if(!resp.ok) throw new Error('Services request failed');
+      const payload = await resp.json();
+      const services = payload.services || {};
+      
+      if(!Object.keys(services).length){
+        container.innerHTML = `
+          <div class="text-center py-4 text-white-50">
+            <i class="bi bi-journal-x"></i>
+            <p class="mb-0 mt-2">${HostBerry.t?.('security.no_services', 'No services found') || 'No services found'}</p>
+          </div>`;
+        return;
+      }
+      
+      container.innerHTML = '';
+      Object.keys(services).forEach(serviceName => {
+        const service = services[serviceName];
+        const status = service.status || service;
+        const statusLower = (typeof status === 'string' ? status : 'unknown').toLowerCase();
+        const isRunning = statusLower === 'running' || statusLower === 'active';
+        const statusText = isRunning 
+          ? (HostBerry.t?.('system.running', 'Ejecutándose') || 'Running')
+          : (HostBerry.t?.('system.stopped', 'Detenido') || 'Stopped');
+        const statusClass = isRunning ? 'bg-success' : 'bg-danger';
+        
+        const item = document.createElement('div');
+        item.className = 'service-item';
+        item.innerHTML = `
+          <span class="service-name">${serviceName}</span>
+          <span class="badge ${statusClass} text-white">${statusText}</span>
+        `;
+        container.appendChild(item);
+      });
+    }catch(error){
+      console.error('Services load failed', error);
+      container.innerHTML = `
+        <div class="text-center py-4 text-danger">
+          <i class="bi bi-exclamation-triangle"></i>
+          <p class="mb-0 mt-2">${HostBerry.t?.('security.services_error', 'Unable to load services') || 'Unable to load services'}</p>
+        </div>`;
     }
   }
 
@@ -247,11 +345,11 @@
     if(!container) return;
     try{
       const params = new URLSearchParams({ limit: '20' });
-      if(level !== 'all') params.set('level', level);
+      if(level !== 'all') params.set('level', level.toUpperCase());
       const resp = await HostBerry.apiRequest(`/api/v1/system/logs?${params.toString()}`);
       if(!resp.ok) throw new Error('logs failed');
       const payload = await resp.json();
-      const logs = Array.isArray(payload.logs) ? payload.logs : [];
+      const logs = Array.isArray(payload.logs) ? payload.logs : (Array.isArray(payload) ? payload : []);
       if(!logs.length){
         container.innerHTML = `
           <div class="text-center py-4 text-white-50">
@@ -263,13 +361,14 @@
       container.innerHTML = '';
       logs.forEach(log => {
         const item = document.createElement('div');
-        const levelLabel = (log.level || 'INFO').toUpperCase();
-        const ts = log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : '--:--:--';
+        const levelLabel = (log.level || log.log_level || 'INFO').toUpperCase();
+        const ts = log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : (log.created_at ? new Date(log.created_at).toLocaleTimeString() : '--:--:--');
+        const message = log.message || log.log_message || log.content || '';
         item.className = 'log-item';
         item.innerHTML = `
           <span class="text-white-50 small">${ts}</span>
           <span class="badge bg-${getLevelColor(levelLabel)} log-level">${levelLabel}</span>
-          <span class="text-white flex-grow-1">${log.message || ''}</span>`;
+          <span class="text-white flex-grow-1">${message}</span>`;
         container.appendChild(item);
       });
     }catch(error){
@@ -293,13 +392,24 @@
 
   async function createBackup(){
     try{
+      const confirmMsg = HostBerry.t?.('security.backup_confirm', 'Are you sure you want to create a backup?') || 'Are you sure you want to create a backup?';
+      if(!confirm(confirmMsg)) return;
+      
+      HostBerry.showAlert?.('info', HostBerry.t?.('security.backup_creating', 'Creating backup...') || 'Creating backup...');
+      
       const resp = await HostBerry.apiRequest('/api/v1/security/backup?include_logs=true&include_uploads=true', { method: 'POST' });
+      if(!resp.ok){
+        const errorText = await resp.text();
+        throw new Error(errorText || 'Backup failed');
+      }
       const payload = await resp.json();
-      HostBerry.showAlert?.('success', payload.message || HostBerry.t?.('security.backup_success', 'Backup created successfully'));
+      const message = payload.message || payload.data?.message || HostBerry.t?.('security.backup_success', 'Backup created successfully') || 'Backup created successfully';
+      HostBerry.showAlert?.('success', message);
       await loadBackups();
     }catch(error){
       console.error('Backup failed', error);
-      HostBerry.showAlert?.('danger', HostBerry.t?.('security.backup_error', 'Unable to create backup'));
+      const errorMsg = HostBerry.t?.('security.backup_error', 'Unable to create backup') || 'Unable to create backup';
+      HostBerry.showAlert?.('danger', errorMsg);
     }
   }
 
@@ -308,26 +418,33 @@
     if(!list) return;
     try{
       const resp = await HostBerry.apiRequest('/api/v1/security/backups');
+      if(!resp.ok) throw new Error('Backups request failed');
       const payload = await resp.json();
-      const backups = payload.data?.backups || [];
+      const backups = payload.data?.backups || payload.backups || [];
       if(!backups.length){
         list.innerHTML = `
           <div class="text-center py-4 text-white-50">
             <i class="bi bi-archive"></i>
-            <p class="mb-0 mt-2">${HostBerry.t?.('security.no_backups', 'No backups listed yet')}</p>
+            <p class="mb-0 mt-2">${HostBerry.t?.('security.no_backups', 'No backups listed yet') || 'No backups listed yet'}</p>
           </div>`;
         return;
       }
       list.innerHTML = '';
-      backups.slice(0,5).forEach(backup => {
+      backups.slice(0, 10).forEach(backup => {
         const item = document.createElement('div');
         item.className = 'backup-item text-white';
+        const name = backup.name || backup.filename || backup.path || backup;
+        const size = backup.size ? formatBytes(backup.size) : '';
+        const date = backup.created_at || backup.timestamp || backup.date || '';
+        const formattedDate = date ? new Date(date).toLocaleString() : '';
         item.innerHTML = `
-          <div class="d-flex justify-content-between">
-            <strong>${backup.name || backup}</strong>
-            <span class="text-white-50 small">${backup.size || ''}</span>
-          </div>
-          <div class="text-white-50 small">${backup.created_at || ''}</div>`;
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="flex-grow-1">
+              <strong class="d-block">${name}</strong>
+              <span class="text-white-50 small">${formattedDate}</span>
+            </div>
+            ${size ? `<span class="text-white-50 small ms-2">${size}</span>` : ''}
+          </div>`;
         list.appendChild(item);
       });
     }catch(error){
@@ -335,43 +452,61 @@
       list.innerHTML = `
         <div class="text-center py-4 text-danger">
           <i class="bi bi-exclamation-triangle"></i>
-          <p class="mb-0 mt-2">${HostBerry.t?.('security.backups_error', 'Unable to load backups')}</p>
+          <p class="mb-0 mt-2">${HostBerry.t?.('security.backups_error', 'Unable to load backups') || 'Unable to load backups'}</p>
         </div>`;
     }
   }
 
+  function formatBytes(bytes){
+    if(!bytes || bytes === 0) return '';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  }
+
   async function validateInput(){
     try{
-      const sample = prompt(HostBerry.t?.('security.prompt_input', 'Enter input to validate')) || '';
+      const promptMsg = HostBerry.t?.('security.prompt_input', 'Enter input to validate') || 'Enter input to validate';
+      const sample = prompt(promptMsg) || '';
       if(!sample) return;
       const resp = await HostBerry.apiRequest('/api/v1/security/validate-input', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sample)
       });
+      if(!resp.ok) throw new Error('Validation failed');
       const payload = await resp.json();
-      const valid = payload.data?.is_valid;
-      HostBerry.showAlert?.(valid ? 'success' : 'warning',
-        valid ? HostBerry.t?.('security.input_ok', 'Input considered safe') : HostBerry.t?.('security.input_not_ok', 'Potentially unsafe input detected'));
+      const valid = payload.data?.is_valid !== false;
+      const msg = valid 
+        ? (HostBerry.t?.('security.input_ok', 'Input considered safe') || 'Input considered safe')
+        : (HostBerry.t?.('security.input_not_ok', 'Potentially unsafe input detected') || 'Potentially unsafe input detected');
+      HostBerry.showAlert?.(valid ? 'success' : 'warning', msg);
     }catch(error){
       console.error('Input validation failed', error);
-      HostBerry.showAlert?.('danger', HostBerry.t?.('security.input_error', 'Unable to validate input'));
+      HostBerry.showAlert?.('danger', HostBerry.t?.('security.input_error', 'Unable to validate input') || 'Unable to validate input');
     }
   }
 
   document.addEventListener('DOMContentLoaded', function(){
     fetchSecurityStatus();
+    loadServices();
     loadLogs();
     loadBackups();
+    
     document.getElementById('securityStatusRefresh')?.addEventListener('click', fetchSecurityStatus);
+    document.getElementById('servicesRefresh')?.addEventListener('click', loadServices);
     document.getElementById('securityLogsRefresh')?.addEventListener('click', loadLogs);
     document.getElementById('securityLogLevel')?.addEventListener('change', loadLogs);
     document.getElementById('securityBackupsRefresh')?.addEventListener('click', loadBackups);
     document.getElementById('action-create-backup')?.addEventListener('click', createBackup);
     document.getElementById('action-list-backups')?.addEventListener('click', loadBackups);
     document.getElementById('action-validate-input')?.addEventListener('click', validateInput);
+    
     setInterval(fetchSecurityStatus, 60000);
+    setInterval(loadServices, 60000);
     setInterval(loadLogs, 20000);
+    setInterval(loadBackups, 30000);
   });
 })();
 </script>
