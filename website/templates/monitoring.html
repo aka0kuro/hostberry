@@ -606,77 +606,95 @@
         populateInterfaceSelect(networkStatsRaw.interfaces);
       }
 
+      console.log('System stats received:', systemStats);
+      
       // Actualizar uptime
       const uptime = systemStats.uptime || systemStats.uptime_seconds || 0;
       setText('uptime-value', formatUptime(uptime));
       
-      // Actualizar CPU
-      const cpuUsage = systemStats.cpu_usage || systemStats.cpu_percent || 0;
+      // Actualizar CPU - usar los campos correctos del modelo
+      const cpuUsage = systemStats.cpu_usage || 0;
       const cpuUsageValue = typeof cpuUsage === 'number' ? cpuUsage : parseFloat(cpuUsage) || 0;
       setText('cpu-usage', `${safeToFixed(cpuUsageValue)}%`);
       updateProgress('cpu-progress', cpuUsageValue);
       
-      const cpuTemp = systemStats.cpu_temperature || systemStats.temperature;
+      const cpuTemp = systemStats.cpu_temperature || 0;
       if(typeof cpuTemp === 'number' && cpuTemp > 0){
         setText('cpu-temp', `${safeToFixed(cpuTemp)}°C`);
       } else {
         setText('cpu-temp', '--°C');
       }
       
-      const cpuCores = systemStats.cpu_cores || systemStats.cpu_count;
+      const cpuCores = systemStats.cpu_cores || 0;
       setText('cpu-cores', cpuCores ? String(cpuCores) : '-');
 
-      // Actualizar Memoria
-      const memUsage = systemStats.memory_usage || systemStats.memory_percent || 0;
+      // Actualizar Memoria - usar los campos correctos del modelo
+      const memUsage = systemStats.memory_usage || 0;
       const memUsageValue = typeof memUsage === 'number' ? memUsage : parseFloat(memUsage) || 0;
       setText('mem-usage', `${safeToFixed(memUsageValue)}%`);
       updateProgress('mem-progress', memUsageValue);
       
-      const memTotal = systemStats.memory_total || systemStats.memory_total_bytes;
+      const memTotal = systemStats.memory_total || 0;
       if(memTotal && memTotal > 0){
-        const memTotalGB = typeof memTotal === 'number' ? memTotal : parseFloat(memTotal) || 0;
-        setText('mem-total', formatBytes(memTotalGB));
+        setText('mem-total', formatBytes(memTotal));
       } else {
         setText('mem-total', '0 GB');
       }
       
-      const memFree = systemStats.memory_free || systemStats.memory_available;
+      const memFree = systemStats.memory_free || 0;
       if(memFree && memFree > 0){
-        const memFreeGB = typeof memFree === 'number' ? memFree : parseFloat(memFree) || 0;
-        setText('mem-free', formatBytes(memFreeGB));
+        setText('mem-free', formatBytes(memFree));
       } else {
         setText('mem-free', '0 GB');
       }
 
-      // Actualizar Disco
-      const diskUsage = systemStats.disk_usage || systemStats.disk_percent || 0;
+      // Actualizar Disco - usar los campos correctos del modelo
+      const diskUsage = systemStats.disk_usage || 0;
       const diskUsageValue = typeof diskUsage === 'number' ? diskUsage : parseFloat(diskUsage) || 0;
       setText('disk-usage', `${safeToFixed(diskUsageValue)}%`);
       updateProgress('disk-progress', diskUsageValue);
       
-      const diskTotal = systemStats.disk_total || systemStats.disk_total_bytes;
+      const diskTotal = systemStats.disk_total || 0;
       if(diskTotal && diskTotal > 0){
-        const diskTotalGB = typeof diskTotal === 'number' ? diskTotal : parseFloat(diskTotal) || 0;
-        setText('disk-total', formatBytes(diskTotalGB));
+        setText('disk-total', formatBytes(diskTotal));
       } else {
         setText('disk-total', '0 GB');
       }
       
-      const diskUsed = systemStats.disk_used || systemStats.disk_used_bytes;
+      const diskUsed = systemStats.disk_used || 0;
       if(diskUsed && diskUsed > 0){
-        const diskUsedGB = typeof diskUsed === 'number' ? diskUsed : parseFloat(diskUsed) || 0;
-        setText('disk-used', formatBytes(diskUsedGB));
+        setText('disk-used', formatBytes(diskUsed));
       } else {
         setText('disk-used', '0 GB');
       }
 
-      // Actualizar información del sistema
+      // Actualizar información del sistema - obtener desde /api/v1/system/info
+      // Por ahora usar valores por defecto o intentar obtenerlos
       setText('sys-hostname', systemStats.hostname || '--');
       setText('sys-os', systemStats.os_version || '--');
       setText('sys-kernel', systemStats.kernel_version || '--');
       setText('sys-arch', systemStats.architecture || '--');
       setText('sys-processor', systemStats.processor || '--');
       setText('sys-load', systemStats.load_average || '--');
+      
+      // Intentar obtener información del sistema si no está en stats
+      if(!systemStats.hostname){
+        fetchJson('/api/v1/system/info').then(info => {
+          const systemInfo = info.data || info;
+          if(systemInfo){
+            setText('sys-hostname', systemInfo.hostname || '--');
+            setText('sys-os', systemInfo.platform || '--');
+            setText('sys-kernel', systemInfo.kernel_version || '--');
+            setText('sys-arch', systemInfo.architecture || '--');
+            setText('sys-processor', systemInfo.processor || '--');
+            if(systemInfo.load_average && Array.isArray(systemInfo.load_average)){
+              setText('sys-load', systemInfo.load_average.map(l => safeToFixed(l, 2)).join(', '));
+            }
+          }
+        }).catch(err => {
+          console.warn('Could not fetch system info:', err);
+        });
+      }
 
       // Actualizar estadísticas de red
       setText('net-interface', networkStats.interface || networkStatsRaw.interface || '--');
