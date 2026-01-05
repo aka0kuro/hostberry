@@ -134,11 +134,37 @@
     }
   }
 
+  // Timezone/locale helpers (timezone guardado en Settings y servido por backend)
+  function getServerTimezone(){
+    return (window.HostBerryServerSettings && window.HostBerryServerSettings.timezone) ? window.HostBerryServerSettings.timezone : 'UTC';
+  }
+
+  function getServerLanguage(){
+    const lang = (document.documentElement && document.documentElement.lang) ? document.documentElement.lang : 'en';
+    return (lang === 'es') ? 'es' : 'en';
+  }
+
+  function formatTime(date, options){
+    const tz = getServerTimezone();
+    const lang = getServerLanguage();
+    const locale = (lang === 'es') ? 'es-ES' : 'en-US';
+    const d = (date instanceof Date) ? date : new Date(date);
+    const fmtOpts = Object.assign({ hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: tz }, options || {});
+    try{
+      return new Intl.DateTimeFormat(locale, fmtOpts).format(d);
+    }catch(_e){
+      // Fallback si Intl/timeZone no está disponible
+      return d.toLocaleTimeString(locale, { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+  }
+
   // Export
   window.t = t;
   HostBerry.t = t;
   HostBerry.showAlert = showAlert;
   HostBerry.apiRequest = apiRequest;
+  HostBerry.getServerTimezone = getServerTimezone;
+  HostBerry.formatTime = formatTime;
 
   // Populate navbar username from API if logged in
   document.addEventListener('DOMContentLoaded', async function(){
