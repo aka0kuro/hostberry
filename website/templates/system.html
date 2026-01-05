@@ -391,7 +391,11 @@
       setText('info-uptime', formatUptime(stats.uptime || 0));
       setText('info-cpu-cores', stats.cpu_cores || '--');
       
-      setText('system-last-update', new Date().toLocaleTimeString());
+      const now = new Date();
+      const timeStr = (window.HostBerry && typeof window.HostBerry.formatTime === 'function')
+        ? window.HostBerry.formatTime(now)
+        : now.toLocaleTimeString();
+      setText('system-last-update', timeStr);
     }catch(error){
       console.error('Error fetching system stats:', error);
       HostBerry.showAlert?.('danger', HostBerry.t?.('errors.system_stats_error', 'Unable to fetch system statistics') || 'Unable to fetch system statistics');
