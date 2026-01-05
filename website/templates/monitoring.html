@@ -623,8 +623,8 @@
           throw new Error(`HTTP ${resp.status}`);
         }
         
-        const data = await resp.json();
-        return data.data !== undefined ? data.data : data;
+        const data = resp.data !== undefined ? resp.data : resp;
+        return data;
       } catch (error) {
         console.error('fetchJson error:', url, error);
         throw error;
