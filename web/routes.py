@@ -470,7 +470,7 @@ async def network_page(request: Request, lang: str | None = Query(default=None))
 
 @router.get("/wifi", response_class=HTMLResponse)
 async def wifi_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    return _render(
+    return await _render(
         "wifi.html",
         request,
         lang,
@@ -485,7 +485,7 @@ async def wifi_page(request: Request, lang: str | None = Query(default=None)) ->
 
 @router.get("/hostapd", response_class=HTMLResponse)
 async def hostapd_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    return _render(
+    return await _render(
         "hostapd.html",
         request,
         lang,
@@ -499,7 +499,7 @@ async def hostapd_page(request: Request, lang: str | None = Query(default=None))
 
 @router.get("/vpn", response_class=HTMLResponse)
 async def vpn_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    return _render(
+    return await _render(
         "vpn.html",
         request,
         lang,
@@ -514,7 +514,7 @@ async def vpn_page(request: Request, lang: str | None = Query(default=None)) -> 
 
 @router.get("/wireguard", response_class=HTMLResponse)
 async def wireguard_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    return _render(
+    return await _render(
         "wireguard.html",
         request,
         lang,
@@ -528,7 +528,7 @@ async def wireguard_page(request: Request, lang: str | None = Query(default=None
 
 @router.get("/adblock", response_class=HTMLResponse)
 async def adblock_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    return _render(
+    return await _render(
         "adblock.html",
         request,
         lang,
@@ -542,7 +542,7 @@ async def adblock_page(request: Request, lang: str | None = Query(default=None))
 
 @router.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    current_lang, _ = _resolve_language(request, lang)
+    current_lang, _ = await _resolve_language(request, lang)
     # Cargar configuración persistida desde la DB para que la página refleje cambios guardados
     from core.database import db
 
@@ -629,7 +629,7 @@ async def settings_page(request: Request, lang: str | None = Query(default=None)
     except Exception:
         email_notifications, email_address, system_alerts = None, None, None
 
-    return _render(
+    return await _render(
         "settings.html",
         request,
         lang,
@@ -667,7 +667,7 @@ async def settings_page(request: Request, lang: str | None = Query(default=None)
 
 @router.get("/profile", response_class=HTMLResponse)
 async def profile_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    return _render(
+    return await _render(
         "profile.html",
         request,
         lang,
@@ -680,7 +680,7 @@ async def profile_page(request: Request, lang: str | None = Query(default=None))
 
 @router.get("/help", response_class=HTMLResponse)
 async def help_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    current_lang, _ = _resolve_language(request, lang)
+    current_lang, _ = await _resolve_language(request, lang)
     support_stats = [
         {"label_key": "help.stats.active_tickets", "value": "128", "trend": "+8%", "status": "warning"},
         {"label_key": "help.stats.resolution_rate", "value": "94%", "trend": "+2%", "status": "success"},
@@ -733,10 +733,10 @@ async def help_page(request: Request, lang: str | None = Query(default=None)) ->
         {"icon": "bi bi-discord", "label_key": "help.contact.community", "value": "discord.gg/hostberry"},
         {"icon": "bi bi-github", "label_key": "help.contact.repo", "value": "github.com/hostberry"},
     ]
-    return _render(
+    return await _render(
         "help.html",
         request,
-        current_lang,
+        lang,
         extra={
             "support_stats": support_stats,
             "faqs": faqs,
@@ -749,38 +749,28 @@ async def help_page(request: Request, lang: str | None = Query(default=None)) ->
 
 @router.get("/about", response_class=HTMLResponse)
 async def about_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    return _render("about.html", request, lang, extra={"app_info": {}})
+    return await _render("about.html", request, lang, extra={"app_info": {}})
 
 
 @router.get("/first-login", response_class=HTMLResponse)
 async def first_login(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
     from config.settings import settings
-    # Resolver idioma desde query, cookie o usar el del contexto (middleware)
-    # Si viene por query, forzamos el cambio y seteamos cookie
-    if lang:
-        i18n.set_context_language(lang)
-    elif request.cookies.get("lang"):
-        i18n.set_context_language(request.cookies.get("lang"))
-    
-    current_lang = i18n.get_current_language()
-    
     # Obtener usuario desde cookie o usar valor por defecto
     username = request.cookies.get("username") or settings.default_username
     current_user = {"username": username}
-    
-    context = _base_context(request, current_lang)
-    context.update({
-        "current_user": current_user,
-        "services": _get_service_statuses(),
-        "recent_activities": [
-            {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
-            {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"}
-        ]
-    })
-    resp = templates.TemplateResponse("first_login.html", context)
-    if lang:
-        resp.set_cookie("lang", lang, max_age=60*60*24*365)
-    return resp
+    return await _render(
+        "first_login.html",
+        request,
+        lang,
+        extra={
+            "current_user": current_user,
+            "services": _get_service_statuses(),
+            "recent_activities": [
+                {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
+                {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"},
+            ],
+        },
+    )
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
@@ -789,16 +779,16 @@ async def dashboard_page(request: Request, lang: str | None = Query(default=None
     # Usar un nombre de usuario dinámico - en producción esto vendría de la autenticación
     current_user = {"username": "admin"}  # Reemplazar con lógica real de autenticación
     
-    current_lang, _ = _resolve_language(request, lang)
+    current_lang, _ = await _resolve_language(request, lang)
     
     # Obtener estadísticas reales del sistema
     system_stats = _get_system_stats()
     system_health = _calculate_health_status(system_stats)
     
-    return _render(
+    return await _render(
         "dashboard.html",
         request,
-        current_lang,
+        lang,
         extra={
             "current_user": current_user,
             "system_stats": system_stats,
@@ -815,11 +805,11 @@ async def dashboard_page(request: Request, lang: str | None = Query(default=None
 
 @router.get("/monitoring", response_class=HTMLResponse)
 async def monitoring_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    current_lang, _ = _resolve_language(request, lang)
-    return _render(
+    current_lang, _ = await _resolve_language(request, lang)
+    return await _render(
         "monitoring.html",
         request,
-        current_lang,
+        lang,
         extra={
             "system_info": {
                 "hostname": "hostberry",
@@ -843,12 +833,11 @@ async def monitoring_page(request: Request, lang: str | None = Query(default=Non
 
 @router.get("/update", response_class=HTMLResponse)
 async def update_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    current_lang, _ = _resolve_language(request, lang)
-    
-    return _render(
+    current_lang, _ = await _resolve_language(request, lang)
+    return await _render(
         "update.html",
         request,
-        current_lang,
+        lang,
         extra={},
     )
 
