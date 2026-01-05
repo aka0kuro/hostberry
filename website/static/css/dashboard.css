@@ -1435,6 +1435,14 @@ body:not(.light-theme) .form-select-sm {
     text-align: center;
 }
 
+.settings-card .form-select {
+    text-align-last: center;
+}
+
+.settings-card .form-select option {
+    text-align: center;
+}
+
 .settings-card .form-check {
     justify-content: center;
 }
