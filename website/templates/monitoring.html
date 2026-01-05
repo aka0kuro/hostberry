@@ -755,6 +755,15 @@
         const validDownloadSpeed = (typeof downloadSpeed === 'number' && !isNaN(downloadSpeed) && isFinite(downloadSpeed)) ? downloadSpeed : 0;
         const validUploadSpeed = (typeof uploadSpeed === 'number' && !isNaN(uploadSpeed) && isFinite(uploadSpeed)) ? uploadSpeed : 0;
         
+        // Log para depuración
+        if (validDownloadSpeed > 0 || validUploadSpeed > 0) {
+          console.log('Adding to chart:', {
+            download: validDownloadSpeed.toFixed(2) + ' B/s',
+            upload: validUploadSpeed.toFixed(2) + ' B/s',
+            historyLength: netHistory.labels.length
+          });
+        }
+        
         pushNetHistory(validDownloadSpeed, validUploadSpeed);
 
         setText('monitoring-last-update', new Date().toLocaleTimeString());
@@ -762,10 +771,19 @@
         ensureNetChart();
         
         if (netChart) {
-          netChart.data.labels = netHistory.labels;
-          netChart.data.datasets[0].data = netHistory.download;
-          netChart.data.datasets[1].data = netHistory.upload;
+          // Actualizar datos del gráfico
+          netChart.data.labels = [...netHistory.labels];
+          netChart.data.datasets[0].data = [...netHistory.download];
+          netChart.data.datasets[1].data = [...netHistory.upload];
+          
+          // Actualizar etiquetas de las series
+          netChart.data.datasets[0].label = t('monitoring.download', 'Download');
+          netChart.data.datasets[1].label = t('monitoring.upload', 'Upload');
+          
+          // Forzar actualización
           netChart.update('none');
+          
+          console.log('Chart updated with', netHistory.labels.length, 'data points');
         }
       } catch (error) {
         console.error('Error updating monitoring stats:', error);
