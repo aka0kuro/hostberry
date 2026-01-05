@@ -22,18 +22,36 @@ async function updateSystemStats() {
         const response = await HostBerry.apiRequest('/api/v1/system/stats');
         if (response.ok) {
             const stats = await response.json();
+
+            // Uptime (si existe en la respuesta)
+            try {
+                const uptimeSeconds = (stats.uptime_seconds !== undefined ? stats.uptime_seconds : stats.uptime);
+                if (typeof uptimeSeconds === 'number' && isFinite(uptimeSeconds)) {
+                    const uptimeEl = document.getElementById('uptime-value');
+                    if (uptimeEl) {
+                        const mins = Math.floor(uptimeSeconds / 60);
+                        const hrs = Math.floor(mins / 60);
+                        const days = Math.floor(hrs / 24);
+                        const remHrs = hrs % 24;
+                        const remMins = mins % 60;
+                        if (days > 0) uptimeEl.textContent = `${days}d ${remHrs}h ${remMins}m`;
+                        else if (hrs > 0) uptimeEl.textContent = `${hrs}h ${remMins}m`;
+                        else uptimeEl.textContent = `${remMins}m`;
+                    }
+                }
+            } catch (_e) {}
             
             // Actualizar CPU
-            updateStatCard('cpu', stats.cpu_percent !== undefined ? stats.cpu_percent : stats.cpu_usage);
+            updateStatCard('cpu', stats.cpu_percent !== undefined ? stats.cpu_percent : stats.cpu_usage, stats);
             
             // Actualizar Memoria
-            updateStatCard('memory', stats.memory_percent !== undefined ? stats.memory_percent : stats.memory_usage);
+            updateStatCard('memory', stats.memory_percent !== undefined ? stats.memory_percent : stats.memory_usage, stats);
             
             // Actualizar Disco
-            updateStatCard('disk', stats.disk_percent !== undefined ? stats.disk_percent : stats.disk_usage);
+            updateStatCard('disk', stats.disk_percent !== undefined ? stats.disk_percent : stats.disk_usage, stats);
             
             // Actualizar Temperatura
-            updateStatCard('temp', stats.temperature !== undefined ? stats.temperature : stats.cpu_temperature);
+            updateStatCard('temp', stats.temperature !== undefined ? stats.temperature : stats.cpu_temperature, stats);
         }
     } catch (error) {
         console.error('Error updating system stats:', error);
@@ -41,13 +59,24 @@ async function updateSystemStats() {
 }
 
 // Actualizar tarjeta de estadísticas
-function updateStatCard(type, value) {
+function updateStatCard(type, value, stats = null) {
     const card = document.querySelector(`.${type}-card`);
     if (!card) return;
+
+    // Layout nuevo (estilo monitoring) usa IDs
+    const idMap = {
+        cpu: { value: 'cpu-usage', progress: 'cpu-progress' },
+        memory: { value: 'mem-usage', progress: 'mem-progress' },
+        disk: { value: 'disk-usage', progress: 'disk-progress' },
+        temp: { value: null, progress: null }
+    };
+    const ids = idMap[type] || {};
+    const valueById = ids.value ? document.getElementById(ids.value) : null;
+    const progressById = ids.progress ? document.getElementById(ids.progress) : null;
     
-    const valueElement = card.querySelector('.status-info h3');
-    const progressBar = card.querySelector(`.${type}-progress`);
-    
+    const valueElement = valueById || card.querySelector('.status-info h3');
+    const progressBar = progressById || card.querySelector(`.${type}-progress`);
+
     if (valueElement) {
         if (type === 'temp') {
             const tempVal = typeof value === 'number' ? value.toFixed(1) : value;
@@ -64,6 +93,47 @@ function updateStatCard(type, value) {
                 progressBar.style.width = `${value}%`;
             }
         }
+    }
+
+    // Detalles extra para el layout nuevo
+    if (type === 'cpu' && stats) {
+        const coresEl = document.getElementById('cpu-cores');
+        if (coresEl && stats.cpu_cores !== undefined) coresEl.textContent = String(stats.cpu_cores);
+        const tempEl = document.getElementById('cpu-temp');
+        const tval = (stats.temperature !== undefined ? stats.temperature : stats.cpu_temperature);
+        if (tempEl && typeof tval === 'number' && isFinite(tval)) tempEl.textContent = `${tval.toFixed(1)}°C`;
+    }
+    if (type === 'memory' && stats) {
+        const totalEl = document.getElementById('mem-total');
+        const freeEl = document.getElementById('mem-free');
+        const total = stats.memory_total;
+        const free = stats.memory_free;
+        const fmt = (b) => {
+            if (typeof b !== 'number' || !isFinite(b) || b <= 0) return '--';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.min(sizes.length - 1, Math.floor(Math.log(b) / Math.log(k)));
+            const v = b / Math.pow(k, i);
+            return `${v.toFixed(1)} ${sizes[i]}`;
+        };
+        if (totalEl) totalEl.textContent = fmt(total);
+        if (freeEl) freeEl.textContent = fmt(free);
+    }
+    if (type === 'disk' && stats) {
+        const totalEl = document.getElementById('disk-total');
+        const usedEl = document.getElementById('disk-used');
+        const total = stats.disk_total;
+        const used = stats.disk_used;
+        const fmt = (b) => {
+            if (typeof b !== 'number' || !isFinite(b) || b <= 0) return '--';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.min(sizes.length - 1, Math.floor(Math.log(b) / Math.log(k)));
+            const v = b / Math.pow(k, i);
+            return `${v.toFixed(1)} ${sizes[i]}`;
+        };
+        if (usedEl) usedEl.textContent = fmt(used);
+        if (totalEl) totalEl.textContent = fmt(total);
     }
     
     // Actualizar estado de salud
