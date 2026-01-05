@@ -282,13 +282,13 @@
                 <div class="card-body px-4 pb-4">
                     <form id="notificationConfigForm">
                         <div class="mb-3">
-                            <label class="form-label text-white">{{ t('settings.email_notifications', 'Email Notifications') }}</label>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {{ 'checked' if (notification_config.email_notifications if notification_config else False) else '' }}>
-                                <label class="form-check-label text-white" for="email_notifications">
-                                    {{ t('settings.enable_email_notifications', 'Enable email notifications') }}
-                                </label>
-                            </div>
+                            <label class="form-label text-white d-flex align-items-center justify-content-between">
+                                <span>{{ t('settings.email_notifications', 'Email Notifications') }}</span>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {{ 'checked' if (notification_config.email_notifications if notification_config else False) else '' }}>
+                                    <label class="form-check-label text-white" for="email_notifications"></label>
+                                </div>
+                            </label>
                         </div>
                         
                         <div class="mb-3">
