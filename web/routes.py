@@ -351,6 +351,13 @@ async def _base_context(request: Request, current_lang: str) -> dict:
         "timezone": ui.get("timezone") or "UTC",
     }
 
+    # Info de versión de la app (para About / UI)
+    try:
+        from core.version import get_full_version_info
+        version_info = get_full_version_info()
+    except Exception:
+        version_info = {"app_name": "HostBerry", "app_version": "", "api_version": "v1", "environment": "production"}
+
     return {
         "request": request,
         "language": current_lang,
@@ -359,6 +366,7 @@ async def _base_context(request: Request, current_lang: str) -> dict:
         "pytz": pytz,
         "current_user": {"username": username},
         "settings": settings_ctx,
+        "version_info": version_info,
         "system_info": {
             "hostname": hostname,
             "os_version": os_version,
