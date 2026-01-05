@@ -141,14 +141,23 @@
 {% block extra_js %}
 <script>
 (function(){
-  // Función para obtener traducciones
+  // Función para obtener traducciones - usar HostBerry.t directamente
   function getTranslation(key, defaultValue) {
     if (!key) return defaultValue || '';
     
-    const keys = String(key).split('.');
+    // Prioridad 1: HostBerry.t (función estándar del sistema)
+    if (window.HostBerry?.t) {
+      try {
+        const result = window.HostBerry.t(key, defaultValue);
+        if (result && result !== key && typeof result === 'string') return result;
+      } catch (e) {
+        // Continuar con otros métodos
+      }
+    }
     
-    // 1. Intentar desde HostBerry.translations
+    // Prioridad 2: Intentar desde HostBerry.translations
     if (window.HostBerry?.translations) {
+      const keys = String(key).split('.');
       let current = window.HostBerry.translations;
       for (const k of keys) {
         if (current && typeof current === 'object' && k in current) {
@@ -161,8 +170,9 @@
       if (typeof current === 'string' && current) return current;
     }
     
-    // 2. Intentar desde window.translations
+    // Prioridad 3: Intentar desde window.translations
     if (window.translations) {
+      const keys = String(key).split('.');
       let current = window.translations;
       for (const k of keys) {
         if (current && typeof current === 'object' && k in current) {
@@ -175,11 +185,12 @@
       if (typeof current === 'string' && current) return current;
     }
     
-    // 3. Intentar desde el JSON embebido
+    // Prioridad 4: Intentar desde el JSON embebido
     try {
       const i18nEl = document.getElementById('i18n-json');
       if (i18nEl) {
         const translations = JSON.parse(i18nEl.textContent || i18nEl.innerText || '{}');
+        const keys = String(key).split('.');
         let current = translations;
         for (const k of keys) {
           if (current && typeof current === 'object' && k in current) {
@@ -195,18 +206,13 @@
       // Ignorar errores
     }
     
-    // 4. Usar HostBerry.t si está disponible
-    if (window.HostBerry?.t) {
-      try {
-        const result = window.HostBerry.t(key, defaultValue);
-        if (result && result !== key && typeof result === 'string') return result;
-      } catch (e) {
-        // Ignorar errores
-      }
-    }
-    
-    // 5. Fallback al valor por defecto
+    // Fallback al valor por defecto
     return defaultValue || key;
+  }
+  
+  // Asegurar que HostBerry esté disponible
+  if (!window.HostBerry) {
+    window.HostBerry = {};
   }
 
   const setText = (id, value) => {
