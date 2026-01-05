@@ -492,45 +492,86 @@ async def get_system_config(current_user: Dict[str, Any] = Depends(get_current_a
 
 @router.post("/config")
 async def update_system_config(
-    config: Dict[str, Any],
+    request: Request,
     current_user: Dict[str, Any] = Depends(get_current_active_user)
 ):
     """Actualiza la configuración del sistema (acepta múltiples valores en un objeto JSON)"""
     try:
-        if not config or not isinstance(config, dict):
+        # Obtener el body como JSON
+        try:
+            body = await request.json()
+        except Exception as e:
+            logger.error(f"Error parseando JSON: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=get_text("errors.invalid_json", default="Invalid JSON in request body")
+            )
+        
+        # Validar que sea un diccionario
+        if not isinstance(body, dict):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=get_text("errors.invalid_config", default="Invalid configuration data")
             )
         
-        updated_keys = []
-        for key, value in config.items():
-            # Convertir valores a string para almacenar
-            value_str = str(value) if value is not None else ""
-            success = await db.set_configuration(key, value_str)
-            if success:
-                updated_keys.append(key)
-                # Log del cambio de configuración
-                await db.insert_log("INFO", f"Configuración actualizada: {key}={value_str} por {current_user.get('username', 'unknown')}")
-        
-        if not updated_keys:
+        if not body:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=get_text("errors.config_update_error", default="Error actualizando configuración")
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=get_text("errors.empty_config", default="Configuration data is empty")
             )
         
+        updated_keys = []
+        errors = []
+        
+        for key, value in body.items():
+            try:
+                # Convertir valores a string para almacenar
+                # Manejar valores booleanos, None, etc.
+                if value is None:
+                    value_str = ""
+                elif isinstance(value, bool):
+                    value_str = str(value).lower()
+                else:
+                    value_str = str(value)
+                
+                success = await db.set_configuration(key, value_str)
+                if success:
+                    updated_keys.append(key)
+                    # Log del cambio de configuración
+                    try:
+                        await db.insert_log("INFO", f"Configuración actualizada: {key}={value_str} por {current_user.get('username', 'unknown')}")
+                    except Exception as log_error:
+                        logger.warning(f"Error insertando log: {str(log_error)}")
+                else:
+                    errors.append(f"Error guardando {key}")
+            except Exception as e:
+                logger.error(f"Error procesando clave {key}: {str(e)}")
+                errors.append(f"Error procesando {key}: {str(e)}")
+        
+        if not updated_keys:
+            error_msg = "; ".join(errors) if errors else get_text("errors.config_update_error", default="Error actualizando configuración")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=error_msg
+            )
+        
+        response_msg = get_text("messages.config_updated", default="Configuración actualizada exitosamente")
+        if errors:
+            response_msg += f" (Algunos errores: {', '.join(errors)})"
+        
         return {
-            "message": get_text("messages.config_updated", default="Configuración actualizada exitosamente"),
-            "updated_keys": updated_keys
+            "message": response_msg,
+            "updated_keys": updated_keys,
+            "errors": errors if errors else None
         }
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error actualizando configuración: {str(e)}")
+        logger.error(f"Error actualizando configuración: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=get_text("errors.config_update_error", default="Error actualizando configuración")
+            detail=get_text("errors.config_update_error", default=f"Error actualizando configuración: {str(e)}")
         )
 
 @router.get("/activity")
