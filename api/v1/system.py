@@ -582,6 +582,34 @@ async def update_system_config(
                 if success:
                     updated_keys.append(key)
                     logger.info(f"Configuración guardada exitosamente: {key}")
+
+                    # Aplicar zona horaria al sistema si corresponde
+                    if key == "timezone" and value_str:
+                        try:
+                            tz = value_str.strip()
+                            if not _is_valid_timezone_name(tz):
+                                errors.append(get_text("settings.timezone_invalid", default="Zona horaria inválida"))
+                            elif not os.path.isfile(f"/usr/share/zoneinfo/{tz}"):
+                                errors.append(get_text("settings.timezone_not_found", default="Zona horaria no encontrada"))
+                            else:
+                                from core.async_utils import run_subprocess_async
+                                rc, out, err = await run_subprocess_async(
+                                    ["sudo", "/usr/local/sbin/hostberry-safe/set-timezone", tz],
+                                    timeout=20
+                                )
+                                if rc != 0:
+                                    combined = (err or out or "").strip()
+                                    # Mensaje más útil si falta permisos sudo
+                                    if "sudo" in combined.lower() and ("password" in combined.lower() or "a password is required" in combined.lower()):
+                                        errors.append(get_text("update.sudo_error", default="Permisos insuficientes (sudo requerido)"))
+                                    else:
+                                        errors.append(get_text("settings.timezone_apply_failed", default="No se pudo aplicar la zona horaria al sistema"))
+                                        if combined:
+                                            logger.warning(f"Error aplicando timezone al sistema: {combined}")
+                        except Exception as tz_err:
+                            logger.warning(f"Excepción aplicando timezone al sistema: {tz_err}")
+                            errors.append(get_text("settings.timezone_apply_failed", default="No se pudo aplicar la zona horaria al sistema"))
+
                     # Log del cambio de configuración
                     try:
                         await db.insert_log("INFO", f"Configuración actualizada: {key}={value_str} por {current_user.get('username', 'unknown')}")
