@@ -53,10 +53,11 @@
                             <label for="timezone" class="form-label text-white text-center mb-2 w-100">{{ t('settings.timezone', 'Timezone') }}</label>
                             <div class="timezone-selector-wrapper position-relative" style="max-width: 300px; width: 100%;">
                                 <input type="text" 
-                                       class="form-control bg-dark text-white border-secondary text-center" 
+                                       class="form-control bg-white text-dark border-secondary text-center" 
                                        id="timezone_search" 
                                        placeholder="{{ t('settings.search_timezone', 'Search timezone...') }}"
-                                       autocomplete="off">
+                                       autocomplete="off"
+                                       style="background-color: #ffffff !important;">
                                 <input type="hidden" id="timezone" name="timezone" value="{{ (settings.timezone if settings else 'UTC') or 'UTC' }}">
                                 <div class="timezone-dropdown bg-dark border border-secondary rounded mt-1 position-absolute w-100" 
                                      id="timezone_dropdown" 
