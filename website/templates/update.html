@@ -481,12 +481,12 @@
       const systemResp = await HostBerry.apiRequest('/api/v1/system/updates/execute', { method: 'POST' });
       if(!systemResp || !systemResp.ok){
         const errorText = systemResp ? await systemResp.text() : 'No response';
-        throw new Error(errorText || getTranslation('update.system_failed', 'Error actualizando sistema'));
+        throw new Error(errorText || getTranslation('update.system_failed', 'Error updating system'));
       }
-      addLogEntry(getTranslation('update.system_updated', 'Sistema actualizado'), 'success');
+      addLogEntry(getTranslation('update.system_updated', 'System updated'), 'success');
       
       // Luego actualizar el proyecto
-      addLogEntry(getTranslation('update.updating_project', 'Actualizando proyecto...'), 'info');
+      addLogEntry(getTranslation('update.updating_project', 'Updating project...'), 'info');
       const projectResp = await HostBerry.apiRequest('/api/v1/system/updates/project', { method: 'POST' });
       if(!projectResp || !projectResp.ok){
         const errorText = projectResp ? await projectResp.text() : 'No response';
