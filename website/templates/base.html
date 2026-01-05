@@ -130,6 +130,13 @@
     <script id="i18n-json" type="application/json">{{ translations|tojson }}</script>
     {% endif %}
 
+    {% if settings %}
+    <script>
+      // Settings globales provenientes del backend (DB): language/theme/timezone
+      window.HostBerryServerSettings = {{ settings|tojson }};
+    </script>
+    {% endif %}
+
     <script src="/static/js/common.js"></script>
     <script src="/static/js/theme.js"></script>
     
