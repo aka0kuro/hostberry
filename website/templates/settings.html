@@ -223,16 +223,6 @@
                 <div class="card-body px-4 pb-4">
                     <form id="securityConfigForm">
                         <div class="mb-3">
-                            <label class="form-label text-white">{{ t('settings.ssl', 'SSL/TLS') }}</label>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="ssl_enabled" name="ssl_enabled" {{ 'checked' if (security_config.ssl_enabled if security_config else False) else '' }}>
-                                <label class="form-check-label text-white" for="ssl_enabled">
-                                    {{ t('settings.enable_ssl', 'Enable SSL/TLS') }}
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
                             <label for="max_login_attempts" class="form-label text-white">{{ t('settings.max_login_attempts', 'Max Login Attempts') }}</label>
                             <input type="number" class="form-control bg-dark text-white border-secondary" id="max_login_attempts" name="max_login_attempts" value="{{ security_config.max_login_attempts if security_config else 3 }}" min="1" max="10">
                         </div>
