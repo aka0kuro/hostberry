@@ -198,80 +198,64 @@
             </div>
         </div>
 
-        <!-- Configuración de Seguridad -->
-        <div class="col-lg-6 col-md-12 mb-4">
+        <!-- Configuración de Red -->
+        <div class="col-lg-6 col-md-12 settings-card">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
                     <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
-                        <i class="bi bi-shield-check me-2"></i>{{ t('settings.security', 'Security') }}
+                        <i class="bi bi-wifi me-2"></i>{{ t('settings.network', 'Network') }}
                     </h5>
                 </div>
                 <div class="card-body px-4 pb-4">
-                    <form id="securityConfigForm">
+                    <form id="networkConfigForm">
                         <div class="mb-3">
-                            <label class="form-label text-white">{{ t('settings.ssl', 'SSL/TLS') }}</label>
+                            <label class="form-label text-white">{{ t('settings.dhcp_server', 'DHCP Server') }}</label>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="ssl_enabled" name="ssl_enabled" {{ 'checked' if (security_config.ssl_enabled if security_config else False) else '' }}>
-                                <label class="form-check-label text-white" for="ssl_enabled">
-                                    {{ t('settings.enable_ssl', 'Enable SSL/TLS') }}
+                                <input class="form-check-input" type="checkbox" id="dhcp_enabled" name="dhcp_enabled" {{ 'checked' if (network_config.dhcp_enabled if network_config else False) else '' }}>
+                                <label class="form-check-label text-white" for="dhcp_enabled">
+                                    {{ t('settings.enable_dhcp', 'Enable DHCP server') }}
                                 </label>
                             </div>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label for="max_login_attempts" class="form-label text-white">{{ t('settings.max_login_attempts', 'Max Login Attempts') }}</label>
-                            <input type="number" class="form-control bg-dark text-white border-secondary" id="max_login_attempts" name="max_login_attempts" value="{{ security_config.max_login_attempts if security_config else 3 }}" min="1" max="10">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="session_timeout" class="form-label text-white">{{ t('settings.session_timeout', 'Session Timeout') }}</label>
-                            <input type="number" class="form-control bg-dark text-white border-secondary" id="session_timeout" name="session_timeout" value="{{ security_config.session_timeout if security_config else 30 }}" min="5" max="1440">
-                            <small class="text-white-50">{{ t('settings.minutes', 'minutes') }}</small>
-                        </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle me-2"></i>
-                                {{ t('common.save', 'Save') }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
 
-        <!-- Configuración de Rendimiento -->
-        <div class="col-lg-6 col-md-12 mb-4">
-            <div class="card h-100 glass-card border-0">
-                <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
-                    <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
-                        <i class="bi bi-speedometer2 me-2"></i>{{ t('settings.performance', 'Performance') }}
-                    </h5>
-                </div>
-                <div class="card-body px-4 pb-4">
-                    <form id="performanceConfigForm">
-                        <div class="mb-3">
-                            <label class="form-label text-white">{{ t('settings.cache', 'Cache') }}</label>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="cache_enabled" name="cache_enabled" {{ 'checked' if (performance_config.cache_enabled if performance_config else True) else '' }}>
-                                <label class="form-check-label text-white" for="cache_enabled">
-                                    {{ t('settings.enable_cache', 'Enable cache') }}
-                                </label>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="dhcp_interface" class="form-label text-white">{{ t('settings.dhcp_interface', 'DHCP Interface') }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_interface" name="dhcp_interface" value="{{ network_config.dhcp_interface if network_config else 'eth0' }}" placeholder="eth0">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="dhcp_range_start" class="form-label text-white">{{ t('settings.dhcp_range_start', 'Range Start') }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_range_start" name="dhcp_range_start" value="{{ network_config.dhcp_range_start if network_config else '' }}" placeholder="192.168.1.100">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="dhcp_range_end" class="form-label text-white">{{ t('settings.dhcp_range_end', 'Range End') }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_range_end" name="dhcp_range_end" value="{{ network_config.dhcp_range_end if network_config else '' }}" placeholder="192.168.1.200">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="dhcp_gateway" class="form-label text-white">{{ t('settings.dhcp_gateway', 'Gateway (router)') }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_gateway" name="dhcp_gateway" value="{{ network_config.dhcp_gateway if network_config else '' }}" placeholder="192.168.1.1">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="dhcp_lease_time" class="form-label text-white">{{ t('settings.dhcp_lease_time', 'Lease Time') }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_lease_time" name="dhcp_lease_time" value="{{ network_config.dhcp_lease_time if network_config else '12h' }}" placeholder="12h">
+                                <small class="text-white-50">{{ t('settings.dhcp_lease_hint', 'Example: 12h, 30m, 1d') }}</small>
                             </div>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="cache_size" class="form-label text-white">{{ t('settings.cache_size', 'Cache Size') }}</label>
-                            <input type="number" class="form-control bg-dark text-white border-secondary" id="cache_size" name="cache_size" value="{{ performance_config.cache_size if performance_config else 50 }}" min="10" max="500">
-                            <small class="text-white-50">{{ t('settings.mb', 'MB') }}</small>
+                            <label for="dns_server" class="form-label text-white">{{ t('settings.dns_server', 'DNS Server') }}</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="dns_server" name="dns_server" value="{{ network_config.dns_server if network_config else '8.8.8.8' }}">
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label text-white">{{ t('settings.compression', 'Compression') }}</label>
+                            <label class="form-label text-white">{{ t('settings.firewall', 'Firewall') }}</label>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="compression_enabled" name="compression_enabled" {{ 'checked' if (performance_config.compression_enabled if performance_config else True) else '' }}>
-                                <label class="form-check-label text-white" for="compression_enabled">
-                                    {{ t('settings.enable_compression', 'Enable compression') }}
+                                <input class="form-check-input" type="checkbox" id="firewall_enabled" name="firewall_enabled" {{ 'checked' if (network_config.firewall_enabled if network_config else True) else '' }}>
+                                <label class="form-check-label text-white" for="firewall_enabled">
+                                    {{ t('settings.enable_firewall', 'Enable firewall') }}
                                 </label>
                             </div>
                         </div>
@@ -288,7 +272,7 @@
         </div>
 
         <!-- Configuración de Notificaciones -->
-        <div class="col-lg-6 col-md-12 mb-4">
+        <div class="col-lg-6 col-md-12 settings-card">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
                     <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
