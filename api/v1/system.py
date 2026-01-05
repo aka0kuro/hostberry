@@ -24,6 +24,25 @@ from core.i18n import get_text
 router = APIRouter()
 logger = get_logger("system")
 
+
+def _is_valid_timezone_name(tz: str) -> bool:
+    """Validación defensiva para nombres de zona horaria tipo 'Area/City'."""
+    if not isinstance(tz, str):
+        return False
+    tz = tz.strip()
+    if not tz:
+        return False
+    if tz.startswith("/") or ".." in tz:
+        return False
+    if "\n" in tz or "\r" in tz:
+        return False
+    # Permitir letras/números y separadores típicos
+    for ch in tz:
+        if ch.isalnum() or ch in ("/", "_", "-", "+"):
+            continue
+        return False
+    return True
+
 @router.get("/stats")
 async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_current_active_user)):
     """Obtiene estadísticas del sistema (con caché)"""
