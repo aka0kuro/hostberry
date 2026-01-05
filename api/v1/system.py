@@ -574,7 +574,7 @@ async def update_system_config(
         
         for key, value in body.items():
             try:
-            # Convertir valores a string para almacenar
+                # Convertir valores a string para almacenar
                 # Manejar valores booleanos, None, etc.
                 if value is None:
                     value_str = ""
@@ -593,9 +593,9 @@ async def update_system_config(
                     continue
                 
                 logger.debug(f"Guardando configuración: {key}={value_str}")
-            success = await db.set_configuration(key, value_str)
+                success = await db.set_configuration(key, value_str)
                 
-            if success:
+                if success:
                 updated_keys.append(key)
                     logger.info(f"Configuración guardada exitosamente: {key}")
 
