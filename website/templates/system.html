@@ -589,6 +589,44 @@
     }
   }
 
+  async function updateSystem(){
+    try{
+      const confirmMsg = HostBerry.t?.('update.system_confirm', '¿Actualizar el sistema Debian?') || '¿Actualizar el sistema Debian?';
+      if(!confirm(confirmMsg)) return;
+      
+      HostBerry.showAlert?.('info', HostBerry.t?.('update.updating_system', 'Actualizando sistema...') || 'Actualizando sistema...');
+      const resp = await HostBerry.apiRequest('/api/v1/system/updates/execute', { method: 'POST' });
+      if(!resp || !resp.ok) {
+        const errorData = await resp.json().catch(() => ({}));
+        throw new Error(errorData.detail || HostBerry.t?.('update.system_failed', 'Error al actualizar el sistema') || 'Error al actualizar el sistema');
+      }
+      const payload = await resp.json();
+      HostBerry.showAlert?.('success', payload.message || HostBerry.t?.('update.system_success', 'Sistema actualizado correctamente') || 'Sistema actualizado correctamente');
+    }catch(error){
+      console.error('System update failed', error);
+      HostBerry.showAlert?.('danger', error.message || HostBerry.t?.('update.system_failed', 'Error al actualizar el sistema') || 'Error al actualizar el sistema');
+    }
+  }
+
+  async function updateProject(){
+    try{
+      const confirmMsg = HostBerry.t?.('update.project_confirm', '¿Actualizar el proyecto HostBerry?') || '¿Actualizar el proyecto HostBerry?';
+      if(!confirm(confirmMsg)) return;
+      
+      HostBerry.showAlert?.('info', HostBerry.t?.('update.updating_project', 'Actualizando proyecto...') || 'Actualizando proyecto...');
+      const resp = await HostBerry.apiRequest('/api/v1/system/updates/project', { method: 'POST' });
+      if(!resp || !resp.ok) {
+        const errorData = await resp.json().catch(() => ({}));
+        throw new Error(errorData.detail || HostBerry.t?.('update.project_failed', 'Error al actualizar el proyecto') || 'Error al actualizar el proyecto');
+      }
+      const payload = await resp.json();
+      HostBerry.showAlert?.('success', payload.message || HostBerry.t?.('update.project_success', 'Proyecto actualizado correctamente') || 'Proyecto actualizado correctamente');
+    }catch(error){
+      console.error('Project update failed', error);
+      HostBerry.showAlert?.('danger', error.message || HostBerry.t?.('update.project_failed', 'Error al actualizar el proyecto') || 'Error al actualizar el proyecto');
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', function(){
     fetchSystemStats();
     loadServices();
