@@ -148,7 +148,9 @@
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="dhcp_interface" class="form-label text-white">{{ t('settings.dhcp_interface', 'DHCP Interface') }}</label>
-                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_interface" name="dhcp_interface" value="{{ network_config.dhcp_interface if network_config else 'eth0' }}" placeholder="eth0">
+                                <select class="form-select bg-dark text-white border-secondary text-center" id="dhcp_interface" name="dhcp_interface">
+                                    <option value="">{{ t('settings.loading_interfaces', 'Loading interfaces...') }}</option>
+                                </select>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label for="dhcp_range_start" class="form-label text-white">{{ t('settings.dhcp_range_start', 'Range Start') }}</label>
