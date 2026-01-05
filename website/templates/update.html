@@ -575,13 +575,20 @@
     if (refreshBtn) refreshBtn.addEventListener('click', checkUpdates);
   }
   
-  // Inicializar cuando el DOM esté listo
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initUpdatePage);
-  } else {
-    // DOM ya está listo
-    initUpdatePage();
+  // Esperar a que HostBerry esté disponible y luego inicializar
+  function startInit() {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        waitForHostBerry(initUpdatePage);
+      });
+    } else {
+      // DOM ya está listo
+      waitForHostBerry(initUpdatePage);
+    }
   }
+  
+  // Iniciar
+  startInit();
 })();
 </script>
 <style>
