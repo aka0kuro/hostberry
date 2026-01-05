@@ -1117,6 +1117,7 @@
     "checking": "Verificando actualizaciones...",
     "check_failed": "Error verificando actualizaciones",
     "check_error": "Error verificando actualizaciones",
+    "sudo_error": "Error de permisos. Verifica que el usuario tenga permisos sudo sin contraseña configurados. Ejecuta: sudo visudo y agrega: usuario ALL=(ALL) NOPASSWD: ALL",
     "updates_available": "Actualizaciones disponibles",
     "system_updated": "El sistema está actualizado",
     "system_confirm": "¿Estás seguro de que deseas actualizar el sistema Debian? Esto puede tardar varios minutos.",
