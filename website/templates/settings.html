@@ -666,6 +666,60 @@
   loadSystemInfo();
   // Actualizar cada 30 segundos
   setInterval(loadSystemInfo, 30000);
+
+  // Cargar interfaces de red para el desplegable DHCP
+  async function loadNetworkInterfaces() {
+    const select = document.getElementById('dhcp_interface');
+    if (!select) return;
+
+    try {
+      const resp = await HostBerry.apiRequest('/api/v1/system/network/interfaces', {
+        method: 'GET'
+      });
+
+      if (resp && resp.ok) {
+        const interfaces = await resp.json().catch(() => []);
+        
+        // Limpiar opciones existentes
+        select.innerHTML = '';
+        
+        // Obtener el valor actual del formulario (desde el template)
+        const currentValue = '{{ network_config.dhcp_interface if network_config else "eth0" }}';
+        
+        if (interfaces && interfaces.length > 0) {
+          // Agregar cada interfaz como opción
+          interfaces.forEach(iface => {
+            const option = document.createElement('option');
+            option.value = iface.name;
+            option.textContent = `${iface.name}${iface.ip && iface.ip !== 'N/A' ? ` (${iface.ip})` : ''}`;
+            if (iface.name === currentValue || (currentValue === 'eth0' && iface.name === 'eth0' && !select.value)) {
+              option.selected = true;
+            }
+            select.appendChild(option);
+          });
+        } else {
+          // Fallback si no hay interfaces
+          const option = document.createElement('option');
+          option.value = currentValue || 'eth0';
+          option.textContent = currentValue || 'eth0';
+          option.selected = true;
+          select.appendChild(option);
+        }
+      } else {
+        // Fallback en caso de error
+        const currentValue = '{{ network_config.dhcp_interface if network_config else "eth0" }}';
+        select.innerHTML = `<option value="${currentValue || 'eth0'}" selected>${currentValue || 'eth0'}</option>`;
+      }
+    } catch (error) {
+      console.error('Error loading network interfaces:', error);
+      // Fallback en caso de error
+      const currentValue = '{{ network_config.dhcp_interface if network_config else "eth0" }}';
+      select.innerHTML = `<option value="${currentValue || 'eth0'}" selected>${currentValue || 'eth0'}</option>`;
+    }
+  }
+
+  // Cargar interfaces al iniciar
+  loadNetworkInterfaces();
 })();
 </script>
 {% endblock %}
