@@ -192,12 +192,12 @@ async def get_network_statistics(
         
         requested_interface = interface
         
-        # Verificar caché
-        cache_key = f"network_stats_{interface or 'default'}"
-        cached_stats = cache.get(cache_key)
-        if cached_stats:
-            # Devolver directamente el dict del caché
-            return cached_stats
+        # NO usar caché para estadísticas de red - necesitamos valores frescos para calcular velocidades
+        # El caché causa que las velocidades siempre sean 0 porque devuelve los mismos valores
+        # cache_key = f"network_stats_{interface or 'default'}"
+        # cached_stats = cache.get(cache_key)
+        # if cached_stats:
+        #     return cached_stats
         
         # Lazy import de psutil
         import psutil
