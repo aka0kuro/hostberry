@@ -104,16 +104,34 @@
   async function apiRequest(url, options){
     const opts = Object.assign({ method: 'GET', headers: {} }, options || {});
     const headers = new Headers(opts.headers);
+    
+    // Auth token
     if(!headers.has('Authorization')){
       const token = localStorage.getItem('access_token');
       if(token) headers.set('Authorization', 'Bearer ' + token);
     }
-    if(!headers.has('Content-Type') && opts.body && typeof opts.body === 'object'){
-      headers.set('Content-Type', 'application/json');
+    
+    // JSON body handling
+    if(opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)){
+      if(!headers.has('Content-Type')){
+        headers.set('Content-Type', 'application/json');
+      }
+      opts.body = JSON.stringify(opts.body);
     }
+    
     opts.headers = headers;
-    const resp = await fetch(url, opts);
-    return resp;
+    try {
+      const resp = await fetch(url, opts);
+      if(resp.status === 401 && !url.includes('/auth/login')){
+        // Auto logout on unauthorized
+        localStorage.removeItem('access_token');
+        window.location.href = '/login?error=session_expired';
+      }
+      return resp;
+    } catch (e) {
+      console.error('API Request failed:', e);
+      throw e;
+    }
   }
 
   // Export
