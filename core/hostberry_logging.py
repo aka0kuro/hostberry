@@ -125,9 +125,19 @@ class MultiLanguageLogger:
     
     def setup_loggers(self):
         """Configura los loggers para diferentes idiomas"""
-        # Crear directorio de logs si no existe
-        log_dir = Path(settings.log_file).parent
-        log_dir.mkdir(parents=True, exist_ok=True)
+        # Crear directorio de logs si no existe. Ojo: puede fallar si /var/log/... no es escribible.
+        log_file = getattr(settings, "log_file", "/var/log/hostberry/hostberry.log")
+        log_dir = Path(log_file).parent
+        try:
+            log_dir.mkdir(parents=True, exist_ok=True)
+        except PermissionError:
+            # Fallback: escribir en /tmp si no se puede crear /var/log/...
+            log_file = "/tmp/hostberry.log"
+            log_dir = Path(log_file).parent
+        except Exception:
+            # Fallback genérico
+            log_file = "/tmp/hostberry.log"
+            log_dir = Path(log_file).parent
         
         # Configurar logger principal
         self.logger = logging.getLogger(self.name)
@@ -135,15 +145,25 @@ class MultiLanguageLogger:
         
         # Evitar duplicación de handlers
         if not self.logger.handlers:
-            # Handler para archivo
-            file_handler = logging.handlers.RotatingFileHandler(
-                settings.log_file,
-                maxBytes=settings.log_max_size,
-                backupCount=settings.log_backup_count,
-                encoding='utf-8'
-            )
-            file_handler.setFormatter(JSONFormatter())
-            self.logger.addHandler(file_handler)
+            # Handler para archivo (con fallback si hay permisos)
+            try:
+                file_handler = logging.handlers.RotatingFileHandler(
+                    log_file,
+                    maxBytes=getattr(settings, "log_max_size", 5 * 1024 * 1024),
+                    backupCount=getattr(settings, "log_backup_count", 3),
+                    encoding='utf-8'
+                )
+                file_handler.setFormatter(JSONFormatter())
+                self.logger.addHandler(file_handler)
+            except PermissionError:
+                # Si no podemos escribir en el log, no rompemos la app: usamos stdout.
+                console_handler = logging.StreamHandler(sys.stdout)
+                console_handler.setFormatter(JSONFormatter())
+                self.logger.addHandler(console_handler)
+            except Exception:
+                console_handler = logging.StreamHandler(sys.stdout)
+                console_handler.setFormatter(JSONFormatter())
+                self.logger.addHandler(console_handler)
             
             # Handler para consola solo en modo debug
             if settings.debug:
