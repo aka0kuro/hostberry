@@ -753,33 +753,52 @@ async def check_updates(current_user: Dict[str, Any] = Depends(get_current_activ
             timeout=60
         )
         
-        if returncode == 0:
-            # Buscar actualizaciones disponibles
-            returncode2, stdout2, stderr2 = await run_subprocess_async(
-                ["sudo", "apt", "list", "--upgradable"],
-                timeout=30
-            )
-            result = type('obj', (object,), {'returncode': returncode2, 'stdout': stdout2})()
+        if returncode != 0:
+            error_msg = stderr.strip() if stderr else stdout.strip() if stdout else "Error desconocido"
+            logger.error(f"Error ejecutando 'apt update': returncode={returncode}, stderr={error_msg}")
+            await db.insert_log("ERROR", f"Error buscando actualizaciones: {error_msg[:200]}")
             
-            updates = result.stdout.strip().split('\n') if result.stdout.strip() else []
-            # Filtrar líneas vacías y la primera línea que suele ser un encabezado
-            filtered_updates = [line for line in updates if line.strip() and not line.startswith('Listing')]
-            update_count = len(filtered_updates)
+            # Verificar si es un error de permisos
+            if "sudo" in error_msg.lower() or "permission denied" in error_msg.lower() or "not allowed" in error_msg.lower():
+                detail_msg = get_text("update.sudo_error", default="Error de permisos. Verifica que el usuario tenga permisos sudo sin contraseña configurados.")
+            else:
+                detail_msg = f"{get_text('update.check_error', default='Error checking updates')}: {error_msg[:200]}"
             
-            await db.insert_log("INFO", f"Actualizaciones disponibles: {update_count}")
-            
-            return {
-                "updates_available": update_count > 0,
-                "update_count": update_count,
-                "updates": filtered_updates[:20]  # Limitar a 20 actualizaciones
-            }
-        else:
-            await db.insert_log("ERROR", "Error buscando actualizaciones")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=get_text("update.check_error", default="Error checking updates")
+                detail=detail_msg
             )
         
+        # Buscar actualizaciones disponibles
+        returncode2, stdout2, stderr2 = await run_subprocess_async(
+            ["sudo", "apt", "list", "--upgradable"],
+            timeout=30
+        )
+        
+        if returncode2 != 0:
+            error_msg = stderr2.strip() if stderr2 else stdout2.strip() if stdout2 else "Error desconocido"
+            logger.error(f"Error ejecutando 'apt list --upgradable': returncode={returncode2}, stderr={error_msg}")
+            await db.insert_log("ERROR", f"Error listando actualizaciones: {error_msg[:200]}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"{get_text('update.check_error', default='Error checking updates')}: {error_msg[:200]}"
+            )
+        
+        updates = stdout2.strip().split('\n') if stdout2.strip() else []
+        # Filtrar líneas vacías y la primera línea que suele ser un encabezado
+        filtered_updates = [line for line in updates if line.strip() and not line.startswith('Listing')]
+        update_count = len(filtered_updates)
+        
+        await db.insert_log("INFO", f"Actualizaciones disponibles: {update_count}")
+        
+        return {
+            "updates_available": update_count > 0,
+            "update_count": update_count,
+            "updates": filtered_updates[:20]  # Limitar a 20 actualizaciones
+        }
+        
+    except HTTPException:
+        raise
     except TimeoutError:
         await db.insert_log("ERROR", "Timeout buscando actualizaciones")
         raise HTTPException(
@@ -787,11 +806,11 @@ async def check_updates(current_user: Dict[str, Any] = Depends(get_current_activ
             detail=get_text("update.check_error", default="Error checking updates")
         )
     except Exception as e:
-        logger.error(f"Error buscando actualizaciones: {str(e)}")
+        logger.error(f"Error buscando actualizaciones: {str(e)}", exc_info=True)
         await db.insert_log("ERROR", f"Error en actualizaciones: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=get_text("update.check_error", default="Error checking updates")
+            detail=f"{get_text('update.check_error', default='Error checking updates')}: {str(e)[:200]}"
         )
 
 @router.post("/updates/execute")
