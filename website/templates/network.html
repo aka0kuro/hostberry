@@ -254,22 +254,28 @@
     const container = document.getElementById('interfacesContainer'); 
     if(!container) return;
     
-    if(!interfaces || interfaces.length===0){ 
-        container.innerHTML = '<p class="text-muted">'+HostBerry.t('network.no_interfaces', 'No interfaces found')+'</p>'; 
+    if(!interfaces || !Array.isArray(interfaces) || interfaces.length===0){ 
+        container.innerHTML = '<p class="text-muted text-center">'+HostBerry.t('network.no_interfaces', 'No interfaces found')+'</p>'; 
         return; 
     }
     
+    console.log('Displaying interfaces:', interfaces);
+    
     let html='<div class="table-responsive"><table class="table table-dark table-hover"><thead><tr><th class="text-center">'+HostBerry.t('network.interface', 'Interface')+'</th><th class="text-center">'+HostBerry.t('network.status', 'Status')+'</th><th class="text-center">'+HostBerry.t('network.ip_address', 'IP Address')+'</th><th class="text-center">'+HostBerry.t('network.mac_address', 'MAC Address')+'</th></tr></thead><tbody>';
     interfaces.forEach(function(iface){
-        const isUp = (iface.status === 'up' || iface.status === 'connected' || iface.connected === true);
+        if(!iface) return;
+        const isUp = (iface.status === 'up' || iface.status === 'connected' || iface.connected === true || (iface.status && iface.status.toLowerCase() === 'up'));
         const statusClass = isUp ? 'success' : 'danger'; 
         const statusIcon = isUp ? 'bi-check-circle' : 'bi-x-circle';
         const statusText = isUp ? HostBerry.t('network.connected', 'Connected') : HostBerry.t('network.disconnected', 'Disconnected');
+        const ifaceName = iface.name || iface.interface || 'Unknown';
+        const ifaceIp = iface.ip || iface.ip_address || 'N/A';
+        const ifaceMac = iface.mac || iface.mac_address || 'N/A';
         html += '<tr>'
-            +'<td class="text-center text-white"><strong>'+iface.name+'</strong></td>'
+            +'<td class="text-center text-white"><strong>'+ifaceName+'</strong></td>'
             +'<td class="text-center"><span class="badge bg-'+statusClass+'"><i class="bi '+statusIcon+'"></i> '+statusText+'</span></td>'
-            +'<td class="text-center text-white">'+(iface.ip||'N/A')+'</td>'
-            +'<td class="text-center text-white">'+(iface.mac||'N/A')+'</td>'
+            +'<td class="text-center text-white">'+ifaceIp+'</td>'
+            +'<td class="text-center text-white">'+ifaceMac+'</td>'
             +'</tr>';
     });
     html += '</tbody></table></div>';
