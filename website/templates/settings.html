@@ -740,6 +740,27 @@
 
   // Cargar interfaces al iniciar
   loadNetworkInterfaces();
+
+  // Separar DNS actual en primario y secundario
+  function loadDNSValues() {
+    const dnsServerValue = '{{ network_config.dns_server if network_config else "8.8.8.8" }}';
+    const dnsPrimaryInput = document.getElementById('dns_primary');
+    const dnsSecondaryInput = document.getElementById('dns_secondary');
+    
+    if (dnsServerValue && dnsPrimaryInput && dnsSecondaryInput) {
+      // Separar por coma o espacio
+      const parts = dnsServerValue.split(/[,\s]+/).map(p => p.trim()).filter(p => p);
+      if (parts.length > 0) {
+        dnsPrimaryInput.value = parts[0];
+      }
+      if (parts.length > 1) {
+        dnsSecondaryInput.value = parts[1];
+      }
+    }
+  }
+
+  // Cargar valores DNS al iniciar
+  loadDNSValues();
 })();
 </script>
 {% endblock %}
