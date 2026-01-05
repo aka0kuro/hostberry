@@ -192,9 +192,10 @@ async def get_network_statistics(
         
         requested_interface = interface
         
-        # NO usar caché para estadísticas de red - necesitamos valores frescos para calcular velocidades
-        # El caché causa que las velocidades siempre sean 0 porque devuelve los mismos valores
-        # cache_key = f"network_stats_{interface or 'default'}"
+        # Usar caché con TTL muy corto (1 segundo) para estadísticas de red
+        # Necesitamos valores frescos para calcular velocidades, pero el caché ayuda con rendimiento
+        cache_key = f"network_stats_{interface or 'default'}"
+        # No usar caché para permitir cálculos de velocidad precisos
         # cached_stats = cache.get(cache_key)
         # if cached_stats:
         #     return cached_stats
