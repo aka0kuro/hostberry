@@ -48,16 +48,15 @@
                         <i class="bi bi-cpu me-2"></i>{{ t('monitoring.cpu_usage', 'CPU Usage') }}
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body text-center">
                     <div class="text-center mb-2">
                         <h2 class="text-white mb-0" id="cpu-usage">0%</h2>
                     </div>
                     <div class="progress mb-2" style="height: 8px;">
                         <div id="cpu-progress" class="progress-bar bg-info" style="width:0%"></div>
                     </div>
-                    <div class="d-flex justify-content-between text-white-50 small">
-                        <span>{{ t('monitoring.cores', 'Cores') }}: <strong id="cpu-cores">-</strong></span>
-                        <span>{{ t('monitoring.temp', 'Temp') }}: <strong id="cpu-temp">--°C</strong></span>
+                    <div class="text-white-50 small">
+                        <span>{{ t('monitoring.cores', 'Cores') }}: <strong id="cpu-cores">-</strong> · {{ t('monitoring.temp', 'Temp') }}: <strong id="cpu-temp">--°C</strong></span>
                     </div>
                 </div>
             </div>
