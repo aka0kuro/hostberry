@@ -633,10 +633,10 @@
     async function updateStats() {
       try {
         // Agregar timestamp para evitar caché del navegador
-        const cacheBuster = `&_t=${Date.now()}`;
+        const networkUrl = `/api/v1/system/network${selectedInterface ? `?interface=${encodeURIComponent(selectedInterface)}` : ''}&_t=${Date.now()}`;
         const [systemStatsResp, networkStatsResp] = await Promise.all([
           fetchJson('/api/v1/system/stats'),
-          fetchJson(`/api/v1/system/network${selectedInterface ? `?interface=${encodeURIComponent(selectedInterface)}` : ''}${cacheBuster}`)
+          fetchJson(networkUrl)
         ]);
         
         let systemStats = systemStatsResp;
