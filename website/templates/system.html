@@ -140,8 +140,8 @@
         <div class="col-12 mb-4">
             <div class="info-card">
                 <div class="info-card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="info-card-title">
+                    <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-2">
+                        <h5 class="info-card-title text-center d-flex justify-content-center align-items-center">
                             <i class="bi bi-info-circle me-2"></i>
                             {{ t('system.information', 'System Information') }}
                         </h5>
@@ -199,7 +199,7 @@
         <div class="col-12 col-md-8 col-lg-6 mb-4">
             <div class="actions-card">
                 <div class="actions-card-header">
-                    <h5 class="actions-card-title">
+                    <h5 class="actions-card-title text-center d-flex justify-content-center align-items-center">
                         <i class="bi bi-lightning me-2"></i>
                         {{ t('system.actions', 'System Actions') }}
                     </h5>
@@ -237,8 +237,8 @@
         <div class="col-12">
             <div class="services-card">
                 <div class="services-card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="services-card-title">
+                    <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-2">
+                        <h5 class="services-card-title text-center d-flex justify-content-center align-items-center">
                             <i class="bi bi-server me-2"></i>
                             {{ t('system.services', 'Services') }}
                         </h5>
@@ -264,15 +264,15 @@
         <div class="col-12">
             <div class="logs-card">
                 <div class="logs-card-header">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <div>
-                            <h5 class="logs-card-title">
+                    <div class="d-flex flex-column flex-md-row justify-content-center align-items-center flex-wrap gap-3">
+                        <div class="text-center">
+                            <h5 class="logs-card-title text-center d-flex justify-content-center align-items-center">
                                 <i class="bi bi-journal-text me-2"></i>
                                 {{ t('system.logs', 'System Logs') }}
                             </h5>
                             <p class="text-white-50 mb-0 small">{{ t('system.logs_caption', 'Recent system events and logs') }}</p>
                         </div>
-                        <div class="d-flex gap-2">
+                        <div class="d-flex justify-content-center align-items-center gap-2">
                             <select class="form-select form-select-sm bg-dark text-white border-secondary" id="logLevel">
                                 <option value="all">{{ t('system.logs_all', 'All') }}</option>
                                 <option value="info">{{ t('system.logs_info', 'Info') }}</option>
