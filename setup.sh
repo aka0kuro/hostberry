@@ -457,6 +457,9 @@ Defaults:hostberry log_year, log_host, syslog=auth
 
 # Zona horaria del sistema (wrapper validado)
 %hostberry ALL=(ALL) NOPASSWD: /usr/local/sbin/hostberry-safe/set-timezone
+%hostberry ALL=(ALL) NOPASSWD: /usr/local/sbin/hostberry-safe/firewall-set
+%hostberry ALL=(ALL) NOPASSWD: /usr/local/sbin/hostberry-safe/set-dns
+%hostberry ALL=(ALL) NOPASSWD: /usr/local/sbin/hostberry-safe/dhcp-set
 
 # Escritura de archivos específicos
 %hostberry ALL=(ALL) NOPASSWD: /usr/bin/tee /etc/nginx/sites-available/hostberry
