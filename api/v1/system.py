@@ -561,6 +561,8 @@ async def update_system_config(
         
         updated_keys = []
         errors = []
+        # Guardar body para aplicar cambios dependientes (p.ej. DHCP) al final
+        original_body = body
         
         # Verificar que db esté disponible
         if not db:
@@ -624,6 +626,50 @@ async def update_system_config(
                             logger.warning(f"Excepción aplicando timezone al sistema: {tz_err}")
                             errors.append(get_text("settings.timezone_apply_failed", default="No se pudo aplicar la zona horaria al sistema"))
 
+                    # Aplicar firewall (UFW) al sistema si corresponde
+                    if key == "firewall_enabled":
+                        try:
+                            desired = str(value_str).strip().lower() in ("1", "true", "yes", "on", "enabled")
+                            from core.async_utils import run_subprocess_async
+                            action = "enable" if desired else "disable"
+                            rc, out, err = await run_subprocess_async(
+                                ["sudo", "/usr/local/sbin/hostberry-safe/firewall-set", action],
+                                timeout=30
+                            )
+                            if rc != 0:
+                                combined = (err or out or "").strip()
+                                errors.append(get_text("settings.firewall_apply_failed", default="No se pudo aplicar el firewall al sistema"))
+                                if combined:
+                                    logger.warning(f"Error aplicando firewall: {combined}")
+                        except Exception as fw_err:
+                            logger.warning(f"Excepción aplicando firewall: {fw_err}")
+                            errors.append(get_text("settings.firewall_apply_failed", default="No se pudo aplicar el firewall al sistema"))
+
+                    # Aplicar DNS al sistema si corresponde
+                    if key == "dns_server" and value_str:
+                        try:
+                            dns = value_str.strip()
+                            # Permitir "8.8.8.8" o "8.8.8.8,1.1.1.1"
+                            parts = [p.strip() for p in re.split(r"[,\s]+", dns) if p.strip()]
+                            dns1 = parts[0] if parts else ""
+                            dns2 = parts[1] if len(parts) > 1 else ""
+                            if not dns1 or not _is_valid_ipv4(dns1) or (dns2 and not _is_valid_ipv4(dns2)):
+                                errors.append(get_text("settings.dns_invalid", default="DNS inválido"))
+                            else:
+                                from core.async_utils import run_subprocess_async
+                                cmd = ["sudo", "/usr/local/sbin/hostberry-safe/set-dns", dns1]
+                                if dns2:
+                                    cmd.append(dns2)
+                                rc, out, err = await run_subprocess_async(cmd, timeout=30)
+                                if rc != 0:
+                                    combined = (err or out or "").strip()
+                                    errors.append(get_text("settings.dns_apply_failed", default="No se pudo aplicar el DNS al sistema"))
+                                    if combined:
+                                        logger.warning(f"Error aplicando DNS: {combined}")
+                        except Exception as dns_err:
+                            logger.warning(f"Excepción aplicando DNS: {dns_err}")
+                            errors.append(get_text("settings.dns_apply_failed", default="No se pudo aplicar el DNS al sistema"))
+
                     # Log del cambio de configuración
                     try:
                         await db.insert_log("INFO", f"Configuración actualizada: {key}={value_str} por {current_user.get('username', 'unknown')}")
@@ -637,6 +683,63 @@ async def update_system_config(
                 error_msg = f"Error procesando clave {key}: {str(e)}"
                 logger.error(error_msg, exc_info=True)
                 errors.append(error_msg)
+
+        # Aplicar DHCP al final (necesita varias claves)
+        try:
+            dhcp_keys = {"dhcp_enabled", "dhcp_interface", "dhcp_range_start", "dhcp_range_end", "dhcp_lease_time", "dhcp_gateway", "dns_server"}
+            if isinstance(original_body, dict) and (dhcp_keys & set(original_body.keys())):
+                # Tomar valores del body si vienen, o de la DB si no
+                dhcp_enabled_raw = original_body.get("dhcp_enabled")
+                if dhcp_enabled_raw is None:
+                    dhcp_enabled_raw = await db.get_configuration("dhcp_enabled")
+
+                dhcp_enabled = str(dhcp_enabled_raw).strip().lower() in ("1", "true", "yes", "on", "enabled")
+
+                iface = str(original_body.get("dhcp_interface") or await db.get_configuration("dhcp_interface") or "eth0").strip()
+                rstart = str(original_body.get("dhcp_range_start") or await db.get_configuration("dhcp_range_start") or "").strip()
+                rend = str(original_body.get("dhcp_range_end") or await db.get_configuration("dhcp_range_end") or "").strip()
+                lease = str(original_body.get("dhcp_lease_time") or await db.get_configuration("dhcp_lease_time") or "12h").strip()
+                gateway = str(original_body.get("dhcp_gateway") or await db.get_configuration("dhcp_gateway") or "").strip()
+
+                # Reusar dns_server como DNS de DHCP si existe
+                dns_for_dhcp = str(original_body.get("dns_server") or await db.get_configuration("dns_server") or "").strip()
+                dns_parts = [p.strip() for p in re.split(r"[,\s]+", dns_for_dhcp) if p.strip()]
+                dns1 = dns_parts[0] if dns_parts else ""
+
+                from core.async_utils import run_subprocess_async
+                if not dhcp_enabled:
+                    rc, out, err = await run_subprocess_async(
+                        ["sudo", "/usr/local/sbin/hostberry-safe/dhcp-set", "disable", iface],
+                        timeout=30
+                    )
+                    if rc != 0:
+                        combined = (err or out or "").strip()
+                        errors.append(get_text("settings.dhcp_apply_failed", default="No se pudo aplicar DHCP al sistema"))
+                        if combined:
+                            logger.warning(f"Error desactivando DHCP: {combined}")
+                else:
+                    # Validaciones mínimas
+                    if not iface:
+                        errors.append(get_text("settings.dhcp_invalid", default="Configuración DHCP inválida"))
+                    elif not rstart or not rend or not _is_valid_ipv4(rstart) or not _is_valid_ipv4(rend):
+                        errors.append(get_text("settings.dhcp_invalid", default="Configuración DHCP inválida"))
+                    elif gateway and not _is_valid_ipv4(gateway):
+                        errors.append(get_text("settings.dhcp_invalid", default="Configuración DHCP inválida"))
+                    elif dns1 and not _is_valid_ipv4(dns1):
+                        errors.append(get_text("settings.dhcp_invalid", default="Configuración DHCP inválida"))
+                    else:
+                        cmd = ["sudo", "/usr/local/sbin/hostberry-safe/dhcp-set", "enable", iface, rstart, rend, lease]
+                        cmd.append(gateway if gateway else "")
+                        cmd.append(dns1 if dns1 else "")
+                        rc, out, err = await run_subprocess_async(cmd, timeout=45)
+                        if rc != 0:
+                            combined = (err or out or "").strip()
+                            errors.append(get_text("settings.dhcp_apply_failed", default="No se pudo aplicar DHCP al sistema"))
+                            if combined:
+                                logger.warning(f"Error activando DHCP: {combined}")
+        except Exception as dhcp_err:
+            logger.warning(f"Excepción aplicando DHCP: {dhcp_err}")
+            errors.append(get_text("settings.dhcp_apply_failed", default="No se pudo aplicar DHCP al sistema"))
         
         if not updated_keys:
             error_msg = "; ".join(errors) if errors else get_text("errors.config_update_error", default="Error actualizando configuración")
