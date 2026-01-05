@@ -190,13 +190,13 @@
         <div class="col-12">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 pt-4 px-4">
-                    <h5 class="card-title mb-0 fw-bold text-white">
+                    <h5 class="card-title mb-0 fw-bold text-white text-center">
                         <i class="bi bi-lightning me-2"></i>
                         {{ t('dashboard.quick_actions', 'Quick Actions') }}
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="quick-actions">
+                    <div class="quick-actions d-flex justify-content-center align-items-center flex-wrap gap-3">
                         <button class="action-btn action-restart" onclick="restartSystem()">
                             <i class="bi bi-arrow-clockwise"></i>
                             <span>{{ t('system.restart', 'Restart') }}</span>
