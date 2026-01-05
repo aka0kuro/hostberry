@@ -180,23 +180,23 @@
 }
 
 .cpu-icon {
-    background: linear-gradient(135deg, #dc3545 0%, #8b0000 100%);
-    color: white;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .memory-icon {
-    background: linear-gradient(135deg, #198754 0%, #0f5132 100%);
-    color: white;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .disk-icon {
-    background: linear-gradient(135deg, #ffc107 0%, #856404 100%);
-    color: white;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .temp-icon {
-    background: linear-gradient(135deg, #0dcaf0 0%, #055160 100%);
-    color: white;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .status-info {
