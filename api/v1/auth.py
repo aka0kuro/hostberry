@@ -20,7 +20,7 @@ from core.security import (
 )
 from core.database import db
 from core.hostberry_logging import logger, log_auth_event, log_user_action, log_security_event
-from core.audit import audit_login_attempt, audit_security_violation
+from core.audit import audit_login_attempt, audit_security_violation, audit_sensitive_operation
 from core.i18n import get_text, i18n
 
 router = APIRouter()
