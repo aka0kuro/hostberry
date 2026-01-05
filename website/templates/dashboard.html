@@ -29,7 +29,7 @@
         <div class="col-xl-3 col-lg-3 col-md-3 col-sm-6 mb-4">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 pt-4 px-4">
-                    <h4 class="card-title mb-0 fw-bold text-white text-center" style="white-space: nowrap;">
+                    <h4 class="card-title mb-0 fw-bold text-white text-center" style="white-space: nowrap; font-size: 1.4rem;">
                         <i class="bi bi-clock-history me-2"></i>{{ t('monitoring.uptime', 'Uptime') }}
                     </h4>
                 </div>
@@ -44,7 +44,7 @@
         <div class="col-xl-3 col-lg-3 col-md-3 col-sm-6 mb-4">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 pt-4 px-4">
-                    <h4 class="card-title mb-0 fw-bold text-white text-center" style="white-space: nowrap;">
+                    <h4 class="card-title mb-0 fw-bold text-white text-center" style="white-space: nowrap; font-size: 1.4rem;">
                         <i class="bi bi-cpu me-2"></i>{{ t('monitoring.cpu_usage', 'CPU Usage') }}
                     </h4>
                 </div>
@@ -66,7 +66,7 @@
         <div class="col-xl-3 col-lg-3 col-md-3 col-sm-6 mb-4">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 pt-4 px-4">
-                    <h4 class="card-title mb-0 fw-bold text-white text-center" style="white-space: nowrap;">
+                    <h4 class="card-title mb-0 fw-bold text-white text-center" style="white-space: nowrap; font-size: 1.4rem;">
                         <i class="bi bi-memory me-2"></i>{{ t('monitoring.memory_usage', 'Memory Usage') }}
                     </h4>
                 </div>
@@ -88,7 +88,7 @@
         <div class="col-xl-3 col-lg-3 col-md-3 col-sm-6 mb-4">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 pt-4 px-4">
-                    <h4 class="card-title mb-0 fw-bold text-white text-center" style="white-space: nowrap;">
+                    <h4 class="card-title mb-0 fw-bold text-white text-center" style="white-space: nowrap; font-size: 1.4rem;">
                         <i class="bi bi-hdd me-2"></i>{{ t('monitoring.disk_usage', 'Disk Usage') }}
                     </h4>
                 </div>
@@ -195,12 +195,12 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="quick-actions d-flex justify-content-center align-items-center gap-3">
-                        <button class="action-btn action-restart flex-fill" onclick="restartSystem()" style="max-width: 50%;">
+                    <div class="quick-actions d-flex flex-column flex-md-row justify-content-center align-items-stretch gap-3 w-100">
+                        <button class="action-btn action-restart" onclick="restartSystem()" style="width: 100%; max-width: 360px;">
                             <i class="bi bi-arrow-clockwise"></i>
                             <span>{{ t('system.restart', 'Restart') }}</span>
                         </button>
-                        <button class="action-btn action-shutdown flex-fill" onclick="shutdownSystem()" style="max-width: 50%;">
+                        <button class="action-btn action-shutdown" onclick="shutdownSystem()" style="width: 100%; max-width: 360px;">
                             <i class="bi bi-power"></i>
                             <span>{{ t('system.shutdown', 'Shutdown') }}</span>
                         </button>
