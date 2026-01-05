@@ -284,15 +284,30 @@
 
   async function loadRoutingTable(){
     const tbody = document.getElementById('routingTable');
+    if(tbody){
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted"><i class="bi bi-arrow-clockwise spinning"></i><p class="mb-0 mt-2">' + HostBerry.t('network.loading_routes', 'Loading routes...') + '</p></td></tr>';
+    }
     try{
         const resp = await HostBerry.apiRequest('/api/v1/system/network/routing');
         if(resp && resp.ok){ 
-            displayRoutingTable(await resp.json()); 
-        } else { 
+            const data = await resp.json();
+            // Los datos pueden venir directamente como array o envueltos
+            const routes = Array.isArray(data) ? data : (data.routes || data.data || []);
+            displayRoutingTable(routes); 
+        } else {
+            const errorText = resp ? await resp.text().catch(() => '') : '';
+            console.error('Error loading routing table:', errorText);
             HostBerry.showAlert('danger', HostBerry.t('errors.loading_routing', 'Error loading routing table')); 
+            if(tbody){
+              tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">' + HostBerry.t('network.no_routes', 'No routes found') + '</td></tr>';
+            }
         }
-    }catch(_e){ 
+    }catch(e){
+        console.error('Exception loading routing table:', e);
         HostBerry.showAlert('danger', HostBerry.t('errors.network_error', 'Network connection error')); 
+        if(tbody){
+          tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">' + HostBerry.t('network.no_routes', 'No routes found') + '</td></tr>';
+        }
     }
   }
 
