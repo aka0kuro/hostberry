@@ -392,7 +392,7 @@
                 </div>
                 <div class="card-body px-4 pb-4">
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-4 mb-3 text-center">
                             <h6 class="text-white">{{ t('settings.version', 'Version') }}</h6>
                             <p class="text-white-50">{{ (version_info.app_version if version_info else '') or (system_info.app_version if system_info else '') or '-' }}</p>
                             
@@ -402,7 +402,7 @@
                             <h6 class="text-white mt-3">{{ t('system.architecture', 'Architecture') }}</h6>
                             <p class="text-white-50">{{ system_info.architecture if system_info else '-' }}</p>
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-4 mb-3 text-center">
                             <h6 class="text-white">{{ t('system.os', 'OS') }}</h6>
                             <p class="text-white-50">{{ system_info.os_version if system_info else '-' }}</p>
                             
@@ -412,8 +412,8 @@
                             <h6 class="text-white mt-3">{{ t('monitoring.processor', 'Processor') }}</h6>
                             <p class="text-white-50">{{ system_info.processor if system_info else '-' }}</p>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <h6 class="text-white">{{ t('system.uptime', 'Uptime') }}</h6>
+                        <div class="col-md-4 mb-3 text-center">
+                            <h6 class="text-white">{{ t('monitoring.uptime', 'Uptime') }}</h6>
                             <p class="text-white-50" id="about-uptime">--</p>
                             
                             <h6 class="text-white mt-3">{{ t('system.boot_time', 'Boot Time') }}</h6>
