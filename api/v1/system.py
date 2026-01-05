@@ -306,8 +306,8 @@ async def get_network_statistics(
         asyncio.create_task(db.insert_statistic("network_upload", upload_speed))
         asyncio.create_task(db.insert_statistic("network_download", download_speed))
         
-        # Guardar en caché (5 segundos TTL)
-        cache.set(cache_key, stats_dict)
+        # NO guardar en caché - necesitamos valores frescos cada vez para calcular velocidades correctamente
+        # cache.set(cache_key, stats_dict, ttl=1)  # TTL muy corto si se necesita caché
         
         # Devolver dict directamente (no el modelo)
         return stats_dict
