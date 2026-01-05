@@ -46,6 +46,17 @@ def _is_valid_timezone_name(tz: str) -> bool:
         return False
     return True
 
+
+def _is_valid_ipv4(ip: str) -> bool:
+    if not isinstance(ip, str):
+        return False
+    ip = ip.strip()
+    m = re.match(r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$", ip)
+    if not m:
+        return False
+    parts = [int(x) for x in m.groups()]
+    return all(0 <= p <= 255 for p in parts)
+
 @router.get("/stats")
 async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_current_active_user)):
     """Obtiene estadísticas del sistema (con caché)"""
