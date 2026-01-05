@@ -437,8 +437,8 @@
       showNotification(getTranslation('update.updating_project', 'Actualizando proyecto...'), 'info');
       
       const resp = await HostBerry.apiRequest('/api/v1/system/updates/project', { method: 'POST' });
-      if(!resp.ok){
-        const errorText = await resp.text();
+      if(!resp || !resp.ok){
+        const errorText = resp ? await resp.text() : 'No response';
         throw new Error(errorText || getTranslation('update.project_failed', 'Error actualizando proyecto'));
       }
       
