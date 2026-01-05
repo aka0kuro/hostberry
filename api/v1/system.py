@@ -190,6 +190,8 @@ async def get_network_statistics(
         import subprocess
         import re
         
+        requested_interface = interface
+        
         # Verificar caché
         cache_key = f"network_stats_{interface or 'default'}"
         cached_stats = cache.get(cache_key)
@@ -219,10 +221,23 @@ async def get_network_statistics(
                 name for name in psutil.net_if_stats().keys() if name != "lo"
             ]
         
-        # Obtener información de red
-        iface_info = get_network_interface(interface)
-        interface = iface_info.get("interface") if isinstance(iface_info, dict) else None
-        ip_address = iface_info.get("ip_address") if isinstance(iface_info, dict) else None
+        # Resolver interfaz a usar (primero lo pedido por query, luego autodetección, luego fallback)
+        iface_info = get_network_interface(requested_interface)
+        detected_interface = iface_info.get("interface") if isinstance(iface_info, dict) else None
+        
+        if requested_interface:
+            interface = requested_interface
+        elif detected_interface:
+            interface = detected_interface
+        elif available_interfaces:
+            interface = available_interfaces[0]
+        else:
+            interface = None
+        
+        # IP conocida solo si corresponde a la interfaz detectada; si no, recalcularemos luego
+        ip_address = None
+        if isinstance(iface_info, dict) and interface and detected_interface and interface == detected_interface:
+            ip_address = iface_info.get("ip_address")
         
         # Obtener estadísticas de red usando /proc/net/dev (más preciso)
         bytes_sent = 0
@@ -233,9 +248,10 @@ async def get_network_statistics(
         try:
             with open('/proc/net/dev', 'r') as f:
                 for line in f:
-                    if interface and interface in line:
+                    line_stripped = line.strip()
+                    if interface and line_stripped.startswith(f"{interface}:"):
                         # Formato: interface: bytes_recv packets_recv errs_recv drop_recv bytes_sent packets_sent errs_sent drop_sent
-                        parts = line.split()
+                        parts = line_stripped.split()
                         if len(parts) >= 10:
                             bytes_recv = int(parts[1])
                             packets_recv = int(parts[2])
@@ -264,20 +280,6 @@ async def get_network_statistics(
             except:
                 ip_address = get_ip_address(interface) if interface else None
 
-        # Fallbacks si no hay interfaz detectada
-        if not interface:
-            # elegir cualquier interfaz activa
-            if available_interfaces:
-                interface = available_interfaces[0]
-            else:
-                ifaces = psutil.net_if_stats()
-                for name, st in ifaces.items():
-                    if name == "lo":
-                        continue
-                    if getattr(st, "isup", False):
-                        interface = name
-                        break
-        
         interface = interface or "unknown"
         ip_address = ip_address or "--"
         
