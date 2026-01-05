@@ -830,9 +830,19 @@ async def execute_system_updates(current_user: Dict[str, Any] = Depends(get_curr
         )
         
         if returncode1 != 0:
+            error_msg = stderr1.strip() if stderr1 else stdout1.strip() if stdout1 else "Error desconocido"
+            logger.error(f"Error ejecutando 'apt update': returncode={returncode1}, stderr={error_msg}")
+            await db.insert_log("ERROR", f"Error actualizando repositorios: {error_msg[:200]}")
+            
+            # Verificar si es un error de permisos
+            if "sudo" in error_msg.lower() or "permission denied" in error_msg.lower() or "not allowed" in error_msg.lower():
+                detail_msg = get_text("update.sudo_error", default="Error de permisos. Verifica que el usuario tenga permisos sudo sin contraseña configurados.")
+            else:
+                detail_msg = f"Error actualizando repositorios: {error_msg[:200]}"
+            
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Error actualizando repositorios"
+                detail=detail_msg
             )
         
         # Ejecutar upgrade
@@ -842,10 +852,19 @@ async def execute_system_updates(current_user: Dict[str, Any] = Depends(get_curr
         )
         
         if returncode2 != 0:
-            await db.insert_log("ERROR", f"Error ejecutando actualizaciones: {stderr2}")
+            error_msg = stderr2.strip() if stderr2 else stdout2.strip() if stdout2 else "Error desconocido"
+            logger.error(f"Error ejecutando 'apt upgrade': returncode={returncode2}, stderr={error_msg}")
+            await db.insert_log("ERROR", f"Error ejecutando actualizaciones: {error_msg[:200]}")
+            
+            # Verificar si es un error de permisos
+            if "sudo" in error_msg.lower() or "permission denied" in error_msg.lower() or "not allowed" in error_msg.lower():
+                detail_msg = get_text("update.sudo_error", default="Error de permisos. Verifica que el usuario tenga permisos sudo sin contraseña configurados.")
+            else:
+                detail_msg = f"Error ejecutando actualizaciones: {error_msg[:200]}"
+            
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error ejecutando actualizaciones: {stderr2[:200]}"
+                detail=detail_msg
             )
         
         await db.insert_log("INFO", "Actualización del sistema completada exitosamente")
