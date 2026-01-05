@@ -2627,9 +2627,6 @@ show_update_info() {
         log "$ANSI_BLUE" "INFO" "URL Segura:      https://$ip_address (Acepte el certificado)"
     fi
     echo
-    log "$ANSI_BLUE" "INFO" "Admin User:      admin"
-    log "$ANSI_BLUE" "INFO" "Admin Password:  hostberry"
-    echo
     log "$ANSI_BLUE" "INFO" "Logs:            tail -f $LOG_DIR/hostberry_error.log"
     log "$ANSI_BLUE" "INFO" "Servicio:        systemctl status hostberry.service"
     log "$ANSI_BLUE" "INFO" "Monitor:         $PROD_DIR/monitor.sh"
