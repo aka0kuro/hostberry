@@ -439,8 +439,8 @@
       const confirmMsg = getTranslation('update.project_confirm', 'Are you sure you want to update HostBerry? This will run setup.sh --update.');
       if(!confirm(confirmMsg)) return;
       
-      addLogEntry(getTranslation('update.updating_project', 'Iniciando actualización del proyecto...'), 'info');
-      showNotification(getTranslation('update.updating_project', 'Actualizando proyecto...'), 'info');
+      addLogEntry(getTranslation('update.updating_project', 'Updating project...'), 'info');
+      showNotification(getTranslation('update.updating_project', 'Updating project...'), 'info');
       
       const resp = await HostBerry.apiRequest('/api/v1/system/updates/project', { method: 'POST' });
       if(!resp || !resp.ok){
