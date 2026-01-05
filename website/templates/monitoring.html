@@ -654,13 +654,15 @@
           throw new Error('Invalid network stats response');
         }
         
-        // Log de depuración
-        console.log('Network stats raw:', {
-          bytes_recv: networkStatsRaw.bytes_recv,
-          bytes_sent: networkStatsRaw.bytes_sent,
-          interface: networkStatsRaw.interface,
-          hasSnapshot: !!lastNetSnapshot
-        });
+        // Log de depuración (solo ocasionalmente para no saturar la consola)
+        if (!lastNetSnapshot || Math.random() < 0.1) {
+          console.log('Network stats raw:', {
+            bytes_recv: networkStatsRaw.bytes_recv,
+            bytes_sent: networkStatsRaw.bytes_sent,
+            interface: networkStatsRaw.interface,
+            hasSnapshot: !!lastNetSnapshot
+          });
+        }
         
         const networkStats = computeNetworkRates(networkStatsRaw);
         
