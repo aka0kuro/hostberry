@@ -366,7 +366,7 @@
       const resp = await HostBerry.apiRequest('/api/v1/system/updates', { method: 'POST' });
       if(!resp || !resp.ok){
         const errorText = resp ? await resp.text() : 'No response';
-        throw new Error(errorText || getTranslation('update.check_failed', 'Error checking updates'));
+        throw new Error(errorText || getTranslation('update.check_failed', "{{ t('update.check_failed', 'Error checking updates') }}"));
       }
       
       const payload = await resp.json();
@@ -413,11 +413,11 @@
         list.innerHTML = `
           <div class="alert alert-danger">
             <i class="bi bi-x-circle me-2"></i>
-            ${getTranslation('update.check_error', 'Error checking updates')}
+            ${getTranslation('update.check_error', "{{ t('update.check_error', 'Error checking updates') }}")}
           </div>`;
       }
-      addLogEntry(getTranslation('update.check_error', 'Error checking updates'), 'error');
-      showNotification(getTranslation('update.check_error', 'Error checking updates'), 'error');
+      addLogEntry(getTranslation('update.check_error', "{{ t('update.check_error', 'Error checking updates') }}"), 'error');
+      showNotification(getTranslation('update.check_error', "{{ t('update.check_error', 'Error checking updates') }}"), 'error');
     }
   }
 
