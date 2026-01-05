@@ -542,14 +542,18 @@
   }
 
   function pushNetHistory(download, upload){
+    // Asegurar que los valores sean números válidos
+    const downloadValue = (typeof download === 'number' && !isNaN(download) && isFinite(download)) ? download : 0;
+    const uploadValue = (typeof upload === 'number' && !isNaN(upload) && isFinite(upload)) ? upload : 0;
+    
     const now = new Date();
     const timeLabel = now.getHours().toString().padStart(2, '0') + ':' + 
                       now.getMinutes().toString().padStart(2, '0') + ':' + 
                       now.getSeconds().toString().padStart(2, '0');
     
     netHistory.labels.push(timeLabel);
-    netHistory.download.push(download);
-    netHistory.upload.push(upload);
+    netHistory.download.push(Math.max(0, downloadValue));
+    netHistory.upload.push(Math.max(0, uploadValue));
     
     if(netHistory.labels.length > 30){
       netHistory.labels.shift();
@@ -560,48 +564,106 @@
 
   function ensureNetChart(){
     const canvas = document.getElementById('net-chart');
-    if(!canvas) return;
+    if(!canvas) {
+      console.warn('Canvas element not found');
+      return;
+    }
     
     if(netChart) return;
     
-    const ctx = canvas.getContext('2d');
-    netChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: netHistory.labels,
-        datasets: [
-          {
-            label: getTranslation('monitoring.download', 'Download'),
-            data: netHistory.download,
-            borderColor: '#0dcaf0',
-            backgroundColor: 'rgba(13, 202, 240, 0.1)',
-            tension: 0.4,
-            fill: true
-          },
-          {
-            label: getTranslation('monitoring.upload', 'Upload'),
-            data: netHistory.upload,
-            borderColor: '#198754',
-            backgroundColor: 'rgba(25, 135, 84, 0.1)',
-            tension: 0.4,
-            fill: true
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            labels: { color: '#fff' }
-          }
-        },
-        scales: {
-          x: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
-          y: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
-        }
+    // Verificar que Chart.js esté disponible
+    if(typeof Chart === 'undefined'){
+      console.warn('Chart.js not loaded yet, retrying...');
+      setTimeout(ensureNetChart, 500);
+      return;
+    }
+    
+    // Inicializar con algunos datos por defecto si está vacío
+    if(netHistory.labels.length === 0){
+      const now = new Date();
+      for(let i = 9; i >= 0; i--){
+        const time = new Date(now.getTime() - i * 1000);
+        const timeLabel = time.getHours().toString().padStart(2, '0') + ':' + 
+                          time.getMinutes().toString().padStart(2, '0') + ':' + 
+                          time.getSeconds().toString().padStart(2, '0');
+        netHistory.labels.push(timeLabel);
+        netHistory.download.push(0);
+        netHistory.upload.push(0);
       }
-    });
+    }
+    
+    try {
+      const ctx = canvas.getContext('2d');
+      netChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: netHistory.labels,
+          datasets: [
+            {
+              label: getTranslation('monitoring.download', 'Download'),
+              data: netHistory.download,
+              borderColor: '#0dcaf0',
+              backgroundColor: 'rgba(13, 202, 240, 0.1)',
+              tension: 0.4,
+              fill: true,
+              pointRadius: 0,
+              pointHoverRadius: 4
+            },
+            {
+              label: getTranslation('monitoring.upload', 'Upload'),
+              data: netHistory.upload,
+              borderColor: '#198754',
+              backgroundColor: 'rgba(25, 135, 84, 0.1)',
+              tension: 0.4,
+              fill: true,
+              pointRadius: 0,
+              pointHoverRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: {
+            duration: 0
+          },
+          plugins: {
+            legend: {
+              labels: { color: '#fff' },
+              display: true
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            }
+          },
+          scales: {
+            x: { 
+              ticks: { color: '#fff', maxRotation: 45, minRotation: 0 },
+              grid: { color: 'rgba(255,255,255,0.1)' }
+            },
+            y: { 
+              ticks: { 
+                color: '#fff',
+                callback: function(value) {
+                  return formatBytes(value) + '/s';
+                }
+              },
+              grid: { color: 'rgba(255,255,255,0.1)' },
+              beginAtZero: true
+            }
+          },
+          interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
+          }
+        }
+      });
+      console.log('Network chart initialized successfully');
+    } catch (error) {
+      console.error('Error creating network chart:', error);
+    }
   }
 
   async function updateStats(){
