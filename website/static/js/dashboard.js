@@ -54,6 +54,15 @@ function updateCurrentTime() {
     }
 }
 
+function updateDashboardLastUpdate() {
+    const now = new Date();
+    const timeString = (window.HostBerry && typeof window.HostBerry.formatTime === 'function')
+        ? window.HostBerry.formatTime(now)
+        : now.toLocaleTimeString();
+    const el = document.getElementById('dashboard-last-update');
+    if (el) el.textContent = timeString;
+}
+
 // Inicializar actualización de tiempo
 setInterval(updateCurrentTime, 1000);
 updateCurrentTime();
@@ -99,6 +108,8 @@ async function updateSystemStats() {
             hbUpdateProgress('disk-progress', diskValue || 0);
             hbSetText('disk-used', hbFormatBytes(stats.disk_used || 0));
             hbSetText('disk-total', hbFormatBytes(stats.disk_total || 0));
+
+            updateDashboardLastUpdate();
         }
     } catch (error) {
         console.error('Error updating system stats:', error);
@@ -266,8 +277,10 @@ async function updateNetworkStatus() {
             const networkData = data.interfaces;
             
             // Actualizar interfaces de red
-            updateNetworkInterface('eth0', networkData.eth0);
-            updateNetworkInterface('wlan0', networkData.wlan0);
+            updateNetworkInterface('eth0', networkData?.eth0 || {});
+            updateNetworkInterface('wlan0', networkData?.wlan0 || {});
+
+            updateDashboardLastUpdate();
         }
     } catch (error) {
         console.error('Error updating network status:', error);
@@ -276,33 +289,38 @@ async function updateNetworkStatus() {
 
 // Actualizar interfaz de red
 function updateNetworkInterface(interfaceName, data) {
-    const interfaces = document.querySelectorAll('.network-interface');
-    
-    interfaces.forEach(interface => {
-        const interfaceHeader = interface.querySelector('.interface-header h6');
-        if (interfaceHeader && interfaceHeader.textContent === interfaceName) {
-            const statusElement = interface.querySelector('.interface-status');
-            const details = interface.querySelectorAll('.network-item');
-            
-            if (statusElement) {
-                statusElement.textContent = data.connected ? HostBerry.t('network.connected', 'Connected') : HostBerry.t('network.disconnected', 'Disconnected');
-            }
-            
-            // Actualizar detalles si están disponibles
-            if (data.ip_address && details[0]) {
-                details[0].querySelector('.network-value').textContent = data.ip_address;
-            }
-            if (data.gateway && details[1]) {
-                details[1].querySelector('.network-value').textContent = data.gateway;
-            }
-            if (data.ssid && details[2]) {
-                details[2].querySelector('.network-value').textContent = data.ssid;
-            }
-            if (data.signal_strength && details[2]) {
-                details[2].querySelector('.network-value').textContent = `${data.signal_strength}%`;
-            }
-        }
-    });
+    const container =
+        document.querySelector(`.network-interface[data-interface="${interfaceName}"]`) ||
+        Array.from(document.querySelectorAll('.network-interface')).find(el => {
+            const h6 = el.querySelector('.interface-header h6');
+            return h6 && h6.textContent === interfaceName;
+        });
+    if (!container) return;
+
+    const statusElement = container.querySelector('.interface-status');
+    const isConnected = !!data?.connected;
+    if (statusElement) {
+        statusElement.textContent = isConnected
+            ? HostBerry.t('network.connected', 'Connected')
+            : HostBerry.t('network.disconnected', 'Disconnected');
+    }
+
+    const setField = (field, value) => {
+        const el = container.querySelector(`.network-value[data-field="${field}"]`);
+        if (!el) return;
+        el.textContent = (value === null || value === undefined || value === '') ? '--' : String(value);
+    };
+
+    setField('ip_address', data?.ip_address);
+    setField('gateway', data?.gateway);
+    setField('dns', data?.dns || (Array.isArray(data?.dns_servers) ? data.dns_servers.join(', ') : undefined));
+    setField('ssid', data?.ssid);
+    setField('signal_strength', (data?.signal_strength !== undefined && data?.signal_strength !== null) ? `${data.signal_strength}%` : undefined);
+}
+
+function refreshNetwork() {
+    updateNetworkStatus();
+    showNotification(HostBerry.t?.('system.network_refreshed', 'Network refreshed') || 'Network refreshed', 'info');
 }
 
 // Actualizar logs
@@ -325,13 +343,14 @@ async function updateLogs() {
         if (response.ok) {
             const data = await response.json();
             renderLogs(data.logs);
+            updateDashboardLastUpdate();
         } else {
             console.error('Server returned error:', response.status);
             if (logsContainer) {
                 logsContainer.innerHTML = `
                     <div class="text-center py-4 text-muted">
                         <i class="bi bi-exclamation-circle text-danger"></i>
-                        <p class="mb-0 mt-2">Error al cargar logs (${response.status})</p>
+                        <p class="mb-0 mt-2">${HostBerry.t?.('system.logs_error', `Error loading logs (${response.status})`) || `Error loading logs (${response.status})`}</p>
                     </div>
                 `;
             }
@@ -342,7 +361,7 @@ async function updateLogs() {
             logsContainer.innerHTML = `
                 <div class="text-center py-4 text-muted">
                     <i class="bi bi-wifi-off text-danger"></i>
-                    <p class="mb-0 mt-2">Error de conexión</p>
+                    <p class="mb-0 mt-2">${HostBerry.t?.('system.connection_error', 'Connection error') || 'Connection error'}</p>
                 </div>
             `;
         }
@@ -484,35 +503,35 @@ function getTimeAgo(timestamp) {
 
 // Funciones de acción rápida
 async function restartSystem() {
-    if (!confirm('¿Estás seguro de que quieres reiniciar el sistema?')) return;
+    if (!confirm(HostBerry.t?.('system.restart_confirm', 'Are you sure you want to restart the system?') || 'Are you sure you want to restart the system?')) return;
     
     try {
         const response = await HostBerry.apiRequest('/api/v1/system/restart', { method: 'POST' });
         if (response.ok) {
-            showNotification('Sistema reiniciándose...', 'info');
+            showNotification(HostBerry.t?.('system.restarting', 'System restarting...') || 'System restarting...', 'info');
             setTimeout(() => {
                 window.location.reload();
             }, 5000);
         } else {
-            showNotification('Error al reiniciar el sistema', 'error');
+            showNotification(HostBerry.t?.('system.restart_error', 'Error restarting system') || 'Error restarting system', 'error');
         }
     } catch (error) {
-        showNotification('Error de conexión', 'error');
+        showNotification(HostBerry.t?.('system.connection_error', 'Connection error') || 'Connection error', 'error');
     }
 }
 
 async function shutdownSystem() {
-    if (!confirm('¿Estás seguro de que quieres apagar el sistema?')) return;
+    if (!confirm(HostBerry.t?.('system.shutdown_confirm', 'Are you sure you want to shutdown the system?') || 'Are you sure you want to shutdown the system?')) return;
     
     try {
         const response = await HostBerry.apiRequest('/api/v1/system/shutdown', { method: 'POST' });
         if (response.ok) {
-            showNotification('Sistema apagándose...', 'info');
+            showNotification(HostBerry.t?.('system.shutting_down', 'System shutting down...') || 'System shutting down...', 'info');
         } else {
-            showNotification('Error al apagar el sistema', 'error');
+            showNotification(HostBerry.t?.('system.shutdown_error', 'Error shutting down system') || 'Error shutting down system', 'error');
         }
     } catch (error) {
-        showNotification('Error de conexión', 'error');
+        showNotification(HostBerry.t?.('system.connection_error', 'Connection error') || 'Connection error', 'error');
     }
 }
 
@@ -566,7 +585,7 @@ function refreshActivity() {
 
 function refreshLogs() {
     updateLogs();
-    showNotification('Logs actualizados', 'info');
+    showNotification(HostBerry.t?.('system.logs_refreshed', 'Logs refreshed') || 'Logs refreshed', 'info');
 }
 
 // Sistema de notificaciones
@@ -687,6 +706,7 @@ window.dashboard = {
     refreshActivity,
     refreshLogs,
     refreshServices,
+    refreshNetwork,
     restartSystem,
     shutdownSystem,
     backupSystem,
