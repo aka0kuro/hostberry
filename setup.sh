@@ -553,6 +553,164 @@ exec /usr/bin/timedatectl set-timezone "$TZ"
 EOF
     chmod 750 /usr/local/sbin/hostberry-safe/set-timezone
 
+    # Wrapper para activar/desactivar UFW de forma segura (evita bloquear SSH)
+    cat > /usr/local/sbin/hostberry-safe/firewall-set << 'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+  echo "Uso: firewall-set <enable|disable>" >&2
+  exit 2
+fi
+
+ACTION="$1"
+if [[ "$ACTION" != "enable" && "$ACTION" != "disable" ]]; then
+  echo "Acción inválida: $ACTION" >&2
+  exit 2
+fi
+
+if [[ "$ACTION" == "disable" ]]; then
+  exec /usr/sbin/ufw --force disable
+fi
+
+# enable: asegurar reglas mínimas para no perder acceso
+/usr/sbin/ufw allow 22/tcp >/dev/null 2>&1 || true
+/usr/sbin/ufw allow 80/tcp >/dev/null 2>&1 || true
+/usr/sbin/ufw allow 443/tcp >/dev/null 2>&1 || true
+exec /usr/sbin/ufw --force enable
+EOF
+    chmod 750 /usr/local/sbin/hostberry-safe/firewall-set
+
+    # Wrapper para configurar DNS del sistema (systemd-resolved o /etc/resolv.conf)
+    cat > /usr/local/sbin/hostberry-safe/set-dns << 'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -lt 1 || $# -gt 2 ]]; then
+  echo "Uso: set-dns <dns1> [dns2]" >&2
+  exit 2
+fi
+
+DNS1="$1"
+DNS2="${2:-}"
+
+valid_ip() {
+  local ip="$1"
+  [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1
+  IFS='.' read -r a b c d <<< "$ip"
+  for n in "$a" "$b" "$c" "$d"; do
+    [[ "$n" -ge 0 && "$n" -le 255 ]] || return 1
+  done
+  return 0
+}
+
+valid_ip "$DNS1" || { echo "DNS inválido: $DNS1" >&2; exit 2; }
+if [[ -n "$DNS2" ]]; then valid_ip "$DNS2" || { echo "DNS inválido: $DNS2" >&2; exit 2; }; fi
+
+if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet systemd-resolved; then
+  CONF="/etc/systemd/resolved.conf"
+  mkdir -p /etc/systemd
+  touch "$CONF"
+  cp -a "$CONF" "${CONF}.bak.$(date +%s)" || true
+  if ! grep -q "^[[:space:]]*\\[Resolve\\][[:space:]]*$" "$CONF"; then
+    printf "\n[Resolve]\n" >> "$CONF"
+  fi
+
+  DNS_LINE="DNS=${DNS1}${DNS2:+ ${DNS2}}"
+  if grep -q "^[[:space:]]*DNS=" "$CONF"; then
+    sed -i "s|^[[:space:]]*DNS=.*|$DNS_LINE|g" "$CONF"
+  else
+    echo "$DNS_LINE" >> "$CONF"
+  fi
+
+  systemctl restart systemd-resolved
+  exit 0
+fi
+
+# Fallback: /etc/resolv.conf clásico
+RESOLV="/etc/resolv.conf"
+cp -a "$RESOLV" "${RESOLV}.bak.$(date +%s)" 2>/dev/null || true
+{
+  echo "# Managed by HostBerry"
+  echo "nameserver ${DNS1}"
+  if [[ -n "$DNS2" ]]; then echo "nameserver ${DNS2}"; fi
+} > "$RESOLV"
+EOF
+    chmod 750 /usr/local/sbin/hostberry-safe/set-dns
+
+    # Wrapper para configurar DHCP server con dnsmasq
+    cat > /usr/local/sbin/hostberry-safe/dhcp-set << 'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -lt 2 ]]; then
+  echo "Uso: dhcp-set <enable|disable> <iface> [range_start] [range_end] [lease] [gateway] [dns]" >&2
+  exit 2
+fi
+
+ACTION="$1"
+IFACE="$2"
+RSTART="${3:-}"
+REND="${4:-}"
+LEASE="${5:-12h}"
+GATEWAY="${6:-}"
+DNS="${7:-}"
+
+if [[ "$ACTION" != "enable" && "$ACTION" != "disable" ]]; then
+  echo "Acción inválida: $ACTION" >&2
+  exit 2
+fi
+
+if [[ ! "$IFACE" =~ ^[a-zA-Z0-9_.:-]+$ ]]; then
+  echo "Interfaz inválida: $IFACE" >&2
+  exit 2
+fi
+
+valid_ip() {
+  local ip="$1"
+  [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1
+  IFS='.' read -r a b c d <<< "$ip"
+  for n in "$a" "$b" "$c" "$d"; do
+    [[ "$n" -ge 0 && "$n" -le 255 ]] || return 1
+  done
+  return 0
+}
+
+CONF="/etc/dnsmasq.d/hostberry-dhcp.conf"
+
+if [[ "$ACTION" == "disable" ]]; then
+  rm -f "$CONF" || true
+  systemctl stop dnsmasq || true
+  systemctl disable dnsmasq || true
+  exit 0
+fi
+
+command -v dnsmasq >/dev/null 2>&1 || { echo "dnsmasq no está instalado" >&2; exit 3; }
+[[ -n "$RSTART" && -n "$REND" ]] || { echo "Falta rango DHCP" >&2; exit 2; }
+valid_ip "$RSTART" || { echo "IP inválida: $RSTART" >&2; exit 2; }
+valid_ip "$REND" || { echo "IP inválida: $REND" >&2; exit 2; }
+if [[ -n "$GATEWAY" ]]; then valid_ip "$GATEWAY" || { echo "Gateway inválido: $GATEWAY" >&2; exit 2; }; fi
+if [[ -n "$DNS" ]]; then valid_ip "$DNS" || { echo "DNS inválido: $DNS" >&2; exit 2; }; fi
+
+cat > "$CONF" <<CFG
+# Managed by HostBerry
+interface=${IFACE}
+bind-interfaces
+dhcp-range=${RSTART},${REND},${LEASE}
+CFG
+
+if [[ -n "$GATEWAY" ]]; then
+  echo "dhcp-option=option:router,${GATEWAY}" >> "$CONF"
+fi
+if [[ -n "$DNS" ]]; then
+  echo "dhcp-option=option:dns-server,${DNS}" >> "$CONF"
+fi
+
+systemctl enable dnsmasq
+systemctl restart dnsmasq
+EOF
+    chmod 750 /usr/local/sbin/hostberry-safe/dhcp-set
+
   # Wrapper para reiniciar servicio de hostberry validando existencia (optimizado)
   cat > /usr/local/sbin/hostberry-safe/restart-app << EOF
 #!/usr/bin/env bash
