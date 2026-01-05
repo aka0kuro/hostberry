@@ -142,7 +142,10 @@
                             <p class="text-white mb-3" id="sys-processor">--</p>
                         </div>
                         <div class="col-6">
-                            <h6 class="text-white-50 mb-1">{{ t('monitoring.load_average', 'Load Average') }}</h6>
+                            <h6 class="text-white-50 mb-1">
+                                {{ t('monitoring.load_average', 'Load Average') }}
+                                <i class="bi bi-question-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ t('monitoring.load_average_desc', 'System load: 1min, 5min, 15min averages') }}"></i>
+                            </h6>
                             <p class="text-white mb-3" id="sys-load">--</p>
                         </div>
                     </div>
