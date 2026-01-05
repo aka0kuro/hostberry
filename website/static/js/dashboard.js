@@ -980,7 +980,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Animación de entrada para las tarjetas
-    const cards = document.querySelectorAll('.status-card, .info-card, .services-card, .network-card, .activity-card, .logs-card, .actions-card');
+    const cards = document.querySelectorAll('.status-card, .info-card, .services-card, .network-card, .activity-card, .logs-card, .actions-card, .glass-card');
     cards.forEach((card, index) => {
         card.style.opacity = '0';
         card.style.transform = 'translateY(20px)';
