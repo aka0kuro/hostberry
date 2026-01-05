@@ -739,8 +739,13 @@
         
         const downloadSpeed = networkStats.download_speed || 0;
         const uploadSpeed = networkStats.upload_speed || 0;
-        setText('net-download', formatBytes(downloadSpeed) + '/s');
-        setText('net-upload', formatBytes(uploadSpeed) + '/s');
+        
+        // Formatear velocidades correctamente
+        const downloadText = downloadSpeed > 0 ? formatBytes(downloadSpeed) + '/s' : '0 B/s';
+        const uploadText = uploadSpeed > 0 ? formatBytes(uploadSpeed) + '/s' : '0 B/s';
+        
+        setText('net-download', downloadText);
+        setText('net-upload', uploadText);
         
         const bytesRecv = networkStats.bytes_recv || networkStatsRaw.bytes_recv || 0;
         const bytesSent = networkStats.bytes_sent || networkStatsRaw.bytes_sent || 0;
