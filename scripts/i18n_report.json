@@ -9,8 +9,8 @@
   "locales": {
     "en": {
       "file": "locales/en.json",
-      "defined_keys_count": 1372,
-      "missing_keys_count": 172,
+      "defined_keys_count": 1373,
+      "missing_keys_count": 171,
       "unused_keys_count": 1002,
       "missing_keys": [
         "a.b.c",
@@ -71,7 +71,6 @@
         "common.hours",
         "common.welcome",
         "common.welcome_message",
-        "dashboard.monitoring",
         "errors.error_details",
         "errors.error_occurred",
         "errors.get_help",
@@ -693,8 +692,8 @@
     },
     "es": {
       "file": "locales/es.json",
-      "defined_keys_count": 1371,
-      "missing_keys_count": 164,
+      "defined_keys_count": 1372,
+      "missing_keys_count": 163,
       "unused_keys_count": 993,
       "missing_keys": [
         "a.b.c",
@@ -755,7 +754,6 @@
         "common.hours",
         "common.welcome",
         "common.welcome_message",
-        "dashboard.monitoring",
         "errors.error_details",
         "errors.error_occurred",
         "errors.get_help",
@@ -1479,7 +1477,6 @@
     "common.hours",
     "common.welcome",
     "common.welcome_message",
-    "dashboard.monitoring",
     "errors.error_details",
     "errors.error_occurred",
     "errors.get_help",
@@ -1586,5 +1583,5 @@
     "wireguard.total_traffic",
     "wireguard.uptime"
   ],
-  "missing_in_all_locales_count": 164
+  "missing_in_all_locales_count": 163
 }
