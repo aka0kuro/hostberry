@@ -733,21 +733,21 @@ async def check_updates(current_user: Dict[str, Any] = Depends(get_current_activ
             await db.insert_log("ERROR", "Error buscando actualizaciones")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Error buscando actualizaciones"
+                detail=get_text("update.check_error", default="Error checking updates")
             )
         
     except TimeoutError:
         await db.insert_log("ERROR", "Timeout buscando actualizaciones")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Timeout buscando actualizaciones"
+            detail=get_text("update.check_error", default="Error checking updates")
         )
     except Exception as e:
         logger.error(f"Error buscando actualizaciones: {str(e)}")
         await db.insert_log("ERROR", f"Error en actualizaciones: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error buscando actualizaciones"
+            detail=get_text("update.check_error", default="Error checking updates")
         )
 
 @router.post("/updates/execute")
