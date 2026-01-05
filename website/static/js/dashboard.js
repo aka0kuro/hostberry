@@ -49,7 +49,8 @@ async function updateSystemStats() {
             const updateProgress = (id, percent) => {
                 const el = document.getElementById(id);
                 if (!el) return;
-                const safePercent = Math.min(100, Math.max(0, percent));
+                const numeric = (typeof percent === 'number') ? percent : parseFloat(percent);
+                const safePercent = Number.isFinite(numeric) ? Math.min(100, Math.max(0, numeric)) : 0;
                 el.style.width = safePercent + '%';
             };
 
@@ -61,7 +62,7 @@ async function updateSystemStats() {
             }
 
             function formatBytes(bytes) {
-                if (!Number.isFinite(bytes) || bytes < 0 || bytes === 0) return '0 B';
+                if (!Number.isFinite(bytes) || bytes <= 0) return '0 GB';
                 const k = 1024;
                 const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
                 const i = Math.floor(Math.log(bytes) / Math.log(k));
