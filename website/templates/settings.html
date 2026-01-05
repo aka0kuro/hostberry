@@ -198,94 +198,91 @@
             </div>
         </div>
 
-        <!-- Configuración de Seguridad y Rendimiento en la misma fila -->
-        <div class="row">
-            <!-- Configuración de Seguridad -->
-            <div class="col-lg-6 col-md-12 settings-card">
-                <div class="card h-100 glass-card border-0">
-                    <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
-                        <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
-                            <i class="bi bi-shield-check me-2"></i>{{ t('settings.security', 'Security') }}
-                        </h5>
-                    </div>
-                    <div class="card-body px-4 pb-4">
-                        <form id="securityConfigForm">
-                            <div class="mb-3">
-                                <label class="form-label text-white">{{ t('settings.ssl', 'SSL/TLS') }}</label>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="ssl_enabled" name="ssl_enabled" {{ 'checked' if (security_config.ssl_enabled if security_config else False) else '' }}>
-                                    <label class="form-check-label text-white" for="ssl_enabled">
-                                        {{ t('settings.enable_ssl', 'Enable SSL/TLS') }}
-                                    </label>
-                                </div>
+        <!-- Configuración de Seguridad -->
+        <div class="col-lg-6 col-md-12 settings-card">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
+                    <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
+                        <i class="bi bi-shield-check me-2"></i>{{ t('settings.security', 'Security') }}
+                    </h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <form id="securityConfigForm">
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ t('settings.ssl', 'SSL/TLS') }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="ssl_enabled" name="ssl_enabled" {{ 'checked' if (security_config.ssl_enabled if security_config else False) else '' }}>
+                                <label class="form-check-label text-white" for="ssl_enabled">
+                                    {{ t('settings.enable_ssl', 'Enable SSL/TLS') }}
+                                </label>
                             </div>
-                            
-                            <div class="mb-3">
-                                <label for="max_login_attempts" class="form-label text-white">{{ t('settings.max_login_attempts', 'Max Login Attempts') }}</label>
-                                <input type="number" class="form-control bg-dark text-white border-secondary" id="max_login_attempts" name="max_login_attempts" value="{{ security_config.max_login_attempts if security_config else 3 }}" min="1" max="10">
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="session_timeout" class="form-label text-white">{{ t('settings.session_timeout', 'Session Timeout') }}</label>
-                                <input type="number" class="form-control bg-dark text-white border-secondary" id="session_timeout" name="session_timeout" value="{{ security_config.session_timeout if security_config else 30 }}" min="5" max="1440">
-                                <small class="text-white-50">{{ t('settings.minutes', 'minutes') }}</small>
-                            </div>
-                            
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-check-circle me-2"></i>
-                                    {{ t('common.save', 'Save') }}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="max_login_attempts" class="form-label text-white">{{ t('settings.max_login_attempts', 'Max Login Attempts') }}</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" id="max_login_attempts" name="max_login_attempts" value="{{ security_config.max_login_attempts if security_config else 3 }}" min="1" max="10">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="session_timeout" class="form-label text-white">{{ t('settings.session_timeout', 'Session Timeout') }}</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" id="session_timeout" name="session_timeout" value="{{ security_config.session_timeout if security_config else 30 }}" min="5" max="1440">
+                            <small class="text-white-50">{{ t('settings.minutes', 'minutes') }}</small>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {{ t('common.save', 'Save') }}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
+        </div>
 
-            <!-- Configuración de Rendimiento -->
-            <div class="col-lg-6 col-md-12 settings-card">
-                <div class="card h-100 glass-card border-0">
-                    <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
-                        <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
-                            <i class="bi bi-speedometer2 me-2"></i>{{ t('settings.performance', 'Performance') }}
-                        </h5>
-                    </div>
-                    <div class="card-body px-4 pb-4">
-                        <form id="performanceConfigForm">
-                            <div class="mb-3">
-                                <label class="form-label text-white">{{ t('settings.cache', 'Cache') }}</label>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="cache_enabled" name="cache_enabled" {{ 'checked' if (performance_config.cache_enabled if performance_config else True) else '' }}>
-                                    <label class="form-check-label text-white" for="cache_enabled">
-                                        {{ t('settings.enable_cache', 'Enable cache') }}
-                                    </label>
-                                </div>
+        <!-- Configuración de Rendimiento -->
+        <div class="col-lg-6 col-md-12 settings-card">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
+                    <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
+                        <i class="bi bi-speedometer2 me-2"></i>{{ t('settings.performance', 'Performance') }}
+                    </h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <form id="performanceConfigForm">
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ t('settings.cache', 'Cache') }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="cache_enabled" name="cache_enabled" {{ 'checked' if (performance_config.cache_enabled if performance_config else True) else '' }}>
+                                <label class="form-check-label text-white" for="cache_enabled">
+                                    {{ t('settings.enable_cache', 'Enable cache') }}
+                                </label>
                             </div>
-                            
-                            <div class="mb-3">
-                                <label for="cache_size" class="form-label text-white">{{ t('settings.cache_size', 'Cache Size') }}</label>
-                                <input type="number" class="form-control bg-dark text-white border-secondary" id="cache_size" name="cache_size" value="{{ performance_config.cache_size if performance_config else 50 }}" min="10" max="500">
-                                <small class="text-white-50">{{ t('settings.mb', 'MB') }}</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="cache_size" class="form-label text-white">{{ t('settings.cache_size', 'Cache Size') }}</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" id="cache_size" name="cache_size" value="{{ performance_config.cache_size if performance_config else 50 }}" min="10" max="500">
+                            <small class="text-white-50">{{ t('settings.mb', 'MB') }}</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ t('settings.compression', 'Compression') }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="compression_enabled" name="compression_enabled" {{ 'checked' if (performance_config.compression_enabled if performance_config else True) else '' }}>
+                                <label class="form-check-label text-white" for="compression_enabled">
+                                    {{ t('settings.enable_compression', 'Enable compression') }}
+                                </label>
                             </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label text-white">{{ t('settings.compression', 'Compression') }}</label>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="compression_enabled" name="compression_enabled" {{ 'checked' if (performance_config.compression_enabled if performance_config else True) else '' }}>
-                                    <label class="form-check-label text-white" for="compression_enabled">
-                                        {{ t('settings.enable_compression', 'Enable compression') }}
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-check-circle me-2"></i>
-                                    {{ t('common.save', 'Save') }}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {{ t('common.save', 'Save') }}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
