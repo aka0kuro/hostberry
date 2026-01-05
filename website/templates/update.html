@@ -490,11 +490,11 @@
       const projectResp = await HostBerry.apiRequest('/api/v1/system/updates/project', { method: 'POST' });
       if(!projectResp || !projectResp.ok){
         const errorText = projectResp ? await projectResp.text() : 'No response';
-        throw new Error(errorText || getTranslation('update.project_failed', 'Error actualizando proyecto'));
+        throw new Error(errorText || getTranslation('update.project_failed', 'Error updating project'));
       }
-      addLogEntry(getTranslation('update.project_updated', 'Proyecto actualizado'), 'success');
+      addLogEntry(getTranslation('update.project_updated', 'Project updated'), 'success');
       
-      const message = getTranslation('update.all_updated', 'Todo actualizado exitosamente');
+      const message = getTranslation('update.all_updated', 'All updated successfully');
       showNotification(message, 'success');
       updateLastCheck();
       
