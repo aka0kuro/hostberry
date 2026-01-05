@@ -528,11 +528,23 @@
         if(!el || !el.name || el.disabled) continue;
         const name = el.name;
         const type = (el.type || '').toLowerCase();
+        
+        // Combinar DNS primario y secundario en dns_server para el backend
+        if(formId === 'networkConfigForm' && (name === 'dns_primary' || name === 'dns_secondary')){
+          const dnsPrimary = document.getElementById('dns_primary')?.value?.trim() || '';
+          const dnsSecondary = document.getElementById('dns_secondary')?.value?.trim() || '';
+          if(dnsPrimary){
+            obj['dns_server'] = dnsSecondary ? `${dnsPrimary},${dnsSecondary}` : dnsPrimary;
+          }
+          continue; // No agregar dns_primary ni dns_secondary al payload
+        }
+        
         if(type === 'checkbox'){
           obj[name] = !!el.checked;
         } else if(type === 'number'){
           obj[name] = el.value === '' ? null : parseInt(el.value, 10);
-        } else {
+        } else if(type !== 'hidden' || name === 'dns_server') {
+          // Incluir campos hidden solo si es dns_server (ya lo manejamos arriba)
           obj[name] = el.value;
         }
       }
