@@ -290,27 +290,45 @@
       try{
         // Obtener idioma actual de la página o cookie
         const currentLang = document.documentElement.lang || document.querySelector('html').getAttribute('lang') || 'es';
-        
-        const resp = await fetch('/api/v1/auth/first-login/change', {
-                    method:'POST', 
-                    headers:{ 
-                        'Content-Type':'application/json',
-                        'Accept-Language': currentLang
-                    }, 
-                    body: JSON.stringify(payload)
-                });
-        
-        const data = await resp.json();
-        if(resp.ok){
-          showSuccess(data.message || t('auth.credentials_updated', 'Credenciales actualizadas. Vuelve a iniciar sesión.'));
+
+        const requestFn = (window.HostBerry && typeof window.HostBerry.apiRequest === 'function')
+          ? (url, options) => window.HostBerry.apiRequest(url, options)
+          : (url, options) => fetch(url, options);
+
+        const resp = await requestFn('/api/v1/auth/first-login/change', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept-Language': currentLang
+          },
+          body: payload
+        });
+
+        let data = null;
+        try {
+          // Puede fallar si el servidor devuelve HTML (p.ej. 502) o body vacío.
+          data = await resp.json();
+        } catch (_jsonErr) {
+          data = null;
+        }
+
+        if(resp && resp.ok){
+          showSuccess((data && data.message) || t('auth.credentials_updated', 'Credenciales actualizadas. Vuelve a iniciar sesión.'));
           localStorage.removeItem('access_token');
           setTimeout(function(){ 
-            window.location.href = '/login'; 
-          }, 2000);
+            window.location.href = `/login?lang=${encodeURIComponent(currentLang)}`;
+          }, 1200);
         } else {
-          // Procesar errores de validación de Pydantic
-          const errorMessage = processValidationError(data.detail);
-          showError(errorMessage);
+          // Procesar errores de validación de Pydantic (si hay JSON)
+          const detail = data ? data.detail : null;
+          if (detail) {
+            showError(processValidationError(detail));
+          } else {
+            // Fallback: status + mensaje genérico
+            const status = resp && typeof resp.status === 'number' ? resp.status : 0;
+            const baseMsg = t('errors.general_error_message', 'Ha ocurrido un error inesperado');
+            showError(status ? `${baseMsg} (HTTP ${status})` : baseMsg);
+          }
         }
       }catch(_e){
         console.error('Error en first-login:', _e);
