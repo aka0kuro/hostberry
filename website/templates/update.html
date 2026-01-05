@@ -505,7 +505,7 @@
       
     }catch(error){
       console.error('Update all failed', error);
-      const errorMsg = getTranslation('update.all_error', 'Error durante la actualización');
+      const errorMsg = getTranslation('update.all_error', 'Error during update');
       addLogEntry(errorMsg, 'error');
       showNotification(errorMsg, 'error');
     }
