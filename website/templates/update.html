@@ -436,7 +436,7 @@
 
   async function updateProject(){
     try{
-      const confirmMsg = getTranslation('update.project_confirm', '¿Estás seguro de que deseas actualizar HostBerry? Esto ejecutará setup.sh --update.');
+      const confirmMsg = getTranslation('update.project_confirm', 'Are you sure you want to update HostBerry? This will run setup.sh --update.');
       if(!confirm(confirmMsg)) return;
       
       addLogEntry(getTranslation('update.updating_project', 'Iniciando actualización del proyecto...'), 'info');
