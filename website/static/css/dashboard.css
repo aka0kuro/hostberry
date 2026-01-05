@@ -1283,3 +1283,42 @@ body:not(.light-theme) .form-select-sm {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* System Information - Espaciado y centrado */
+.system-info-grid {
+    --bs-gutter-x: 1.5rem;
+    --bs-gutter-y: 2rem;
+}
+
+.system-info-item {
+    margin-bottom: 1.5rem;
+}
+
+.system-info-item h6,
+.system-info-item p {
+    text-align: center !important;
+    width: 100%;
+}
+
+/* Espaciado adicional en móvil y tablet */
+@media (max-width: 991.98px) {
+    .system-info-grid {
+        --bs-gutter-x: 2rem;
+        --bs-gutter-y: 2.5rem;
+    }
+    
+    .system-info-item {
+        margin-bottom: 2rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .system-info-grid {
+        --bs-gutter-x: 1.5rem;
+        --bs-gutter-y: 2rem;
+    }
+    
+    .system-info-item {
+        margin-bottom: 1.5rem;
+    }
+}
