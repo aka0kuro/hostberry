@@ -659,8 +659,7 @@
   async function updateTrafficStats() {
     try {
       // Agregar timestamp para evitar caché del navegador
-      const cacheBuster = `&_t=${Date.now()}`;
-      const url = `/api/v1/system/network${selectedTrafficInterface ? `?interface=${encodeURIComponent(selectedTrafficInterface)}` : ''}${cacheBuster}`;
+      const url = `/api/v1/system/network${selectedTrafficInterface ? `?interface=${encodeURIComponent(selectedTrafficInterface)}` : ''}&_t=${Date.now()}`;
       const resp = await HostBerry.apiRequest(url);
       
       if (!resp || !resp.ok) {
