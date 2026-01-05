@@ -41,7 +41,7 @@
                         
                         <div class="mb-3">
                             <label for="theme" class="form-label text-white">{{ t('settings.theme', 'Theme') }}</label>
-                            <select class="form-select bg-dark text-white border-secondary" id="theme" name="theme">
+                            <select class="form-select bg-dark text-white border-secondary text-center" id="theme" name="theme">
                                 {% set current_theme = (settings.theme if settings else 'dark') or 'dark' %}
                                 <option value="light" {{ 'selected' if current_theme == 'light' else '' }}>{{ t('settings.theme_light', 'Light') }}</option>
                                 <option value="dark" {{ 'selected' if current_theme == 'dark' else '' }}>{{ t('settings.theme_dark', 'Dark') }}</option>
