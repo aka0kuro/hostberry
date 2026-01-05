@@ -1460,3 +1460,40 @@ body:not(.light-theme) .form-select-sm {
     text-align: center;
     width: 100%;
 }
+
+/* Selector de zona horaria con búsqueda */
+.timezone-selector-wrapper {
+    position: relative;
+}
+
+.timezone-dropdown {
+    background-color: rgba(33, 37, 41, 0.95) !important;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.timezone-option {
+    transition: background-color 0.2s ease;
+}
+
+.timezone-option:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.timezone-option.bg-primary {
+    background-color: rgba(13, 110, 253, 0.3) !important;
+}
+
+.spinning {
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
