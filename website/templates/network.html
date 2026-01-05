@@ -315,14 +315,17 @@
     const tbody = document.getElementById('routingTable'); 
     if(!tbody) return;
     
-    if(!routes || routes.length===0){ 
+    if(!routes || !Array.isArray(routes) || routes.length===0){ 
         tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">'+HostBerry.t('network.no_routes', 'No routes found')+'</td></tr>'; 
         return; 
     }
     
+    console.log('Displaying routes:', routes);
+    
     let html='';
     routes.forEach(function(route){ 
-        html += '<tr><td class="text-white">'+(route.destination || '0.0.0.0')+'</td><td class="text-white">'+(route.gateway||'*')+'</td><td class="text-white">'+(route.interface || '-')+'</td><td class="text-white">'+(route.metric||'0')+'</td></tr>'; 
+        if(!route) return;
+        html += '<tr><td class="text-white">'+(route.destination || '0.0.0.0')+'</td><td class="text-white">'+(route.gateway||'*')+'</td><td class="text-white">'+(route.interface || route.dev || '-')+'</td><td class="text-white">'+(route.metric||'0')+'</td></tr>'; 
     });
     tbody.innerHTML = html;
   }
