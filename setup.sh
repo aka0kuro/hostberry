@@ -455,6 +455,9 @@ Defaults:hostberry log_year, log_host, syslog=auth
 %hostberry ALL=(ALL) NOPASSWD: /usr/bin/rm -f /etc/nginx/sites-enabled/hostberry
 %hostberry ALL=(ALL) NOPASSWD: /usr/bin/rm -f /etc/nginx/sites-enabled/hostberry-ssl
 
+# Zona horaria del sistema (wrapper validado)
+%hostberry ALL=(ALL) NOPASSWD: /usr/local/sbin/hostberry-safe/set-timezone
+
 # Escritura de archivos específicos
 %hostberry ALL=(ALL) NOPASSWD: /usr/bin/tee /etc/nginx/sites-available/hostberry
 %hostberry ALL=(ALL) NOPASSWD: /usr/bin/tee /etc/nginx/sites-available/hostberry-ssl
