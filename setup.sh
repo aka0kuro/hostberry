@@ -2618,6 +2618,10 @@ EOF
         
         # Configurar venv en modo update (instalar/verificar deps)
         setup_production_venv "update"
+
+        # IMPORTANTE: en modo update también asegurar directorios/permisos (logs/db/uploads).
+        # Si /var/log/hostberry pierde owner/permisos, el backend puede caer y Nginx devuelve 502.
+        setup_production_dirs
         
         # Reiniciar servicio
         if [[ $EUID -eq 0 ]]; then
