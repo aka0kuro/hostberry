@@ -542,6 +542,33 @@
   bindForm('securityConfigForm', '/api/v1/system/config');
   bindForm('performanceConfigForm', '/api/v1/system/config');
   bindForm('notificationConfigForm', '/api/v1/system/config');
+
+  // Email de prueba
+  const testBtn = document.getElementById('sendTestEmailBtn');
+  if (testBtn) {
+    testBtn.addEventListener('click', async function () {
+      try {
+        const to = (document.getElementById('email_address')?.value || '').trim();
+        if (!to) {
+          showNotification(t('settings.test_email_missing_to', 'Please enter an email address first.'), 'warning');
+          return;
+        }
+
+        showNotification(t('settings.sending_test_email', 'Sending test email...'), 'info');
+        const resp = await HostBerry.apiRequest('/api/v1/system/notifications/test-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: { to }
+        });
+        const msg = resp?.message || t('settings.test_email_sent', 'Test email sent.');
+        showNotification(msg, 'success');
+      } catch (e) {
+        console.error('Test email error:', e);
+        const detail = (e && (e.detail || e.message)) ? (e.detail || e.message) : '';
+        showNotification(detail || t('settings.test_email_failed', 'Failed to send test email.'), 'error');
+      }
+    });
+  }
 })();
 </script>
 {% endblock %}
