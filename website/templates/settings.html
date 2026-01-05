@@ -284,6 +284,45 @@
                             <label for="email_address" class="form-label text-white">{{ t('settings.email_address', 'Email Address') }}</label>
                             <input type="email" class="form-control bg-dark text-white border-secondary" id="email_address" name="email_address" value="{{ notification_config.email_address if notification_config else '' }}">
                         </div>
+
+                        <hr class="border-secondary">
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="smtp_host" class="form-label text-white">{{ t('settings.smtp_host', 'SMTP Host') }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="smtp_host" name="smtp_host" value="{{ notification_config.smtp_host if notification_config else '' }}" placeholder="smtp.gmail.com">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="smtp_port" class="form-label text-white">{{ t('settings.smtp_port', 'SMTP Port') }}</label>
+                                <input type="number" class="form-control bg-dark text-white border-secondary" id="smtp_port" name="smtp_port" value="{{ notification_config.smtp_port if notification_config else 587 }}" min="1" max="65535">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="smtp_user" class="form-label text-white">{{ t('settings.smtp_user', 'SMTP User') }}</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="smtp_user" name="smtp_user" value="{{ notification_config.smtp_user if notification_config else '' }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="smtp_password" class="form-label text-white">{{ t('settings.smtp_password', 'SMTP Password') }}</label>
+                            <input type="password" class="form-control bg-dark text-white border-secondary" id="smtp_password" name="smtp_password" value="{{ notification_config.smtp_password if notification_config else '' }}" autocomplete="new-password">
+                            <small class="text-white-50">{{ t('settings.smtp_password_hint', 'If you use Gmail, use an App Password') }}</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="smtp_from" class="form-label text-white">{{ t('settings.smtp_from', 'From Email') }}</label>
+                            <input type="email" class="form-control bg-dark text-white border-secondary" id="smtp_from" name="smtp_from" value="{{ notification_config.smtp_from if notification_config else '' }}" placeholder="hostberry@tu-dominio.com">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ t('settings.smtp_tls', 'Use TLS (STARTTLS)') }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="smtp_tls" name="smtp_tls" {{ 'checked' if (notification_config.smtp_tls if notification_config else True) else '' }}>
+                                <label class="form-check-label text-white" for="smtp_tls">
+                                    {{ t('settings.enable_smtp_tls', 'Enable TLS') }}
+                                </label>
+                            </div>
+                        </div>
                         
                         <div class="mb-3">
                             <label class="form-label text-white">{{ t('settings.system_alerts', 'System Alerts') }}</label>
@@ -302,6 +341,13 @@
                             </button>
                         </div>
                     </form>
+
+                    <div class="d-grid mt-3">
+                        <button type="button" class="btn btn-outline-info" id="sendTestEmailBtn">
+                            <i class="bi bi-send me-2"></i>
+                            {{ t('settings.send_test_email', 'Send test email') }}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
