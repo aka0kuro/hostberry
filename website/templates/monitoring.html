@@ -286,11 +286,12 @@
     }
 
     function formatBytes(bytes) {
-      if (!Number.isFinite(bytes) || bytes < 0) return '0 B';
+      if (!Number.isFinite(bytes) || bytes < 0 || bytes === 0) return '0 B';
       const k = 1024;
       const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
       const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return `${safeToFixed(bytes / Math.pow(k, i), 1)} ${sizes[i]}`;
+      const sizeIndex = Math.max(0, Math.min(i, sizes.length - 1));
+      return `${safeToFixed(bytes / Math.pow(k, sizeIndex), 1)} ${sizes[sizeIndex]}`;
     }
 
     function updateProgress(id, percent) {
