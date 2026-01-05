@@ -473,11 +473,11 @@
       const confirmMsg = getTranslation('update.all_confirm', 'Are you sure you want to update both the system and the project? This may take several minutes.');
       if(!confirm(confirmMsg)) return;
       
-      addLogEntry(getTranslation('update.updating_all', 'Iniciando actualización completa...'), 'info');
-      showNotification(getTranslation('update.updating_all', 'Actualizando todo...'), 'info');
+      addLogEntry(getTranslation('update.updating_all', 'Updating all...'), 'info');
+      showNotification(getTranslation('update.updating_all', 'Updating all...'), 'info');
       
       // Primero actualizar el sistema
-      addLogEntry(getTranslation('update.updating_system', 'Actualizando sistema...'), 'info');
+      addLogEntry(getTranslation('update.updating_system', 'Updating system...'), 'info');
       const systemResp = await HostBerry.apiRequest('/api/v1/system/updates/execute', { method: 'POST' });
       if(!systemResp || !systemResp.ok){
         const errorText = systemResp ? await systemResp.text() : 'No response';
