@@ -632,7 +632,7 @@
     // Actualizar estadísticas
     async function updateStats() {
       try {
-        // Agregar timestamp para evitar caché
+        // Agregar timestamp para evitar caché del navegador
         const cacheBuster = `&_t=${Date.now()}`;
         const [systemStatsResp, networkStatsResp] = await Promise.all([
           fetchJson('/api/v1/system/stats'),
