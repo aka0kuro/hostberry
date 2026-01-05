@@ -1497,3 +1497,50 @@ body:not(.light-theme) .form-select-sm {
         transform: rotate(360deg);
     }
 }
+
+/* Estilos mejorados para desplegables de Idioma y Tema */
+.form-select-custom {
+    border-radius: 12px !important;
+    padding: 0.75rem 1rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background-color: rgba(33, 37, 41, 0.8) !important;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    font-weight: 500;
+    text-align: center !important;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    padding-right: 2.5rem !important;
+}
+
+.form-select-custom:hover {
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+}
+
+.form-select-custom:focus {
+    border-color: rgba(13, 110, 253, 0.6) !important;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25), 0 4px 12px rgba(0, 0, 0, 0.3);
+    outline: none;
+    background-color: rgba(33, 37, 41, 0.95) !important;
+}
+
+.form-select-custom option {
+    background-color: #212529;
+    color: #ffffff;
+    padding: 0.5rem;
+    text-align: center;
+}
+
+/* Centrar labels de Idioma y Tema */
+.settings-card .form-label.text-center {
+    text-align: center !important;
+    width: 100%;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
