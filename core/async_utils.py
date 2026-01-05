@@ -96,3 +96,18 @@ def get_version() -> str:
     from core.version import get_version as get_app_version
     return get_app_version()
 
+
+async def run_command_async(*args, timeout: Optional[int] = None, cwd: Optional[str] = None) -> Tuple[int, str, str]:
+    """
+    Ejecuta un comando de forma asíncrona (wrapper para run_subprocess_async)
+    
+    Args:
+        *args: Argumentos del comando
+        timeout: Timeout opcional en segundos
+        cwd: Directorio de trabajo opcional
+        
+    Returns:
+        Tuple[int, str, str]: (returncode, stdout, stderr)
+    """
+    return await run_subprocess_async(list(args), timeout=timeout, cwd=cwd)
+
