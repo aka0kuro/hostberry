@@ -392,14 +392,14 @@
                         <div class="col-md-6 mb-3">
                             <h6 class="text-white">{{ t('settings.version', 'Version') }}</h6>
                             <p class="text-white-50">{{ (version_info.app_version if version_info else '') or (system_info.app_version if system_info else '') or '-' }}</p>
-
+                            
                             <h6 class="text-white">{{ t('system.hostname', 'Hostname') }}</h6>
                             <p class="text-white-50">{{ system_info.hostname if system_info else '-' }}</p>
                         </div>
                         <div class="col-md-6 mb-3">
                             <h6 class="text-white">{{ t('system.os', 'OS') }}</h6>
                             <p class="text-white-50">{{ system_info.os_version if system_info else '-' }}</p>
-
+                            
                             <h6 class="text-white">{{ t('system.kernel', 'Kernel') }}</h6>
                             <p class="text-white-50">{{ system_info.kernel_version if system_info else '-' }}</p>
                         </div>
@@ -424,7 +424,7 @@
         <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
       </div>
     `;
-
+    
     if (!document.querySelector('#notification-styles')) {
       const style = document.createElement('style');
       style.id = 'notification-styles';
@@ -476,7 +476,7 @@
       `;
       document.head.appendChild(style);
     }
-
+    
     document.body.appendChild(notification);
     setTimeout(() => {
       if (notification.parentElement) notification.remove();
@@ -494,7 +494,7 @@
     
     form.addEventListener('submit', async function(e){
       e.preventDefault();
-
+      
       // Construir payload robusto (incluye checkboxes aunque estén apagados)
       const obj = {};
       const elements = Array.from(form.elements || []);
@@ -512,7 +512,7 @@
       }
 
       showNotification(t('settings.saving', 'Saving...'), 'info');
-
+      
       try{
         const resp = await HostBerry.apiRequest(endpoint, {
           method: 'POST',
@@ -529,26 +529,26 @@
 
         const data = await resp.json().catch(() => ({}));
         const message = data.message || t('settings.saved', 'Settings saved successfully');
-        showNotification(message, 'success');
-
+          showNotification(message, 'success');
+          
         // Aplicar cambios UX
-        if(formId === 'generalConfigForm'){
-          setTimeout(() => {
-            if(obj.language){
+          if(formId === 'generalConfigForm'){
+            setTimeout(() => {
+              if(obj.language){
               const currentUrl = new URL(window.location.href);
-              currentUrl.searchParams.set('lang', obj.language);
-              window.location.href = currentUrl.toString();
+                currentUrl.searchParams.set('lang', obj.language);
+                window.location.href = currentUrl.toString();
               return;
             }
             if(obj.theme){
               if(obj.theme === 'auto'){
                 localStorage.removeItem('theme');
                 window.ThemeManager?.initTheme?.();
-              } else {
+                } else {
                 window.ThemeManager?.setTheme?.(obj.theme);
               }
             }
-            if(obj.timezone){
+              if(obj.timezone){
               showNotification(t('settings.timezone_updated', 'Timezone updated. Changes will take effect on next page reload.'), 'info');
               // Aplicar en todo el proyecto: recargar para que base.html exporte el nuevo timezone a JS global.
               setTimeout(() => window.location.reload(), 800);

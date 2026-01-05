@@ -799,10 +799,10 @@ async def first_login(request: Request, lang: str | None = Query(default=None)) 
         request,
         lang,
         extra={
-            "current_user": current_user,
-            "services": _get_service_statuses(),
-            "recent_activities": [
-                {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
+        "current_user": current_user,
+        "services": _get_service_statuses(),
+        "recent_activities": [
+            {"title": "Login exitoso", "description": "Usuario admin inició sesión", "timestamp": "Hace 5 minutos"},
                 {"title": "Actualización de sistema", "description": "Paquetes actualizados", "timestamp": "Hace 1 hora"},
             ],
         },
