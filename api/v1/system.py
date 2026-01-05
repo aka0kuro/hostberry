@@ -645,6 +645,68 @@ async def update_system_config(
                             logger.warning(f"Excepción aplicando firewall: {fw_err}")
                             errors.append(get_text("settings.firewall_apply_failed", default="No se pudo aplicar el firewall al sistema"))
 
+                    # Aplicar SSL/TLS al sistema si corresponde
+                    if key == "ssl_enabled":
+                        try:
+                            desired = str(value_str).strip().lower() in ("1", "true", "yes", "on", "enabled")
+                            from core.async_utils import run_subprocess_async
+                            
+                            if desired:
+                                # Habilitar SSL: crear symlink a hostberry-ssl y deshabilitar hostberry normal
+                                rc1, out1, err1 = await run_subprocess_async(
+                                    ["sudo", "/usr/bin/ln", "-sf", "/etc/nginx/sites-available/hostberry-ssl", "/etc/nginx/sites-enabled/hostberry-ssl"],
+                                    timeout=10
+                                )
+                                rc2, out2, err2 = await run_subprocess_async(
+                                    ["sudo", "/usr/bin/rm", "-f", "/etc/nginx/sites-enabled/hostberry"],
+                                    timeout=10
+                                )
+                                if rc1 != 0 or rc2 != 0:
+                                    combined = (err1 or out1 or err2 or out2 or "").strip()
+                                    errors.append(get_text("settings.ssl_apply_failed", default="No se pudo habilitar SSL/TLS"))
+                                    if combined:
+                                        logger.warning(f"Error habilitando SSL: {combined}")
+                                else:
+                                    # Recargar nginx
+                                    rc3, out3, err3 = await run_subprocess_async(
+                                        ["sudo", "/usr/local/sbin/hostberry-safe/reload-nginx"],
+                                        timeout=10
+                                    )
+                                    if rc3 != 0:
+                                        combined = (err3 or out3 or "").strip()
+                                        errors.append(get_text("settings.ssl_apply_failed", default="No se pudo recargar Nginx"))
+                                        if combined:
+                                            logger.warning(f"Error recargando Nginx: {combined}")
+                            else:
+                                # Deshabilitar SSL: crear symlink a hostberry normal y deshabilitar hostberry-ssl
+                                rc1, out1, err1 = await run_subprocess_async(
+                                    ["sudo", "/usr/bin/ln", "-sf", "/etc/nginx/sites-available/hostberry", "/etc/nginx/sites-enabled/hostberry"],
+                                    timeout=10
+                                )
+                                rc2, out2, err2 = await run_subprocess_async(
+                                    ["sudo", "/usr/bin/rm", "-f", "/etc/nginx/sites-enabled/hostberry-ssl"],
+                                    timeout=10
+                                )
+                                if rc1 != 0 or rc2 != 0:
+                                    combined = (err1 or out1 or err2 or out2 or "").strip()
+                                    errors.append(get_text("settings.ssl_apply_failed", default="No se pudo deshabilitar SSL/TLS"))
+                                    if combined:
+                                        logger.warning(f"Error deshabilitando SSL: {combined}")
+                                else:
+                                    # Recargar nginx
+                                    rc3, out3, err3 = await run_subprocess_async(
+                                        ["sudo", "/usr/local/sbin/hostberry-safe/reload-nginx"],
+                                        timeout=10
+                                    )
+                                    if rc3 != 0:
+                                        combined = (err3 or out3 or "").strip()
+                                        errors.append(get_text("settings.ssl_apply_failed", default="No se pudo recargar Nginx"))
+                                        if combined:
+                                            logger.warning(f"Error recargando Nginx: {combined}")
+                        except Exception as ssl_err:
+                            logger.warning(f"Excepción aplicando SSL: {ssl_err}")
+                            errors.append(get_text("settings.ssl_apply_failed", default="No se pudo aplicar SSL/TLS al sistema"))
+
                     # Aplicar DNS al sistema si corresponde
                     if key == "dns_server" and value_str:
                         try:
