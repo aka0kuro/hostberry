@@ -87,7 +87,7 @@
                     <form id="systemConfigForm">
                         <div class="mb-3">
                             <label for="log_level" class="form-label text-white">{{ t('system.log_level', 'Log Level') }}</label>
-                            <select class="form-select bg-dark text-white border-secondary" id="log_level" name="log_level">
+                            <select class="form-select bg-dark text-white border-secondary text-center" id="log_level" name="log_level">
                                 <option value="DEBUG" {{ 'selected' if (system_config.log_level if system_config else 'INFO') == 'DEBUG' else '' }}>DEBUG</option>
                                 <option value="INFO" {{ 'selected' if (system_config.log_level if system_config else 'INFO') == 'INFO' else '' }}>INFO</option>
                                 <option value="WARNING" {{ 'selected' if (system_config.log_level if system_config else 'INFO') == 'WARNING' else '' }}>WARNING</option>
