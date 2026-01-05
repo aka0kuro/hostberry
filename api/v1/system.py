@@ -9,6 +9,9 @@ import asyncio
 import subprocess
 import re
 from typing import Dict, Any, List
+# Email (notificaciones)
+import smtplib
+from email.message import EmailMessage
 # psutil se importa lazy cuando se necesita
 
 from fastapi import APIRouter, HTTPException, status, Depends, Request
@@ -651,6 +654,96 @@ async def update_system_config(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=get_text("errors.config_update_error", default=f"Error actualizando configuración: {str(e)}")
+        )
+
+
+@router.post("/notifications/test-email")
+async def send_test_email(
+    request: Request,
+    current_user: Dict[str, Any] = Depends(get_current_active_user)
+):
+    """Envía un email de prueba usando configuración SMTP guardada en la DB."""
+    try:
+        if not db:
+            raise HTTPException(status_code=500, detail="Database not available")
+
+        body = {}
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+
+        to_addr = (body.get("to") if isinstance(body, dict) else None) or await db.get_configuration("email_address") or ""
+        to_addr = str(to_addr).strip()
+        if not to_addr:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=get_text("settings.test_email_missing_to", default="Please enter an email address first.")
+            )
+
+        smtp_host = str(await db.get_configuration("smtp_host") or "").strip()
+        smtp_port_raw = await db.get_configuration("smtp_port")
+        smtp_user = str(await db.get_configuration("smtp_user") or "").strip()
+        smtp_password = str(await db.get_configuration("smtp_password") or "")
+        smtp_from = str(await db.get_configuration("smtp_from") or "").strip()
+        smtp_tls_raw = await db.get_configuration("smtp_tls")
+
+        # defaults
+        try:
+            smtp_port = int(str(smtp_port_raw).strip() or "587")
+        except Exception:
+            smtp_port = 587
+
+        smtp_tls = True
+        if smtp_tls_raw is not None:
+            s = str(smtp_tls_raw).strip().lower()
+            smtp_tls = s in ("1", "true", "yes", "on", "enabled")
+
+        if not smtp_host:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=get_text("settings.missing_smtp_config", default="SMTP configuration is missing. Please fill SMTP Host/Port/User/Password and save.")
+            )
+
+        from_addr = smtp_from or smtp_user or to_addr
+        if not from_addr:
+            from_addr = "hostberry@localhost"
+
+        subject = get_text("settings.test_email_subject", default="HostBerry: test email")
+        message = get_text("settings.test_email_body", default="This is a test email from HostBerry.")
+
+        msg = EmailMessage()
+        msg["From"] = from_addr
+        msg["To"] = to_addr
+        msg["Subject"] = subject
+        msg.set_content(message)
+
+        # Enviar (bloqueante) en hilo para no bloquear el event loop
+        def _send():
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+                server.ehlo()
+                if smtp_tls:
+                    server.starttls()
+                    server.ehlo()
+                if smtp_user:
+                    server.login(smtp_user, smtp_password)
+                server.send_message(msg)
+
+        await asyncio.to_thread(_send)
+
+        try:
+            await db.insert_log("INFO", f"Email de prueba enviado a {to_addr} por {current_user.get('username', 'unknown')}")
+        except Exception:
+            pass
+
+        return {"message": get_text("settings.test_email_sent", default="Test email sent.")}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error enviando email de prueba: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=get_text("settings.test_email_failed", default="Failed to send test email.")
         )
 
 @router.get("/activity")
