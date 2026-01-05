@@ -521,6 +521,34 @@ fi
 EOF
     chmod 750 /usr/local/sbin/hostberry-safe/reload-nginx
 
+    # Wrapper para aplicar zona horaria del sistema de forma segura
+    cat > /usr/local/sbin/hostberry-safe/set-timezone << 'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+  echo "Uso: set-timezone <Area/City>" >&2
+  exit 2
+fi
+
+TZ="$1"
+
+# Validación básica para evitar path traversal y entradas raras
+if [[ "$TZ" == *".."* ]] || [[ "$TZ" == /* ]] || [[ "$TZ" == *$'\n'* ]] || [[ "$TZ" == *$'\r'* ]]; then
+  echo "Zona horaria inválida" >&2
+  exit 2
+fi
+
+ZONEINFO="/usr/share/zoneinfo/${TZ}"
+if [[ ! -f "$ZONEINFO" ]]; then
+  echo "Zona horaria no encontrada: $TZ" >&2
+  exit 2
+fi
+
+exec /usr/bin/timedatectl set-timezone "$TZ"
+EOF
+    chmod 750 /usr/local/sbin/hostberry-safe/set-timezone
+
   # Wrapper para reiniciar servicio de hostberry validando existencia (optimizado)
   cat > /usr/local/sbin/hostberry-safe/restart-app << EOF
 #!/usr/bin/env bash
