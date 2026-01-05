@@ -175,16 +175,18 @@
     <div class="row services-network-row">
         <!-- System Manager - Services Status -->
         <div class="col-lg-6 mb-4">
-            <div class="card h-100 glass-card border-0 services-card">
-                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4 services-card-header">
-                    <h5 class="card-title mb-0 fw-bold text-white services-card-title">
-                        <i class="bi bi-gear-fill me-2"></i>{{ t('system.manager', 'System Manager') }}
-                    </h5>
-                    <button class="btn btn-sm btn-outline-primary" onclick="refreshServices()" title="{{ t('common.refresh', 'Refresh') }}">
-                        <i class="bi bi-arrow-clockwise"></i>
-                    </button>
+            <div class="actions-card h-100">
+                <div class="actions-card-header">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="actions-card-title mb-0">
+                            <i class="bi bi-gear-fill me-2"></i>{{ t('system.manager', 'System Manager') }}
+                        </h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshServices()" title="{{ t('common.refresh', 'Refresh') }}">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="card-body services-card-body">
+                <div class="actions-card-body">
                     <div id="dashboardServicesContainer">
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-arrow-clockwise spinning"></i>
