@@ -43,15 +43,28 @@ function updateThemeIcon(theme) {
 function loadTheme() {
     const savedTheme = localStorage.getItem('theme');
     const body = document.body;
+    const serverTheme = window.HostBerryServerSettings && window.HostBerryServerSettings.theme;
     
-    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    // Prioridad: localStorage > settings del servidor > preferencia del sistema
+    if (savedTheme === 'dark' || (!savedTheme && serverTheme === 'dark')) {
         body.classList.remove('light-theme');
         body.classList.add('dark-theme');
         updateThemeIcon('dark');
-    } else {
+    } else if (savedTheme === 'light' || (!savedTheme && serverTheme === 'light')) {
         body.classList.remove('dark-theme');
         body.classList.add('light-theme');
         updateThemeIcon('light');
+    } else {
+        // auto / sin setting: usar preferencia del sistema
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            body.classList.remove('light-theme');
+            body.classList.add('dark-theme');
+            updateThemeIcon('dark');
+        } else {
+            body.classList.remove('dark-theme');
+            body.classList.add('light-theme');
+            updateThemeIcon('light');
+        }
     }
 }
 
