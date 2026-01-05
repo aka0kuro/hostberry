@@ -30,18 +30,18 @@
                 </div>
                 <div class="card-body px-4 pb-4">
                     <form id="generalConfigForm">
-                        <div class="mb-3 d-flex flex-column align-items-center">
-                            <label for="language" class="form-label text-white text-center mb-2">{{ t('settings.language', 'Language') }}</label>
-                            <select class="form-select form-select-custom bg-white text-dark border-secondary text-center" id="language" name="language" style="max-width: 300px; width: 100%;">
+                        <div class="mb-3 d-flex flex-column align-items-center justify-content-center">
+                            <label for="language" class="form-label text-white text-center mb-2 w-100">{{ t('settings.language', 'Language') }}</label>
+                            <select class="form-select form-select-custom bg-white text-dark border-secondary text-center" id="language" name="language" style="max-width: 300px; width: 100%; background-color: #ffffff !important;">
                                 {% set current_lang = (settings.language if settings else (language if language else 'es')) or 'es' %}
                                 <option value="es" {{ 'selected' if current_lang == 'es' else '' }}>🇪🇸 Español</option>
                                 <option value="en" {{ 'selected' if current_lang == 'en' else '' }}>🇺🇸 English</option>
                             </select>
                         </div>
                         
-                        <div class="mb-3 d-flex flex-column align-items-center">
-                            <label for="theme" class="form-label text-white text-center mb-2">{{ t('settings.theme', 'Theme') }}</label>
-                            <select class="form-select form-select-custom bg-white text-dark border-secondary text-center" id="theme" name="theme" style="max-width: 300px; width: 100%;">
+                        <div class="mb-3 d-flex flex-column align-items-center justify-content-center">
+                            <label for="theme" class="form-label text-white text-center mb-2 w-100">{{ t('settings.theme', 'Theme') }}</label>
+                            <select class="form-select form-select-custom bg-white text-dark border-secondary text-center" id="theme" name="theme" style="max-width: 300px; width: 100%; background-color: #ffffff !important;">
                                 {% set current_theme = (settings.theme if settings else 'dark') or 'dark' %}
                                 <option value="light" {{ 'selected' if current_theme == 'light' else '' }}>{{ t('settings.theme_light', 'Light') }}</option>
                                 <option value="dark" {{ 'selected' if current_theme == 'dark' else '' }}>{{ t('settings.theme_dark', 'Dark') }}</option>
