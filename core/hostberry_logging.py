@@ -129,7 +129,7 @@ class MultiLanguageLogger:
         log_file = getattr(settings, "log_file", "/var/log/hostberry/hostberry.log")
         log_dir = Path(log_file).parent
         try:
-            log_dir.mkdir(parents=True, exist_ok=True)
+        log_dir.mkdir(parents=True, exist_ok=True)
         except PermissionError:
             # Fallback: escribir en /tmp si no se puede crear /var/log/...
             log_file = "/tmp/hostberry.log"
@@ -147,14 +147,14 @@ class MultiLanguageLogger:
         if not self.logger.handlers:
             # Handler para archivo (con fallback si hay permisos)
             try:
-                file_handler = logging.handlers.RotatingFileHandler(
+            file_handler = logging.handlers.RotatingFileHandler(
                     log_file,
                     maxBytes=getattr(settings, "log_max_size", 5 * 1024 * 1024),
                     backupCount=getattr(settings, "log_backup_count", 3),
-                    encoding='utf-8'
-                )
-                file_handler.setFormatter(JSONFormatter())
-                self.logger.addHandler(file_handler)
+                encoding='utf-8'
+            )
+            file_handler.setFormatter(JSONFormatter())
+            self.logger.addHandler(file_handler)
             except PermissionError:
                 # Si no podemos escribir en el log, no rompemos la app: usamos stdout.
                 console_handler = logging.StreamHandler(sys.stdout)

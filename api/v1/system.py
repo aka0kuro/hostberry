@@ -313,7 +313,7 @@ async def get_network_statistics(
                         break
             except:
                 ip_address = get_ip_address(interface) if interface else None
-
+        
         interface = interface or "unknown"
         ip_address = ip_address or "--"
         
@@ -574,7 +574,7 @@ async def update_system_config(
         
         for key, value in body.items():
             try:
-                # Convertir valores a string para almacenar
+            # Convertir valores a string para almacenar
                 # Manejar valores booleanos, None, etc.
                 if value is None:
                     value_str = ""
@@ -593,10 +593,10 @@ async def update_system_config(
                     continue
                 
                 logger.debug(f"Guardando configuración: {key}={value_str}")
-                success = await db.set_configuration(key, value_str)
+            success = await db.set_configuration(key, value_str)
                 
-                if success:
-                    updated_keys.append(key)
+            if success:
+                updated_keys.append(key)
                     logger.info(f"Configuración guardada exitosamente: {key}")
 
                     # Aplicar zona horaria al sistema si corresponde
@@ -670,9 +670,9 @@ async def update_system_config(
                             logger.warning(f"Excepción aplicando DNS: {dns_err}")
                             errors.append(get_text("settings.dns_apply_failed", default="No se pudo aplicar el DNS al sistema"))
 
-                    # Log del cambio de configuración
+                # Log del cambio de configuración
                     try:
-                        await db.insert_log("INFO", f"Configuración actualizada: {key}={value_str} por {current_user.get('username', 'unknown')}")
+                await db.insert_log("INFO", f"Configuración actualizada: {key}={value_str} por {current_user.get('username', 'unknown')}")
                     except Exception as log_error:
                         logger.warning(f"Error insertando log: {str(log_error)}")
                 else:
@@ -1054,11 +1054,11 @@ async def check_updates(current_user: Dict[str, Any] = Depends(get_current_activ
                 detail=detail_msg
             )
         
-        # Buscar actualizaciones disponibles
-        returncode2, stdout2, stderr2 = await run_subprocess_async(
-            ["sudo", "apt", "list", "--upgradable"],
-            timeout=30
-        )
+            # Buscar actualizaciones disponibles
+            returncode2, stdout2, stderr2 = await run_subprocess_async(
+                ["sudo", "apt", "list", "--upgradable"],
+                timeout=30
+            )
         
         if returncode2 != 0:
             error_msg = stderr2.strip() if stderr2 else stdout2.strip() if stdout2 else "Error desconocido"
@@ -1073,14 +1073,14 @@ async def check_updates(current_user: Dict[str, Any] = Depends(get_current_activ
         # Filtrar líneas vacías y la primera línea que suele ser un encabezado
         filtered_updates = [line for line in updates if line.strip() and not line.startswith('Listing')]
         update_count = len(filtered_updates)
-        
-        await db.insert_log("INFO", f"Actualizaciones disponibles: {update_count}")
-        
-        return {
-            "updates_available": update_count > 0,
-            "update_count": update_count,
+            
+            await db.insert_log("INFO", f"Actualizaciones disponibles: {update_count}")
+            
+            return {
+                "updates_available": update_count > 0,
+                "update_count": update_count,
             "updates": filtered_updates[:20]  # Limitar a 20 actualizaciones
-        }
+            }
         
     except HTTPException:
         raise
@@ -1122,7 +1122,7 @@ async def execute_system_updates(current_user: Dict[str, Any] = Depends(get_curr
             # Verificar si es un error de permisos
             if "sudo" in error_msg.lower() or "permission denied" in error_msg.lower() or "not allowed" in error_msg.lower():
                 detail_msg = get_text("update.sudo_error", default="Error de permisos. Verifica que el usuario tenga permisos sudo sin contraseña configurados.")
-            else:
+        else:
                 detail_msg = f"Error actualizando repositorios: {error_msg[:200]}"
             
             raise HTTPException(

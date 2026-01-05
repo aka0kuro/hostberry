@@ -33,11 +33,11 @@
                 <div class="actions-card-body text-center">
                     <h2 class="text-white mb-2" id="uptime-value">--</h2>
                     <small class="text-white-50">{{ t('monitoring.since_boot', 'Since boot') }}</small>
-                </div>
-            </div>
-        </div>
+                                </div>
+                            </div>
+                        </div>
 
-        <!-- CPU Usage -->
+                        <!-- CPU Usage -->
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="actions-card">
                 <div class="actions-card-header">
@@ -45,23 +45,23 @@
                         <i class="bi bi-cpu me-2"></i>
                         {{ t('monitoring.cpu_usage', 'CPU Usage') }}
                     </h6>
-                </div>
+                                    </div>
                 <div class="actions-card-body">
                     <div class="text-center mb-2">
                         <h2 class="text-white mb-0" id="cpu-usage">0%</h2>
-                    </div>
+                                    </div>
                     <div class="progress mb-2" style="height: 8px;">
                         <div id="cpu-progress" class="progress-bar bg-info" style="width:0%"></div>
-                    </div>
+                                </div>
                     <div class="d-flex justify-content-between text-white-50 small">
                         <span>{{ t('monitoring.cores', 'Cores') }}: <strong id="cpu-cores">-</strong></span>
                         <span>{{ t('monitoring.temp', 'Temp') }}: <strong id="cpu-temp">--°C</strong></span>
-                    </div>
-                </div>
-            </div>
-        </div>
+                                </div>
+                                </div>
+                            </div>
+                        </div>
 
-        <!-- Memory Usage -->
+                        <!-- Memory Usage -->
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="actions-card">
                 <div class="actions-card-header">
@@ -69,22 +69,22 @@
                         <i class="bi bi-memory me-2"></i>
                         {{ t('monitoring.memory_usage', 'Memory Usage') }}
                     </h6>
-                </div>
+                                    </div>
                 <div class="actions-card-body">
                     <div class="text-center mb-2">
                         <h2 class="text-white mb-0" id="mem-usage">0%</h2>
-                    </div>
+                                    </div>
                     <div class="progress mb-2" style="height: 8px;">
                         <div id="mem-progress" class="progress-bar bg-success" style="width:0%"></div>
-                    </div>
+                                </div>
                     <div class="text-center text-white-50 small">
                         <span>{{ t('monitoring.used_of', 'Used of') }} <strong id="mem-total">0 GB</strong> · <span id="mem-free">0 GB</span> {{ t('monitoring.free', 'free') }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+                                </div>
+                                </div>
+                            </div>
+                        </div>
 
-        <!-- Disk Usage -->
+                        <!-- Disk Usage -->
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="actions-card">
                 <div class="actions-card-header">
@@ -92,14 +92,14 @@
                         <i class="bi bi-hdd me-2"></i>
                         {{ t('monitoring.disk_usage', 'Disk Usage') }}
                     </h6>
-                </div>
+                                    </div>
                 <div class="actions-card-body">
                     <div class="text-center mb-2">
                         <h2 class="text-white mb-0" id="disk-usage">0%</h2>
-                    </div>
+                                    </div>
                     <div class="progress mb-2" style="height: 8px;">
                         <div id="disk-progress" class="progress-bar bg-warning" style="width:0%"></div>
-                    </div>
+                                </div>
                     <div class="text-center text-white-50 small">
                         <span>{{ t('monitoring.used', 'Used') }} <strong id="disk-used">0 GB</strong> / <span id="disk-total">0 GB</span></span>
                     </div>
@@ -162,9 +162,9 @@
                             <i class="bi bi-wifi me-2"></i>
                             {{ t('monitoring.network_stats', 'Network Statistics') }}
                         </h5>
-                        <select class="form-select form-select-sm bg-dark text-white border-secondary" id="net-interface-select" style="min-width: 150px;">
-                            <option value="">{{ t('monitoring.network_auto', 'Auto detect') }}</option>
-                        </select>
+                            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="net-interface-select" style="min-width: 150px;">
+                                <option value="">{{ t('monitoring.network_auto', 'Auto detect') }}</option>
+                            </select>
                     </div>
                 </div>
                 <div class="actions-card-body">
@@ -236,13 +236,13 @@
       clearInterval(checkChart);
       if (typeof Chart !== 'undefined') {
         initMonitoring();
-      } else {
+        } else {
         console.error('Chart.js failed to load');
       }
     }, 5000);
-  } else {
+        } else {
     initMonitoring();
-  }
+        }
 
   function initMonitoring() {
     // Esperar a que HostBerry esté disponible
@@ -251,37 +251,37 @@
         callback();
       } else if (maxAttempts > 0) {
         setTimeout(() => waitForHostBerry(callback, maxAttempts - 1), 100);
-      } else {
+          } else {
         console.error('HostBerry not available');
         callback(); // Continuar de todos modos
       }
     }
-
+    
     // Función de traducción
     function t(key, defaultValue) {
       if (window.HostBerry && window.HostBerry.t) {
         return window.HostBerry.t(key, defaultValue);
       }
-      return defaultValue || key;
-    }
+    return defaultValue || key;
+  }
 
     // Utilidades
-    const setText = (id, value) => {
-      const el = document.getElementById(id);
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
       if (el) el.textContent = value;
-    };
+  };
 
     function safeToFixed(value, digits = 1) {
       if (value === null || value === undefined) return '0.0';
-      const num = typeof value === 'number' ? value : parseFloat(value);
+    const num = typeof value === 'number' ? value : parseFloat(value);
       if (Number.isNaN(num) || !Number.isFinite(num)) return '0.0';
-      return num.toFixed(digits);
-    }
+    return num.toFixed(digits);
+  }
 
     function formatUptime(seconds) {
       if (!Number.isFinite(seconds) || seconds < 0) return '--';
-      const days = Math.floor(seconds / 86400);
-      const hours = Math.floor((seconds % 86400) / 3600);
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
       const minutes = Math.floor(((seconds % 86400) % 3600) / 60);
       if (days > 0) return `${days}d ${hours}h ${minutes}m`;
       if (hours > 0) return `${hours}h ${minutes}m`;
@@ -290,12 +290,12 @@
 
     function formatBytes(bytes) {
       if (!Number.isFinite(bytes) || bytes < 0 || bytes === 0) return '0 B';
-      const k = 1024;
-      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
       const sizeIndex = Math.max(0, Math.min(i, sizes.length - 1));
       return `${safeToFixed(bytes / Math.pow(k, sizeIndex), 1)} ${sizes[sizeIndex]}`;
-    }
+  }
 
     function updateProgress(id, percent) {
       const el = document.getElementById(id);
@@ -306,91 +306,91 @@
     }
 
     // Variables globales
-    let selectedInterface = '';
-    let lastNetSnapshot = null;
-    let netChart = null;
-    const netHistory = { labels: [], download: [], upload: [] };
+  let selectedInterface = '';
+  let lastNetSnapshot = null;
+  let netChart = null;
+  const netHistory = { labels: [], download: [], upload: [] };
 
     // Poblar selector de interfaces
     function populateInterfaceSelect(interfaces) {
-      const select = document.getElementById('net-interface-select');
+    const select = document.getElementById('net-interface-select');
       if (!select) return;
-      
+    
       if (Array.isArray(interfaces) && interfaces.length > 0) {
         while (select.options.length > 1) {
-          select.remove(1);
-        }
-        
-        interfaces.forEach(iface => {
-          const ifaceName = (typeof iface === 'string') ? iface : (iface.name || iface);
-          if (ifaceName && ifaceName !== 'lo') {
-            const option = document.createElement('option');
-            option.value = ifaceName;
-            option.textContent = ifaceName;
-            if (ifaceName === selectedInterface) {
-              option.selected = true;
-            }
-            select.appendChild(option);
-          }
-        });
+        select.remove(1);
       }
+      
+      interfaces.forEach(iface => {
+        const ifaceName = (typeof iface === 'string') ? iface : (iface.name || iface);
+          if (ifaceName && ifaceName !== 'lo') {
+          const option = document.createElement('option');
+          option.value = ifaceName;
+          option.textContent = ifaceName;
+            if (ifaceName === selectedInterface) {
+            option.selected = true;
+          }
+          select.appendChild(option);
+        }
+      });
     }
+  }
 
     // Calcular velocidades de red
     function computeNetworkRates(current) {
       if (!current || typeof current !== 'object') {
-        return {
-          download_speed: 0.0,
-          upload_speed: 0.0,
-          bytes_recv: 0,
-          bytes_sent: 0,
-          packets_sent: 0,
-          packets_recv: 0,
-          errors: 0,
-          interface: selectedInterface || '',
-          ip_address: '--',
-          interfaces: []
-        };
-      }
-      
-      const bytesRecv = typeof current.bytes_recv === 'number' && !isNaN(current.bytes_recv) ? current.bytes_recv : 0;
-      const bytesSent = typeof current.bytes_sent === 'number' && !isNaN(current.bytes_sent) ? current.bytes_sent : 0;
-      
+      return {
+        download_speed: 0.0,
+        upload_speed: 0.0,
+        bytes_recv: 0,
+        bytes_sent: 0,
+        packets_sent: 0,
+        packets_recv: 0,
+        errors: 0,
+        interface: selectedInterface || '',
+        ip_address: '--',
+        interfaces: []
+      };
+    }
+    
+    const bytesRecv = typeof current.bytes_recv === 'number' && !isNaN(current.bytes_recv) ? current.bytes_recv : 0;
+    const bytesSent = typeof current.bytes_sent === 'number' && !isNaN(current.bytes_sent) ? current.bytes_sent : 0;
+    
       // Resetear si cambia la interfaz
       if (lastNetSnapshot && current.interface && lastNetSnapshot.interface && current.interface !== lastNetSnapshot.interface) {
-        lastNetSnapshot = null;
-        netHistory.labels.length = 0;
-        netHistory.download.length = 0;
-        netHistory.upload.length = 0;
+      lastNetSnapshot = null;
+      netHistory.labels.length = 0;
+      netHistory.download.length = 0;
+      netHistory.upload.length = 0;
         if (netChart) netChart.update();
-      }
-      
-      const now = Date.now();
+    }
+    
+    const now = Date.now();
       
       // Primera vez o reset
       if (!lastNetSnapshot) {
-        lastNetSnapshot = { 
-          time: now, 
-          bytes_recv: bytesRecv,
-          bytes_sent: bytesSent,
-          interface: current.interface || selectedInterface || ''
-        };
+      lastNetSnapshot = { 
+        time: now, 
+        bytes_recv: bytesRecv,
+        bytes_sent: bytesSent,
+        interface: current.interface || selectedInterface || ''
+      };
         console.log('Network snapshot initialized:', {
           bytes_recv: bytesRecv,
           bytes_sent: bytesSent,
           interface: current.interface
         });
-        return {
-          ...current,
-          download_speed: 0.0,
-          upload_speed: 0.0,
-          bytes_recv: bytesRecv,
-          bytes_sent: bytesSent
-        };
-      }
-      
+      return {
+        ...current,
+        download_speed: 0.0,
+        upload_speed: 0.0,
+        bytes_recv: bytesRecv,
+        bytes_sent: bytesSent
+      };
+    }
+    
       // Calcular tiempo transcurrido
-      const timeDelta = (now - lastNetSnapshot.time) / 1000;
+    const timeDelta = (now - lastNetSnapshot.time) / 1000;
       
       // Validar tiempo delta (debe ser entre 0.1 y 60 segundos)
       if (timeDelta <= 0.1 || timeDelta > 60) {
@@ -430,7 +430,7 @@
       // Calcular velocidades en bytes/s
       const downloadSpeed = Math.max(0, bytesRecvDelta / timeDelta);
       const uploadSpeed = Math.max(0, bytesSentDelta / timeDelta);
-      
+    
       // Log para depuración (solo ocasionalmente)
       if (Math.random() < 0.1) {
         console.log('Network rates calculated:', {
@@ -447,46 +447,46 @@
       }
       
       // Actualizar snapshot
-      lastNetSnapshot = {
-        time: now,
-        bytes_recv: bytesRecv,
-        bytes_sent: bytesSent,
-        interface: current.interface || selectedInterface || ''
-      };
-      
-      return {
-        ...current,
-        download_speed: downloadSpeed,
-        upload_speed: uploadSpeed,
-        bytes_recv: bytesRecv,
-        bytes_sent: bytesSent
-      };
-    }
+    lastNetSnapshot = {
+      time: now,
+      bytes_recv: bytesRecv,
+      bytes_sent: bytesSent,
+      interface: current.interface || selectedInterface || ''
+    };
+    
+    return {
+      ...current,
+      download_speed: downloadSpeed,
+      upload_speed: uploadSpeed,
+      bytes_recv: bytesRecv,
+      bytes_sent: bytesSent
+    };
+  }
 
     // Agregar datos al historial del gráfico
     function pushNetHistory(download, upload) {
       const downloadValue = (typeof download === 'number' && !isNaN(download) && isFinite(download)) ? download : 0;
       const uploadValue = (typeof upload === 'number' && !isNaN(upload) && isFinite(upload)) ? upload : 0;
       
-      const now = new Date();
-      const timeLabel = now.getHours().toString().padStart(2, '0') + ':' + 
-                        now.getMinutes().toString().padStart(2, '0') + ':' + 
-                        now.getSeconds().toString().padStart(2, '0');
-      
-      netHistory.labels.push(timeLabel);
+    const now = new Date();
+    const timeLabel = now.getHours().toString().padStart(2, '0') + ':' + 
+                      now.getMinutes().toString().padStart(2, '0') + ':' + 
+                      now.getSeconds().toString().padStart(2, '0');
+    
+    netHistory.labels.push(timeLabel);
       netHistory.download.push(Math.max(0, downloadValue));
       netHistory.upload.push(Math.max(0, uploadValue));
-      
+    
       if (netHistory.labels.length > 30) {
-        netHistory.labels.shift();
-        netHistory.download.shift();
-        netHistory.upload.shift();
-      }
+      netHistory.labels.shift();
+      netHistory.download.shift();
+      netHistory.upload.shift();
     }
+  }
 
     // Inicializar gráfico
     function ensureNetChart() {
-      const canvas = document.getElementById('net-chart');
+    const canvas = document.getElementById('net-chart');
       if (!canvas) {
         console.warn('Canvas element not found');
         return;
@@ -514,49 +514,49 @@
       }
       
       try {
-        const ctx = canvas.getContext('2d');
-        netChart = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: netHistory.labels,
-            datasets: [
-              {
+    const ctx = canvas.getContext('2d');
+    netChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: netHistory.labels,
+        datasets: [
+          {
                 label: t('monitoring.download', 'Download'),
-                data: netHistory.download,
-                borderColor: '#0dcaf0',
-                backgroundColor: 'rgba(13, 202, 240, 0.1)',
-                tension: 0.4,
+            data: netHistory.download,
+            borderColor: '#0dcaf0',
+            backgroundColor: 'rgba(13, 202, 240, 0.1)',
+            tension: 0.4,
                 fill: true,
                 pointRadius: 0,
                 pointHoverRadius: 4
-              },
-              {
-                label: t('monitoring.upload', 'Upload'),
-                data: netHistory.upload,
-                borderColor: '#198754',
-                backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointRadius: 0,
-                pointHoverRadius: 4
-              }
-            ]
           },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
+          {
+                label: t('monitoring.upload', 'Upload'),
+            data: netHistory.upload,
+            borderColor: '#198754',
+            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+            tension: 0.4,
+                fill: true,
+                pointRadius: 0,
+                pointHoverRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
             animation: { duration: 0 },
-            plugins: {
-              legend: {
+        plugins: {
+          legend: {
                 labels: { color: '#fff' },
                 display: true
               },
               tooltip: {
                 mode: 'index',
                 intersect: false
-              }
-            },
-            scales: {
+          }
+        },
+        scales: {
               x: { 
                 ticks: { color: '#fff', maxRotation: 45, minRotation: 0 },
                 grid: { color: 'rgba(255,255,255,0.1)' }
@@ -576,9 +576,9 @@
               mode: 'nearest',
               axis: 'x',
               intersect: false
-            }
-          }
-        });
+        }
+      }
+    });
         console.log('Network chart initialized');
       } catch (error) {
         console.error('Error creating network chart:', error);
@@ -641,21 +641,21 @@
         } else {
           networkUrl += `?_t=${Date.now()}`;
         }
-        const [systemStatsResp, networkStatsResp] = await Promise.all([
-          fetchJson('/api/v1/system/stats'),
+      const [systemStatsResp, networkStatsResp] = await Promise.all([
+        fetchJson('/api/v1/system/stats'),
           fetchJson(networkUrl)
-        ]);
-        
-        let systemStats = systemStatsResp;
+      ]);
+      
+      let systemStats = systemStatsResp;
         if (!systemStats || typeof systemStats !== 'object') {
-          throw new Error('Invalid system stats response');
-        }
-        
-        let networkStatsRaw = networkStatsResp;
+        throw new Error('Invalid system stats response');
+      }
+      
+      let networkStatsRaw = networkStatsResp;
         if (!networkStatsRaw || typeof networkStatsRaw !== 'object') {
-          throw new Error('Invalid network stats response');
-        }
-        
+        throw new Error('Invalid network stats response');
+      }
+      
         // Log de depuración (solo ocasionalmente para no saturar la consola)
         if (!lastNetSnapshot || Math.random() < 0.1) {
           console.log('Network stats raw:', {
@@ -665,93 +665,93 @@
             hasSnapshot: !!lastNetSnapshot
           });
         }
-        
-        const networkStats = computeNetworkRates(networkStatsRaw);
-        
+      
+      const networkStats = computeNetworkRates(networkStatsRaw);
+      
         if (networkStats.interfaces && Array.isArray(networkStats.interfaces)) {
-          populateInterfaceSelect(networkStats.interfaces);
+        populateInterfaceSelect(networkStats.interfaces);
         } else if (networkStatsRaw.interfaces && Array.isArray(networkStatsRaw.interfaces)) {
-          populateInterfaceSelect(networkStatsRaw.interfaces);
-        }
-
-        // Actualizar uptime
-        const uptime = systemStats.uptime || systemStats.uptime_seconds || 0;
-        setText('uptime-value', formatUptime(uptime));
-        
+        populateInterfaceSelect(networkStatsRaw.interfaces);
+      }
+      
+      // Actualizar uptime
+      const uptime = systemStats.uptime || systemStats.uptime_seconds || 0;
+      setText('uptime-value', formatUptime(uptime));
+      
         // Actualizar CPU
-        const cpuUsage = systemStats.cpu_usage;
-        let cpuUsageValue = 0;
+      const cpuUsage = systemStats.cpu_usage;
+      let cpuUsageValue = 0;
         if (cpuUsage !== null && cpuUsage !== undefined) {
-          cpuUsageValue = typeof cpuUsage === 'number' ? cpuUsage : parseFloat(cpuUsage);
+        cpuUsageValue = typeof cpuUsage === 'number' ? cpuUsage : parseFloat(cpuUsage);
           if (Number.isNaN(cpuUsageValue)) cpuUsageValue = 0;
-        }
-        setText('cpu-usage', `${safeToFixed(cpuUsageValue)}%`);
-        updateProgress('cpu-progress', cpuUsageValue);
-        
-        const cpuTemp = systemStats.cpu_temperature || 0;
+      }
+      setText('cpu-usage', `${safeToFixed(cpuUsageValue)}%`);
+      updateProgress('cpu-progress', cpuUsageValue);
+      
+      const cpuTemp = systemStats.cpu_temperature || 0;
         if (typeof cpuTemp === 'number' && cpuTemp > 0) {
-          setText('cpu-temp', `${safeToFixed(cpuTemp)}°C`);
-        } else {
-          setText('cpu-temp', '--°C');
-        }
-        
-        const cpuCores = systemStats.cpu_cores || 0;
-        setText('cpu-cores', cpuCores ? String(cpuCores) : '-');
+        setText('cpu-temp', `${safeToFixed(cpuTemp)}°C`);
+      } else {
+        setText('cpu-temp', '--°C');
+      }
+      
+      const cpuCores = systemStats.cpu_cores || 0;
+      setText('cpu-cores', cpuCores ? String(cpuCores) : '-');
 
         // Actualizar Memoria
-        const memUsage = systemStats.memory_usage;
-        let memUsageValue = 0;
+      const memUsage = systemStats.memory_usage;
+      let memUsageValue = 0;
         if (memUsage !== null && memUsage !== undefined) {
-          memUsageValue = typeof memUsage === 'number' ? memUsage : parseFloat(memUsage);
+        memUsageValue = typeof memUsage === 'number' ? memUsage : parseFloat(memUsage);
           if (Number.isNaN(memUsageValue)) memUsageValue = 0;
-        }
-        setText('mem-usage', `${safeToFixed(memUsageValue)}%`);
-        updateProgress('mem-progress', memUsageValue);
-        
-        const memTotal = systemStats.memory_total || 0;
+      }
+      setText('mem-usage', `${safeToFixed(memUsageValue)}%`);
+      updateProgress('mem-progress', memUsageValue);
+      
+      const memTotal = systemStats.memory_total || 0;
         if (memTotal && memTotal > 0) {
-          setText('mem-total', formatBytes(memTotal));
-        } else {
-          setText('mem-total', '0 GB');
-        }
-        
-        const memFree = systemStats.memory_free || 0;
+        setText('mem-total', formatBytes(memTotal));
+      } else {
+        setText('mem-total', '0 GB');
+      }
+      
+      const memFree = systemStats.memory_free || 0;
         if (memFree && memFree > 0) {
-          setText('mem-free', formatBytes(memFree));
-        } else {
-          setText('mem-free', '0 GB');
-        }
+        setText('mem-free', formatBytes(memFree));
+      } else {
+        setText('mem-free', '0 GB');
+      }
 
         // Actualizar Disco
-        const diskUsage = systemStats.disk_usage;
-        let diskUsageValue = 0;
+      const diskUsage = systemStats.disk_usage;
+      let diskUsageValue = 0;
         if (diskUsage !== null && diskUsage !== undefined) {
-          diskUsageValue = typeof diskUsage === 'number' ? diskUsage : parseFloat(diskUsage);
+        diskUsageValue = typeof diskUsage === 'number' ? diskUsage : parseFloat(diskUsage);
           if (Number.isNaN(diskUsageValue)) diskUsageValue = 0;
-        }
-        setText('disk-usage', `${safeToFixed(diskUsageValue)}%`);
-        updateProgress('disk-progress', diskUsageValue);
-        
-        const diskTotal = systemStats.disk_total || 0;
+      }
+      setText('disk-usage', `${safeToFixed(diskUsageValue)}%`);
+      updateProgress('disk-progress', diskUsageValue);
+      
+      const diskTotal = systemStats.disk_total || 0;
         if (diskTotal && diskTotal > 0) {
-          setText('disk-total', formatBytes(diskTotal));
-        } else {
-          setText('disk-total', '0 GB');
-        }
-        
-        const diskUsed = systemStats.disk_used || 0;
+        setText('disk-total', formatBytes(diskTotal));
+      } else {
+        setText('disk-total', '0 GB');
+      }
+      
+      const diskUsed = systemStats.disk_used || 0;
         if (diskUsed && diskUsed > 0) {
-          setText('disk-used', formatBytes(diskUsed));
-        } else {
-          setText('disk-used', '0 GB');
-        }
+        setText('disk-used', formatBytes(diskUsed));
+      } else {
+        setText('disk-used', '0 GB');
+      }
 
         // Actualizar información del sistema
-        setText('sys-hostname', systemStats.hostname || '--');
-        setText('sys-os', systemStats.os_version || '--');
-        setText('sys-kernel', systemStats.kernel_version || '--');
-        setText('sys-arch', systemStats.architecture || '--');
-        setText('sys-processor', systemStats.processor || '--');
+      setText('sys-hostname', systemStats.hostname || '--');
+      setText('sys-os', systemStats.os_version || '--');
+      setText('sys-kernel', systemStats.kernel_version || '--');
+      setText('sys-arch', systemStats.architecture || '--');
+      setText('sys-processor', systemStats.processor || '--');
         // Formatear Load Average con descripción
         const loadAvg = systemStats.load_average;
         if (loadAvg) {
@@ -761,16 +761,16 @@
           } else {
             setText('sys-load', loadAvg);
           }
-        } else {
-          setText('sys-load', '--');
-        }
+            } else {
+              setText('sys-load', '--');
+      }
 
-        // Actualizar estadísticas de red
-        setText('net-interface', networkStats.interface || networkStatsRaw.interface || '--');
-        setText('net-ip', networkStats.ip_address || networkStatsRaw.ip_address || '--');
-        
-        const downloadSpeed = networkStats.download_speed || 0;
-        const uploadSpeed = networkStats.upload_speed || 0;
+      // Actualizar estadísticas de red
+      setText('net-interface', networkStats.interface || networkStatsRaw.interface || '--');
+      setText('net-ip', networkStats.ip_address || networkStatsRaw.ip_address || '--');
+      
+      const downloadSpeed = networkStats.download_speed || 0;
+      const uploadSpeed = networkStats.upload_speed || 0;
         
         // Formatear velocidades correctamente
         const downloadText = downloadSpeed > 0 ? formatBytes(downloadSpeed) + '/s' : '0 B/s';
@@ -778,19 +778,19 @@
         
         setText('net-download', downloadText);
         setText('net-upload', uploadText);
-        
-        const bytesRecv = networkStats.bytes_recv || networkStatsRaw.bytes_recv || 0;
-        const bytesSent = networkStats.bytes_sent || networkStatsRaw.bytes_sent || 0;
-        setText('net-bytes-recv', formatBytes(bytesRecv));
-        setText('net-bytes-sent', formatBytes(bytesSent));
-        
-        const packetsSent = networkStats.packets_sent || networkStatsRaw.packets_sent || 0;
-        const packetsRecv = networkStats.packets_recv || networkStatsRaw.packets_recv || 0;
-        setText('net-packets', `${packetsSent} / ${packetsRecv}`);
-        
-        const errors = (networkStats.errors || networkStatsRaw.errors || 0) + 
-                       (networkStats.drop || networkStatsRaw.drop || 0);
-        setText('net-errors', errors || '0');
+      
+      const bytesRecv = networkStats.bytes_recv || networkStatsRaw.bytes_recv || 0;
+      const bytesSent = networkStats.bytes_sent || networkStatsRaw.bytes_sent || 0;
+      setText('net-bytes-recv', formatBytes(bytesRecv));
+      setText('net-bytes-sent', formatBytes(bytesSent));
+      
+      const packetsSent = networkStats.packets_sent || networkStatsRaw.packets_sent || 0;
+      const packetsRecv = networkStats.packets_recv || networkStatsRaw.packets_recv || 0;
+      setText('net-packets', `${packetsSent} / ${packetsRecv}`);
+      
+      const errors = (networkStats.errors || networkStatsRaw.errors || 0) + 
+                     (networkStats.drop || networkStatsRaw.drop || 0);
+      setText('net-errors', errors || '0');
 
         // Agregar al historial del gráfico
         const validDownloadSpeed = (typeof downloadSpeed === 'number' && !isNaN(downloadSpeed) && isFinite(downloadSpeed)) ? downloadSpeed : 0;
@@ -807,10 +807,10 @@
         
         pushNetHistory(validDownloadSpeed, validUploadSpeed);
 
-        setText('monitoring-last-update', new Date().toLocaleTimeString());
+      setText('monitoring-last-update', new Date().toLocaleTimeString());
         
-        ensureNetChart();
-        
+      ensureNetChart();
+      
         if (netChart) {
           // Actualizar datos del gráfico
           netChart.data.labels = [...netHistory.labels];
@@ -823,44 +823,44 @@
           
           // Forzar actualización
           netChart.update('none');
-        }
-      } catch (error) {
-        console.error('Error updating monitoring stats:', error);
-        
-        setText('uptime-value', '--');
-        setText('cpu-usage', '--');
-        setText('mem-usage', '--');
-        setText('disk-usage', '--');
-        setText('net-download', '--');
-        setText('net-upload', '--');
-        
-        setTimeout(() => {
-          updateStats();
-        }, 5000);
       }
+      } catch (error) {
+      console.error('Error updating monitoring stats:', error);
+      
+      setText('uptime-value', '--');
+      setText('cpu-usage', '--');
+      setText('mem-usage', '--');
+      setText('disk-usage', '--');
+      setText('net-download', '--');
+      setText('net-upload', '--');
+      
+      setTimeout(() => {
+        updateStats();
+      }, 5000);
     }
+  }
 
-    // Event listener para cambio de interfaz
+  // Event listener para cambio de interfaz
     function setupEventListeners() {
       const select = document.getElementById('net-interface-select');
       if (select) {
         select.addEventListener('change', function(e) {
-          selectedInterface = e.target.value || '';
-          lastNetSnapshot = null;
-          netHistory.labels.length = 0;
-          netHistory.download.length = 0;
-          netHistory.upload.length = 0;
+    selectedInterface = e.target.value || '';
+    lastNetSnapshot = null;
+    netHistory.labels.length = 0;
+    netHistory.download.length = 0;
+    netHistory.upload.length = 0;
           if (netChart) netChart.update();
-          updateStats();
-        });
+    updateStats();
+  });
       }
     }
 
     // Inicializar
     waitForHostBerry(function() {
       setupEventListeners();
-      updateStats();
-      setInterval(updateStats, 5000);
+        updateStats();
+        setInterval(updateStats, 5000);
     });
   }
 })();

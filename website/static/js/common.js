@@ -114,20 +114,20 @@
     // JSON body handling
     if(opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)){
       if(!headers.has('Content-Type')){
-        headers.set('Content-Type', 'application/json');
+      headers.set('Content-Type', 'application/json');
       }
       opts.body = JSON.stringify(opts.body);
     }
     
     opts.headers = headers;
     try {
-      const resp = await fetch(url, opts);
+    const resp = await fetch(url, opts);
       if(resp.status === 401 && !url.includes('/auth/login')){
         // Auto logout on unauthorized
         localStorage.removeItem('access_token');
         window.location.href = '/login?error=session_expired';
       }
-      return resp;
+    return resp;
     } catch (e) {
       console.error('API Request failed:', e);
       throw e;

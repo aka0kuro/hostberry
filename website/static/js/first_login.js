@@ -290,7 +290,7 @@
       try{
         // Obtener idioma actual de la página o cookie
         const currentLang = document.documentElement.lang || document.querySelector('html').getAttribute('lang') || 'es';
-
+        
         const requestFn = (window.HostBerry && typeof window.HostBerry.apiRequest === 'function')
           ? (url, options) => window.HostBerry.apiRequest(url, options)
           : (url, options) => fetch(url, options);
@@ -299,11 +299,11 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Accept-Language': currentLang
-          },
+                        'Accept-Language': currentLang
+                    }, 
           body: payload
-        });
-
+                });
+        
         let data = null;
         try {
           // Puede fallar si el servidor devuelve HTML (p.ej. 502) o body vacío.
