@@ -722,8 +722,13 @@ async def update_system_config(
                                     if rc1 != 0 or rc2 != 0:
                                         combined = (err1 or out1 or err2 or out2 or "").strip()
                                         error_msg = get_text("settings.ssl_disable_failed", default="No se pudo deshabilitar SSL/TLS")
-                                        if combined:
+                                        
+                                        # Detectar problemas de permisos sudo
+                                        if "password" in combined.lower() or "askpass" in combined.lower() or "terminal is required" in combined.lower():
+                                            error_msg = get_text("settings.ssl_sudo_permission_error", default="Error de permisos sudo. Asegúrate de que el usuario esté en el grupo 'hostberry' y que los permisos sudo estén configurados. Ejecuta: sudo usermod -a -G hostberry $USER")
+                                        elif combined:
                                             error_msg += f": {combined}"
+                                        
                                         errors.append(error_msg)
                                         logger.warning(f"Error deshabilitando SSL: rc1={rc1}, rc2={rc2}, combined={combined}")
                                     else:
@@ -735,8 +740,13 @@ async def update_system_config(
                                         if rc3 != 0:
                                             combined = (err3 or out3 or "").strip()
                                             error_msg = get_text("settings.ssl_reload_failed", default="No se pudo recargar Nginx")
-                                            if combined:
+                                            
+                                            # Detectar problemas de permisos sudo
+                                            if "password" in combined.lower() or "askpass" in combined.lower() or "terminal is required" in combined.lower():
+                                                error_msg = get_text("settings.ssl_sudo_permission_error", default="Error de permisos sudo. Asegúrate de que el usuario esté en el grupo 'hostberry' y que los permisos sudo estén configurados.")
+                                            elif combined:
                                                 error_msg += f": {combined}"
+                                            
                                             errors.append(error_msg)
                                             logger.warning(f"Error recargando Nginx: {combined}")
                         except Exception as ssl_err:
