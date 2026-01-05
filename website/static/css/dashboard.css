@@ -877,7 +877,8 @@ body.light-theme .services-card,
 body.light-theme .network-card,
 body.light-theme .activity-card,
 body.light-theme .logs-card,
-body.light-theme .actions-card {
+body.light-theme .actions-card,
+body.light-theme .glass-card {
     background: rgba(255, 255, 255, 0.95);
     border: 1px solid rgba(0, 0, 0, 0.1);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
