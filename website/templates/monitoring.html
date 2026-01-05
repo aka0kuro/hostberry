@@ -352,6 +352,7 @@
       const bytesRecv = typeof current.bytes_recv === 'number' && !isNaN(current.bytes_recv) ? current.bytes_recv : 0;
       const bytesSent = typeof current.bytes_sent === 'number' && !isNaN(current.bytes_sent) ? current.bytes_sent : 0;
       
+      // Resetear si cambia la interfaz
       if (lastNetSnapshot && current.interface && lastNetSnapshot.interface && current.interface !== lastNetSnapshot.interface) {
         lastNetSnapshot = null;
         netHistory.labels.length = 0;
@@ -361,7 +362,35 @@
       }
       
       const now = Date.now();
+      
+      // Primera vez o reset
       if (!lastNetSnapshot) {
+        lastNetSnapshot = { 
+          time: now, 
+          bytes_recv: bytesRecv,
+          bytes_sent: bytesSent,
+          interface: current.interface || selectedInterface || ''
+        };
+        console.log('Network snapshot initialized:', {
+          bytes_recv: bytesRecv,
+          bytes_sent: bytesSent,
+          interface: current.interface
+        });
+        return {
+          ...current,
+          download_speed: 0.0,
+          upload_speed: 0.0,
+          bytes_recv: bytesRecv,
+          bytes_sent: bytesSent
+        };
+      }
+      
+      // Calcular tiempo transcurrido
+      const timeDelta = (now - lastNetSnapshot.time) / 1000;
+      
+      // Validar tiempo delta (debe ser entre 0.1 y 60 segundos)
+      if (timeDelta <= 0.1 || timeDelta > 60) {
+        console.log('Invalid timeDelta, resetting snapshot:', timeDelta);
         lastNetSnapshot = { 
           time: now, 
           bytes_recv: bytesRecv,
@@ -377,15 +406,39 @@
         };
       }
       
-      const timeDelta = (now - lastNetSnapshot.time) / 1000;
-      if (timeDelta <= 0) return { ...current, download_speed: 0.0, upload_speed: 0.0 };
+      // Calcular diferencias
+      const prevBytesRecv = lastNetSnapshot.bytes_recv || 0;
+      const prevBytesSent = lastNetSnapshot.bytes_sent || 0;
       
-      const bytesRecvDelta = bytesRecv - lastNetSnapshot.bytes_recv;
-      const bytesSentDelta = bytesSent - lastNetSnapshot.bytes_sent;
+      let bytesRecvDelta = bytesRecv - prevBytesRecv;
+      let bytesSentDelta = bytesSent - prevBytesSent;
       
-      const downloadSpeed = bytesRecvDelta / timeDelta;
-      const uploadSpeed = bytesSentDelta / timeDelta;
+      // Manejar reset de contadores (si los bytes disminuyen significativamente, asumir reset)
+      if (bytesRecvDelta < 0 && Math.abs(bytesRecvDelta) > prevBytesRecv * 0.5) {
+        console.log('Detected bytes_recv counter reset');
+        bytesRecvDelta = bytesRecv; // Asumir que empezó desde 0
+      }
+      if (bytesSentDelta < 0 && Math.abs(bytesSentDelta) > prevBytesSent * 0.5) {
+        console.log('Detected bytes_sent counter reset');
+        bytesSentDelta = bytesSent; // Asumir que empezó desde 0
+      }
       
+      // Calcular velocidades en bytes/s
+      const downloadSpeed = Math.max(0, bytesRecvDelta / timeDelta);
+      const uploadSpeed = Math.max(0, bytesSentDelta / timeDelta);
+      
+      // Log para depuración (solo cada 5 actualizaciones)
+      if (Math.random() < 0.2) {
+        console.log('Network rates:', {
+          timeDelta: timeDelta.toFixed(2),
+          bytesRecvDelta: bytesRecvDelta,
+          bytesSentDelta: bytesSentDelta,
+          downloadSpeed: downloadSpeed.toFixed(2) + ' B/s',
+          uploadSpeed: uploadSpeed.toFixed(2) + ' B/s'
+        });
+      }
+      
+      // Actualizar snapshot
       lastNetSnapshot = {
         time: now,
         bytes_recv: bytesRecv,
