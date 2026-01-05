@@ -473,16 +473,18 @@
       // Primero actualizar el sistema
       addLogEntry(getTranslation('update.updating_system', 'Actualizando sistema...'), 'info');
       const systemResp = await HostBerry.apiRequest('/api/v1/system/updates/execute', { method: 'POST' });
-      if(!systemResp.ok){
-        throw new Error(getTranslation('update.system_failed', 'Error actualizando sistema'));
+      if(!systemResp || !systemResp.ok){
+        const errorText = systemResp ? await systemResp.text() : 'No response';
+        throw new Error(errorText || getTranslation('update.system_failed', 'Error actualizando sistema'));
       }
       addLogEntry(getTranslation('update.system_updated', 'Sistema actualizado'), 'success');
       
       // Luego actualizar el proyecto
       addLogEntry(getTranslation('update.updating_project', 'Actualizando proyecto...'), 'info');
       const projectResp = await HostBerry.apiRequest('/api/v1/system/updates/project', { method: 'POST' });
-      if(!projectResp.ok){
-        throw new Error(getTranslation('update.project_failed', 'Error actualizando proyecto'));
+      if(!projectResp || !projectResp.ok){
+        const errorText = projectResp ? await projectResp.text() : 'No response';
+        throw new Error(errorText || getTranslation('update.project_failed', 'Error actualizando proyecto'));
       }
       addLogEntry(getTranslation('update.project_updated', 'Proyecto actualizado'), 'success');
       
@@ -507,11 +509,13 @@
     try{
       // Obtener información del proyecto desde la API de stats
       const resp = await HostBerry.apiRequest('/api/v1/system/stats');
-      if(resp.ok){
+      if(resp && resp.ok){
         const data = await resp.json();
         // Intentar obtener versión desde diferentes campos
         const version = data.version || data.app_version || '2.0.0';
         setText('project-version', version);
+      } else {
+        setText('project-version', '2.0.0');
       }
       
       // Obtener última actualización desde logs o configuración
@@ -520,7 +524,7 @@
       
     }catch(error){
       console.error('Load project status failed', error);
-      setText('project-version', '--');
+      setText('project-version', '2.0.0');
       setText('project-last-update', '--');
     }
   }
