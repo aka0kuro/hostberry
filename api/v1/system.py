@@ -718,14 +718,16 @@ async def check_updates(current_user: Dict[str, Any] = Depends(get_current_activ
             result = type('obj', (object,), {'returncode': returncode2, 'stdout': stdout2})()
             
             updates = result.stdout.strip().split('\n') if result.stdout.strip() else []
-            update_count = len([line for line in updates if line.strip()])
+            # Filtrar líneas vacías y la primera línea que suele ser un encabezado
+            filtered_updates = [line for line in updates if line.strip() and not line.startswith('Listing')]
+            update_count = len(filtered_updates)
             
             await db.insert_log("INFO", f"Actualizaciones disponibles: {update_count}")
             
             return {
                 "updates_available": update_count > 0,
                 "update_count": update_count,
-                "updates": updates[:10]  # Limitar a 10 actualizaciones
+                "updates": filtered_updates[:20]  # Limitar a 20 actualizaciones
             }
         else:
             await db.insert_log("ERROR", "Error buscando actualizaciones")
