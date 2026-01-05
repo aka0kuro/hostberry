@@ -40,18 +40,60 @@ async function updateSystemStats() {
                     }
                 }
             } catch (_e) {}
-            
+
+            const setText = (id, text) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = text;
+            };
+
+            const updateProgress = (id, percent) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const safePercent = Math.min(100, Math.max(0, percent));
+                el.style.width = safePercent + '%';
+            };
+
+            function safeToFixed(value, digits = 1) {
+                if (value === null || value === undefined) return '0.0';
+                const num = typeof value === 'number' ? value : parseFloat(value);
+                if (Number.isNaN(num) || !Number.isFinite(num)) return '0.0';
+                return num.toFixed(digits);
+            }
+
+            function formatBytes(bytes) {
+                if (!Number.isFinite(bytes) || bytes < 0 || bytes === 0) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                const sizeIndex = Math.max(0, Math.min(i, sizes.length - 1));
+                return `${safeToFixed(bytes / Math.pow(k, sizeIndex), 1)} ${sizes[sizeIndex]}`;
+            }
+
             // Actualizar CPU
-            updateStatCard('cpu', stats.cpu_percent !== undefined ? stats.cpu_percent : stats.cpu_usage, stats);
-            
+            const cpuUsage = (stats.cpu_percent !== undefined ? stats.cpu_percent : stats.cpu_usage);
+            const cpuValue = (cpuUsage !== null && cpuUsage !== undefined) ? (typeof cpuUsage === 'number' ? cpuUsage : parseFloat(cpuUsage)) : 0;
+            setText('cpu-usage', `${safeToFixed(cpuValue)}%`);
+            updateProgress('cpu-progress', cpuValue || 0);
+            if (stats.cpu_cores !== undefined) setText('cpu-cores', String(stats.cpu_cores));
+            const cpuTemp = (stats.temperature !== undefined ? stats.temperature : stats.cpu_temperature);
+            if (typeof cpuTemp === 'number' && isFinite(cpuTemp)) setText('cpu-temp', `${cpuTemp.toFixed(1)}°C`);
+            else setText('cpu-temp', '--°C');
+
             // Actualizar Memoria
-            updateStatCard('memory', stats.memory_percent !== undefined ? stats.memory_percent : stats.memory_usage, stats);
-            
+            const memUsage = (stats.memory_percent !== undefined ? stats.memory_percent : stats.memory_usage);
+            const memValue = (memUsage !== null && memUsage !== undefined) ? (typeof memUsage === 'number' ? memUsage : parseFloat(memUsage)) : 0;
+            setText('mem-usage', `${safeToFixed(memValue)}%`);
+            updateProgress('mem-progress', memValue || 0);
+            setText('mem-total', formatBytes(stats.memory_total || 0));
+            setText('mem-free', formatBytes(stats.memory_free || 0));
+
             // Actualizar Disco
-            updateStatCard('disk', stats.disk_percent !== undefined ? stats.disk_percent : stats.disk_usage, stats);
-            
-            // Actualizar Temperatura
-            updateStatCard('temp', stats.temperature !== undefined ? stats.temperature : stats.cpu_temperature, stats);
+            const diskUsage = (stats.disk_percent !== undefined ? stats.disk_percent : stats.disk_usage);
+            const diskValue = (diskUsage !== null && diskUsage !== undefined) ? (typeof diskUsage === 'number' ? diskUsage : parseFloat(diskUsage)) : 0;
+            setText('disk-usage', `${safeToFixed(diskValue)}%`);
+            updateProgress('disk-progress', diskValue || 0);
+            setText('disk-used', formatBytes(stats.disk_used || 0));
+            setText('disk-total', formatBytes(stats.disk_total || 0));
         }
     } catch (error) {
         console.error('Error updating system stats:', error);
@@ -135,45 +177,6 @@ function updateStatCard(type, value, stats = null) {
         if (usedEl) usedEl.textContent = fmt(used);
         if (totalEl) totalEl.textContent = fmt(total);
     }
-    
-    // Actualizar estado de salud
-    updateHealthStatus(type, value);
-}
-
-// Actualizar estado de salud
-function updateHealthStatus(type, value) {
-    const card = document.querySelector(`.${type}-card`);
-    if (!card) return;
-    
-    const statusText = card.querySelector('.status-text');
-    if (!statusText) return;
-    
-    // Para temperatura, el estado "normal" es más claro que "healthy"
-    let status = (type === 'temp') ? 'system.normal' : 'system.healthy';
-    let statusClass = 'status-healthy';
-    
-    // Umbrales para cada tipo
-    const thresholds = {
-        cpu: { warning: 70, critical: 90 },
-        memory: { warning: 75, critical: 90 },
-        disk: { warning: 80, critical: 95 },
-        temp: { warning: 60, critical: 80 }
-    };
-    
-    const threshold = thresholds[type];
-    if (value >= threshold.critical) {
-        status = 'system.critical';
-        statusClass = 'status-critical';
-    } else if (value >= threshold.warning) {
-        status = 'system.warning';
-        statusClass = 'status-warning';
-    }
-    
-    // Actualizar texto con traducción
-    const translation = window.HostBerryTranslations?.system?.[status.split('.')[1]] || 
-                      (status === 'system.healthy' ? 'Healthy' : (status === 'system.normal' ? 'Normal' : (status === 'system.warning' ? 'Warning' : 'Critical')));
-    statusText.textContent = translation;
-    statusText.className = `status-text ${statusClass}`;
 }
 
 // Actualizar servicios
