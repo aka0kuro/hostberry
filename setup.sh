@@ -449,6 +449,9 @@ Defaults:hostberry log_year, log_host, syslog=auth
 
 # Comandos de configuración específicos
 %hostberry ALL=(ALL) NOPASSWD: /usr/bin/systemctl daemon-reload
+
+# Permisos para habilitar/deshabilitar SSL/TLS en Nginx
+# Estos permisos permiten cambiar entre configuración HTTP y HTTPS
 %hostberry ALL=(ALL) NOPASSWD: /usr/bin/ln -sf /etc/nginx/sites-available/hostberry /etc/nginx/sites-enabled/
 %hostberry ALL=(ALL) NOPASSWD: /usr/bin/ln -sf /etc/nginx/sites-available/hostberry-ssl /etc/nginx/sites-enabled/
 %hostberry ALL=(ALL) NOPASSWD: /usr/bin/rm -f /etc/nginx/sites-enabled/default
