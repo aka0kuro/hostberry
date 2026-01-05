@@ -144,6 +144,33 @@
                                 </label>
                             </div>
                         </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="dhcp_interface" class="form-label text-white">{{ t('settings.dhcp_interface', 'DHCP Interface') }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_interface" name="dhcp_interface" value="{{ network_config.dhcp_interface if network_config else 'eth0' }}" placeholder="eth0">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="dhcp_range_start" class="form-label text-white">{{ t('settings.dhcp_range_start', 'Range Start') }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_range_start" name="dhcp_range_start" value="{{ network_config.dhcp_range_start if network_config else '' }}" placeholder="192.168.1.100">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="dhcp_range_end" class="form-label text-white">{{ t('settings.dhcp_range_end', 'Range End') }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_range_end" name="dhcp_range_end" value="{{ network_config.dhcp_range_end if network_config else '' }}" placeholder="192.168.1.200">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="dhcp_gateway" class="form-label text-white">{{ t('settings.dhcp_gateway', 'Gateway (router)') }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_gateway" name="dhcp_gateway" value="{{ network_config.dhcp_gateway if network_config else '' }}" placeholder="192.168.1.1">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="dhcp_lease_time" class="form-label text-white">{{ t('settings.dhcp_lease_time', 'Lease Time') }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_lease_time" name="dhcp_lease_time" value="{{ network_config.dhcp_lease_time if network_config else '12h' }}" placeholder="12h">
+                                <small class="text-white-50">{{ t('settings.dhcp_lease_hint', 'Example: 12h, 30m, 1d') }}</small>
+                            </div>
+                        </div>
                         
                         <div class="mb-3">
                             <label for="dns_server" class="form-label text-white">{{ t('settings.dns_server', 'DNS Server') }}</label>
