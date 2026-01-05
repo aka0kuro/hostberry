@@ -3,7 +3,9 @@
 // Actualizar tiempo en tiempo real
 function updateCurrentTime() {
     const now = new Date();
-    const timeString = now.toLocaleTimeString('es-ES', { 
+    const lang = (document.documentElement && document.documentElement.lang) ? document.documentElement.lang : 'en';
+    const locale = (lang === 'es') ? 'es-ES' : 'en-US';
+    const timeString = now.toLocaleTimeString(locale, {
         hour12: false,
         hour: '2-digit',
         minute: '2-digit',
@@ -81,7 +83,8 @@ function updateHealthStatus(type, value) {
     const statusText = card.querySelector('.status-text');
     if (!statusText) return;
     
-    let status = 'system.healthy';
+    // Para temperatura, el estado "normal" es más claro que "healthy"
+    let status = (type === 'temp') ? 'system.normal' : 'system.healthy';
     let statusClass = 'status-healthy';
     
     // Umbrales para cada tipo
@@ -103,7 +106,7 @@ function updateHealthStatus(type, value) {
     
     // Actualizar texto con traducción
     const translation = window.HostBerryTranslations?.system?.[status.split('.')[1]] || 
-                      (status === 'system.healthy' ? 'Healthy' : (status === 'system.warning' ? 'Warning' : 'Critical'));
+                      (status === 'system.healthy' ? 'Healthy' : (status === 'system.normal' ? 'Normal' : (status === 'system.warning' ? 'Warning' : 'Critical')));
     statusText.textContent = translation;
     statusText.className = `status-text ${statusClass}`;
 }
