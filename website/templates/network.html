@@ -223,15 +223,30 @@
   // Network functionality
   async function loadInterfaces(){
     const container = document.getElementById('interfacesContainer');
+    if(container){
+      container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-arrow-clockwise spinning"></i><p class="mb-0 mt-2">' + HostBerry.t('network.loading_interfaces', 'Loading interfaces...') + '</p></div>';
+    }
     try{
         const resp = await HostBerry.apiRequest('/api/v1/system/network/interfaces');
         if(resp && resp.ok){ 
-            displayInterfaces(await resp.json()); 
-        } else { 
+            const data = await resp.json();
+            // Los datos pueden venir directamente como array o envueltos
+            const interfaces = Array.isArray(data) ? data : (data.interfaces || data.data || []);
+            displayInterfaces(interfaces); 
+        } else {
+            const errorText = resp ? await resp.text().catch(() => '') : '';
+            console.error('Error loading interfaces:', errorText);
             HostBerry.showAlert('danger', HostBerry.t('errors.loading_interfaces', 'Error loading interfaces')); 
+            if(container){
+              container.innerHTML = '<p class="text-muted text-center">' + HostBerry.t('network.no_interfaces', 'No interfaces found') + '</p>';
+            }
         }
-    }catch(_e){ 
+    }catch(e){
+        console.error('Exception loading interfaces:', e);
         HostBerry.showAlert('danger', HostBerry.t('errors.network_error', 'Network connection error')); 
+        if(container){
+          container.innerHTML = '<p class="text-muted text-center">' + HostBerry.t('network.no_interfaces', 'No interfaces found') + '</p>';
+        }
     }
   }
 
