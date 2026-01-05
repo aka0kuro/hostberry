@@ -2724,9 +2724,12 @@ main() {
         setup_firewall
         setup_nginx
         
-        # Si se pidió SSL
-        if [[ "$SSL_MODE" = true ]]; then
+        # Instalar SSL/TLS automáticamente (mkcert ya está instalado en install_system_deps)
+        log "$ANSI_YELLOW" "INFO" "$(get_text 'auto_ssl_setup' 'Configurando SSL/TLS automáticamente...')"
+        if command -v mkcert &> /dev/null; then
             setup_ssl
+        else
+            log "$ANSI_YELLOW" "WARN" "$(get_text 'mkcert_not_available' 'mkcert no está disponible. SSL/TLS no se configurará. Ejecuta --ssl después de la instalación.')"
         fi
         
         setup_logrotate
