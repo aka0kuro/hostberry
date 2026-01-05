@@ -70,6 +70,68 @@
     </div>
 
     <div class="row">
+        <!-- Network Traffic Statistics -->
+        <div class="col-xl-8 col-lg-7 mb-4">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 w-100">
+                        <h5 class="card-title mb-0 fw-bold text-white">
+                            <i class="bi bi-graph-up me-2"></i>{{ t('network.traffic', 'Network Traffic') }}
+                        </h5>
+                        <select class="form-select form-select-sm bg-dark text-white border-secondary" id="net-traffic-interface-select" style="min-width: 150px;">
+                            <option value="">{{ t('network.auto_detect', 'Auto detect') }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('network.interface', 'Interface') }}</h6>
+                            <p class="text-white mb-3" id="net-traffic-interface">--</p>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('network.ip_address', 'IP Address') }}</h6>
+                            <p class="text-white mb-3" id="net-traffic-ip">--</p>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.download', 'Download') }}</h6>
+                            <p class="text-white mb-2" id="net-traffic-download" style="font-size: 1.2rem; font-weight: 600;">0 B/s</p>
+                            <small class="text-white-50">{{ t('monitoring.total_received', 'Total Rx') }}: <span id="net-traffic-bytes-recv">0 MB</span></small>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.upload', 'Upload') }}</h6>
+                            <p class="text-white mb-2" id="net-traffic-upload" style="font-size: 1.2rem; font-weight: 600;">0 B/s</p>
+                            <small class="text-white-50">{{ t('monitoring.total_sent', 'Total Tx') }}: <span id="net-traffic-bytes-sent">0 MB</span></small>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.packets', 'Packets') }}</h6>
+                            <p class="text-white mb-3" id="net-traffic-packets">--</p>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.errors', 'Errors') }}</h6>
+                            <p class="text-white mb-3" id="net-traffic-errors">--</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Traffic Chart -->
+        <div class="col-xl-4 col-lg-5 mb-4">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-graph-up me-2"></i>{{ t('monitoring.network_chart', 'Network Traffic Chart') }}
+                    </h5>
+                </div>
+                <div class="card-body" style="position: relative; height: 250px;">
+                    <canvas id="net-traffic-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
         <!-- Routing Table -->
         <div class="col-xl-8 col-lg-7 mb-4">
             <div class="card h-100 glass-card border-0">
@@ -206,6 +268,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="/static/js/lib/chart.umd.min.js"></script>
 <script>
 (function(){
   // Esperar a que HostBerry esté disponible
