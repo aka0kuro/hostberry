@@ -79,56 +79,6 @@
             </div>
         </div>
 
-        <!-- Configuración del Sistema -->
-        <div class="col-lg-6 col-md-12 settings-card">
-            <div class="card h-100 glass-card border-0">
-                <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
-                    <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
-                        <i class="bi bi-cpu me-2"></i>{{ t('settings.system', 'System') }}
-                    </h5>
-                </div>
-                <div class="card-body px-4 pb-4">
-                    <form id="systemConfigForm">
-                        <div class="mb-3">
-                            <label for="log_level" class="form-label text-white">{{ t('system.log_level', 'Log Level') }}</label>
-                            <select class="form-select bg-dark text-white border-secondary text-center" id="log_level" name="log_level">
-                                <option value="DEBUG" {{ 'selected' if (system_config.log_level if system_config else 'INFO') == 'DEBUG' else '' }}>DEBUG</option>
-                                <option value="INFO" {{ 'selected' if (system_config.log_level if system_config else 'INFO') == 'INFO' else '' }}>INFO</option>
-                                <option value="WARNING" {{ 'selected' if (system_config.log_level if system_config else 'INFO') == 'WARNING' else '' }}>WARNING</option>
-                                <option value="ERROR" {{ 'selected' if (system_config.log_level if system_config else 'INFO') == 'ERROR' else '' }}>ERROR</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label text-white">{{ t('settings.auto_backup', 'Auto Backup') }}</label>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="auto_backup" name="auto_backup" {{ 'checked' if (system_config.auto_backup if system_config else False) else '' }}>
-                                <label class="form-check-label text-white" for="auto_backup">
-                                    {{ t('settings.enable_auto_backup', 'Enable automatic backups') }}
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="backup_interval" class="form-label text-white">{{ t('settings.backup_interval', 'Backup Interval') }}</label>
-                            <select class="form-select bg-dark text-white border-secondary text-center" id="backup_interval" name="backup_interval">
-                                <option value="daily" {{ 'selected' if (system_config.backup_interval if system_config else 'daily') == 'daily' else '' }}>{{ t('settings.daily', 'Daily') }}</option>
-                                <option value="weekly" {{ 'selected' if (system_config.backup_interval if system_config else 'daily') == 'weekly' else '' }}>{{ t('settings.weekly', 'Weekly') }}</option>
-                                <option value="monthly" {{ 'selected' if (system_config.backup_interval if system_config else 'daily') == 'monthly' else '' }}>{{ t('settings.monthly', 'Monthly') }}</option>
-                            </select>
-                        </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle me-2"></i>
-                                {{ t('common.save', 'Save') }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
         <!-- Configuración de Red -->
         <div class="col-12 settings-card">
             <div class="card h-100 glass-card border-0">
@@ -203,7 +153,7 @@
         </div>
 
         <!-- Configuración de Seguridad -->
-        <div class="col-lg-6 col-md-12 settings-card">
+        <div class="col-lg-6 col-md-12 settings-card security-settings-card">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
                     <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
