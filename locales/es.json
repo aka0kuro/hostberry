@@ -264,6 +264,7 @@
     "architecture": "Arquitectura",
     "processor": "Procesador",
     "load_average": "Carga Promedio",
+    "load_average_desc": "Carga del sistema: promedios de 1min, 5min, 15min",
     "interface": "Interfaz",
     "errors": "Errores",
     "network_auto": "Detección automática",
