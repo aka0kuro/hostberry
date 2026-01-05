@@ -1422,3 +1422,33 @@ body:not(.light-theme) .form-select-sm {
         margin-bottom: 2rem;
     }
 }
+
+/* Centrar contenido de formularios en settings */
+.settings-card .form-label {
+    text-align: center;
+    display: block;
+    width: 100%;
+}
+
+.settings-card .form-control,
+.settings-card .form-select {
+    text-align: center;
+}
+
+.settings-card .form-check {
+    justify-content: center;
+}
+
+.settings-card .form-check-label {
+    text-align: center;
+}
+
+.settings-card .btn {
+    width: 100%;
+}
+
+.settings-card small {
+    display: block;
+    text-align: center;
+    width: 100%;
+}
