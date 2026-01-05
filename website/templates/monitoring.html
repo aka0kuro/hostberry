@@ -731,7 +731,18 @@
         setText('sys-kernel', systemStats.kernel_version || '--');
         setText('sys-arch', systemStats.architecture || '--');
         setText('sys-processor', systemStats.processor || '--');
-        setText('sys-load', systemStats.load_average || '--');
+        // Formatear Load Average con descripción
+        const loadAvg = systemStats.load_average;
+        if (loadAvg) {
+          const loadParts = String(loadAvg).split(',').map(s => s.trim());
+          if (loadParts.length === 3) {
+            setText('sys-load', `${loadParts[0]} (1m), ${loadParts[1]} (5m), ${loadParts[2]} (15m)`);
+          } else {
+            setText('sys-load', loadAvg);
+          }
+        } else {
+          setText('sys-load', '--');
+        }
 
         // Actualizar estadísticas de red
         setText('net-interface', networkStats.interface || networkStatsRaw.interface || '--');
