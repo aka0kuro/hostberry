@@ -431,18 +431,20 @@
       const downloadSpeed = Math.max(0, bytesRecvDelta / timeDelta);
       const uploadSpeed = Math.max(0, bytesSentDelta / timeDelta);
       
-      // Log para depuración
-      console.log('Network rates calculated:', {
-        timeDelta: timeDelta.toFixed(2) + 's',
-        prevBytesRecv: prevBytesRecv,
-        currentBytesRecv: bytesRecv,
-        bytesRecvDelta: bytesRecvDelta,
-        prevBytesSent: prevBytesSent,
-        currentBytesSent: bytesSent,
-        bytesSentDelta: bytesSentDelta,
-        downloadSpeed: downloadSpeed.toFixed(2) + ' B/s',
-        uploadSpeed: uploadSpeed.toFixed(2) + ' B/s'
-      });
+      // Log para depuración (solo ocasionalmente)
+      if (Math.random() < 0.1) {
+        console.log('Network rates calculated:', {
+          timeDelta: timeDelta.toFixed(2) + 's',
+          prevBytesRecv: prevBytesRecv,
+          currentBytesRecv: bytesRecv,
+          bytesRecvDelta: bytesRecvDelta,
+          prevBytesSent: prevBytesSent,
+          currentBytesSent: bytesSent,
+          bytesSentDelta: bytesSentDelta,
+          downloadSpeed: downloadSpeed.toFixed(2) + ' B/s',
+          uploadSpeed: uploadSpeed.toFixed(2) + ' B/s'
+        });
+      }
       
       // Actualizar snapshot
       lastNetSnapshot = {
