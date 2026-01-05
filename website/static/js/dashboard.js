@@ -1,5 +1,47 @@
 // Dashboard JavaScript - Funcionalidades interactivas
 
+// Helpers (evitar duplicación en cada refresh)
+function hbSetText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+}
+
+function hbUpdateProgress(id, percent) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const numeric = (typeof percent === 'number') ? percent : parseFloat(percent);
+    const safePercent = Number.isFinite(numeric) ? Math.min(100, Math.max(0, numeric)) : 0;
+    el.style.width = safePercent + '%';
+}
+
+function hbSafeToFixed(value, digits = 1) {
+    if (value === null || value === undefined) return '0.0';
+    const num = typeof value === 'number' ? value : parseFloat(value);
+    if (Number.isNaN(num) || !Number.isFinite(num)) return '0.0';
+    return num.toFixed(digits);
+}
+
+function hbFormatBytes(bytes) {
+    if (!Number.isFinite(bytes) || bytes <= 0) return '0 GB';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const sizeIndex = Math.max(0, Math.min(i, sizes.length - 1));
+    return `${hbSafeToFixed(bytes / Math.pow(k, sizeIndex), 1)} ${sizes[sizeIndex]}`;
+}
+
+function hbFormatUptime(seconds) {
+    if (typeof seconds !== 'number' || !isFinite(seconds) || seconds < 0) return '--';
+    const mins = Math.floor(seconds / 60);
+    const hrs = Math.floor(mins / 60);
+    const days = Math.floor(hrs / 24);
+    const remHrs = hrs % 24;
+    const remMins = mins % 60;
+    if (days > 0) return `${days}d ${remHrs}h ${remMins}m`;
+    if (hrs > 0) return `${hrs}h ${remMins}m`;
+    return `${remMins}m`;
+}
+
 // Actualizar tiempo en tiempo real
 function updateCurrentTime() {
     const now = new Date();
@@ -19,6 +61,9 @@ updateCurrentTime();
 // Actualizar datos del sistema
 async function updateSystemStats() {
     try {
+        if (!window.HostBerry || typeof window.HostBerry.apiRequest !== 'function') {
+            return;
+        }
         const response = await HostBerry.apiRequest('/api/v1/system/stats');
         if (response.ok) {
             const stats = await response.json();
@@ -26,75 +71,34 @@ async function updateSystemStats() {
             // Uptime (si existe en la respuesta)
             try {
                 const uptimeSeconds = (stats.uptime_seconds !== undefined ? stats.uptime_seconds : stats.uptime);
-                if (typeof uptimeSeconds === 'number' && isFinite(uptimeSeconds)) {
-                    const uptimeEl = document.getElementById('uptime-value');
-                    if (uptimeEl) {
-                        const mins = Math.floor(uptimeSeconds / 60);
-                        const hrs = Math.floor(mins / 60);
-                        const days = Math.floor(hrs / 24);
-                        const remHrs = hrs % 24;
-                        const remMins = mins % 60;
-                        if (days > 0) uptimeEl.textContent = `${days}d ${remHrs}h ${remMins}m`;
-                        else if (hrs > 0) uptimeEl.textContent = `${hrs}h ${remMins}m`;
-                        else uptimeEl.textContent = `${remMins}m`;
-                    }
-                }
+                hbSetText('uptime-value', hbFormatUptime(uptimeSeconds));
             } catch (_e) {}
-
-            const setText = (id, text) => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = text;
-            };
-
-            const updateProgress = (id, percent) => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                const numeric = (typeof percent === 'number') ? percent : parseFloat(percent);
-                const safePercent = Number.isFinite(numeric) ? Math.min(100, Math.max(0, numeric)) : 0;
-                el.style.width = safePercent + '%';
-            };
-
-            function safeToFixed(value, digits = 1) {
-                if (value === null || value === undefined) return '0.0';
-                const num = typeof value === 'number' ? value : parseFloat(value);
-                if (Number.isNaN(num) || !Number.isFinite(num)) return '0.0';
-                return num.toFixed(digits);
-            }
-
-            function formatBytes(bytes) {
-                if (!Number.isFinite(bytes) || bytes <= 0) return '0 GB';
-                const k = 1024;
-                const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                const sizeIndex = Math.max(0, Math.min(i, sizes.length - 1));
-                return `${safeToFixed(bytes / Math.pow(k, sizeIndex), 1)} ${sizes[sizeIndex]}`;
-            }
 
             // Actualizar CPU
             const cpuUsage = (stats.cpu_percent !== undefined ? stats.cpu_percent : stats.cpu_usage);
             const cpuValue = (cpuUsage !== null && cpuUsage !== undefined) ? (typeof cpuUsage === 'number' ? cpuUsage : parseFloat(cpuUsage)) : 0;
-            setText('cpu-usage', `${safeToFixed(cpuValue)}%`);
-            updateProgress('cpu-progress', cpuValue || 0);
-            if (stats.cpu_cores !== undefined) setText('cpu-cores', String(stats.cpu_cores));
+            hbSetText('cpu-usage', `${hbSafeToFixed(cpuValue)}%`);
+            hbUpdateProgress('cpu-progress', cpuValue || 0);
+            if (stats.cpu_cores !== undefined) hbSetText('cpu-cores', String(stats.cpu_cores));
             const cpuTemp = (stats.temperature !== undefined ? stats.temperature : stats.cpu_temperature);
-            if (typeof cpuTemp === 'number' && isFinite(cpuTemp)) setText('cpu-temp', `${cpuTemp.toFixed(1)}°C`);
-            else setText('cpu-temp', '--°C');
+            if (typeof cpuTemp === 'number' && isFinite(cpuTemp)) hbSetText('cpu-temp', `${cpuTemp.toFixed(1)}°C`);
+            else hbSetText('cpu-temp', '--°C');
 
             // Actualizar Memoria
             const memUsage = (stats.memory_percent !== undefined ? stats.memory_percent : stats.memory_usage);
             const memValue = (memUsage !== null && memUsage !== undefined) ? (typeof memUsage === 'number' ? memUsage : parseFloat(memUsage)) : 0;
-            setText('mem-usage', `${safeToFixed(memValue)}%`);
-            updateProgress('mem-progress', memValue || 0);
-            setText('mem-total', formatBytes(stats.memory_total || 0));
-            setText('mem-free', formatBytes(stats.memory_free || 0));
+            hbSetText('mem-usage', `${hbSafeToFixed(memValue)}%`);
+            hbUpdateProgress('mem-progress', memValue || 0);
+            hbSetText('mem-total', hbFormatBytes(stats.memory_total || 0));
+            hbSetText('mem-free', hbFormatBytes(stats.memory_free || 0));
 
             // Actualizar Disco
             const diskUsage = (stats.disk_percent !== undefined ? stats.disk_percent : stats.disk_usage);
             const diskValue = (diskUsage !== null && diskUsage !== undefined) ? (typeof diskUsage === 'number' ? diskUsage : parseFloat(diskUsage)) : 0;
-            setText('disk-usage', `${safeToFixed(diskValue)}%`);
-            updateProgress('disk-progress', diskValue || 0);
-            setText('disk-used', formatBytes(stats.disk_used || 0));
-            setText('disk-total', formatBytes(stats.disk_total || 0));
+            hbSetText('disk-usage', `${hbSafeToFixed(diskValue)}%`);
+            hbUpdateProgress('disk-progress', diskValue || 0);
+            hbSetText('disk-used', hbFormatBytes(stats.disk_used || 0));
+            hbSetText('disk-total', hbFormatBytes(stats.disk_total || 0));
         }
     } catch (error) {
         console.error('Error updating system stats:', error);
@@ -104,6 +108,9 @@ async function updateSystemStats() {
 // Actualizar servicios
 async function updateServices() {
     try {
+        if (!window.HostBerry || typeof window.HostBerry.apiRequest !== 'function') {
+            return;
+        }
         const response = await HostBerry.apiRequest('/api/v1/system/services');
         if (response.ok) {
             const data = await response.json();
@@ -189,7 +196,7 @@ async function updateServices() {
         }
     } catch (error) {
         console.error('Error updating services:', error);
-        const servicesBody = document.querySelector('.services-card-body');
+        const servicesBody = document.querySelector('#dashboardServicesContainer') || document.querySelector('.services-card-body');
         if (servicesBody) {
             servicesBody.innerHTML = `
                 <div class="text-center py-4 text-danger">
@@ -250,6 +257,9 @@ function updateServiceStatus(serviceName, status) {
 // Actualizar estado de red
 async function updateNetworkStatus() {
     try {
+        if (!window.HostBerry || typeof window.HostBerry.apiRequest !== 'function') {
+            return;
+        }
         const response = await HostBerry.apiRequest('/api/v1/system/network/status');
         if (response.ok) {
             const data = await response.json();
@@ -299,6 +309,9 @@ function updateNetworkInterface(interfaceName, data) {
 async function updateLogs() {
     const logsContainer = document.querySelector('.logs-container');
     try {
+        if (!window.HostBerry || typeof window.HostBerry.apiRequest !== 'function') {
+            return;
+        }
         const levelSelect = document.getElementById('logLevel');
         let level = levelSelect ? levelSelect.value : 'all';
         
@@ -360,12 +373,9 @@ function renderLogs(logs) {
         
         let timeStr = '';
         try {
-            timeStr = new Date(log.timestamp).toLocaleTimeString('es-ES', { 
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
+            timeStr = (window.HostBerry && typeof window.HostBerry.formatTime === 'function')
+                ? window.HostBerry.formatTime(log.timestamp)
+                : new Date(log.timestamp).toLocaleTimeString();
         } catch (e) {
             timeStr = '--:--:--';
         }
@@ -384,6 +394,9 @@ function renderLogs(logs) {
 // Actualizar actividad reciente
 async function updateRecentActivity() {
     try {
+        if (!window.HostBerry || typeof window.HostBerry.apiRequest !== 'function') {
+            return;
+        }
         const response = await HostBerry.apiRequest('/api/v1/system/activity?limit=5');
         if (response.ok) {
             const data = await response.json();
@@ -679,6 +692,6 @@ window.dashboard = {
     backupSystem,
     checkUpdates,
     openMonitoring,
-    openBackup,
+    openUpdate,
     showNotification
 };
