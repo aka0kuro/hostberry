@@ -405,8 +405,8 @@
       const confirmMsg = getTranslation('update.system_confirm', 'Are you sure you want to update the Debian system? This may take several minutes.');
       if(!confirm(confirmMsg)) return;
       
-      addLogEntry(getTranslation('update.updating_system', 'Iniciando actualización del sistema...'), 'info');
-      showNotification(getTranslation('update.updating_system', 'Actualizando sistema...'), 'info');
+      addLogEntry(getTranslation('update.updating_system', 'Updating system...'), 'info');
+      showNotification(getTranslation('update.updating_system', 'Updating system...'), 'info');
       
       const resp = await HostBerry.apiRequest('/api/v1/system/updates/execute', { method: 'POST' });
       if(!resp || !resp.ok){
