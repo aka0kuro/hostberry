@@ -660,6 +660,7 @@ async def update_system_config(
                                     logger.warning("Archivo de configuración SSL no encontrado: /etc/nginx/sites-available/hostberry-ssl")
                                 else:
                                     # Habilitar SSL: crear symlink a hostberry-ssl y deshabilitar hostberry normal
+                                    # Usar comandos exactos como están en sudoers
                                     rc1, out1, err1 = await run_subprocess_async(
                                         ["sudo", "/usr/bin/ln", "-sf", "/etc/nginx/sites-available/hostberry-ssl", "/etc/nginx/sites-enabled/hostberry-ssl"],
                                         timeout=10
@@ -671,10 +672,15 @@ async def update_system_config(
                                     if rc1 != 0 or rc2 != 0:
                                         combined = (err1 or out1 or err2 or out2 or "").strip()
                                         error_msg = get_text("settings.ssl_apply_failed", default="No se pudo habilitar SSL/TLS")
-                                        if combined:
+                                        
+                                        # Detectar problemas de permisos sudo
+                                        if "password" in combined.lower() or "askpass" in combined.lower() or "terminal is required" in combined.lower():
+                                            error_msg = get_text("settings.ssl_sudo_permission_error", default="Error de permisos sudo. Asegúrate de que el usuario esté en el grupo 'hostberry' y que los permisos sudo estén configurados. Ejecuta: sudo usermod -a -G hostberry $USER")
+                                        elif combined:
                                             error_msg += f": {combined}"
+                                        
                                         errors.append(error_msg)
-                                        logger.warning(f"Error habilitando SSL: {combined}")
+                                        logger.warning(f"Error habilitando SSL: rc1={rc1}, rc2={rc2}, combined={combined}")
                                     else:
                                         # Recargar nginx
                                         rc3, out3, err3 = await run_subprocess_async(
@@ -683,9 +689,14 @@ async def update_system_config(
                                         )
                                         if rc3 != 0:
                                             combined = (err3 or out3 or "").strip()
-                                            error_msg = get_text("settings.ssl_apply_failed", default="No se pudo recargar Nginx")
-                                            if combined:
+                                            error_msg = get_text("settings.ssl_reload_failed", default="No se pudo recargar Nginx")
+                                            
+                                            # Detectar problemas de permisos sudo
+                                            if "password" in combined.lower() or "askpass" in combined.lower() or "terminal is required" in combined.lower():
+                                                error_msg = get_text("settings.ssl_sudo_permission_error", default="Error de permisos sudo. Asegúrate de que el usuario esté en el grupo 'hostberry' y que los permisos sudo estén configurados.")
+                                            elif combined:
                                                 error_msg += f": {combined}"
+                                            
                                             errors.append(error_msg)
                                             logger.warning(f"Error recargando Nginx: {combined}")
                             else:
