@@ -207,21 +207,35 @@
 
 {% block extra_js %}
 <script>
-// Network functionality
-async function loadInterfaces(){
+(function(){
+  // Esperar a que HostBerry esté disponible
+  function waitForHostBerry(callback, maxAttempts = 50) {
+    if (window.HostBerry && window.HostBerry.apiRequest && window.HostBerry.t) {
+      callback();
+    } else if (maxAttempts > 0) {
+      setTimeout(() => waitForHostBerry(callback, maxAttempts - 1), 100);
+    } else {
+      console.error('HostBerry not available after waiting');
+      callback(); // Intentar de todos modos
+    }
+  }
+
+  // Network functionality
+  async function loadInterfaces(){
+    const container = document.getElementById('interfacesContainer');
     try{
-        const resp = await fetch('/api/v1/system/network/interfaces', { headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
-        if(resp.ok){ 
+        const resp = await HostBerry.apiRequest('/api/v1/system/network/interfaces');
+        if(resp && resp.ok){ 
             displayInterfaces(await resp.json()); 
         } else { 
-            HostBerry.showAlert('danger', HostBerry.t('errors.loading_interfaces')); 
+            HostBerry.showAlert('danger', HostBerry.t('errors.loading_interfaces', 'Error loading interfaces')); 
         }
     }catch(_e){ 
-        HostBerry.showAlert('danger', HostBerry.t('errors.network_error')); 
+        HostBerry.showAlert('danger', HostBerry.t('errors.network_error', 'Network connection error')); 
     }
-}
+  }
 
-function displayInterfaces(interfaces){
+  function displayInterfaces(interfaces){
     const container = document.getElementById('interfacesContainer'); 
     if(!container) return;
     
@@ -232,9 +246,10 @@ function displayInterfaces(interfaces){
     
     let html='<div class="table-responsive"><table class="table table-dark table-hover"><thead><tr><th class="text-center">'+HostBerry.t('network.interface', 'Interface')+'</th><th class="text-center">'+HostBerry.t('network.status', 'Status')+'</th><th class="text-center">'+HostBerry.t('network.ip_address', 'IP Address')+'</th><th class="text-center">'+HostBerry.t('network.mac_address', 'MAC Address')+'</th></tr></thead><tbody>';
     interfaces.forEach(function(iface){
-        const statusClass = iface.status==='up'?'success':'danger'; 
-        const statusIcon = iface.status==='up'?'bi-check-circle':'bi-x-circle';
-        const statusText = iface.status==='up'?HostBerry.t('network.connected', 'Connected'):HostBerry.t('network.disconnected', 'Disconnected');
+        const isUp = (iface.status === 'up' || iface.status === 'connected' || iface.connected === true);
+        const statusClass = isUp ? 'success' : 'danger'; 
+        const statusIcon = isUp ? 'bi-check-circle' : 'bi-x-circle';
+        const statusText = isUp ? HostBerry.t('network.connected', 'Connected') : HostBerry.t('network.disconnected', 'Disconnected');
         html += '<tr>'
             +'<td class="text-center text-white"><strong>'+iface.name+'</strong></td>'
             +'<td class="text-center"><span class="badge bg-'+statusClass+'"><i class="bi '+statusIcon+'"></i> '+statusText+'</span></td>'
@@ -244,22 +259,23 @@ function displayInterfaces(interfaces){
     });
     html += '</tbody></table></div>';
     container.innerHTML = html;
-}
+  }
 
-async function loadRoutingTable(){
+  async function loadRoutingTable(){
+    const tbody = document.getElementById('routingTable');
     try{
-        const resp = await fetch('/api/v1/system/network/routing', { headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
-        if(resp.ok){ 
+        const resp = await HostBerry.apiRequest('/api/v1/system/network/routing');
+        if(resp && resp.ok){ 
             displayRoutingTable(await resp.json()); 
         } else { 
-            HostBerry.showAlert('danger', HostBerry.t('errors.loading_routing')); 
+            HostBerry.showAlert('danger', HostBerry.t('errors.loading_routing', 'Error loading routing table')); 
         }
     }catch(_e){ 
-        HostBerry.showAlert('danger', HostBerry.t('errors.network_error')); 
+        HostBerry.showAlert('danger', HostBerry.t('errors.network_error', 'Network connection error')); 
     }
-}
+  }
 
-function displayRoutingTable(routes){
+  function displayRoutingTable(routes){
     const tbody = document.getElementById('routingTable'); 
     if(!tbody) return;
     
@@ -270,65 +286,72 @@ function displayRoutingTable(routes){
     
     let html='';
     routes.forEach(function(route){ 
-        html += '<tr><td class="text-white">'+route.destination+'</td><td class="text-white">'+(route.gateway||'*')+'</td><td class="text-white">'+route.interface+'</td><td class="text-white">'+(route.metric||'0')+'</td></tr>'; 
+        html += '<tr><td class="text-white">'+(route.destination || '0.0.0.0')+'</td><td class="text-white">'+(route.gateway||'*')+'</td><td class="text-white">'+(route.interface || '-')+'</td><td class="text-white">'+(route.metric||'0')+'</td></tr>'; 
     });
     tbody.innerHTML = html;
-}
+  }
 
-async function toggleFirewall(){
+  window.toggleFirewall = async function(){
     try{
-        const resp = await fetch('/api/v1/system/network/firewall/toggle', { method:'POST', headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
-        if(resp.ok){ 
+        const resp = await HostBerry.apiRequest('/api/v1/system/network/firewall/toggle', { method:'POST' });
+        if(resp && resp.ok){ 
             HostBerry.showAlert('success', HostBerry.t('messages.operation_successful', 'Operation successful')); 
             setTimeout(()=>window.location.reload(), 1000); 
         }
         else { 
-            HostBerry.showAlert('danger', HostBerry.t('errors.operation_failed')); 
+            HostBerry.showAlert('danger', HostBerry.t('errors.operation_failed', 'Operation failed')); 
         }
     }catch(_e){ 
-        HostBerry.showAlert('danger', HostBerry.t('errors.network_error')); 
+        HostBerry.showAlert('danger', HostBerry.t('errors.network_error', 'Network error')); 
     }
-}
+  };
 
-function viewFirewallRules(){ 
+  window.viewFirewallRules = function(){ 
     alert(HostBerry.t('network.viewing_firewall_rules','Viewing firewall rules')); 
-}
+  };
 
-const configForm = document.getElementById('networkConfigForm');
-if(configForm){
-    configForm.addEventListener('submit', async function(e){
-        e.preventDefault(); 
-        const fd = new FormData(this);
-        const data = { 
-            hostname: fd.get('hostname'), 
-            dns1: fd.get('dns1'), 
-            dns2: fd.get('dns2'), 
-            gateway: fd.get('gateway') 
-        };
-        try{
-            const resp = await fetch('/api/v1/system/network/config', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                },
-                body: JSON.stringify(data)
-            });
-            if(resp.ok){
-                HostBerry.showAlert('success', HostBerry.t('messages.config_saved', 'Configuration saved'));
-            } else {
-                HostBerry.showAlert('danger', HostBerry.t('errors.config_update_error'));
-            }
-        }catch(_e){
-            HostBerry.showAlert('danger', HostBerry.t('errors.network_error'));
-        }
-    });
-}
-
-// Load data on page load
-document.addEventListener('DOMContentLoaded', function() {
+  function initNetworkPage() {
     loadInterfaces();
     loadRoutingTable();
-});
+    
+    const configForm = document.getElementById('networkConfigForm');
+    if(configForm){
+        configForm.addEventListener('submit', async function(e){
+            e.preventDefault(); 
+            const fd = new FormData(this);
+            const data = { 
+                hostname: fd.get('hostname'), 
+                dns1: fd.get('dns1'), 
+                dns2: fd.get('dns2'), 
+                gateway: fd.get('gateway') 
+            };
+            try{
+                const resp = await HostBerry.apiRequest('/api/v1/system/network/config', {
+                    method: 'POST',
+                    body: data
+                });
+                if(resp && resp.ok){
+                    HostBerry.showAlert('success', HostBerry.t('messages.config_saved', 'Configuration saved'));
+                } else {
+                    HostBerry.showAlert('danger', HostBerry.t('errors.config_update_error', 'Error updating configuration'));
+                }
+            }catch(_e){
+                HostBerry.showAlert('danger', HostBerry.t('errors.network_error', 'Network error'));
+            }
+        });
+    }
+  }
+
+  // Exportar funciones para los botones onclick
+  window.loadInterfaces = loadInterfaces;
+  window.loadRoutingTable = loadRoutingTable;
+
+  // Iniciar
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => waitForHostBerry(initNetworkPage));
+  } else {
+    waitForHostBerry(initNetworkPage);
+  }
+})();
 </script>
 {% endblock %}
