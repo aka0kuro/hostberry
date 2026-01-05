@@ -111,41 +111,92 @@
             </div>
         </div>
     </div>
-    <!-- System Information (estética Monitoring) -->
+    <!-- System Information and Network Statistics (igual que Monitoring) -->
     <div class="row mb-4">
-        <div class="col-12">
+        <!-- System Information -->
+        <div class="col-lg-6 col-md-12 mb-4">
             <div class="actions-card">
                 <div class="actions-card-header">
                     <h5 class="actions-card-title">
                         <i class="bi bi-info-circle me-2"></i>
-                        {{ t('system.information', 'System Information') }}
+                        {{ t('monitoring.system_info', 'System Information') }}
                     </h5>
                 </div>
                 <div class="actions-card-body">
                     <div class="row g-3">
-                        <div class="col-6 col-lg-2">
-                            <h6 class="text-white-50 mb-1">{{ t('system.hostname', 'Hostname') }}</h6>
-                            <p class="text-white mb-3">{{ system_info.hostname | default('hostberry') }}</p>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.hostname', 'Hostname') }}</h6>
+                            <p class="text-white mb-3" id="sys-hostname">--</p>
                         </div>
-                        <div class="col-6 col-lg-2">
-                            <h6 class="text-white-50 mb-1">{{ t('system.os_version', 'OS Version') }}</h6>
-                            <p class="text-white mb-3">{{ system_info.os_version | default('Raspberry Pi OS') }}</p>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.os_version', 'OS Version') }}</h6>
+                            <p class="text-white mb-3" id="sys-os">--</p>
                         </div>
-                        <div class="col-6 col-lg-2">
-                            <h6 class="text-white-50 mb-1">{{ t('system.kernel_version', 'Kernel') }}</h6>
-                            <p class="text-white mb-3">{{ system_info.kernel_version | default('Linux 6.8.0') }}</p>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.kernel', 'Kernel') }}</h6>
+                            <p class="text-white mb-3" id="sys-kernel">--</p>
                         </div>
-                        <div class="col-6 col-lg-2">
-                            <h6 class="text-white-50 mb-1">{{ t('system.architecture', 'Architecture') }}</h6>
-                            <p class="text-white mb-3">{{ system_info.architecture | default('armv7l') }}</p>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.architecture', 'Architecture') }}</h6>
+                            <p class="text-white mb-3" id="sys-arch">--</p>
                         </div>
-                        <div class="col-6 col-lg-2">
-                            <h6 class="text-white-50 mb-1">{{ t('system.uptime', 'Uptime') }}</h6>
-                            <p class="text-white mb-3">{{ system_info.uptime | default('2 days, 5 hours') }}</p>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.processor', 'Processor') }}</h6>
+                            <p class="text-white mb-3" id="sys-processor">--</p>
                         </div>
-                        <div class="col-6 col-lg-2">
-                            <h6 class="text-white-50 mb-1">{{ t('system.cpu_cores', 'CPU Cores') }}</h6>
-                            <p class="text-white mb-3">{{ system_info.cpu_cores | default('4') }}</p>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">
+                                {{ t('monitoring.load_average', 'Load Average') }}
+                                <i class="bi bi-question-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ t('monitoring.load_average_desc', 'System load: 1min, 5min, 15min averages') }}"></i>
+                            </h6>
+                            <p class="text-white mb-3" id="sys-load">--</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Statistics -->
+        <div class="col-lg-6 col-md-12 mb-4">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="actions-card-title mb-0">
+                            <i class="bi bi-wifi me-2"></i>
+                            {{ t('monitoring.network_stats', 'Network Statistics') }}
+                        </h5>
+                        <select class="form-select form-select-sm bg-dark text-white border-secondary" id="net-interface-select" style="min-width: 150px;">
+                            <option value="">{{ t('monitoring.network_auto', 'Auto detect') }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="actions-card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.interface', 'Interface') }}</h6>
+                            <p class="text-white mb-3" id="net-interface">--</p>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.ip_address', 'IP Address') }}</h6>
+                            <p class="text-white mb-3" id="net-ip">--</p>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.download', 'Download') }}</h6>
+                            <p class="text-white mb-2" id="net-download" style="font-size: 1.2rem; font-weight: 600;">0 KB/s</p>
+                            <small class="text-white-50">{{ t('monitoring.total_received', 'Total Rx') }}: <span id="net-bytes-recv">0 MB</span></small>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.upload', 'Upload') }}</h6>
+                            <p class="text-white mb-2" id="net-upload" style="font-size: 1.2rem; font-weight: 600;">0 KB/s</p>
+                            <small class="text-white-50">{{ t('monitoring.total_sent', 'Total Tx') }}: <span id="net-bytes-sent">0 MB</span></small>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.packets', 'Packets') }}</h6>
+                            <p class="text-white mb-3" id="net-packets">--</p>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.errors', 'Errors') }}</h6>
+                            <p class="text-white mb-3" id="net-errors">--</p>
                         </div>
                     </div>
                 </div>
@@ -153,10 +204,26 @@
         </div>
     </div>
 
-    <!-- Services & Network Status (estética Monitoring) -->
+    <!-- Network Traffic Chart -->
     <div class="row mb-4">
-        <!-- System Manager - Services Status -->
-        <div class="col-lg-6 col-md-12 mb-4">
+        <div class="col-12">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <h5 class="actions-card-title">
+                        <i class="bi bi-graph-up me-2"></i>
+                        {{ t('monitoring.network_chart', 'Network Traffic Chart') }}
+                    </h5>
+                </div>
+                <div class="actions-card-body" style="position: relative; height: 300px;">
+                    <canvas id="net-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Manager - Services Status -->
+    <div class="row mb-4">
+        <div class="col-12">
             <div class="actions-card">
                 <div class="actions-card-header">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -173,72 +240,6 @@
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-arrow-clockwise spinning"></i>
                             <p class="mb-0 mt-2">{{ t('system.loading_services', 'Loading services...') }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Network Status (sin valores hardcodeados) -->
-        <div class="col-lg-6 col-md-12 mb-4">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <h5 class="actions-card-title mb-0">
-                            <i class="bi bi-wifi me-2"></i>
-                            {{ t('dashboard.network_status', 'Network Status') }}
-                        </h5>
-                        <button class="btn btn-sm btn-outline-primary" onclick="refreshNetwork()" title="{{ t('common.refresh', 'Refresh') }}">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="actions-card-body">
-                    <div class="network-interface" data-interface="eth0">
-                        <div class="interface-header">
-                            <i class="bi bi-ethernet interface-icon"></i>
-                            <div class="interface-info">
-                                <h6>eth0</h6>
-                                <span class="interface-status">--</span>
-                            </div>
-                        </div>
-                        <div class="interface-details">
-                            <div class="network-item">
-                                <span class="network-label">{{ t('network.ip_address', 'IP Address') }}</span>
-                                <span class="network-value" data-field="ip_address">--</span>
-                            </div>
-                            <div class="network-item">
-                                <span class="network-label">{{ t('network.gateway', 'Gateway') }}</span>
-                                <span class="network-value" data-field="gateway">--</span>
-                            </div>
-                            <div class="network-item">
-                                <span class="network-label">{{ t('network.dns', 'DNS') }}</span>
-                                <span class="network-value" data-field="dns">--</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="network-interface" data-interface="wlan0">
-                        <div class="interface-header">
-                            <i class="bi bi-wifi interface-icon"></i>
-                            <div class="interface-info">
-                                <h6>wlan0</h6>
-                                <span class="interface-status">--</span>
-                            </div>
-                        </div>
-                        <div class="interface-details">
-                            <div class="network-item">
-                                <span class="network-label">{{ t('network.ip_address', 'IP Address') }}</span>
-                                <span class="network-value" data-field="ip_address">--</span>
-                            </div>
-                            <div class="network-item">
-                                <span class="network-label">{{ t('network.ssid', 'SSID') }}</span>
-                                <span class="network-value" data-field="ssid">--</span>
-                            </div>
-                            <div class="network-item">
-                                <span class="network-label">{{ t('network.signal', 'Signal') }}</span>
-                                <span class="network-value" data-field="signal_strength">--</span>
-                            </div>
                         </div>
                     </div>
                 </div>
