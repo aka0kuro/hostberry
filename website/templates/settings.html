@@ -318,41 +318,18 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <h6 class="text-white">{{ t('settings.version', 'Version') }}</h6>
-                            <p class="text-white-50">{{ system_info.version if system_info else '1.0.0' }}</p>
-                            
-                            <h6 class="text-white">{{ t('settings.build', 'Build') }}</h6>
-                            <p class="text-white-50">{{ system_info.build if system_info else '2023.10.27' }}</p>
-                            
-                            <h6 class="text-white">{{ t('settings.release_date', 'Release Date') }}</h6>
-                            <p class="text-white-50">{{ system_info.release_date if system_info else '2023-10-27' }}</p>
+                            <p class="text-white-50">{{ (version_info.app_version if version_info else '') or (system_info.app_version if system_info else '') or '-' }}</p>
+
+                            <h6 class="text-white">{{ t('system.hostname', 'Hostname') }}</h6>
+                            <p class="text-white-50">{{ system_info.hostname if system_info else '-' }}</p>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <h6 class="text-white">{{ t('settings.license', 'License') }}</h6>
-                            <p class="text-white-50">{{ system_info.license if system_info else 'MIT License' }}</p>
-                            
-                            <h6 class="text-white">{{ t('settings.author', 'Author') }}</h6>
-                            <p class="text-white-50">{{ system_info.author if system_info else 'HostBerry Team' }}</p>
-                            
-                            <h6 class="text-white">{{ t('settings.website', 'Website') }}</h6>
-                            <p class="text-white-50">{{ system_info.website if system_info else 'https://hostberry.com' }}</p>
+                            <h6 class="text-white">{{ t('system.os', 'OS') }}</h6>
+                            <p class="text-white-50">{{ system_info.os_version if system_info else '-' }}</p>
+
+                            <h6 class="text-white">{{ t('system.kernel', 'Kernel') }}</h6>
+                            <p class="text-white-50">{{ system_info.kernel_version if system_info else '-' }}</p>
                         </div>
-                    </div>
-                    
-                    <hr class="border-secondary">
-                    
-                    <div class="text-center">
-                        <a href="/help" class="btn btn-outline-info me-2">
-                            <i class="bi bi-question-circle me-2"></i>
-                            {{ t('settings.help', 'Help') }}
-                        </a>
-                        <a href="/documentation" class="btn btn-outline-secondary me-2">
-                            <i class="bi bi-book me-2"></i>
-                            {{ t('settings.documentation', 'Documentation') }}
-                        </a>
-                        <a href="/support" class="btn btn-outline-primary">
-                            <i class="bi bi-headset me-2"></i>
-                            {{ t('settings.support', 'Support') }}
-                        </a>
                     </div>
                 </div>
             </div>
