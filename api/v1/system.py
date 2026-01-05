@@ -908,10 +908,19 @@ async def update_project(current_user: Dict[str, Any] = Depends(get_current_acti
         )
         
         if returncode != 0:
-            await db.insert_log("ERROR", f"Error actualizando proyecto: {stderr}")
+            error_msg = stderr.strip() if stderr else stdout.strip() if stdout else "Error desconocido"
+            logger.error(f"Error ejecutando 'setup.sh --update': returncode={returncode}, stderr={error_msg}")
+            await db.insert_log("ERROR", f"Error actualizando proyecto: {error_msg[:200]}")
+            
+            # Verificar si es un error de permisos
+            if "sudo" in error_msg.lower() or "permission denied" in error_msg.lower() or "not allowed" in error_msg.lower():
+                detail_msg = get_text("update.sudo_error", default="Error de permisos. Verifica que el usuario tenga permisos sudo sin contraseña configurados.")
+            else:
+                detail_msg = f"Error actualizando proyecto: {error_msg[:200]}"
+            
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error actualizando proyecto: {stderr[:200]}"
+                detail=detail_msg
             )
         
         await db.insert_log("INFO", "Actualización del proyecto completada exitosamente")
