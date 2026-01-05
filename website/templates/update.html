@@ -449,7 +449,7 @@
       }
       
       const payload = await resp.json();
-      const message = payload.message || getTranslation('update.project_updated', 'Proyecto actualizado exitosamente');
+      const message = payload.message || getTranslation('update.project_updated', 'Project updated successfully');
       
       addLogEntry(message, 'success');
       showNotification(message, 'success');
