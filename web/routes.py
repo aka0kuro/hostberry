@@ -491,17 +491,123 @@ async def adblock_page(request: Request, lang: str | None = Query(default=None))
 @router.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
     current_lang, _ = _resolve_language(request, lang)
+    # Cargar configuración persistida desde la DB para que la página refleje cambios guardados
+    from core.database import db
+
+    def _as_bool(v, default: bool = False) -> bool:
+        if v is None:
+            return default
+        if isinstance(v, bool):
+            return v
+        s = str(v).strip().lower()
+        if s in ("1", "true", "yes", "on", "enabled"):
+            return True
+        if s in ("0", "false", "no", "off", "disabled", ""):
+            return False
+        return default
+
+    def _as_int(v, default: int) -> int:
+        try:
+            return int(v)
+        except Exception:
+            return default
+
+    def _as_str(v, default: str) -> str:
+        if v is None:
+            return default
+        s = str(v)
+        return s if s != "" else default
+
+    # Preferir language guardado si es válido; si no, usar el resuelto por cookie/query
+    try:
+        cfg_language = await db.get_configuration("language")
+    except Exception:
+        cfg_language = None
+    language_value = cfg_language if cfg_language in ("en", "es") else current_lang
+
+    try:
+        cfg_theme = await db.get_configuration("theme")
+    except Exception:
+        cfg_theme = None
+    theme_value = cfg_theme if cfg_theme in ("light", "dark", "auto") else "dark"
+
+    try:
+        cfg_timezone = await db.get_configuration("timezone")
+    except Exception:
+        cfg_timezone = None
+    timezone_value = cfg_timezone or "UTC"
+
+    # System
+    try:
+        log_level = await db.get_configuration("log_level")
+        auto_backup = await db.get_configuration("auto_backup")
+        backup_interval = await db.get_configuration("backup_interval")
+    except Exception:
+        log_level, auto_backup, backup_interval = None, None, None
+
+    # Network
+    try:
+        dhcp_enabled = await db.get_configuration("dhcp_enabled")
+        dns_server = await db.get_configuration("dns_server")
+        firewall_enabled = await db.get_configuration("firewall_enabled")
+    except Exception:
+        dhcp_enabled, dns_server, firewall_enabled = None, None, None
+
+    # Security
+    try:
+        ssl_enabled = await db.get_configuration("ssl_enabled")
+        max_login_attempts = await db.get_configuration("max_login_attempts")
+        session_timeout = await db.get_configuration("session_timeout")
+    except Exception:
+        ssl_enabled, max_login_attempts, session_timeout = None, None, None
+
+    # Performance
+    try:
+        cache_enabled = await db.get_configuration("cache_enabled")
+        cache_size = await db.get_configuration("cache_size")
+        compression_enabled = await db.get_configuration("compression_enabled")
+    except Exception:
+        cache_enabled, cache_size, compression_enabled = None, None, None
+
+    # Notifications
+    try:
+        email_notifications = await db.get_configuration("email_notifications")
+        email_address = await db.get_configuration("email_address")
+        system_alerts = await db.get_configuration("system_alerts")
+    except Exception:
+        email_notifications, email_address, system_alerts = None, None, None
+
     return _render(
         "settings.html",
         request,
         lang,
         extra={
-            "settings": {"language": current_lang, "theme": "dark", "timezone": "UTC"},
-            "system_config": {},
-            "network_config": {},
-            "security_config": {},
-            "performance_config": {},
-            "notification_config": {},
+            "settings": {"language": language_value, "theme": theme_value, "timezone": timezone_value},
+            "system_config": {
+                "log_level": _as_str(log_level, "INFO"),
+                "auto_backup": _as_bool(auto_backup, False),
+                "backup_interval": _as_str(backup_interval, "daily"),
+            },
+            "network_config": {
+                "dhcp_enabled": _as_bool(dhcp_enabled, False),
+                "dns_server": _as_str(dns_server, "8.8.8.8"),
+                "firewall_enabled": _as_bool(firewall_enabled, True),
+            },
+            "security_config": {
+                "ssl_enabled": _as_bool(ssl_enabled, False),
+                "max_login_attempts": _as_int(max_login_attempts, 3),
+                "session_timeout": _as_int(session_timeout, 30),
+            },
+            "performance_config": {
+                "cache_enabled": _as_bool(cache_enabled, True),
+                "cache_size": _as_int(cache_size, 50),
+                "compression_enabled": _as_bool(compression_enabled, True),
+            },
+            "notification_config": {
+                "email_notifications": _as_bool(email_notifications, False),
+                "email_address": _as_str(email_address, ""),
+                "system_alerts": _as_bool(system_alerts, True),
+            },
             "system_info": {},
         },
     )
