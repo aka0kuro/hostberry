@@ -428,7 +428,7 @@
       
     }catch(error){
       console.error('System update failed', error);
-      const errorMsg = getTranslation('update.system_error', 'Error actualizando sistema');
+      const errorMsg = getTranslation('update.system_error', 'Error updating system');
       addLogEntry(errorMsg, 'error');
       showNotification(errorMsg, 'error');
     }
