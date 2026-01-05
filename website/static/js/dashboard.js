@@ -42,6 +42,203 @@ function hbFormatUptime(seconds) {
     return `${remMins}m`;
 }
 
+// ---- Monitoring-like Network Stats (para dashboard) ----
+let hbSelectedInterface = '';
+let hbLastNetSnapshot = null;
+let hbNetChart = null;
+const hbNetHistory = { labels: [], download: [], upload: [] };
+
+function hbPopulateInterfaceSelect(list) {
+    const select = document.getElementById('net-interface-select');
+    if (!select || !Array.isArray(list)) return;
+
+    const existing = new Set(Array.from(select.options).map(o => o.value));
+    let added = false;
+
+    list.forEach((iface) => {
+        const name = (typeof iface === 'string') ? iface : (iface?.name || iface);
+        if (!name || name === 'lo') return;
+        if (existing.has(name)) return;
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+        existing.add(name);
+        added = true;
+    });
+
+    // Mantener selección
+    if (!select.value && hbSelectedInterface) {
+        select.value = hbSelectedInterface;
+    }
+
+    // Si se añadieron opciones y no hay selección explícita, no disparamos change
+    // (evita bucles). La UI se actualizará en el siguiente refresh.
+    return added;
+}
+
+function hbEnsureNetChart() {
+    const canvas = document.getElementById('net-chart');
+    if (!canvas) return null;
+    if (hbNetChart) return hbNetChart;
+    if (typeof Chart === 'undefined') return null;
+
+    const t = (key, fallback) => (window.HostBerry && HostBerry.t) ? HostBerry.t(key, fallback) : (fallback || key);
+
+    const ctx = canvas.getContext('2d');
+    hbNetChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: hbNetHistory.labels,
+            datasets: [
+                {
+                    label: t('monitoring.download', 'Download'),
+                    data: hbNetHistory.download,
+                    borderColor: '#0dcaf0',
+                    backgroundColor: 'rgba(13, 202, 240, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 4
+                },
+                {
+                    label: t('monitoring.upload', 'Upload'),
+                    data: hbNetHistory.upload,
+                    borderColor: '#198754',
+                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 0 },
+            plugins: {
+                legend: { labels: { color: '#fff' }, display: true },
+                tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#fff', maxRotation: 45, minRotation: 0 },
+                    grid: { color: 'rgba(255,255,255,0.1)' }
+                },
+                y: {
+                    ticks: {
+                        color: '#fff',
+                        callback: function (value) {
+                            return hbFormatBytes(value) + '/s';
+                        }
+                    },
+                    grid: { color: 'rgba(255,255,255,0.1)' },
+                    beginAtZero: true
+                }
+            },
+            interaction: { mode: 'nearest', axis: 'x', intersect: false }
+        }
+    });
+
+    return hbNetChart;
+}
+
+function hbPushNetHistory(downloadBytesPerSec, uploadBytesPerSec) {
+    const now = new Date();
+    const label = now.toLocaleTimeString();
+
+    const dl = (typeof downloadBytesPerSec === 'number' && isFinite(downloadBytesPerSec)) ? Math.max(0, downloadBytesPerSec) : 0;
+    const ul = (typeof uploadBytesPerSec === 'number' && isFinite(uploadBytesPerSec)) ? Math.max(0, uploadBytesPerSec) : 0;
+
+    hbNetHistory.labels.push(label);
+    hbNetHistory.download.push(dl);
+    hbNetHistory.upload.push(ul);
+
+    if (hbNetHistory.labels.length > 30) {
+        hbNetHistory.labels.shift();
+        hbNetHistory.download.shift();
+        hbNetHistory.upload.shift();
+    }
+
+    if (hbNetChart) {
+        hbNetChart.data.labels = [...hbNetHistory.labels];
+        hbNetChart.data.datasets[0].data = [...hbNetHistory.download];
+        hbNetChart.data.datasets[1].data = [...hbNetHistory.upload];
+        hbNetChart.update('none');
+    }
+}
+
+function hbComputeNetworkRates(current) {
+    if (!current || typeof current !== 'object') {
+        return {
+            download_speed: 0.0,
+            upload_speed: 0.0,
+            bytes_recv: 0,
+            bytes_sent: 0,
+            packets_sent: 0,
+            packets_recv: 0,
+            errors: 0,
+            interface: hbSelectedInterface || '',
+            ip_address: '--',
+            interfaces: []
+        };
+    }
+
+    const bytesRecv = (typeof current.bytes_recv === 'number' && isFinite(current.bytes_recv)) ? current.bytes_recv : 0;
+    const bytesSent = (typeof current.bytes_sent === 'number' && isFinite(current.bytes_sent)) ? current.bytes_sent : 0;
+
+    const now = Date.now();
+    if (!hbLastNetSnapshot) {
+        hbLastNetSnapshot = {
+            time: now,
+            bytes_recv: bytesRecv,
+            bytes_sent: bytesSent,
+            interface: current.interface || hbSelectedInterface || ''
+        };
+        return { ...current, download_speed: 0.0, upload_speed: 0.0, bytes_recv: bytesRecv, bytes_sent: bytesSent };
+    }
+
+    const elapsedSec = (now - hbLastNetSnapshot.time) / 1000;
+    if (!isFinite(elapsedSec) || elapsedSec <= 0.1 || elapsedSec > 60) {
+        hbLastNetSnapshot = {
+            time: now,
+            bytes_recv: bytesRecv,
+            bytes_sent: bytesSent,
+            interface: current.interface || hbSelectedInterface || ''
+        };
+        return { ...current, download_speed: 0.0, upload_speed: 0.0, bytes_recv: bytesRecv, bytes_sent: bytesSent };
+    }
+
+    const prevRecv = hbLastNetSnapshot.bytes_recv || 0;
+    const prevSent = hbLastNetSnapshot.bytes_sent || 0;
+
+    let recvDelta = bytesRecv - prevRecv;
+    let sentDelta = bytesSent - prevSent;
+
+    // Manejar reset de contadores
+    if (recvDelta < 0 && Math.abs(recvDelta) > prevRecv * 0.5) recvDelta = bytesRecv;
+    if (sentDelta < 0 && Math.abs(sentDelta) > prevSent * 0.5) sentDelta = bytesSent;
+
+    const downloadSpeed = Math.max(0, recvDelta / elapsedSec); // bytes/s
+    const uploadSpeed = Math.max(0, sentDelta / elapsedSec);   // bytes/s
+
+    hbLastNetSnapshot = {
+        time: now,
+        bytes_recv: bytesRecv,
+        bytes_sent: bytesSent,
+        interface: current.interface || hbSelectedInterface || ''
+    };
+
+    return {
+        ...current,
+        download_speed: downloadSpeed,
+        upload_speed: uploadSpeed,
+        bytes_recv: bytesRecv,
+        bytes_sent: bytesSent
+    };
+}
+
 // Actualizar tiempo en tiempo real
 function updateCurrentTime() {
     const now = new Date();
@@ -108,6 +305,24 @@ async function updateSystemStats() {
             hbUpdateProgress('disk-progress', diskValue || 0);
             hbSetText('disk-used', hbFormatBytes(stats.disk_used || 0));
             hbSetText('disk-total', hbFormatBytes(stats.disk_total || 0));
+
+            // System Info (monitoring-like)
+            hbSetText('sys-hostname', stats.hostname || '--');
+            hbSetText('sys-os', stats.os_version || '--');
+            hbSetText('sys-kernel', stats.kernel_version || '--');
+            hbSetText('sys-arch', stats.architecture || '--');
+            hbSetText('sys-processor', stats.processor || '--');
+            const loadAvg = stats.load_average;
+            if (loadAvg) {
+                const parts = String(loadAvg).split(',').map(s => s.trim());
+                if (parts.length === 3) {
+                    hbSetText('sys-load', `${parts[0]} (1m), ${parts[1]} (5m), ${parts[2]} (15m)`);
+                } else {
+                    hbSetText('sys-load', String(loadAvg));
+                }
+            } else {
+                hbSetText('sys-load', '--');
+            }
 
             updateDashboardLastUpdate();
         }
@@ -287,6 +502,60 @@ async function updateNetworkStatus() {
     }
 }
 
+// Monitoring-like Network Stats (selector + chart)
+async function updateNetworkMonitoring() {
+    try {
+        if (!window.HostBerry || typeof window.HostBerry.apiRequest !== 'function') {
+            return;
+        }
+
+        const url = hbSelectedInterface
+            ? `/api/v1/system/network?interface=${encodeURIComponent(hbSelectedInterface)}&_t=${Date.now()}`
+            : `/api/v1/system/network?_t=${Date.now()}`;
+
+        const resp = await HostBerry.apiRequest(url);
+        if (!resp || !resp.ok) return;
+
+        const payload = await resp.json();
+        const raw = (payload && typeof payload === 'object' && payload.data !== undefined) ? payload.data : payload;
+
+        const computed = hbComputeNetworkRates(raw);
+
+        if (computed.interfaces && Array.isArray(computed.interfaces)) {
+            hbPopulateInterfaceSelect(computed.interfaces);
+        } else if (raw && raw.interfaces && Array.isArray(raw.interfaces)) {
+            hbPopulateInterfaceSelect(raw.interfaces);
+        }
+
+        hbSetText('net-interface', computed.interface || raw?.interface || '--');
+        hbSetText('net-ip', computed.ip_address || raw?.ip_address || '--');
+
+        const dl = computed.download_speed || 0;
+        const ul = computed.upload_speed || 0;
+        hbSetText('net-download', dl > 0 ? `${hbFormatBytes(dl)}/s` : '0 B/s');
+        hbSetText('net-upload', ul > 0 ? `${hbFormatBytes(ul)}/s` : '0 B/s');
+
+        const bytesRecv = computed.bytes_recv || raw?.bytes_recv || 0;
+        const bytesSent = computed.bytes_sent || raw?.bytes_sent || 0;
+        hbSetText('net-bytes-recv', hbFormatBytes(bytesRecv));
+        hbSetText('net-bytes-sent', hbFormatBytes(bytesSent));
+
+        const packetsSent = computed.packets_sent || raw?.packets_sent || 0;
+        const packetsRecv = computed.packets_recv || raw?.packets_recv || 0;
+        hbSetText('net-packets', `${packetsSent} / ${packetsRecv}`);
+
+        const errors = (computed.errors || 0) + (raw?.errors || 0) + (raw?.drop || 0);
+        hbSetText('net-errors', String(errors || 0));
+
+        hbEnsureNetChart();
+        hbPushNetHistory(dl, ul);
+
+        updateDashboardLastUpdate();
+    } catch (e) {
+        console.error('Error updating network monitoring:', e);
+    }
+}
+
 // Actualizar interfaz de red
 function updateNetworkInterface(interfaceName, data) {
     const container =
@@ -319,7 +588,11 @@ function updateNetworkInterface(interfaceName, data) {
 }
 
 function refreshNetwork() {
-    updateNetworkStatus();
+    if (document.getElementById('net-interface-select')) {
+        updateNetworkMonitoring();
+    } else {
+        updateNetworkStatus();
+    }
     showNotification(HostBerry.t?.('system.network_refreshed', 'Network refreshed') || 'Network refreshed', 'info');
 }
 
@@ -666,14 +939,37 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cargar datos iniciales
     updateSystemStats();
     updateServices();
-    updateNetworkStatus();
+    // Si existe el layout de monitoring (selector), usar /api/v1/system/network + chart
+    const hasNetMonitoring = !!document.getElementById('net-interface-select');
+    if (hasNetMonitoring) {
+        // Event listener para cambio de interfaz
+        const select = document.getElementById('net-interface-select');
+        if (select) {
+            select.addEventListener('change', function (e) {
+                hbSelectedInterface = e.target.value || '';
+                hbLastNetSnapshot = null;
+                hbNetHistory.labels.length = 0;
+                hbNetHistory.download.length = 0;
+                hbNetHistory.upload.length = 0;
+                if (hbNetChart) hbNetChart.update();
+                updateNetworkMonitoring();
+            });
+        }
+        updateNetworkMonitoring();
+    } else {
+        updateNetworkStatus();
+    }
     updateLogs();
     updateRecentActivity();
     
     // Configurar actualizaciones periódicas
-    setInterval(updateSystemStats, 30000); // Cada 30 segundos
+    setInterval(updateSystemStats, 5000); // más parecido a Monitoring
     setInterval(updateServices, 60000);   // Cada minuto
-    setInterval(updateNetworkStatus, 30000); // Cada 30 segundos
+    if (hasNetMonitoring) {
+        setInterval(updateNetworkMonitoring, 5000);
+    } else {
+        setInterval(updateNetworkStatus, 30000); // Cada 30 segundos
+    }
     setInterval(updateLogs, 10000);       // Cada 10 segundos
     setInterval(updateRecentActivity, 60000); // Cada minuto
     
@@ -701,6 +997,7 @@ window.dashboard = {
     updateSystemStats,
     updateServices,
     updateNetworkStatus,
+    updateNetworkMonitoring,
     updateLogs,
     updateRecentActivity,
     refreshActivity,
