@@ -49,9 +49,9 @@
                             </select>
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="timezone" class="form-label text-white">{{ t('settings.timezone', 'Timezone') }}</label>
-                            <div class="timezone-selector-wrapper position-relative">
+                        <div class="mb-3 d-flex flex-column align-items-center justify-content-center">
+                            <label for="timezone" class="form-label text-white text-center mb-2 w-100">{{ t('settings.timezone', 'Timezone') }}</label>
+                            <div class="timezone-selector-wrapper position-relative" style="max-width: 300px; width: 100%;">
                                 <input type="text" 
                                        class="form-control bg-dark text-white border-secondary text-center" 
                                        id="timezone_search" 
