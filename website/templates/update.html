@@ -210,9 +210,30 @@
     return defaultValue || key;
   }
   
-  // Asegurar que HostBerry esté disponible
-  if (!window.HostBerry) {
-    window.HostBerry = {};
+  // Esperar a que HostBerry esté disponible (common.js se carga antes)
+  function waitForHostBerry(callback, maxAttempts = 50) {
+    if (window.HostBerry && window.HostBerry.apiRequest) {
+      callback();
+    } else if (maxAttempts > 0) {
+      setTimeout(() => waitForHostBerry(callback, maxAttempts - 1), 100);
+    } else {
+      console.error('HostBerry not available after waiting');
+      // Fallback: crear funciones básicas
+      if (!window.HostBerry) window.HostBerry = {};
+      if (!window.HostBerry.apiRequest) {
+        window.HostBerry.apiRequest = async function(url, options) {
+          const token = localStorage.getItem('access_token');
+          const opts = Object.assign({ method: 'GET', headers: {} }, options || {});
+          const headers = new Headers(opts.headers);
+          if (!headers.has('Authorization') && token) {
+            headers.set('Authorization', 'Bearer ' + token);
+          }
+          opts.headers = headers;
+          return await fetch(url, opts);
+        };
+      }
+      callback();
+    }
   }
 
   const setText = (id, value) => {
