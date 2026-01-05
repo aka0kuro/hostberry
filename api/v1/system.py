@@ -498,11 +498,14 @@ async def update_system_config(
 ):
     """Actualiza la configuración del sistema (acepta múltiples valores en un objeto JSON)"""
     try:
+        logger.info(f"Recibida petición de actualización de configuración de {current_user.get('username', 'unknown')}")
+        
         # Obtener el body como JSON
         try:
             body = await request.json()
+            logger.debug(f"Body recibido: {body}")
         except Exception as e:
-            logger.error(f"Error parseando JSON: {str(e)}")
+            logger.error(f"Error parseando JSON: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=get_text("errors.invalid_json", default="Invalid JSON in request body")
@@ -510,12 +513,14 @@ async def update_system_config(
         
         # Validar que sea un diccionario
         if not isinstance(body, dict):
+            logger.error(f"Body no es un diccionario: {type(body)}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=get_text("errors.invalid_config", default="Invalid configuration data")
             )
         
         if not body:
+            logger.warning("Body vacío recibido")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=get_text("errors.empty_config", default="Configuration data is empty")
@@ -523,6 +528,14 @@ async def update_system_config(
         
         updated_keys = []
         errors = []
+        
+        # Verificar que db esté disponible
+        if not db:
+            logger.error("Database instance no está disponible")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Database not available"
+            )
         
         for key, value in body.items():
             try:
@@ -539,12 +552,17 @@ async def update_system_config(
                 
                 # Validar que la clave no esté vacía
                 if not key or not isinstance(key, str):
-                    errors.append(f"Clave inválida: {key}")
+                    error_msg = f"Clave inválida: {key}"
+                    logger.warning(error_msg)
+                    errors.append(error_msg)
                     continue
                 
+                logger.debug(f"Guardando configuración: {key}={value_str}")
                 success = await db.set_configuration(key, value_str)
+                
                 if success:
                     updated_keys.append(key)
+                    logger.info(f"Configuración guardada exitosamente: {key}")
                     # Log del cambio de configuración
                     try:
                         await db.insert_log("INFO", f"Configuración actualizada: {key}={value_str} por {current_user.get('username', 'unknown')}")
@@ -561,6 +579,7 @@ async def update_system_config(
         
         if not updated_keys:
             error_msg = "; ".join(errors) if errors else get_text("errors.config_update_error", default="Error actualizando configuración")
+            logger.error(f"No se pudo actualizar ninguna configuración: {error_msg}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=error_msg
@@ -570,6 +589,7 @@ async def update_system_config(
         if errors:
             response_msg += f" (Algunos errores: {', '.join(errors)})"
         
+        logger.info(f"Configuración actualizada exitosamente. Claves: {updated_keys}")
         return {
             "message": response_msg,
             "updated_keys": updated_keys,
@@ -579,7 +599,8 @@ async def update_system_config(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error actualizando configuración: {str(e)}", exc_info=True)
+        error_msg = f"Error inesperado actualizando configuración: {str(e)}"
+        logger.error(error_msg, exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=get_text("errors.config_update_error", default=f"Error actualizando configuración: {str(e)}")
