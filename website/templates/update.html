@@ -462,7 +462,7 @@
       
     }catch(error){
       console.error('Project update failed', error);
-      const errorMsg = getTranslation('update.project_error', 'Error actualizando proyecto');
+      const errorMsg = getTranslation('update.project_error', 'Error updating project');
       addLogEntry(errorMsg, 'error');
       showNotification(errorMsg, 'error');
     }
