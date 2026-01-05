@@ -192,80 +192,23 @@
     <div class="row services-network-row">
         <!-- System Manager - Services Status -->
         <div class="col-lg-6 mb-4">
-            <div class="services-card">
-                <div class="services-card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="services-card-title">
-                            <i class="bi bi-gear-fill me-2"></i>
-                            {{ t('system.manager', 'System Manager') }}
-                        </h5>
-                        <button class="btn btn-sm btn-outline-light" onclick="refreshServices()" title="{{ t('common.refresh', 'Refresh') }}">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
-                    </div>
+            <!-- Estilo alineado con /network (glass-card + header spacing + loader) -->
+            <div class="card h-100 glass-card border-0 services-card">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4 services-card-header">
+                    <h5 class="card-title mb-0 fw-bold text-white services-card-title">
+                        <i class="bi bi-gear-fill me-2"></i>{{ t('system.manager', 'System Manager') }}
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="refreshServices()" title="{{ t('common.refresh', 'Refresh') }}">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
                 </div>
-                <div class="services-card-body">
-                    {% set service_icons = {
-                        'hostberry': 'bi bi-gear-fill service-icon hostberry-icon',
-                        'nginx': 'bi bi-shield-check service-icon nginx-icon',
-                        'fail2ban': 'bi bi-shield-fill service-icon fail2ban-icon',
-                        'ufw': 'bi bi-shield-lock service-icon ufw-icon',
-                        'ufw firewall': 'bi bi-shield-lock service-icon ufw-icon',
-                        'wifi': 'bi bi-wifi service-icon wifi-icon',
-                        'ssh': 'bi bi-terminal service-icon ssh-icon',
-                        'hostapd': 'bi bi-wifi service-icon wifi-icon',
-                        'openvpn': 'bi bi-shield-check service-icon openvpn-icon',
-                        'wireguard': 'bi bi-shield-lock service-icon wireguard-icon',
-                        'wg-quick': 'bi bi-shield-lock service-icon wireguard-icon',
-                        'wg': 'bi bi-shield-lock service-icon wireguard-icon',
-                        'dnsmasq': 'bi bi-diagram-3 service-icon dns-icon',
-                        'dns': 'bi bi-diagram-3 service-icon dns-icon',
-                        'adblock': 'bi bi-shield-x service-icon adblock-icon',
-                        'pihole': 'bi bi-shield-x service-icon adblock-icon'
-                    } %}
-                    {% if services %}
-                        {% for service_name, service_status in services.items() %}
-                            {% set normalized_name = service_name|lower %}
-                            {% set alias = normalized_name.replace('_', '').replace('-', '').replace(' ', '') %}
-                            {% set icon_class = service_icons.get(normalized_name) or service_icons.get(alias) or 'bi bi-hdd service-icon default-icon' %}
-                            {% set status_value = service_status.status if service_status is mapping and service_status.status is defined else service_status %}
-                            {% set status_lower = (status_value|string)|lower %}
-                            {% set is_running = status_lower in ['running', 'active', 'online', 'connected'] %}
-                            {% set is_stopped = status_lower in ['stopped', 'inactive', 'offline', 'disconnected'] %}
-                            {% if status_lower == 'active' %}
-                                {% set status_text = t('system.running', 'Running') %}
-                            {% elif status_lower == 'connected' %}
-                                {% set status_text = t('system.connected', 'Connected') %}
-                            {% elif status_lower == 'disconnected' %}
-                                {% set status_text = t('system.disconnected', 'Disconnected') %}
-                            {% elif status_lower == 'online' %}
-                                {% set status_text = t('system.online', 'Online') %}
-                            {% elif status_lower == 'offline' %}
-                                {% set status_text = t('system.offline', 'Offline') %}
-                            {% elif is_running %}
-                                {% set status_text = t('system.running', 'Running') %}
-                            {% elif is_stopped %}
-                                {% set status_text = t('system.stopped', 'Stopped') %}
-                            {% else %}
-                                {% set status_text = t('system.unknown', 'Unknown') %}
-                            {% endif %}
-                            <div class="service-item">
-                                <div class="service-info">
-                                    <i class="{{ icon_class }}"></i>
-                                    <span class="service-name">{{ service_name|title }}</span>
-                                </div>
-                                <div class="service-status">
-                                    <span class="status-badge {{ 'status-running' if is_running else 'status-stopped' }}">
-                                        {{ status_text }}
-                                    </span>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="text-muted small">
-                            {{ t('system.no_services', 'No services to display') }}
+                <div class="card-body services-card-body">
+                    <div id="dashboardServicesContainer">
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-arrow-clockwise spinning"></i>
+                            <p class="mb-0 mt-2">{{ t('system.loading_services', 'Loading services...') }}</p>
                         </div>
-                    {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
