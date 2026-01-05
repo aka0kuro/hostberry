@@ -161,20 +161,20 @@
                         <i class="bi bi-shield-check me-2"></i>{{ t('settings.security', 'Security') }}
                     </h5>
                 </div>
-                <div class="card-body px-4 pb-4">
-                    <form id="securityConfigForm">
+                <div class="card-body px-4 pb-4 d-flex flex-column">
+                    <form id="securityConfigForm" class="d-flex flex-column flex-grow-1">
                         <div class="mb-3">
                             <label for="max_login_attempts" class="form-label text-white">{{ t('settings.max_login_attempts', 'Max Login Attempts') }}</label>
-                            <input type="number" class="form-control bg-dark text-white border-secondary" id="max_login_attempts" name="max_login_attempts" value="{{ security_config.max_login_attempts if security_config else 3 }}" min="1" max="10">
+                            <input type="number" class="form-control bg-dark text-white border-secondary text-center" id="max_login_attempts" name="max_login_attempts" value="{{ security_config.max_login_attempts if security_config else 3 }}" min="1" max="10">
                         </div>
                         
                         <div class="mb-3">
                             <label for="session_timeout" class="form-label text-white">{{ t('settings.session_timeout', 'Session Timeout') }}</label>
-                            <input type="number" class="form-control bg-dark text-white border-secondary" id="session_timeout" name="session_timeout" value="{{ security_config.session_timeout if security_config else 30 }}" min="5" max="1440">
+                            <input type="number" class="form-control bg-dark text-white border-secondary text-center" id="session_timeout" name="session_timeout" value="{{ security_config.session_timeout if security_config else 30 }}" min="5" max="1440">
                             <small class="text-white-50">{{ t('settings.minutes', 'minutes') }}</small>
                         </div>
                         
-                        <div class="d-grid">
+                        <div class="d-grid mt-auto">
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-check-circle me-2"></i>
                                 {{ t('common.save', 'Save') }}
