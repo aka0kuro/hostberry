@@ -19,116 +19,99 @@
         </div>
     </div>
 
-    <!-- System Status Cards -->
-    <div class="row mb-4 status-cards-row">
-        <div class="col-lg-3 col-md-6 col-12 mb-3">
-            <div class="card h-100 glass-card border-0 status-card cpu-card">
-                <div class="status-card-header">
-                    <div class="status-icon cpu-icon">
-                        <i class="bi bi-cpu"></i>
-                    </div>
-                    <div class="status-info">
-                        <h6>{{ t('system.cpu_usage', 'CPU') }}</h6>
-                        <h3>{{ system_stats.cpu_percent | default(25, true) }}%</h3>
-                    </div>
+    <!-- System Status Cards (estética Monitoring) -->
+    <div class="row mb-4">
+        <!-- Uptime -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="actions-card h-100 glass-card border-0 uptime-card">
+                <div class="actions-card-header">
+                    <h6 class="actions-card-title mb-0">
+                        <i class="bi bi-clock-history me-2 text-white-50"></i>
+                        {{ t('monitoring.uptime', 'Uptime') }}
+                    </h6>
                 </div>
-                <div class="progress">
-                    <div class="progress-bar cpu-progress" style="width: {{ system_stats.cpu_percent | default(25, true) }}%"></div>
-                </div>
-                <div class="status-footer">
-                    <span class="status-text status-{{ system_health.cpu }}">
-                        {% if system_health.cpu == 'critical' %}
-                            {{ t('system.critical', 'Critical') }}
-                        {% elif system_health.cpu == 'warning' %}
-                            {{ t('system.warning', 'Warning') }}
-                        {% else %}
-                            {{ t('system.healthy', 'Healthy') }}
-                        {% endif %}
-                    </span>
+                <div class="actions-card-body text-center">
+                    <h2 class="text-white mb-2" id="uptime-value">{{ system_info.uptime | default('--') }}</h2>
+                    <small class="text-white-50">{{ t('monitoring.since_boot', 'Since boot') }}</small>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6 col-12 mb-3">
-            <div class="card h-100 glass-card border-0 status-card memory-card">
-                <div class="status-card-header">
-                    <div class="status-icon memory-icon">
-                        <i class="bi bi-memory"></i>
-                    </div>
-                    <div class="status-info">
-                        <h6>{{ t('system.memory_usage', 'Memory') }}</h6>
-                        <h3>{{ system_stats.memory_percent | default(45, true) }}%</h3>
-                    </div>
+        <!-- CPU Usage -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="actions-card h-100 glass-card border-0 cpu-card">
+                <div class="actions-card-header">
+                    <h6 class="actions-card-title mb-0">
+                        <i class="bi bi-cpu me-2 text-white-50"></i>
+                        {{ t('monitoring.cpu_usage', 'CPU Usage') }}
+                    </h6>
                 </div>
-                <div class="progress">
-                    <div class="progress-bar memory-progress" style="width: {{ system_stats.memory_percent | default(45, true) }}%"></div>
-                </div>
-                <div class="status-footer">
-                    <span class="status-text status-{{ system_health.memory }}">
-                        {% if system_health.memory == 'critical' %}
-                            {{ t('system.critical', 'Critical') }}
-                        {% elif system_health.memory == 'warning' %}
-                            {{ t('system.warning', 'Warning') }}
-                        {% else %}
-                            {{ t('system.healthy', 'Healthy') }}
-                        {% endif %}
-                    </span>
+                <div class="actions-card-body">
+                    <div class="text-center mb-2">
+                        <h2 class="text-white mb-0" id="cpu-usage">{{ system_stats.cpu_percent | default(0, true) }}%</h2>
+                    </div>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div id="cpu-progress" class="progress-bar bg-info cpu-progress" style="width: {{ system_stats.cpu_percent | default(0, true) }}%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between text-white-50 small">
+                        <span>{{ t('monitoring.cores', 'Cores') }}: <strong id="cpu-cores">{{ system_info.cpu_cores | default('-') }}</strong></span>
+                        <span>{{ t('monitoring.temp', 'Temp') }}: <strong id="cpu-temp">{{ system_stats.temperature | default('--', true) }}°C</strong></span>
+                    </div>
+                    <div class="mt-2 text-center">
+                        <span class="status-text status-healthy">{{ t('system.healthy', 'Healthy') }}</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6 col-12 mb-3">
-            <div class="card h-100 glass-card border-0 status-card disk-card">
-                <div class="status-card-header">
-                    <div class="status-icon disk-icon">
-                        <i class="bi bi-hdd"></i>
-                    </div>
-                    <div class="status-info">
-                        <h6>{{ t('system.disk_usage', 'Disk') }}</h6>
-                        <h3>{{ system_stats.disk_percent | default(60, true) }}%</h3>
-                    </div>
+        <!-- Memory Usage -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="actions-card h-100 glass-card border-0 memory-card">
+                <div class="actions-card-header">
+                    <h6 class="actions-card-title mb-0">
+                        <i class="bi bi-memory me-2 text-white-50"></i>
+                        {{ t('monitoring.memory_usage', 'Memory Usage') }}
+                    </h6>
                 </div>
-                <div class="progress">
-                    <div class="progress-bar disk-progress" style="width: {{ system_stats.disk_percent | default(60, true) }}%"></div>
-                </div>
-                <div class="status-footer">
-                    <span class="status-text status-{{ system_health.disk }}">
-                        {% if system_health.disk == 'critical' %}
-                            {{ t('system.critical', 'Critical') }}
-                        {% elif system_health.disk == 'warning' %}
-                            {{ t('system.warning', 'Warning') }}
-                        {% else %}
-                            {{ t('system.healthy', 'Healthy') }}
-                        {% endif %}
-                    </span>
+                <div class="actions-card-body">
+                    <div class="text-center mb-2">
+                        <h2 class="text-white mb-0" id="mem-usage">{{ system_stats.memory_percent | default(0, true) }}%</h2>
+                    </div>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div id="mem-progress" class="progress-bar bg-success memory-progress" style="width: {{ system_stats.memory_percent | default(0, true) }}%"></div>
+                    </div>
+                    <div class="text-center text-white-50 small">
+                        <span>{{ t('monitoring.used_of', 'Used of') }} <strong id="mem-total">--</strong> · <span id="mem-free">--</span> {{ t('monitoring.free', 'free') }}</span>
+                    </div>
+                    <div class="mt-2 text-center">
+                        <span class="status-text status-healthy">{{ t('system.healthy', 'Healthy') }}</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6 col-12 mb-3">
-            <div class="card h-100 glass-card border-0 status-card temp-card">
-                <div class="status-card-header">
-                    <div class="status-icon temp-icon">
-                        <i class="bi bi-thermometer-half"></i>
-                    </div>
-                    <div class="status-info">
-                        <h6>{{ t('system.temperature', 'Temperature') }}</h6>
-                        <h3>{{ system_stats.temperature | default(45, true) }}°C</h3>
-                    </div>
+        <!-- Disk Usage -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="actions-card h-100 glass-card border-0 disk-card">
+                <div class="actions-card-header">
+                    <h6 class="actions-card-title mb-0">
+                        <i class="bi bi-hdd me-2 text-white-50"></i>
+                        {{ t('monitoring.disk_usage', 'Disk Usage') }}
+                    </h6>
                 </div>
-                <div class="progress">
-                    <div class="progress-bar temp-progress" style="width: {{ (system_stats.temperature | default(45, true) / 100 * 100) | round }}%"></div>
-                </div>
-                <div class="status-footer">
-                    <span class="status-text status-{{ system_health.temperature }}">
-                        {% if system_health.temperature == 'critical' %}
-                            {{ t('system.critical', 'Critical') }}
-                        {% elif system_health.temperature == 'warning' %}
-                            {{ t('system.warning', 'Warning') }}
-                        {% else %}
-                            {{ t('system.normal', 'Normal') }}
-                        {% endif %}
-                    </span>
+                <div class="actions-card-body">
+                    <div class="text-center mb-2">
+                        <h2 class="text-white mb-0" id="disk-usage">{{ system_stats.disk_percent | default(0, true) }}%</h2>
+                    </div>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div id="disk-progress" class="progress-bar bg-warning disk-progress" style="width: {{ system_stats.disk_percent | default(0, true) }}%"></div>
+                    </div>
+                    <div class="text-center text-white-50 small">
+                        <span>{{ t('monitoring.used', 'Used') }} <strong id="disk-used">--</strong> / <span id="disk-total">--</span></span>
+                    </div>
+                    <div class="mt-2 text-center">
+                        <span class="status-text status-healthy">{{ t('system.healthy', 'Healthy') }}</span>
+                    </div>
                 </div>
             </div>
         </div>
