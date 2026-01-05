@@ -339,8 +339,8 @@
           </div>`;
       }
       
-      addLogEntry(getTranslation('update.checking', 'Verificando actualizaciones...'), 'info');
-      showNotification(getTranslation('update.checking', 'Verificando actualizaciones...'), 'info');
+      addLogEntry(getTranslation('update.checking', 'Checking for updates...'), 'info');
+      showNotification(getTranslation('update.checking', 'Checking for updates...'), 'info');
       
       const resp = await HostBerry.apiRequest('/api/v1/system/updates', { method: 'POST' });
       if(!resp || !resp.ok){
