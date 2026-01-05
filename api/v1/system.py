@@ -1422,6 +1422,21 @@ async def get_network_interfaces(current_user: Dict[str, Any] = Depends(get_curr
         )
 
 
+@router.get("/timezones")
+async def get_timezones(current_user: Dict[str, Any] = Depends(get_current_active_user)):
+    """Obtiene todas las zonas horarias disponibles"""
+    try:
+        from core.utils import get_all_timezones
+        timezones = get_all_timezones()
+        return {"timezones": timezones}
+    except Exception as e:
+        logger.error(f"Error obteniendo zonas horarias: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=get_text("errors.loading_timezones", default="Error cargando zonas horarias")
+        )
+
+
 @router.get("/network/routing")
 async def get_routing_table(current_user: Dict[str, Any] = Depends(get_current_active_user)):
     """Obtiene la tabla de enrutamiento"""
