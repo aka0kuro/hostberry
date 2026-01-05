@@ -34,13 +34,14 @@
                     </h4>
                 </div>
                 <div class="card-body text-center d-flex flex-column justify-content-center">
-                    <h2 class="text-white mb-2" id="uptime-value">--</h2>
-                    <small class="text-white-50 mb-2">{{ t('monitoring.since_boot', 'Since boot') }}</small>
+                    <div class="text-center mb-2">
+                        <h2 class="text-white mb-0" id="uptime-value">--</h2>
+                    </div>
                     <div class="progress mb-2" style="height: 8px; visibility: hidden;">
                         <div class="progress-bar" style="width:0%"></div>
                     </div>
-                    <div class="text-white-50 small" style="visibility: hidden;">
-                        <span>Placeholder</span>
+                    <div class="text-white-50 small">
+                        <span>{{ t('monitoring.since_boot', 'Since boot') }}</span>
                     </div>
                 </div>
             </div>
