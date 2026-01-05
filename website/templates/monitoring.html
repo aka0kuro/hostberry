@@ -829,13 +829,23 @@
                      (networkStats.drop || networkStatsRaw.drop || 0);
       setText('net-errors', errors || '0');
 
-      pushNetHistory(downloadSpeed, uploadSpeed);
+      // Asegurar que las velocidades sean números válidos antes de agregar al historial
+      const validDownloadSpeed = (typeof downloadSpeed === 'number' && !isNaN(downloadSpeed) && isFinite(downloadSpeed)) ? downloadSpeed : 0;
+      const validUploadSpeed = (typeof uploadSpeed === 'number' && !isNaN(uploadSpeed) && isFinite(uploadSpeed)) ? uploadSpeed : 0;
+      
+      pushNetHistory(validDownloadSpeed, validUploadSpeed);
 
       setText('monitoring-last-update', new Date().toLocaleTimeString());
+      
+      // Asegurar que el gráfico esté creado antes de actualizarlo
       ensureNetChart();
       
       if(netChart){
-        netChart.update();
+        // Actualizar los datos del gráfico
+        netChart.data.labels = netHistory.labels;
+        netChart.data.datasets[0].data = netHistory.download;
+        netChart.data.datasets[1].data = netHistory.upload;
+        netChart.update('none'); // 'none' para actualización sin animación
       }
     }catch(error){
       console.error('Error updating monitoring stats:', error);
@@ -885,11 +895,25 @@
       });
     }
     
-    // Esperar un poco para que Chart.js se cargue y luego iniciar actualizaciones
-    setTimeout(function(){
+    // Esperar a que Chart.js se cargue completamente
+    function waitForChartJS(callback, maxAttempts = 20) {
+      if (typeof Chart !== 'undefined') {
+        console.log('Chart.js loaded, initializing chart...');
+        ensureNetChart();
+        callback();
+      } else if (maxAttempts > 0) {
+        setTimeout(() => waitForChartJS(callback, maxAttempts - 1), 250);
+      } else {
+        console.error('Chart.js not loaded after waiting');
+        callback(); // Continuar de todos modos
+      }
+    }
+    
+    // Iniciar actualizaciones después de que Chart.js esté listo
+    waitForChartJS(function(){
       updateStats();
       setInterval(updateStats, 5000);
-    }, 500);
+    });
   }
   
   // Esperar a que HostBerry esté disponible y luego inicializar
