@@ -1119,6 +1119,7 @@
     "checking": "Checking for updates...",
     "check_failed": "Error checking updates",
     "check_error": "Error checking updates",
+    "sudo_error": "Permission error. Verify that the user has passwordless sudo permissions configured. Run: sudo visudo and add: user ALL=(ALL) NOPASSWD: ALL",
     "updates_available": "Updates available",
     "system_updated": "System is up to date",
     "system_confirm": "Are you sure you want to update the Debian system? This may take several minutes.",
