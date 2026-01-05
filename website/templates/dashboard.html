@@ -1,21 +1,22 @@
 {% extends "base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+{% endblock %}
+
 {% block content %}
-<div class="dashboard-container">
-    <!-- Header Section -->
-    <div class="dashboard-header mb-4">
-        <div class="row align-items-center">
-            <div class="col-12 text-center">
-                <h1 class="dashboard-title">
-                    <i class="bi bi-speedometer2 me-2"></i>
-                    {{ t('navigation.dashboard', 'Dashboard') }}
-                </h1>
-                <p class="dashboard-subtitle">{{ t('dashboard.welcome', 'Welcome to HostBerry') }}</p>
+<div class="system-page">
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <img src="/static/hostberry.png" alt="HostBerry" class="logo-image" style="height: 24px; width: auto;" />
+            <h1>HostBerry</h1>
+            <p>{{ t('dashboard.title', 'Control Panel') }}</p>
+            <div class="mt-2 d-flex flex-column align-items-center gap-1">
                 <div class="dashboard-time">
                     <i class="bi bi-clock me-1"></i>
                     <span id="currentTime">--:--:--</span>
                 </div>
-                <div class="dashboard-time mt-1" style="font-size: 0.95rem; font-weight: 400;">
+                <div class="dashboard-time" style="font-size: 0.95rem; font-weight: 400;">
                     <i class="bi bi-arrow-repeat me-1"></i>
                     {{ t('dashboard.last_update', 'Last Update') }}: <span id="dashboard-last-update">--:--:--</span>
                 </div>
@@ -23,34 +24,31 @@
         </div>
     </div>
 
-    <!-- System Information Cards -->
-    <div class="row mb-4">
+    <div class="row">
         <!-- Uptime -->
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <h6 class="actions-card-title mb-0">
-                        <i class="bi bi-clock-history me-2"></i>
-                        {{ t('monitoring.uptime', 'Uptime') }}
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h6 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-clock-history me-2"></i>{{ t('monitoring.uptime', 'Uptime') }}
                     </h6>
                 </div>
-                <div class="actions-card-body text-center">
+                <div class="card-body text-center">
                     <h2 class="text-white mb-2" id="uptime-value">--</h2>
                     <small class="text-white-50">{{ t('monitoring.since_boot', 'Since boot') }}</small>
                 </div>
             </div>
         </div>
 
-        <!-- CPU Usage -->
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <h6 class="actions-card-title mb-0">
-                        <i class="bi bi-cpu me-2"></i>
-                        {{ t('monitoring.cpu_usage', 'CPU Usage') }}
+        <!-- CPU -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h6 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-cpu me-2"></i>{{ t('monitoring.cpu_usage', 'CPU Usage') }}
                     </h6>
                 </div>
-                <div class="actions-card-body">
+                <div class="card-body">
                     <div class="text-center mb-2">
                         <h2 class="text-white mb-0" id="cpu-usage">0%</h2>
                     </div>
@@ -65,16 +63,15 @@
             </div>
         </div>
 
-        <!-- Memory Usage -->
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <h6 class="actions-card-title mb-0">
-                        <i class="bi bi-memory me-2"></i>
-                        {{ t('monitoring.memory_usage', 'Memory Usage') }}
+        <!-- Memory -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h6 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-memory me-2"></i>{{ t('monitoring.memory_usage', 'Memory Usage') }}
                     </h6>
                 </div>
-                <div class="actions-card-body">
+                <div class="card-body">
                     <div class="text-center mb-2">
                         <h2 class="text-white mb-0" id="mem-usage">0%</h2>
                     </div>
@@ -88,16 +85,15 @@
             </div>
         </div>
 
-        <!-- Disk Usage -->
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <h6 class="actions-card-title mb-0">
-                        <i class="bi bi-hdd me-2"></i>
-                        {{ t('monitoring.disk_usage', 'Disk Usage') }}
+        <!-- Disk -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h6 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-hdd me-2"></i>{{ t('monitoring.disk_usage', 'Disk Usage') }}
                     </h6>
                 </div>
-                <div class="actions-card-body">
+                <div class="card-body">
                     <div class="text-center mb-2">
                         <h2 class="text-white mb-0" id="disk-usage">0%</h2>
                     </div>
@@ -111,18 +107,17 @@
             </div>
         </div>
     </div>
-    <!-- System Information and Network Statistics (igual que Monitoring) -->
-    <div class="row mb-4">
+
+    <div class="row">
         <!-- System Information -->
-        <div class="col-lg-6 col-md-12 mb-4">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <h5 class="actions-card-title">
-                        <i class="bi bi-info-circle me-2"></i>
-                        {{ t('monitoring.system_info', 'System Information') }}
+        <div class="col-xl-8 col-lg-7 mb-4">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-info-circle me-2"></i>{{ t('monitoring.system_info', 'System Information') }}
                     </h5>
                 </div>
-                <div class="actions-card-body">
+                <div class="card-body">
                     <div class="row g-3">
                         <div class="col-6">
                             <h6 class="text-white-50 mb-1">{{ t('monitoring.hostname', 'Hostname') }}</h6>
@@ -156,90 +151,67 @@
             </div>
         </div>
 
-        <!-- Network Statistics -->
-        <div class="col-lg-6 col-md-12 mb-4">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <h5 class="actions-card-title mb-0">
-                            <i class="bi bi-wifi me-2"></i>
-                            {{ t('monitoring.network_stats', 'Network Statistics') }}
-                        </h5>
-                        <select class="form-select form-select-sm bg-dark text-white border-secondary" id="net-interface-select" style="min-width: 150px;">
-                            <option value="">{{ t('monitoring.network_auto', 'Auto detect') }}</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="actions-card-body">
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <h6 class="text-white-50 mb-1">{{ t('monitoring.interface', 'Interface') }}</h6>
-                            <p class="text-white mb-3" id="net-interface">--</p>
-                        </div>
-                        <div class="col-6">
-                            <h6 class="text-white-50 mb-1">{{ t('monitoring.ip_address', 'IP Address') }}</h6>
-                            <p class="text-white mb-3" id="net-ip">--</p>
-                        </div>
-                        <div class="col-6">
-                            <h6 class="text-white-50 mb-1">{{ t('monitoring.download', 'Download') }}</h6>
-                            <p class="text-white mb-2" id="net-download" style="font-size: 1.2rem; font-weight: 600;">0 KB/s</p>
-                            <small class="text-white-50">{{ t('monitoring.total_received', 'Total Rx') }}: <span id="net-bytes-recv">0 MB</span></small>
-                        </div>
-                        <div class="col-6">
-                            <h6 class="text-white-50 mb-1">{{ t('monitoring.upload', 'Upload') }}</h6>
-                            <p class="text-white mb-2" id="net-upload" style="font-size: 1.2rem; font-weight: 600;">0 KB/s</p>
-                            <small class="text-white-50">{{ t('monitoring.total_sent', 'Total Tx') }}: <span id="net-bytes-sent">0 MB</span></small>
-                        </div>
-                        <div class="col-6">
-                            <h6 class="text-white-50 mb-1">{{ t('monitoring.packets', 'Packets') }}</h6>
-                            <p class="text-white mb-3" id="net-packets">--</p>
-                        </div>
-                        <div class="col-6">
-                            <h6 class="text-white-50 mb-1">{{ t('monitoring.errors', 'Errors') }}</h6>
-                            <p class="text-white mb-3" id="net-errors">--</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Network Traffic Chart -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <h5 class="actions-card-title">
-                        <i class="bi bi-graph-up me-2"></i>
-                        {{ t('monitoring.network_chart', 'Network Traffic Chart') }}
+        <!-- Network Traffic Chart -->
+        <div class="col-xl-4 col-lg-5 mb-4">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-graph-up me-2"></i>{{ t('monitoring.network_chart', 'Network Traffic Chart') }}
                     </h5>
                 </div>
-                <div class="actions-card-body" style="position: relative; height: 300px;">
+                <div class="card-body" style="position: relative; height: 250px;">
                     <canvas id="net-chart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- System Manager - Services Status -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <h5 class="actions-card-title mb-0">
-                            <i class="bi bi-gear-fill me-2"></i>{{ t('system.manager', 'System Manager') }}
+    <div class="row">
+        <!-- Network Traffic Statistics -->
+        <div class="col-12 mb-4">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 w-100">
+                        <h5 class="card-title mb-0 fw-bold text-white">
+                            <i class="bi bi-wifi me-2"></i>{{ t('monitoring.network_stats', 'Network Statistics') }}
                         </h5>
-                        <button class="btn btn-sm btn-outline-primary" onclick="refreshServices()" title="{{ t('common.refresh', 'Refresh') }}">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
+                        <div class="d-flex align-items-center gap-2">
+                            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="net-interface-select" style="min-width: 150px;">
+                                <option value="">{{ t('monitoring.network_auto', 'Auto detect') }}</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-primary" onclick="refreshNetwork()" title="{{ t('common.refresh', 'Refresh') }}">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="actions-card-body">
-                    <div id="dashboardServicesContainer">
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-arrow-clockwise spinning"></i>
-                            <p class="mb-0 mt-2">{{ t('system.loading_services', 'Loading services...') }}</p>
+                <div class="card-body">
+                    <div class="row g-3 mb-1">
+                        <div class="col-6 col-lg-4">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.interface', 'Interface') }}</h6>
+                            <p class="text-white mb-3" id="net-interface">--</p>
+                        </div>
+                        <div class="col-6 col-lg-4">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.ip_address', 'IP Address') }}</h6>
+                            <p class="text-white mb-3" id="net-ip">--</p>
+                        </div>
+                        <div class="col-6 col-lg-4">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.packets', 'Packets') }}</h6>
+                            <p class="text-white mb-3" id="net-packets">--</p>
+                        </div>
+                        <div class="col-6 col-lg-4">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.download', 'Download') }}</h6>
+                            <p class="text-white mb-2" id="net-download" style="font-size: 1.2rem; font-weight: 600;">0 B/s</p>
+                            <small class="text-white-50">{{ t('monitoring.total_received', 'Total Rx') }}: <span id="net-bytes-recv">0 MB</span></small>
+                        </div>
+                        <div class="col-6 col-lg-4">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.upload', 'Upload') }}</h6>
+                            <p class="text-white mb-2" id="net-upload" style="font-size: 1.2rem; font-weight: 600;">0 B/s</p>
+                            <small class="text-white-50">{{ t('monitoring.total_sent', 'Total Tx') }}: <span id="net-bytes-sent">0 MB</span></small>
+                        </div>
+                        <div class="col-6 col-lg-4">
+                            <h6 class="text-white-50 mb-1">{{ t('monitoring.errors', 'Errors') }}</h6>
+                            <p class="text-white mb-3" id="net-errors">--</p>
                         </div>
                     </div>
                 </div>
@@ -250,10 +222,10 @@
     <!-- System Logs -->
     <div class="row">
         <div class="col-12">
-            <div class="actions-card">
-                <div class="actions-card-header">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-4 px-4">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <h5 class="actions-card-title mb-0">
+                        <h5 class="card-title mb-0 fw-bold text-white">
                             <i class="bi bi-journal-text me-2"></i>
                             {{ t('system.logs', 'System Logs') }}
                         </h5>
@@ -270,7 +242,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="actions-card-body">
+                <div class="card-body">
                     <div class="logs-container">
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-arrow-clockwise spinning"></i>
@@ -285,14 +257,14 @@
     <!-- Quick Actions -->
     <div class="row">
         <div class="col-12">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <h5 class="actions-card-title">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
                         <i class="bi bi-lightning me-2"></i>
                         {{ t('dashboard.quick_actions', 'Quick Actions') }}
                     </h5>
                 </div>
-                <div class="actions-card-body">
+                <div class="card-body">
                     <div class="quick-actions">
                         <button class="action-btn action-restart" onclick="restartSystem()">
                             <i class="bi bi-arrow-clockwise"></i>
