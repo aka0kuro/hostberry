@@ -501,6 +501,12 @@ Defaults:%hostberry timestamp_timeout=2, log_year, log_host, syslog=auth
 %hostberry ALL=(root) NOPASSWD: /usr/local/sbin/hostberry-safe/set-dns
 %hostberry ALL=(root) NOPASSWD: /usr/local/sbin/hostberry-safe/dhcp-set
 
+# Permisos para habilitar/deshabilitar SSL/TLS en Nginx
+%hostberry ALL=(ALL) NOPASSWD: /usr/bin/ln -sf /etc/nginx/sites-available/hostberry /etc/nginx/sites-enabled/
+%hostberry ALL=(ALL) NOPASSWD: /usr/bin/ln -sf /etc/nginx/sites-available/hostberry-ssl /etc/nginx/sites-enabled/
+%hostberry ALL=(ALL) NOPASSWD: /usr/bin/rm -f /etc/nginx/sites-enabled/hostberry
+%hostberry ALL=(ALL) NOPASSWD: /usr/bin/rm -f /etc/nginx/sites-enabled/hostberry-ssl
+
 # Nota: acciones de systemctl para hostberry se autorizan vía Polkit, no por sudoers
 # Nota: para leer logs del sistema, añadir usuarios al grupo systemd-journal (sin sudo)
 EOF
@@ -511,6 +517,8 @@ EOF
         groupadd hostberry
     fi
     usermod -a -G hostberry $REAL_USER
+    
+    log "$ANSI_GREEN" "SUCCESS" "$(get_text 'min_sudoers_configured' 'Minimal sudoers configured with SSL/TLS permissions')"
 }
 
 setup_root_wrappers() {
