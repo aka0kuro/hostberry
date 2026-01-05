@@ -1123,7 +1123,7 @@ async def execute_system_updates(current_user: Dict[str, Any] = Depends(get_curr
             if "sudo" in error_msg.lower() or "permission denied" in error_msg.lower() or "not allowed" in error_msg.lower():
                 detail_msg = get_text("update.sudo_error", default="Error de permisos. Verifica que el usuario tenga permisos sudo sin contraseña configurados.")
         else:
-                detail_msg = f"Error actualizando repositorios: {error_msg[:200]}"
+            detail_msg = f"Error actualizando repositorios: {error_msg[:200]}"
             
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
