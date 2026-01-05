@@ -372,6 +372,8 @@
     "services": "Services",
     "manager": "System Manager",
     "services_refreshed": "Services refreshed",
+    "network_refreshed": "Network refreshed",
+    "logs_refreshed": "Logs refreshed",
     "services_error": "Error loading services",
     "logs": "Logs",
     "configuration": "Configuration",
