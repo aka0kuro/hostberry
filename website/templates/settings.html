@@ -383,7 +383,7 @@
         </div>
 
         <!-- Información del Sistema -->
-        <div class="col-12 mb-4">
+        <div class="col-12 settings-card">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
                     <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
@@ -392,19 +392,35 @@
                 </div>
                 <div class="card-body px-4 pb-4">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <h6 class="text-white">{{ t('settings.version', 'Version') }}</h6>
                             <p class="text-white-50">{{ (version_info.app_version if version_info else '') or (system_info.app_version if system_info else '') or '-' }}</p>
                             
-                            <h6 class="text-white">{{ t('system.hostname', 'Hostname') }}</h6>
+                            <h6 class="text-white mt-3">{{ t('system.hostname', 'Hostname') }}</h6>
                             <p class="text-white-50">{{ system_info.hostname if system_info else '-' }}</p>
+                            
+                            <h6 class="text-white mt-3">{{ t('system.architecture', 'Architecture') }}</h6>
+                            <p class="text-white-50">{{ system_info.architecture if system_info else '-' }}</p>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <h6 class="text-white">{{ t('system.os', 'OS') }}</h6>
                             <p class="text-white-50">{{ system_info.os_version if system_info else '-' }}</p>
                             
-                            <h6 class="text-white">{{ t('system.kernel', 'Kernel') }}</h6>
+                            <h6 class="text-white mt-3">{{ t('system.kernel', 'Kernel') }}</h6>
                             <p class="text-white-50">{{ system_info.kernel_version if system_info else '-' }}</p>
+                            
+                            <h6 class="text-white mt-3">{{ t('monitoring.processor', 'Processor') }}</h6>
+                            <p class="text-white-50">{{ system_info.processor if system_info else '-' }}</p>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <h6 class="text-white">{{ t('system.uptime', 'Uptime') }}</h6>
+                            <p class="text-white-50" id="about-uptime">--</p>
+                            
+                            <h6 class="text-white mt-3">{{ t('system.boot_time', 'Boot Time') }}</h6>
+                            <p class="text-white-50" id="about-boot-time">--</p>
+                            
+                            <h6 class="text-white mt-3">{{ t('system.python_version', 'Python Version') }}</h6>
+                            <p class="text-white-50">{{ system_info.python_version if system_info else '-' }}</p>
                         </div>
                     </div>
                 </div>
