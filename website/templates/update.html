@@ -395,14 +395,14 @@
             ${getTranslation('update.check_error', 'Error checking updates')}
           </div>`;
       }
-      addLogEntry(getTranslation('update.check_error', 'Error verificando actualizaciones'), 'error');
-      showNotification(getTranslation('update.check_error', 'Error verificando actualizaciones'), 'error');
+      addLogEntry(getTranslation('update.check_error', 'Error checking updates'), 'error');
+      showNotification(getTranslation('update.check_error', 'Error checking updates'), 'error');
     }
   }
 
   async function updateSystem(){
     try{
-      const confirmMsg = getTranslation('update.system_confirm', '¿Estás seguro de que deseas actualizar el sistema Debian? Esto puede tardar varios minutos.');
+      const confirmMsg = getTranslation('update.system_confirm', 'Are you sure you want to update the Debian system? This may take several minutes.');
       if(!confirm(confirmMsg)) return;
       
       addLogEntry(getTranslation('update.updating_system', 'Iniciando actualización del sistema...'), 'info');
