@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+{% endblock %}
+
 {% block content %}
 <div class="dashboard-container">
     <!-- Header Section -->
@@ -18,14 +22,13 @@
     <div class="row g-4">
         <!-- Configuración General -->
         <div class="col-lg-6 col-md-12">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <h5 class="actions-card-title">
-                        <i class="bi bi-gear me-2"></i>
-                        {{ t('settings.general', 'General') }}
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-gear me-2"></i>{{ t('settings.general', 'General') }}
                     </h5>
                 </div>
-                <div class="actions-card-body">
+                <div class="card-body px-4 pb-4">
                     <form id="generalConfigForm">
                         <div class="mb-3">
                             <label for="language" class="form-label text-white">{{ t('settings.language', 'Language') }}</label>
@@ -74,14 +77,13 @@
 
         <!-- Configuración del Sistema -->
         <div class="col-lg-6 col-md-12">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <h5 class="actions-card-title">
-                        <i class="bi bi-cpu me-2"></i>
-                        {{ t('settings.system', 'System') }}
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-cpu me-2"></i>{{ t('settings.system', 'System') }}
                     </h5>
                 </div>
-                <div class="actions-card-body">
+                <div class="card-body px-4 pb-4">
                     <form id="systemConfigForm">
                         <div class="mb-3">
                             <label for="log_level" class="form-label text-white">{{ t('system.log_level', 'Log Level') }}</label>
@@ -125,14 +127,13 @@
 
         <!-- Configuración de Red -->
         <div class="col-lg-6 col-md-12">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <h5 class="actions-card-title">
-                        <i class="bi bi-wifi me-2"></i>
-                        {{ t('settings.network', 'Network') }}
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-wifi me-2"></i>{{ t('settings.network', 'Network') }}
                     </h5>
                 </div>
-                <div class="actions-card-body">
+                <div class="card-body px-4 pb-4">
                     <form id="networkConfigForm">
                         <div class="mb-3">
                             <label class="form-label text-white">{{ t('settings.dhcp_server', 'DHCP Server') }}</label>
@@ -172,14 +173,13 @@
 
         <!-- Configuración de Seguridad -->
         <div class="col-lg-6 col-md-12">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <h5 class="actions-card-title">
-                        <i class="bi bi-shield-check me-2"></i>
-                        {{ t('settings.security', 'Security') }}
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-shield-check me-2"></i>{{ t('settings.security', 'Security') }}
                     </h5>
                 </div>
-                <div class="actions-card-body">
+                <div class="card-body px-4 pb-4">
                     <form id="securityConfigForm">
                         <div class="mb-3">
                             <label class="form-label text-white">{{ t('settings.ssl', 'SSL/TLS') }}</label>
@@ -215,14 +215,13 @@
 
         <!-- Configuración de Rendimiento -->
         <div class="col-lg-6 col-md-12">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <h5 class="actions-card-title">
-                        <i class="bi bi-speedometer2 me-2"></i>
-                        {{ t('settings.performance', 'Performance') }}
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-speedometer2 me-2"></i>{{ t('settings.performance', 'Performance') }}
                     </h5>
                 </div>
-                <div class="actions-card-body">
+                <div class="card-body px-4 pb-4">
                     <form id="performanceConfigForm">
                         <div class="mb-3">
                             <label class="form-label text-white">{{ t('settings.cache', 'Cache') }}</label>
@@ -263,19 +262,18 @@
 
         <!-- Configuración de Notificaciones -->
         <div class="col-lg-6 col-md-12">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <h5 class="actions-card-title">
-                        <i class="bi bi-bell me-2"></i>
-                        {{ t('settings.notifications', 'Notifications') }}
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-bell me-2"></i>{{ t('settings.notifications', 'Notifications') }}
                     </h5>
                 </div>
-                <div class="actions-card-body">
+                <div class="card-body px-4 pb-4">
                     <form id="notificationConfigForm">
                         <div class="mb-3">
                             <label class="form-label text-white">{{ t('settings.email_notifications', 'Email Notifications') }}</label>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {{ 'checked' if (notification_config.email_enabled if notification_config else False) else '' }}>
+                                <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {{ 'checked' if (notification_config.email_notifications if notification_config else False) else '' }}>
                                 <label class="form-check-label text-white" for="email_notifications">
                                     {{ t('settings.enable_email_notifications', 'Enable email notifications') }}
                                 </label>
@@ -310,14 +308,13 @@
 
         <!-- Información del Sistema -->
         <div class="col-12">
-            <div class="actions-card">
-                <div class="actions-card-header">
-                    <h5 class="actions-card-title">
-                        <i class="bi bi-info-circle me-2"></i>
-                        {{ t('settings.about', 'About') }}
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-white">
+                        <i class="bi bi-info-circle me-2"></i>{{ t('settings.about', 'About') }}
                     </h5>
                 </div>
-                <div class="actions-card-body">
+                <div class="card-body px-4 pb-4">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <h6 class="text-white">{{ t('settings.version', 'Version') }}</h6>
@@ -367,17 +364,17 @@
 {% block extra_js %}
 <script>
 (function(){
-  // Función de notificaciones como en dashboard
+  // Notificaciones estilo dashboard (toast)
   function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.innerHTML = `
       <div class="notification-content">
-        <span class="notification-message">${message}</span>
+        <span class="notification-message">${message || ''}</span>
         <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
       </div>
     `;
-    
+
     if (!document.querySelector('#notification-styles')) {
       const style = document.createElement('style');
       style.id = 'notification-styles';
@@ -424,91 +421,20 @@
           color: #212529;
           border: 1px solid rgba(0, 0, 0, 0.1);
         }
-        body.light-theme .notification-content {
-          color: #212529;
-        }
-        body.light-theme .notification-close {
-          color: #212529;
-        }
+        body.light-theme .notification-content { color: #212529; }
+        body.light-theme .notification-close { color: #212529; }
       `;
       document.head.appendChild(style);
     }
-    
+
     document.body.appendChild(notification);
-    
     setTimeout(() => {
-      if (notification.parentElement) {
-        notification.remove();
-      }
+      if (notification.parentElement) notification.remove();
     }, 5000);
   }
 
-  // Función para obtener traducciones
-  function getTranslation(key, defaultValue) {
-    if (!key) return defaultValue || '';
-    
-    const keys = String(key).split('.');
-    
-    // 1. Intentar desde HostBerry.translations
-    if (window.HostBerry?.translations) {
-      let current = window.HostBerry.translations;
-      for (const k of keys) {
-        if (current && typeof current === 'object' && k in current) {
-          current = current[k];
-        } else {
-          current = null;
-          break;
-        }
-      }
-      if (typeof current === 'string' && current) return current;
-    }
-    
-    // 2. Intentar desde window.translations
-    if (window.translations) {
-      let current = window.translations;
-      for (const k of keys) {
-        if (current && typeof current === 'object' && k in current) {
-          current = current[k];
-        } else {
-          current = null;
-          break;
-        }
-      }
-      if (typeof current === 'string' && current) return current;
-    }
-    
-    // 3. Intentar desde el JSON embebido
-    try {
-      const i18nEl = document.getElementById('i18n-json');
-      if (i18nEl) {
-        const translations = JSON.parse(i18nEl.textContent || i18nEl.innerText || '{}');
-        let current = translations;
-        for (const k of keys) {
-          if (current && typeof current === 'object' && k in current) {
-            current = current[k];
-          } else {
-            current = null;
-            break;
-          }
-        }
-        if (typeof current === 'string' && current) return current;
-      }
-    } catch (e) {
-      // Ignorar errores
-    }
-    
-    // 4. Usar HostBerry.t si está disponible
-    if (window.HostBerry?.t) {
-      try {
-        const result = window.HostBerry.t(key, defaultValue);
-        if (result && result !== key && typeof result === 'string') return result;
-      } catch (e) {
-        // Ignorar errores
-      }
-    }
-    
-    // 5. Fallback al valor por defecto
-    return defaultValue || key;
+  function t(key, fallback) {
+    return window.HostBerry?.t ? window.HostBerry.t(key, fallback) : (fallback || key);
   }
 
   // Función para bindear formularios
@@ -518,85 +444,68 @@
     
     form.addEventListener('submit', async function(e){
       e.preventDefault();
-      
-      const formData = new FormData(this);
+
+      // Construir payload robusto (incluye checkboxes aunque estén apagados)
       const obj = {};
-      formData.forEach((v, k) => { 
-        obj[k] = v;
-      });
-      
-      // Normalizaciones básicas
-      ['max_login_attempts', 'session_timeout', 'cache_size'].forEach(function(k){
-        if(obj[k] !== undefined) obj[k] = parseInt(obj[k]);
-      });
-      
-      ['auto_backup', 'firewall_enabled', 'ssl_enabled', 'cache_enabled', 
-       'compression_enabled', 'email_notifications', 'system_alerts', 'dhcp_enabled'].forEach(function(k){
-        if(obj[k] !== undefined) obj[k] = (obj[k] === 'on');
-      });
-      
-      // Mostrar notificación de guardado
-      showNotification(getTranslation('settings.saving', 'Saving...'), 'info');
-      
-      try{
-        const token = localStorage.getItem('access_token');
-        const resp = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(obj)
-        });
-        
-        if(resp.ok){
-          const data = await resp.json();
-          const message = data.message || getTranslation('settings.saved', 'Settings saved successfully');
-          showNotification(message, 'success');
-          
-          // Si es el formulario general (idioma o tema), recargar después de un momento
-          if(formId === 'generalConfigForm'){
-            setTimeout(() => {
-              // Si cambió el idioma, recargar con el nuevo idioma
-              if(obj.language){
-                const currentUrl = new URL(window.location);
-                currentUrl.searchParams.set('lang', obj.language);
-                window.location.href = currentUrl.toString();
-              } else if(obj.theme){
-                // Si cambió el tema, aplicar el tema
-                if(obj.theme === 'light'){
-                  document.body.classList.add('light-theme');
-                  document.body.classList.remove('dark-theme');
-                } else if(obj.theme === 'dark'){
-                  document.body.classList.add('dark-theme');
-                  document.body.classList.remove('light-theme');
-                } else {
-                  // Auto - detectar preferencia del sistema
-                  if(window.matchMedia('(prefers-color-scheme: light)').matches){
-                    document.body.classList.add('light-theme');
-                    document.body.classList.remove('dark-theme');
-                  } else {
-                    document.body.classList.add('dark-theme');
-                    document.body.classList.remove('light-theme');
-                  }
-                }
-                localStorage.setItem('theme', obj.theme);
-              }
-              
-              // Si cambió timezone, mostrar notificación
-              if(obj.timezone){
-                showNotification(getTranslation('settings.timezone_updated', 'Timezone updated. Changes will take effect on next page reload.'), 'info');
-              }
-            }, 1000);
-          }
+      const elements = Array.from(form.elements || []);
+      for(const el of elements){
+        if(!el || !el.name || el.disabled) continue;
+        const name = el.name;
+        const type = (el.type || '').toLowerCase();
+        if(type === 'checkbox'){
+          obj[name] = !!el.checked;
+        } else if(type === 'number'){
+          obj[name] = el.value === '' ? null : parseInt(el.value, 10);
         } else {
-          const errorData = await resp.json().catch(() => ({ detail: await resp.text() }));
-          const errorMsg = errorData.detail || errorData.message || getTranslation('errors.configuration_error', 'Error saving configuration');
+          obj[name] = el.value;
+        }
+      }
+
+      showNotification(t('settings.saving', 'Saving...'), 'info');
+
+      try{
+        const resp = await HostBerry.apiRequest(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: obj
+        });
+
+        if(!resp || !resp.ok){
+          const errorData = await resp.json().catch(() => ({}));
+          const errorMsg = errorData.detail || errorData.message || t('errors.configuration_error', 'Error saving configuration');
           showNotification(errorMsg, 'error');
+          return;
+        }
+
+        const data = await resp.json().catch(() => ({}));
+        const message = data.message || t('settings.saved', 'Settings saved successfully');
+        showNotification(message, 'success');
+
+        // Aplicar cambios UX
+        if(formId === 'generalConfigForm'){
+          setTimeout(() => {
+            if(obj.language){
+              const currentUrl = new URL(window.location.href);
+              currentUrl.searchParams.set('lang', obj.language);
+              window.location.href = currentUrl.toString();
+              return;
+            }
+            if(obj.theme){
+              if(obj.theme === 'auto'){
+                localStorage.removeItem('theme');
+                window.ThemeManager?.initTheme?.();
+              } else {
+                window.ThemeManager?.setTheme?.(obj.theme);
+              }
+            }
+            if(obj.timezone){
+              showNotification(t('settings.timezone_updated', 'Timezone updated. Changes will take effect on next page reload.'), 'info');
+            }
+          }, 600);
         }
       } catch(error){
         console.error('Error saving settings:', error);
-        showNotification(getTranslation('errors.network_error', 'Network error. Please try again.'), 'error');
+        showNotification(t('errors.network_error', 'Network error. Please try again.'), 'error');
       }
     });
   }
