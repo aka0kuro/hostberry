@@ -340,14 +340,45 @@
     return `${safeToFixed(bytes / Math.pow(k, i), 1)} ${sizes[i]}`;
   }
 
+  // Esperar a que HostBerry esté disponible
+  function waitForHostBerry(callback, maxAttempts = 50) {
+    if (window.HostBerry && window.HostBerry.apiRequest) {
+      callback();
+    } else if (maxAttempts > 0) {
+      setTimeout(() => waitForHostBerry(callback, maxAttempts - 1), 100);
+    } else {
+      console.error('HostBerry not available after waiting');
+      // Fallback: crear funciones básicas
+      if (!window.HostBerry) window.HostBerry = {};
+      if (!window.HostBerry.apiRequest) {
+        window.HostBerry.apiRequest = async function(url, options) {
+          const token = localStorage.getItem('access_token');
+          const opts = Object.assign({ method: 'GET', headers: {} }, options || {});
+          const headers = new Headers(opts.headers);
+          if (!headers.has('Authorization') && token) {
+            headers.set('Authorization', 'Bearer ' + token);
+          }
+          opts.headers = headers;
+          return await fetch(url, opts);
+        };
+      }
+      callback();
+    }
+  }
+
   async function fetchJson(url){
     try {
-      // Intentar usar HostBerry.apiRequest si está disponible
-      if(window.HostBerry && window.HostBerry.apiRequest){
-        const resp = await window.HostBerry.apiRequest(url);
-        if(!resp){
-          throw new Error('No response from server');
-        }
+      // Asegurar que HostBerry.apiRequest esté disponible
+      if (!window.HostBerry || !window.HostBerry.apiRequest) {
+        // Fallback: usar fetch directamente
+        const token = localStorage.getItem('access_token');
+        const resp = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
         
         if(resp.status === 401){
           window.location.href = '/login';
@@ -365,22 +396,14 @@
         }
         
         const data = await resp.json();
-        // Si la respuesta tiene 'data', usarlo; si no, usar directamente
-        if(data && typeof data === 'object' && 'data' in data){
-          return data.data;
-        }
-        return data;
+        return data.data !== undefined ? data.data : data;
       }
       
-      // Fallback: usar fetch directamente
-      const token = localStorage.getItem('access_token');
-      const resp = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Usar HostBerry.apiRequest
+      const resp = await window.HostBerry.apiRequest(url);
+      if(!resp){
+        throw new Error('No response from server');
+      }
       
       if(resp.status === 401){
         window.location.href = '/login';
@@ -398,11 +421,9 @@
       }
       
       const data = await resp.json();
-      // El modelo Pydantic devuelve los datos directamente, no envueltos en 'data'
-      // Pero algunos endpoints pueden devolverlos envueltos
-      if(data && typeof data === 'object'){
-        // Si tiene 'data', usarlo; si no, usar directamente
-        return data.data !== undefined ? data.data : data;
+      // Si la respuesta tiene 'data', usarlo; si no, usar directamente
+      if(data && typeof data === 'object' && 'data' in data){
+        return data.data;
       }
       return data;
     } catch(error){
