@@ -373,14 +373,14 @@
           list.innerHTML = `
             <div class="alert alert-success">
               <i class="bi bi-check-circle me-2"></i>
-              ${getTranslation('update.system_updated', 'El sistema está actualizado')}
+              ${getTranslation('update.system_updated', 'System is up to date')}
             </div>`;
         }
       }
       
       const message = updatesAvailable 
-        ? `${getTranslation('update.updates_available', 'Actualizaciones disponibles')}: ${updateCount}`
-        : getTranslation('update.system_updated', 'El sistema está actualizado');
+        ? `${getTranslation('update.updates_available', 'Updates available')}: ${updateCount}`
+        : getTranslation('update.system_updated', 'System is up to date');
       
       addLogEntry(message, updatesAvailable ? 'warning' : 'success');
       showNotification(message, updatesAvailable ? 'warning' : 'success');
