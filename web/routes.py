@@ -635,8 +635,15 @@ async def settings_page(request: Request, lang: str | None = Query(default=None)
         email_notifications = await db.get_configuration("email_notifications")
         email_address = await db.get_configuration("email_address")
         system_alerts = await db.get_configuration("system_alerts")
+        smtp_host = await db.get_configuration("smtp_host")
+        smtp_port = await db.get_configuration("smtp_port")
+        smtp_user = await db.get_configuration("smtp_user")
+        smtp_password = await db.get_configuration("smtp_password")
+        smtp_tls = await db.get_configuration("smtp_tls")
+        smtp_from = await db.get_configuration("smtp_from")
     except Exception:
         email_notifications, email_address, system_alerts = None, None, None
+        smtp_host, smtp_port, smtp_user, smtp_password, smtp_tls, smtp_from = None, None, None, None, None, None
 
     return await _render(
         "settings.html",
@@ -668,6 +675,12 @@ async def settings_page(request: Request, lang: str | None = Query(default=None)
                 "email_notifications": _as_bool(email_notifications, False),
                 "email_address": _as_str(email_address, ""),
                 "system_alerts": _as_bool(system_alerts, True),
+                "smtp_host": _as_str(smtp_host, ""),
+                "smtp_port": _as_int(smtp_port, 587),
+                "smtp_user": _as_str(smtp_user, ""),
+                "smtp_password": _as_str(smtp_password, ""),
+                "smtp_tls": _as_bool(smtp_tls, True),
+                "smtp_from": _as_str(smtp_from, ""),
             },
         },
     )
