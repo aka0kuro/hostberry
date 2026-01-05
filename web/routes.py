@@ -683,51 +683,6 @@ async def monitoring_page(request: Request, lang: str | None = Query(default=Non
     )
 
 
-@router.get("/security", response_class=HTMLResponse)
-async def security_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    current_lang, _ = _resolve_language(request, lang)
-    
-    cfg = SimpleNamespace(
-        FIREWALL_ENABLED=True,
-        BLOCK_ICMP=True,
-        TIMEZONE="UTC",
-        TIME_FORMAT="%Y-%m-%d %H:%M:%S",
-    )
-    sec = SimpleNamespace(
-        blocked_ips=12,
-        last_attack=None,
-        last_check=datetime.now(timezone.utc),
-    )
-    dummy_form = DummyForm()
-    timezones = ["UTC", "Europe/Madrid", "America/Mexico_City", "America/Bogota"]
-    time_formats = ["%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M", "%H:%M:%S"]
-    current_time = datetime.now(timezone.utc)
-    
-    return _render(
-        "security.html",
-        request,
-        current_lang,
-        extra={
-            "config": cfg,
-            "security_status": sec,
-            "form": dummy_form,
-            "timezones": timezones,
-            "time_formats": time_formats,
-            "current_time": current_time,
-            "system_info": {
-                "hostname": "hostberry",
-                "os_version": "Raspberry Pi OS",
-                "kernel_version": "Linux 6.8.0",
-                "architecture": "armv7l",
-                "processor": "ARM Cortex-A53",
-                "uptime": "2 days, 5 hours",
-                "load_average": "0.25, 0.30, 0.35",
-                "cpu_cores": "4",
-            },
-        },
-    )
-
-
 @router.get("/update", response_class=HTMLResponse)
 async def update_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
     current_lang, _ = _resolve_language(request, lang)
