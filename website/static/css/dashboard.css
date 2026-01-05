@@ -798,14 +798,16 @@ body.light-theme .info-item-grid .info-value {
 
 /* Centrar tarjeta de Quick Actions en tablet y desktop */
 @media (min-width: 768px) {
-    .row:has(.quick-actions) {
+    .quick-actions-container {
         display: flex;
         justify-content: center;
         align-items: center;
     }
     
-    .row:has(.quick-actions) > div {
+    .quick-actions-container > div {
         margin: 0 auto;
+        width: 100%;
+        max-width: 600px;
     }
 }
 
