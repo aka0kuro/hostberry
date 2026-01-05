@@ -630,9 +630,11 @@
     // Actualizar estadísticas
     async function updateStats() {
       try {
+        // Agregar timestamp para evitar caché
+        const cacheBuster = `&_t=${Date.now()}`;
         const [systemStatsResp, networkStatsResp] = await Promise.all([
           fetchJson('/api/v1/system/stats'),
-          fetchJson(`/api/v1/system/network${selectedInterface ? `?interface=${encodeURIComponent(selectedInterface)}` : ''}`)
+          fetchJson(`/api/v1/system/network${selectedInterface ? `?interface=${encodeURIComponent(selectedInterface)}` : ''}${cacheBuster}`)
         ]);
         
         let systemStats = systemStatsResp;
@@ -644,6 +646,14 @@
         if (!networkStatsRaw || typeof networkStatsRaw !== 'object') {
           throw new Error('Invalid network stats response');
         }
+        
+        // Log de depuración
+        console.log('Network stats raw:', {
+          bytes_recv: networkStatsRaw.bytes_recv,
+          bytes_sent: networkStatsRaw.bytes_sent,
+          interface: networkStatsRaw.interface,
+          hasSnapshot: !!lastNetSnapshot
+        });
         
         const networkStats = computeNetworkRates(networkStatsRaw);
         
