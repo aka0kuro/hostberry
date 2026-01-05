@@ -205,19 +205,77 @@ class DummyForm:
     def hidden_tag(self):
         return ""
 
+#
+# Configuración UI global (language/theme/timezone) desde DB
+#
+_UI_SETTINGS_CACHE: dict[str, Any] = {"ts": 0.0, "value": None}
 
-def _resolve_language(request: Request, lang: str | None) -> tuple[str, bool]:
-    if lang:
+
+async def _get_ui_settings() -> dict[str, Any]:
+    """Lee settings básicos desde DB con un caché pequeño para evitar demasiadas lecturas."""
+    now = time.time()
+    cached = _UI_SETTINGS_CACHE.get("value")
+    if cached and (now - float(_UI_SETTINGS_CACHE.get("ts") or 0.0)) < 10:
+        return cached
+
+    from core.database import db
+
+    async def _get(key: str) -> str | None:
+        try:
+            return await db.get_configuration(key)
+        except Exception:
+            return None
+
+    language = await _get("language")
+    if language not in ("en", "es"):
+        language = None
+
+    theme = await _get("theme")
+    if theme not in ("light", "dark", "auto"):
+        theme = None
+
+    timezone = await _get("timezone")
+    timezone = timezone or None
+
+    result = {"language": language, "theme": theme, "timezone": timezone}
+    _UI_SETTINGS_CACHE["ts"] = now
+    _UI_SETTINGS_CACHE["value"] = result
+    return result
+
+
+async def _resolve_language(request: Request, lang: str | None) -> tuple[str, bool]:
+    """Resolver idioma: query -> cookie -> DB -> accept-language -> default."""
+    if lang in ("en", "es"):
         i18n.set_context_language(lang)
         return lang, True
+
     cookie_lang = request.cookies.get("lang")
-    if cookie_lang:
+    if cookie_lang in ("en", "es"):
         i18n.set_context_language(cookie_lang)
         return cookie_lang, False
-    return i18n.get_current_language(), False
+
+    ui = await _get_ui_settings()
+    db_lang = ui.get("language")
+    if db_lang in ("en", "es"):
+        i18n.set_context_language(db_lang)
+        # Si no hay cookie, persistimos el idioma global de DB en cookie para toda la app
+        return db_lang, True
+
+    accept = request.headers.get("accept-language", "")
+    if accept:
+        accept_lang = accept.split(",")[0].split("-")[0].strip().lower()
+        if accept_lang in ("en", "es"):
+            i18n.set_context_language(accept_lang)
+            return accept_lang, False
+
+    current = i18n.get_current_language()
+    if current not in ("en", "es"):
+        current = "en"
+        i18n.set_context_language(current)
+    return current, False
 
 
-def _base_context(request: Request, current_lang: str) -> dict:
+async def _base_context(request: Request, current_lang: str) -> dict:
     bt = 0.0
     try:
         bt = float(boot_time() or 0.0)
@@ -285,6 +343,13 @@ def _base_context(request: Request, current_lang: str) -> dict:
     from config.settings import settings
     username = request.cookies.get("username") or settings.default_username
 
+    ui = await _get_ui_settings()
+    settings_ctx = {
+        "language": current_lang,
+        "theme": ui.get("theme") or "dark",
+        "timezone": ui.get("timezone") or "UTC",
+    }
+
     return {
         "request": request,
         "language": current_lang,
@@ -292,6 +357,7 @@ def _base_context(request: Request, current_lang: str) -> dict:
         "last_update": int(time.time()),
         "pytz": pytz,
         "current_user": {"username": username},
+        "settings": settings_ctx,
         "system_info": {
             "hostname": hostname,
             "os_version": os_version,
@@ -308,9 +374,9 @@ def _base_context(request: Request, current_lang: str) -> dict:
     }
 
 
-def _render(template_name: str, request: Request, lang: str | None, extra: dict | None = None) -> HTMLResponse:
-    current_lang, should_set_cookie = _resolve_language(request, lang)
-    context = _base_context(request, current_lang)
+async def _render(template_name: str, request: Request, lang: str | None, extra: dict | None = None) -> HTMLResponse:
+    current_lang, should_set_cookie = await _resolve_language(request, lang)
+    context = await _base_context(request, current_lang)
     if extra:
         context.update(extra)
     resp = templates.TemplateResponse(template_name, context)
@@ -338,7 +404,7 @@ async def root(request: Request, lang: str | None = Query(default=None)) -> HTML
     from config.settings import settings
     current_user = {"username": settings.default_username}
     
-    return _render(
+    return await _render(
         "index.html",
         request,
         lang,
@@ -350,17 +416,8 @@ async def root(request: Request, lang: str | None = Query(default=None)) -> HTML
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, response: Response, lang: str | None = Query(default=None)) -> HTMLResponse:
-    # Resolver idioma desde query, cookie o usar el del contexto (middleware)
-    # Si viene por query, forzamos el cambio y seteamos cookie
-    if lang:
-        i18n.set_context_language(lang)
-        response.set_cookie("lang", lang, max_age=60*60*24*365)
-    elif request.cookies.get("lang"):
-        i18n.set_context_language(request.cookies.get("lang"))
-    
-    current_lang = i18n.get_current_language()
-    
-    context = _base_context(request, current_lang)
+    current_lang, _ = await _resolve_language(request, lang)
+    context = await _base_context(request, current_lang)
     context.update({
         "current_user": {"username": "usuario"},  # Ensure current_user is available
         "system_health": {
@@ -378,24 +435,19 @@ async def login_page(request: Request, response: Response, lang: str | None = Qu
         ],
         "current_user": {"username": "admin"}  # Add current_user to context
     })
-    resp = templates.TemplateResponse("login.html", context)
-    if lang:
-        resp.set_cookie("lang", lang, max_age=60*60*24*365)
-    return resp
+    return await _render("login.html", request, lang, extra=context)
 
 
 @router.get("/system", response_class=HTMLResponse)
 async def system_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    current_lang, _ = _resolve_language(request, lang)
-    
     # Obtener información del sistema
     system_stats = _get_system_stats()
     services = _get_service_statuses()
     
-    return _render(
+    return await _render(
         "system.html",
         request,
-        current_lang,
+        lang,
         extra={
             "system_info": {
                 "hostname": platform.node(),
@@ -413,7 +465,7 @@ async def system_page(request: Request, lang: str | None = Query(default=None)) 
 
 @router.get("/network", response_class=HTMLResponse)
 async def network_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
-    return _render("network.html", request, lang)
+    return await _render("network.html", request, lang)
 
 
 @router.get("/wifi", response_class=HTMLResponse)
