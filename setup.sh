@@ -490,6 +490,7 @@ Defaults:%hostberry timestamp_timeout=2, log_year, log_host, syslog=auth
 
 # Permitir sólo acciones indispensables sin password (wrappers controlados)
 %hostberry ALL=(root) NOPASSWD: /usr/local/sbin/hostberry-safe/reload-nginx
+%hostberry ALL=(root) NOPASSWD: /usr/local/sbin/hostberry-safe/set-timezone
 
 # Nota: acciones de systemctl para hostberry se autorizan vía Polkit, no por sudoers
 # Nota: para leer logs del sistema, añadir usuarios al grupo systemd-journal (sin sudo)
