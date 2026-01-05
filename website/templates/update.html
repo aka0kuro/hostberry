@@ -535,17 +535,32 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', function(){
+  // Función para inicializar cuando el DOM esté listo
+  function initUpdatePage() {
     updateLastCheck();
     loadProjectStatus();
     
     // Configurar event listeners
-    document.getElementById('action-check-updates')?.addEventListener('click', checkUpdates);
-    document.getElementById('action-update-system')?.addEventListener('click', updateSystem);
-    document.getElementById('action-update-project')?.addEventListener('click', updateProject);
-    document.getElementById('action-update-all')?.addEventListener('click', updateAll);
-    document.getElementById('systemUpdatesRefresh')?.addEventListener('click', checkUpdates);
-  });
+    const checkBtn = document.getElementById('action-check-updates');
+    const systemBtn = document.getElementById('action-update-system');
+    const projectBtn = document.getElementById('action-update-project');
+    const allBtn = document.getElementById('action-update-all');
+    const refreshBtn = document.getElementById('systemUpdatesRefresh');
+    
+    if (checkBtn) checkBtn.addEventListener('click', checkUpdates);
+    if (systemBtn) systemBtn.addEventListener('click', updateSystem);
+    if (projectBtn) projectBtn.addEventListener('click', updateProject);
+    if (allBtn) allBtn.addEventListener('click', updateAll);
+    if (refreshBtn) refreshBtn.addEventListener('click', checkUpdates);
+  }
+  
+  // Inicializar cuando el DOM esté listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initUpdatePage);
+  } else {
+    // DOM ya está listo
+    initUpdatePage();
+  }
 })();
 </script>
 <style>
