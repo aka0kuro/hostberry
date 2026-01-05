@@ -596,7 +596,7 @@ async def update_system_config(
                 success = await db.set_configuration(key, value_str)
                 
                 if success:
-                updated_keys.append(key)
+                    updated_keys.append(key)
                     logger.info(f"Configuración guardada exitosamente: {key}")
 
                     # Aplicar zona horaria al sistema si corresponde
