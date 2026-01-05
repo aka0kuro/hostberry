@@ -748,6 +748,131 @@ async def check_updates(current_user: Dict[str, Any] = Depends(get_current_activ
             detail="Error buscando actualizaciones"
         )
 
+@router.post("/updates/execute")
+async def execute_system_updates(current_user: Dict[str, Any] = Depends(get_current_active_user)):
+    """Ejecuta actualizaciones del sistema Debian"""
+    try:
+        # Log de la acción
+        await db.insert_log("INFO", f"Actualización del sistema iniciada por {current_user['username']}")
+        
+        # Ejecutar actualizaciones (async)
+        from core.async_utils import run_subprocess_async
+        
+        # Primero actualizar repositorios
+        returncode1, stdout1, stderr1 = await run_subprocess_async(
+            ["sudo", "apt", "update"],
+            timeout=120
+        )
+        
+        if returncode1 != 0:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error actualizando repositorios"
+            )
+        
+        # Ejecutar upgrade
+        returncode2, stdout2, stderr2 = await run_subprocess_async(
+            ["sudo", "apt", "upgrade", "-y"],
+            timeout=600  # 10 minutos para actualizaciones
+        )
+        
+        if returncode2 != 0:
+            await db.insert_log("ERROR", f"Error ejecutando actualizaciones: {stderr2}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error ejecutando actualizaciones: {stderr2[:200]}"
+            )
+        
+        await db.insert_log("INFO", "Actualización del sistema completada exitosamente")
+        
+        return {
+            "success": True,
+            "message": "Sistema actualizado exitosamente",
+            "output": stdout2[:500] if stdout2 else "Actualización completada"
+        }
+        
+    except TimeoutError:
+        await db.insert_log("ERROR", "Timeout ejecutando actualizaciones")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Timeout ejecutando actualizaciones"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error ejecutando actualizaciones: {str(e)}")
+        await db.insert_log("ERROR", f"Error en actualizaciones: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error ejecutando actualizaciones: {str(e)}"
+        )
+
+@router.post("/updates/project")
+async def update_project(current_user: Dict[str, Any] = Depends(get_current_active_user)):
+    """Actualiza el proyecto HostBerry ejecutando setup.sh --update"""
+    try:
+        # Log de la acción
+        await db.insert_log("INFO", f"Actualización del proyecto iniciada por {current_user['username']}")
+        
+        # Buscar setup.sh en el directorio de producción o actual
+        setup_script = None
+        possible_paths = [
+            "/opt/hostberry/setup.sh",
+            "/var/lib/hostberry/setup.sh",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "setup.sh"),
+            "setup.sh"
+        ]
+        
+        for path in possible_paths:
+            if os.path.exists(path) and os.path.isfile(path):
+                setup_script = path
+                break
+        
+        if not setup_script:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No se encontró setup.sh"
+            )
+        
+        # Ejecutar setup.sh --update
+        from core.async_utils import run_subprocess_async
+        
+        returncode, stdout, stderr = await run_subprocess_async(
+            ["sudo", "bash", setup_script, "--update"],
+            timeout=600  # 10 minutos para actualización del proyecto
+        )
+        
+        if returncode != 0:
+            await db.insert_log("ERROR", f"Error actualizando proyecto: {stderr}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error actualizando proyecto: {stderr[:200]}"
+            )
+        
+        await db.insert_log("INFO", "Actualización del proyecto completada exitosamente")
+        
+        return {
+            "success": True,
+            "message": "Proyecto actualizado exitosamente",
+            "output": stdout[:500] if stdout else "Actualización completada"
+        }
+        
+    except TimeoutError:
+        await db.insert_log("ERROR", "Timeout actualizando proyecto")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Timeout actualizando proyecto"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error actualizando proyecto: {str(e)}")
+        await db.insert_log("ERROR", f"Error actualizando proyecto: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error actualizando proyecto: {str(e)}"
+        )
+
 @router.get("/network/status")
 async def get_network_status(current_user: Dict[str, Any] = Depends(get_current_active_user)):
     """Obtiene estado detallado de la red"""
