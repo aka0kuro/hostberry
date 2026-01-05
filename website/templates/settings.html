@@ -613,10 +613,23 @@
     });
   }
 
+  // Función para formatear uptime
+  function formatUptime(seconds) {
+    if (typeof seconds !== 'number' || !isFinite(seconds) || seconds < 0) return '--';
+    const mins = Math.floor(seconds / 60);
+    const hrs = Math.floor(mins / 60);
+    const days = Math.floor(hrs / 24);
+    const remHrs = hrs % 24;
+    const remMins = mins % 60;
+    if (days > 0) return `${days}d ${remHrs}h ${remMins}m`;
+    if (hrs > 0) return `${hrs}h ${remMins}m`;
+    return `${remMins}m`;
+  }
+
   // Cargar datos de sistema para "Acerca de"
   async function loadSystemInfo() {
     try {
-      const resp = await HostBerry.apiRequest('/api/v1/system/info', {
+      const resp = await HostBerry.apiRequest('/api/v1/system/stats', {
         method: 'GET'
       });
       
@@ -624,14 +637,22 @@
         const data = await resp.json().catch(() => ({}));
         
         // Actualizar uptime
-        if (data.uptime && document.getElementById('about-uptime')) {
-          document.getElementById('about-uptime').textContent = data.uptime;
+        const uptimeSeconds = data.uptime_seconds !== undefined ? data.uptime_seconds : data.uptime;
+        if (uptimeSeconds !== undefined && document.getElementById('about-uptime')) {
+          document.getElementById('about-uptime').textContent = formatUptime(uptimeSeconds);
         }
         
         // Actualizar boot time
         if (data.boot_time && document.getElementById('about-boot-time')) {
-          const bootDate = new Date(data.boot_time);
+          const bootDate = new Date(data.boot_time * 1000); // Convertir timestamp a milisegundos
           document.getElementById('about-boot-time').textContent = bootDate.toLocaleString();
+        } else if (uptimeSeconds !== undefined) {
+          // Calcular boot time desde uptime
+          const bootTimestamp = Math.floor(Date.now() / 1000) - uptimeSeconds;
+          const bootDate = new Date(bootTimestamp * 1000);
+          if (document.getElementById('about-boot-time')) {
+            document.getElementById('about-boot-time').textContent = bootDate.toLocaleString();
+          }
         }
       }
     } catch (error) {
