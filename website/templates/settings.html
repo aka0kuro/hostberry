@@ -107,7 +107,7 @@
                         
                         <div class="mb-3">
                             <label for="backup_interval" class="form-label text-white">{{ t('settings.backup_interval', 'Backup Interval') }}</label>
-                            <select class="form-select bg-dark text-white border-secondary" id="backup_interval" name="backup_interval">
+                            <select class="form-select bg-dark text-white border-secondary text-center" id="backup_interval" name="backup_interval">
                                 <option value="daily" {{ 'selected' if (system_config.backup_interval if system_config else 'daily') == 'daily' else '' }}>{{ t('settings.daily', 'Daily') }}</option>
                                 <option value="weekly" {{ 'selected' if (system_config.backup_interval if system_config else 'daily') == 'weekly' else '' }}>{{ t('settings.weekly', 'Weekly') }}</option>
                                 <option value="monthly" {{ 'selected' if (system_config.backup_interval if system_config else 'daily') == 'monthly' else '' }}>{{ t('settings.monthly', 'Monthly') }}</option>
