@@ -3,14 +3,9 @@
 // Actualizar tiempo en tiempo real
 function updateCurrentTime() {
     const now = new Date();
-    const lang = (document.documentElement && document.documentElement.lang) ? document.documentElement.lang : 'en';
-    const locale = (lang === 'es') ? 'es-ES' : 'en-US';
-    const timeString = now.toLocaleTimeString(locale, {
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
+    const timeString = (window.HostBerry && typeof window.HostBerry.formatTime === 'function')
+        ? window.HostBerry.formatTime(now)
+        : now.toLocaleTimeString();
     const timeElement = document.getElementById('currentTime');
     if (timeElement) {
         timeElement.textContent = timeString;
