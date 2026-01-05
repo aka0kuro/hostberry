@@ -532,8 +532,15 @@ async def update_system_config(
                     value_str = ""
                 elif isinstance(value, bool):
                     value_str = str(value).lower()
+                elif isinstance(value, (int, float)):
+                    value_str = str(value)
                 else:
                     value_str = str(value)
+                
+                # Validar que la clave no esté vacía
+                if not key or not isinstance(key, str):
+                    errors.append(f"Clave inválida: {key}")
+                    continue
                 
                 success = await db.set_configuration(key, value_str)
                 if success:
@@ -544,10 +551,13 @@ async def update_system_config(
                     except Exception as log_error:
                         logger.warning(f"Error insertando log: {str(log_error)}")
                 else:
-                    errors.append(f"Error guardando {key}")
+                    error_msg = f"Error guardando {key}"
+                    logger.error(f"{error_msg} - No se pudo guardar en la base de datos")
+                    errors.append(error_msg)
             except Exception as e:
-                logger.error(f"Error procesando clave {key}: {str(e)}")
-                errors.append(f"Error procesando {key}: {str(e)}")
+                error_msg = f"Error procesando clave {key}: {str(e)}"
+                logger.error(error_msg, exc_info=True)
+                errors.append(error_msg)
         
         if not updated_keys:
             error_msg = "; ".join(errors) if errors else get_text("errors.config_update_error", default="Error actualizando configuración")
