@@ -51,17 +51,21 @@
                         
                         <div class="mb-3">
                             <label for="timezone" class="form-label text-white">{{ t('settings.timezone', 'Timezone') }}</label>
-                            <select class="form-select bg-dark text-white border-secondary text-center" id="timezone" name="timezone">
-                                {% set current_tz = (settings.timezone if settings else 'UTC') or 'UTC' %}
-                                <option value="UTC" {{ 'selected' if current_tz == 'UTC' else '' }}>UTC</option>
-                                <option value="Europe/Madrid" {{ 'selected' if current_tz == 'Europe/Madrid' else '' }}>Europe/Madrid</option>
-                                <option value="Europe/London" {{ 'selected' if current_tz == 'Europe/London' else '' }}>Europe/London</option>
-                                <option value="America/New_York" {{ 'selected' if current_tz == 'America/New_York' else '' }}>America/New_York</option>
-                                <option value="America/Los_Angeles" {{ 'selected' if current_tz == 'America/Los_Angeles' else '' }}>America/Los_Angeles</option>
-                                <option value="America/Mexico_City" {{ 'selected' if current_tz == 'America/Mexico_City' else '' }}>America/Mexico_City</option>
-                                <option value="America/Bogota" {{ 'selected' if current_tz == 'America/Bogota' else '' }}>America/Bogota</option>
-                                <option value="Asia/Tokyo" {{ 'selected' if current_tz == 'Asia/Tokyo' else '' }}>Asia/Tokyo</option>
-                            </select>
+                            <div class="timezone-selector-wrapper position-relative">
+                                <input type="text" 
+                                       class="form-control bg-dark text-white border-secondary text-center" 
+                                       id="timezone_search" 
+                                       placeholder="{{ t('settings.search_timezone', 'Search timezone...') }}"
+                                       autocomplete="off">
+                                <input type="hidden" id="timezone" name="timezone" value="{{ (settings.timezone if settings else 'UTC') or 'UTC' }}">
+                                <div class="timezone-dropdown bg-dark border border-secondary rounded mt-1 position-absolute w-100" 
+                                     id="timezone_dropdown" 
+                                     style="display: none; max-height: 300px; overflow-y: auto; z-index: 1000;">
+                                    <div class="text-center text-white-50 p-2">
+                                        <i class="bi bi-arrow-clockwise spinning"></i> {{ t('settings.loading_timezones', 'Loading timezones...') }}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="d-grid">
