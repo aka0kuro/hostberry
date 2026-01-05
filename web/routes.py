@@ -611,8 +611,14 @@ async def settings_page(request: Request, lang: str | None = Query(default=None)
         dhcp_enabled = await db.get_configuration("dhcp_enabled")
         dns_server = await db.get_configuration("dns_server")
         firewall_enabled = await db.get_configuration("firewall_enabled")
+        dhcp_interface = await db.get_configuration("dhcp_interface")
+        dhcp_range_start = await db.get_configuration("dhcp_range_start")
+        dhcp_range_end = await db.get_configuration("dhcp_range_end")
+        dhcp_lease_time = await db.get_configuration("dhcp_lease_time")
+        dhcp_gateway = await db.get_configuration("dhcp_gateway")
     except Exception:
         dhcp_enabled, dns_server, firewall_enabled = None, None, None
+        dhcp_interface, dhcp_range_start, dhcp_range_end, dhcp_lease_time, dhcp_gateway = None, None, None, None, None
 
     # Security
     try:
@@ -660,6 +666,11 @@ async def settings_page(request: Request, lang: str | None = Query(default=None)
                 "dhcp_enabled": _as_bool(dhcp_enabled, False),
                 "dns_server": _as_str(dns_server, "8.8.8.8"),
                 "firewall_enabled": _as_bool(firewall_enabled, True),
+                "dhcp_interface": _as_str(dhcp_interface, "eth0"),
+                "dhcp_range_start": _as_str(dhcp_range_start, ""),
+                "dhcp_range_end": _as_str(dhcp_range_end, ""),
+                "dhcp_lease_time": _as_str(dhcp_lease_time, "12h"),
+                "dhcp_gateway": _as_str(dhcp_gateway, ""),
             },
             "security_config": {
                 "ssl_enabled": _as_bool(ssl_enabled, False),
