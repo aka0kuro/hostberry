@@ -174,10 +174,18 @@
                             </div>
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="dns_server" class="form-label text-white">{{ t('settings.dns_server', 'DNS Server') }}</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" id="dns_server" name="dns_server" value="{{ network_config.dns_server if network_config else '8.8.8.8' }}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="dns_primary" class="form-label text-white">{{ t('settings.dns_primary', 'Primary DNS') }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary text-center" id="dns_primary" name="dns_primary" placeholder="8.8.8.8">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="dns_secondary" class="form-label text-white">{{ t('settings.dns_secondary', 'Secondary DNS') }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary text-center" id="dns_secondary" name="dns_secondary" placeholder="8.8.4.4">
+                            </div>
                         </div>
+                        <!-- Campo oculto para mantener compatibilidad con el backend -->
+                        <input type="hidden" id="dns_server" name="dns_server">
                         
                         <div class="mb-3">
                             <label class="form-label text-white">{{ t('settings.firewall', 'Firewall') }}</label>
