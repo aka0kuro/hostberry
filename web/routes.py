@@ -728,6 +728,18 @@ async def security_page(request: Request, lang: str | None = Query(default=None)
     )
 
 
+@router.get("/update", response_class=HTMLResponse)
+async def update_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    current_lang, _ = _resolve_language(request, lang)
+    
+    return _render(
+        "update.html",
+        request,
+        current_lang,
+        extra={},
+    )
+
+
 @router.get("/test-dashboard")
 async def test_dashboard():
     return get_text("test_dashboard_working", default="TEST DASHBOARD FUNCIONANDO - OK")
