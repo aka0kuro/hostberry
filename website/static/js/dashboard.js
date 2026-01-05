@@ -502,8 +502,12 @@ async function updateNetworkStatus() {
     }
 }
 
-// Monitoring-like Network Stats (selector + chart)
+// Monitoring-like Network Stats (selector + chart) - Solo si los elementos existen
 async function updateNetworkMonitoring() {
+    // Si no existe el selector de interfaz, no hacer nada
+    if (!document.getElementById('net-interface-select')) {
+        return;
+    }
     try {
         if (!window.HostBerry || typeof window.HostBerry.apiRequest !== 'function') {
             return;
@@ -527,25 +531,35 @@ async function updateNetworkMonitoring() {
             hbPopulateInterfaceSelect(raw.interfaces);
         }
 
-        hbSetText('net-interface', computed.interface || raw?.interface || '--');
-        hbSetText('net-ip', computed.ip_address || raw?.ip_address || '--');
+        // Solo actualizar si los elementos existen
+        const netInterface = document.getElementById('net-interface');
+        const netIp = document.getElementById('net-ip');
+        const netDownload = document.getElementById('net-download');
+        const netUpload = document.getElementById('net-upload');
+        const netBytesRecv = document.getElementById('net-bytes-recv');
+        const netBytesSent = document.getElementById('net-bytes-sent');
+        const netPackets = document.getElementById('net-packets');
+        const netErrors = document.getElementById('net-errors');
+
+        if (netInterface) hbSetText('net-interface', computed.interface || raw?.interface || '--');
+        if (netIp) hbSetText('net-ip', computed.ip_address || raw?.ip_address || '--');
 
         const dl = computed.download_speed || 0;
         const ul = computed.upload_speed || 0;
-        hbSetText('net-download', dl > 0 ? `${hbFormatBytes(dl)}/s` : '0 B/s');
-        hbSetText('net-upload', ul > 0 ? `${hbFormatBytes(ul)}/s` : '0 B/s');
+        if (netDownload) hbSetText('net-download', dl > 0 ? `${hbFormatBytes(dl)}/s` : '0 B/s');
+        if (netUpload) hbSetText('net-upload', ul > 0 ? `${hbFormatBytes(ul)}/s` : '0 B/s');
 
         const bytesRecv = computed.bytes_recv || raw?.bytes_recv || 0;
         const bytesSent = computed.bytes_sent || raw?.bytes_sent || 0;
-        hbSetText('net-bytes-recv', hbFormatBytes(bytesRecv));
-        hbSetText('net-bytes-sent', hbFormatBytes(bytesSent));
+        if (netBytesRecv) hbSetText('net-bytes-recv', hbFormatBytes(bytesRecv));
+        if (netBytesSent) hbSetText('net-bytes-sent', hbFormatBytes(bytesSent));
 
         const packetsSent = computed.packets_sent || raw?.packets_sent || 0;
         const packetsRecv = computed.packets_recv || raw?.packets_recv || 0;
-        hbSetText('net-packets', `${packetsSent} / ${packetsRecv}`);
+        if (netPackets) hbSetText('net-packets', `${packetsSent} / ${packetsRecv}`);
 
         const errors = (computed.errors || 0) + (raw?.errors || 0) + (raw?.drop || 0);
-        hbSetText('net-errors', String(errors || 0));
+        if (netErrors) hbSetText('net-errors', String(errors || 0));
 
         hbEnsureNetChart();
         hbPushNetHistory(dl, ul);
@@ -588,12 +602,15 @@ function updateNetworkInterface(interfaceName, data) {
 }
 
 function refreshNetwork() {
+    // Solo refrescar si los elementos de red existen
     if (document.getElementById('net-interface-select')) {
         updateNetworkMonitoring();
-    } else {
+        showNotification(HostBerry.t?.('system.network_refreshed', 'Network refreshed') || 'Network refreshed', 'info');
+    } else if (document.querySelector('.network-interface')) {
         updateNetworkStatus();
+        showNotification(HostBerry.t?.('system.network_refreshed', 'Network refreshed') || 'Network refreshed', 'info');
     }
-    showNotification(HostBerry.t?.('system.network_refreshed', 'Network refreshed') || 'Network refreshed', 'info');
+    // Si no hay elementos de red, no hacer nada
 }
 
 // Actualizar logs
@@ -939,37 +956,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cargar datos iniciales
     updateSystemStats();
     updateServices();
-    // Si existe el layout de monitoring (selector), usar /api/v1/system/network + chart
-    const hasNetMonitoring = !!document.getElementById('net-interface-select');
-    if (hasNetMonitoring) {
-        // Event listener para cambio de interfaz
-        const select = document.getElementById('net-interface-select');
-        if (select) {
-            select.addEventListener('change', function (e) {
-                hbSelectedInterface = e.target.value || '';
-                hbLastNetSnapshot = null;
-                hbNetHistory.labels.length = 0;
-                hbNetHistory.download.length = 0;
-                hbNetHistory.upload.length = 0;
-                if (hbNetChart) hbNetChart.update();
-                updateNetworkMonitoring();
-            });
-        }
-        updateNetworkMonitoring();
-    } else {
-        updateNetworkStatus();
-    }
+    // Las funciones de red solo se ejecutan si los elementos existen (ya están protegidas)
     updateLogs();
     updateRecentActivity();
     
     // Configurar actualizaciones periódicas
     setInterval(updateSystemStats, 5000); // más parecido a Monitoring
     setInterval(updateServices, 60000);   // Cada minuto
-    if (hasNetMonitoring) {
-        setInterval(updateNetworkMonitoring, 5000);
-    } else {
-        setInterval(updateNetworkStatus, 30000); // Cada 30 segundos
-    }
     setInterval(updateLogs, 10000);       // Cada 10 segundos
     setInterval(updateRecentActivity, 60000); // Cada minuto
     
