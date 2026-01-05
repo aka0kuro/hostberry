@@ -500,6 +500,8 @@
             }
             if(obj.timezone){
               showNotification(t('settings.timezone_updated', 'Timezone updated. Changes will take effect on next page reload.'), 'info');
+              // Aplicar en todo el proyecto: recargar para que base.html exporte el nuevo timezone a JS global.
+              setTimeout(() => window.location.reload(), 800);
             }
           }, 600);
         }
