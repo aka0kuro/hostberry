@@ -141,97 +141,14 @@
 {% block extra_js %}
 <script>
 (function(){
-  // Función para obtener traducciones - usar HostBerry.t directamente
-  function getTranslation(key, defaultValue) {
-    if (!key) return defaultValue || '';
-    
-    // Prioridad 1: HostBerry.t (función estándar del sistema)
-    if (window.HostBerry?.t) {
-      try {
-        const result = window.HostBerry.t(key, defaultValue);
-        if (result && result !== key && typeof result === 'string') return result;
-      } catch (e) {
-        // Continuar con otros métodos
-      }
-    }
-    
-    // Prioridad 2: Intentar desde HostBerry.translations
-    if (window.HostBerry?.translations) {
-      const keys = String(key).split('.');
-      let current = window.HostBerry.translations;
-      for (const k of keys) {
-        if (current && typeof current === 'object' && k in current) {
-          current = current[k];
-        } else {
-          current = null;
-          break;
-        }
-      }
-      if (typeof current === 'string' && current) return current;
-    }
-    
-    // Prioridad 3: Intentar desde window.translations
-    if (window.translations) {
-      const keys = String(key).split('.');
-      let current = window.translations;
-      for (const k of keys) {
-        if (current && typeof current === 'object' && k in current) {
-          current = current[k];
-        } else {
-          current = null;
-          break;
-        }
-      }
-      if (typeof current === 'string' && current) return current;
-    }
-    
-    // Prioridad 4: Intentar desde el JSON embebido
-    try {
-      const i18nEl = document.getElementById('i18n-json');
-      if (i18nEl) {
-        const translations = JSON.parse(i18nEl.textContent || i18nEl.innerText || '{}');
-        const keys = String(key).split('.');
-        let current = translations;
-        for (const k of keys) {
-          if (current && typeof current === 'object' && k in current) {
-            current = current[k];
-          } else {
-            current = null;
-            break;
-          }
-        }
-        if (typeof current === 'string' && current) return current;
-      }
-    } catch (e) {
-      // Ignorar errores
-    }
-    
-    // Fallback al valor por defecto
-    return defaultValue || key;
-  }
-  
-  // Esperar a que HostBerry esté disponible (common.js se carga antes)
+  // Esperar a que HostBerry esté disponible
   function waitForHostBerry(callback, maxAttempts = 50) {
-    if (window.HostBerry && window.HostBerry.apiRequest) {
+    if (window.HostBerry && window.HostBerry.apiRequest && window.HostBerry.t) {
       callback();
     } else if (maxAttempts > 0) {
       setTimeout(() => waitForHostBerry(callback, maxAttempts - 1), 100);
     } else {
       console.error('HostBerry not available after waiting');
-      // Fallback: crear funciones básicas
-      if (!window.HostBerry) window.HostBerry = {};
-      if (!window.HostBerry.apiRequest) {
-        window.HostBerry.apiRequest = async function(url, options) {
-          const token = localStorage.getItem('access_token');
-          const opts = Object.assign({ method: 'GET', headers: {} }, options || {});
-          const headers = new Headers(opts.headers);
-          if (!headers.has('Authorization') && token) {
-            headers.set('Authorization', 'Bearer ' + token);
-          }
-          opts.headers = headers;
-          return await fetch(url, opts);
-        };
-      }
       callback();
     }
   }
@@ -245,90 +162,18 @@
     setText('update-last-check', new Date().toLocaleString());
   }
 
-  // Función de notificaciones
   function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-      <div class="notification-content">
-        <span class="notification-message">${message}</span>
-        <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
-      </div>
-    `;
-    
-    if (!document.querySelector('#notification-styles')) {
-      const style = document.createElement('style');
-      style.id = 'notification-styles';
-      style.textContent = `
-        .notification {
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          z-index: 9999;
-          min-width: 300px;
-          padding: 1rem;
-          border-radius: 12px;
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-          animation: slideInRight 0.3s ease;
-        }
-        .notification-content {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          color: #fff;
-        }
-        .notification-close {
-          background: none;
-          border: none;
-          color: #fff;
-          font-size: 1.2rem;
-          cursor: pointer;
-          padding: 0;
-          margin-left: 1rem;
-        }
-        .notification-success { border-left: 4px solid #198754; }
-        .notification-error { border-left: 4px solid #dc3545; }
-        .notification-warning { border-left: 4px solid #ffc107; }
-        .notification-info { border-left: 4px solid #0dcaf0; }
-        @keyframes slideInRight {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
-        }
-        body.light-theme .notification {
-          background: rgba(255, 255, 255, 0.95);
-          color: #212529;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-        body.light-theme .notification-content {
-          color: #212529;
-        }
-        body.light-theme .notification-close {
-          color: #212529;
-        }
-      `;
-      document.head.appendChild(style);
+    if (window.HostBerry && window.HostBerry.showToast) {
+        window.HostBerry.showToast(type.toUpperCase(), message, type);
+        return;
     }
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-      if (notification.parentElement) {
-        notification.remove();
-      }
-    }, 5000);
+    alert(message);
   }
 
   function addLogEntry(message, type = 'info') {
     const logContainer = document.getElementById('update-log');
     if (!logContainer) return;
-    
-    // Si es el primer mensaje, limpiar el placeholder
-    if (logContainer.querySelector('.text-center')) {
-      logContainer.innerHTML = '';
-    }
+    if (logContainer.querySelector('.text-center')) logContainer.innerHTML = '';
     
     const logEntry = document.createElement('div');
     logEntry.className = `log-item log-${type}`;
@@ -340,34 +185,17 @@
       <span class="log-message">${message}</span>
     `;
     logContainer.insertBefore(logEntry, logContainer.firstChild);
-    
-    // Limitar a 50 entradas
-    while (logContainer.children.length > 50) {
-      logContainer.removeChild(logContainer.lastChild);
-    }
   }
 
   async function checkUpdates(){
     try{
       const list = document.getElementById('system-updates-list');
-      if(list){
-        list.innerHTML = `
-          <div class="text-center py-4 text-white-50 loading-indicator">
-            <div class="spinner-border spinner-border-sm me-2" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-            <span>${getTranslation('update.checking', 'Checking for updates...')}</span>
-          </div>`;
-      }
+      if(list) list.innerHTML = `<div class="text-center py-4 text-white-50"><div class="spinner-border spinner-border-sm me-2" role="status"></div><span>${HostBerry.t('update.checking', 'Checking for updates...')}</span></div>`;
       
-      addLogEntry(getTranslation('update.checking', 'Checking for updates...'), 'info');
-      showNotification(getTranslation('update.checking', 'Checking for updates...'), 'info');
+      addLogEntry(HostBerry.t('update.checking', 'Checking for updates...'), 'info');
       
       const resp = await HostBerry.apiRequest('/api/v1/system/updates', { method: 'POST' });
-      if(!resp || !resp.ok){
-        const errorText = resp ? await resp.text() : 'No response';
-        throw new Error(errorText || getTranslation('update.check_failed', "{{ t('update.check_failed', 'Error checking updates') }}"));
-      }
+      if(!resp || !resp.ok) throw new Error(HostBerry.t('update.check_failed', 'Error checking updates'));
       
       const payload = await resp.json();
       const updatesAvailable = payload.updates_available || false;
@@ -381,216 +209,84 @@
           list.innerHTML = `
             <div class="alert alert-warning mb-3">
               <i class="bi bi-exclamation-triangle me-2"></i>
-              <strong>${getTranslation('update.updates_available', 'Updates available')}:</strong> ${updateCount}
+              <strong>${HostBerry.t('update.updates_available', 'Updates available')}:</strong> ${updateCount}
             </div>
             <div class="updates-list" style="max-height: 300px; overflow-y: auto;">
-              ${updates.slice(0, 20).map(update => `
-                <div class="update-item text-white-50 small mb-2 p-2" style="background: rgba(255,255,255,0.03); border-radius: 8px;">
-                  ${update}
-                </div>
-              `).join('')}
+              ${updates.slice(0, 20).map(update => `<div class="update-item text-white-50 small mb-2 p-2" style="background: rgba(255,255,255,0.03); border-radius: 8px;">${update}</div>`).join('')}
             </div>`;
         } else {
-          list.innerHTML = `
-            <div class="alert alert-success">
-              <i class="bi bi-check-circle me-2"></i>
-              ${getTranslation('update.system_updated', 'System is up to date')}
-            </div>`;
+          list.innerHTML = `<div class="alert alert-success"><i class="bi bi-check-circle me-2"></i>${HostBerry.t('update.system_updated', 'System is up to date')}</div>`;
         }
       }
       
-      const message = updatesAvailable 
-        ? `${getTranslation('update.updates_available', 'Updates available')}: ${updateCount}`
-        : getTranslation('update.system_updated', 'System is up to date');
-      
+      const message = updatesAvailable ? `${HostBerry.t('update.updates_available', 'Updates available')}: ${updateCount}` : HostBerry.t('update.system_updated', 'System is up to date');
       addLogEntry(message, updatesAvailable ? 'warning' : 'success');
-      showNotification(message, updatesAvailable ? 'warning' : 'success');
-      
     }catch(error){
-      console.error('Check updates failed', error);
-      const list = document.getElementById('system-updates-list');
-      if(list){
-        list.innerHTML = `
-          <div class="alert alert-danger">
-            <i class="bi bi-x-circle me-2"></i>
-            ${getTranslation('update.check_error', "{{ t('update.check_error', 'Error checking updates') }}")}
-          </div>`;
-      }
-      addLogEntry(getTranslation('update.check_error', "{{ t('update.check_error', 'Error checking updates') }}"), 'error');
-      showNotification(getTranslation('update.check_error', "{{ t('update.check_error', 'Error checking updates') }}"), 'error');
+      addLogEntry(error.message, 'error');
+      showNotification(error.message, 'error');
     }
   }
 
   async function updateSystem(){
     try{
-      const confirmMsg = getTranslation('update.system_confirm', 'Are you sure you want to update the Debian system? This may take several minutes.');
-      if(!confirm(confirmMsg)) return;
-      
-      addLogEntry(getTranslation('update.updating_system', 'Updating system...'), 'info');
-      showNotification(getTranslation('update.updating_system', 'Updating system...'), 'info');
-      
+      if(!confirm(HostBerry.t('update.system_confirm', 'Update system?'))) return;
+      showNotification(HostBerry.t('update.updating_system', 'Updating system...'), 'info');
       const resp = await HostBerry.apiRequest('/api/v1/system/updates/execute', { method: 'POST' });
-      if(!resp || !resp.ok){
-        const errorText = resp ? await resp.text() : 'No response';
-        throw new Error(errorText || getTranslation('update.system_failed', 'Error actualizando sistema'));
-      }
-      
+      if(!resp || !resp.ok) throw new Error(HostBerry.t('update.system_failed', 'Error updating system'));
       const payload = await resp.json();
-      const message = payload.message || getTranslation('update.system_updated', 'System updated successfully');
-      
-      addLogEntry(message, 'success');
-      showNotification(message, 'success');
-      updateLastCheck();
-      
-      // Recargar lista de actualizaciones
-      setTimeout(() => {
-        checkUpdates();
-      }, 2000);
-      
+      showNotification(payload.message || HostBerry.t('update.system_updated', 'Success'), 'success');
+      setTimeout(checkUpdates, 2000);
     }catch(error){
-      console.error('System update failed', error);
-      const errorMsg = getTranslation('update.system_error', 'Error updating system');
-      addLogEntry(errorMsg, 'error');
-      showNotification(errorMsg, 'error');
+      showNotification(error.message, 'error');
     }
   }
 
   async function updateProject(){
     try{
-      const confirmMsg = getTranslation('update.project_confirm', 'Are you sure you want to update HostBerry? This will run setup.sh --update.');
-      if(!confirm(confirmMsg)) return;
-      
-      addLogEntry(getTranslation('update.updating_project', 'Updating project...'), 'info');
-      showNotification(getTranslation('update.updating_project', 'Updating project...'), 'info');
-      
+      if(!confirm(HostBerry.t('update.project_confirm', 'Update project?'))) return;
+      showNotification(HostBerry.t('update.updating_project', 'Updating project...'), 'info');
       const resp = await HostBerry.apiRequest('/api/v1/system/updates/project', { method: 'POST' });
-      if(!resp || !resp.ok){
-        const errorText = resp ? await resp.text() : 'No response';
-        throw new Error(errorText || getTranslation('update.project_failed', 'Error actualizando proyecto'));
-      }
-      
+      if(!resp || !resp.ok) throw new Error(HostBerry.t('update.project_failed', 'Error updating project'));
       const payload = await resp.json();
-      const message = payload.message || getTranslation('update.project_updated', 'Project updated successfully');
-      
-      addLogEntry(message, 'success');
-      showNotification(message, 'success');
-      updateLastCheck();
-      
-      // Mostrar mensaje de reinicio recomendado
-      setTimeout(() => {
-        showNotification(getTranslation('update.restart_recommended', 'System restart recommended'), 'warning');
-      }, 2000);
-      
+      showNotification(payload.message || HostBerry.t('update.project_updated', 'Success'), 'success');
     }catch(error){
-      console.error('Project update failed', error);
-      const errorMsg = getTranslation('update.project_error', 'Error updating project');
-      addLogEntry(errorMsg, 'error');
-      showNotification(errorMsg, 'error');
+      showNotification(error.message, 'error');
     }
   }
 
   async function updateAll(){
-    try{
-      const confirmMsg = getTranslation('update.all_confirm', 'Are you sure you want to update both the system and the project? This may take several minutes.');
-      if(!confirm(confirmMsg)) return;
-      
-      addLogEntry(getTranslation('update.updating_all', 'Updating all...'), 'info');
-      showNotification(getTranslation('update.updating_all', 'Updating all...'), 'info');
-      
-      // Primero actualizar el sistema
-      addLogEntry(getTranslation('update.updating_system', 'Updating system...'), 'info');
-      const systemResp = await HostBerry.apiRequest('/api/v1/system/updates/execute', { method: 'POST' });
-      if(!systemResp || !systemResp.ok){
-        const errorText = systemResp ? await systemResp.text() : 'No response';
-        throw new Error(errorText || getTranslation('update.system_failed', 'Error updating system'));
-      }
-      addLogEntry(getTranslation('update.system_updated', 'System updated'), 'success');
-      
-      // Luego actualizar el proyecto
-      addLogEntry(getTranslation('update.updating_project', 'Updating project...'), 'info');
-      const projectResp = await HostBerry.apiRequest('/api/v1/system/updates/project', { method: 'POST' });
-      if(!projectResp || !projectResp.ok){
-        const errorText = projectResp ? await projectResp.text() : 'No response';
-        throw new Error(errorText || getTranslation('update.project_failed', 'Error updating project'));
-      }
-      addLogEntry(getTranslation('update.project_updated', 'Project updated'), 'success');
-      
-      const message = getTranslation('update.all_updated', 'All updated successfully');
-      showNotification(message, 'success');
-      updateLastCheck();
-      
-      // Mostrar mensaje de reinicio recomendado
-      setTimeout(() => {
-        showNotification(getTranslation('update.restart_recommended', 'System restart recommended'), 'warning');
-      }, 2000);
-      
-    }catch(error){
-      console.error('Update all failed', error);
-      const errorMsg = getTranslation('update.all_error', 'Error during update');
-      addLogEntry(errorMsg, 'error');
-      showNotification(errorMsg, 'error');
-    }
+    await updateSystem();
+    await updateProject();
+  }
+
+  function initUpdatePage() {
+    updateLastCheck();
+    loadProjectStatus();
+    document.getElementById('action-check-updates')?.addEventListener('click', checkUpdates);
+    document.getElementById('action-update-system')?.addEventListener('click', updateSystem);
+    document.getElementById('action-update-project')?.addEventListener('click', updateProject);
+    document.getElementById('action-update-all')?.addEventListener('click', updateAll);
+    document.getElementById('systemUpdatesRefresh')?.addEventListener('click', checkUpdates);
   }
 
   async function loadProjectStatus(){
     try{
-      // Obtener información del proyecto desde la API de stats
       const resp = await HostBerry.apiRequest('/api/v1/system/stats');
       if(resp && resp.ok){
         const data = await resp.json();
-        // Intentar obtener versión desde diferentes campos
-        const version = data.version || data.app_version || '2.0.0';
-        setText('project-version', version);
-      } else {
-        setText('project-version', '2.0.0');
+        setText('project-version', data.version || data.app_version || '2.0.0');
       }
-      
-      // Obtener última actualización desde logs o configuración
-      // Por ahora usar timestamp actual como placeholder
-      setText('project-last-update', new Date().toLocaleString());
-      
-    }catch(error){
-      console.error('Load project status failed', error);
-      setText('project-version', '2.0.0');
-      setText('project-last-update', '--');
-    }
+    }catch(e){}
   }
 
-  // Función para inicializar cuando el DOM esté listo
-  function initUpdatePage() {
-    updateLastCheck();
-    loadProjectStatus();
-    
-    // Configurar event listeners
-    const checkBtn = document.getElementById('action-check-updates');
-    const systemBtn = document.getElementById('action-update-system');
-    const projectBtn = document.getElementById('action-update-project');
-    const allBtn = document.getElementById('action-update-all');
-    const refreshBtn = document.getElementById('systemUpdatesRefresh');
-    
-    if (checkBtn) checkBtn.addEventListener('click', checkUpdates);
-    if (systemBtn) systemBtn.addEventListener('click', updateSystem);
-    if (projectBtn) projectBtn.addEventListener('click', updateProject);
-    if (allBtn) allBtn.addEventListener('click', updateAll);
-    if (refreshBtn) refreshBtn.addEventListener('click', checkUpdates);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => waitForHostBerry(initUpdatePage));
+  } else {
+    waitForHostBerry(initUpdatePage);
   }
-  
-  // Esperar a que HostBerry esté disponible y luego inicializar
-  function startInit() {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        waitForHostBerry(initUpdatePage);
-      });
-    } else {
-      // DOM ya está listo
-      waitForHostBerry(initUpdatePage);
-    }
-  }
-  
-  // Iniciar
-  startInit();
 })();
 </script>
+{% endblock %}
 <style>
 .spinning {
     animation: spin 1s linear infinite;
