@@ -669,7 +669,6 @@ async def settings_page(request: Request, lang: str | None = Query(default=None)
                 "email_address": _as_str(email_address, ""),
                 "system_alerts": _as_bool(system_alerts, True),
             },
-            "system_info": {},
         },
     )
 
