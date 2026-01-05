@@ -117,7 +117,8 @@ async function updateServices() {
             const services = data.services || data;
             
             // Limpiar contenedor de servicios
-            const servicesBody = document.querySelector('.services-card-body');
+            // Soporta el nuevo layout (contenedor interno) y el antiguo (body directo)
+            const servicesBody = document.querySelector('#dashboardServicesContainer') || document.querySelector('.services-card-body');
             if (!servicesBody) return;
             
             // Si no hay servicios, mostrar mensaje
