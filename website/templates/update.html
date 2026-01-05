@@ -415,7 +415,7 @@
       }
       
       const payload = await resp.json();
-      const message = payload.message || getTranslation('update.system_updated', 'Sistema actualizado exitosamente');
+      const message = payload.message || getTranslation('update.system_updated', 'System updated successfully');
       
       addLogEntry(message, 'success');
       showNotification(message, 'success');
