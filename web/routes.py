@@ -668,12 +668,16 @@ async def settings_page(request: Request, lang: str | None = Query(default=None)
 
 @router.get("/profile", response_class=HTMLResponse)
 async def profile_page(request: Request, lang: str | None = Query(default=None)) -> HTMLResponse:
+    from config.settings import settings
+    ui = await _get_ui_settings()
+    tz = ui.get("timezone") or "UTC"
+    username = request.cookies.get("username") or settings.default_username
     return await _render(
         "profile.html",
         request,
         lang,
         extra={
-            "user": {"username": settings.default_username, "role": "admin", "timezone": "UTC"},
+            "user": {"username": username, "role": "admin", "timezone": tz},
             "recent_activities": [],
         },
     )
