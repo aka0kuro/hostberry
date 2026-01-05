@@ -107,53 +107,41 @@
             </div>
         </div>
     </div>
-    <!-- System Information -->
+    <!-- System Information (estética Monitoring) -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="info-card">
-                <div class="info-card-header">
-                    <h5 class="info-card-title">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <h5 class="actions-card-title">
                         <i class="bi bi-info-circle me-2"></i>
                         {{ t('system.information', 'System Information') }}
                     </h5>
                 </div>
-                <div class="info-card-body">
-                    <div class="row">
-                        <div class="col-lg-2 col-md-4 col-6 mb-3">
-                            <div class="info-item-grid">
-                                <span class="info-label d-block">{{ t('system.hostname', 'Hostname') }}</span>
-                                <span class="info-value">{{ system_info.hostname | default('hostberry') }}</span>
-                            </div>
+                <div class="actions-card-body">
+                    <div class="row g-3">
+                        <div class="col-6 col-lg-2">
+                            <h6 class="text-white-50 mb-1">{{ t('system.hostname', 'Hostname') }}</h6>
+                            <p class="text-white mb-3">{{ system_info.hostname | default('hostberry') }}</p>
                         </div>
-                        <div class="col-lg-2 col-md-4 col-6 mb-3">
-                            <div class="info-item-grid">
-                                <span class="info-label d-block">{{ t('system.os_version', 'OS Version') }}</span>
-                                <span class="info-value">{{ system_info.os_version | default('Raspberry Pi OS') }}</span>
-                            </div>
+                        <div class="col-6 col-lg-2">
+                            <h6 class="text-white-50 mb-1">{{ t('system.os_version', 'OS Version') }}</h6>
+                            <p class="text-white mb-3">{{ system_info.os_version | default('Raspberry Pi OS') }}</p>
                         </div>
-                        <div class="col-lg-2 col-md-4 col-6 mb-3">
-                            <div class="info-item-grid">
-                                <span class="info-label d-block">{{ t('system.kernel_version', 'Kernel') }}</span>
-                                <span class="info-value">{{ system_info.kernel_version | default('Linux 6.8.0') }}</span>
-                            </div>
+                        <div class="col-6 col-lg-2">
+                            <h6 class="text-white-50 mb-1">{{ t('system.kernel_version', 'Kernel') }}</h6>
+                            <p class="text-white mb-3">{{ system_info.kernel_version | default('Linux 6.8.0') }}</p>
                         </div>
-                        <div class="col-lg-2 col-md-4 col-6 mb-3">
-                            <div class="info-item-grid">
-                                <span class="info-label d-block">{{ t('system.architecture', 'Architecture') }}</span>
-                                <span class="info-value">{{ system_info.architecture | default('armv7l') }}</span>
-                            </div>
+                        <div class="col-6 col-lg-2">
+                            <h6 class="text-white-50 mb-1">{{ t('system.architecture', 'Architecture') }}</h6>
+                            <p class="text-white mb-3">{{ system_info.architecture | default('armv7l') }}</p>
                         </div>
-                        <div class="col-lg-2 col-md-4 col-6 mb-3">
-                            <div class="info-item-grid">
-                                <span class="info-label d-block">{{ t('system.uptime', 'Uptime') }}</span>
-                                <span class="info-value">{{ system_info.uptime | default('2 days, 5 hours') }}</span>
-                            </div>
+                        <div class="col-6 col-lg-2">
+                            <h6 class="text-white-50 mb-1">{{ t('system.uptime', 'Uptime') }}</h6>
+                            <p class="text-white mb-3">{{ system_info.uptime | default('2 days, 5 hours') }}</p>
                         </div>
-                        <div class="col-lg-2 col-md-4 col-6 mb-3">
-                            <div class="info-item-grid">
-                                <span class="info-label d-block">{{ t('system.cpu_cores', 'CPU Cores') }}</span>
-                                <span class="info-value">{{ system_info.cpu_cores | default('4') }}</span>
-                            </div>
+                        <div class="col-6 col-lg-2">
+                            <h6 class="text-white-50 mb-1">{{ t('system.cpu_cores', 'CPU Cores') }}</h6>
+                            <p class="text-white mb-3">{{ system_info.cpu_cores | default('4') }}</p>
                         </div>
                     </div>
                 </div>
@@ -161,10 +149,10 @@
         </div>
     </div>
 
-    <!-- Services & Network Status -->
-    <div class="row services-network-row">
+    <!-- Services & Network Status (estética Monitoring) -->
+    <div class="row mb-4">
         <!-- System Manager - Services Status -->
-        <div class="col-lg-6 mb-4">
+        <div class="col-lg-6 col-md-12 mb-4">
             <div class="actions-card">
                 <div class="actions-card-header">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -188,15 +176,15 @@
         </div>
 
         <!-- Network Status -->
-        <div class="col-lg-6 mb-4">
-            <div class="network-card">
-                <div class="network-card-header">
-                    <h5 class="network-card-title">
+        <div class="col-lg-6 col-md-12 mb-4">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <h5 class="actions-card-title mb-0">
                         <i class="bi bi-wifi me-2"></i>
                         {{ t('dashboard.network_status', 'Network Status') }}
                     </h5>
                 </div>
-                <div class="network-card-body">
+                <div class="actions-card-body">
                     <div class="network-interface">
                         <div class="interface-header">
                             <i class="bi bi-ethernet interface-icon"></i>
@@ -252,25 +240,27 @@
     <!-- System Logs -->
     <div class="row">
         <div class="col-12">
-            <div class="logs-card">
-                <div class="logs-card-header">
-                    <h5 class="logs-card-title">
-                        <i class="bi bi-journal-text me-2"></i>
-                        {{ t('system.logs', 'System Logs') }}
-                    </h5>
-                    <div class="logs-controls">
-                        <select class="form-select form-select-sm me-2" id="logLevel">
-                            <option value="all">{{ t('logs.all_levels', 'All') }}</option>
-                            <option value="error">{{ t('logs.errors', 'Errors') }}</option>
-                            <option value="warning">{{ t('logs.warnings', 'Warnings') }}</option>
-                            <option value="info">{{ t('logs.info', 'Info') }}</option>
-                        </select>
-                        <button class="btn btn-sm btn-outline-primary" onclick="refreshLogs()">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="actions-card-title mb-0">
+                            <i class="bi bi-journal-text me-2"></i>
+                            {{ t('system.logs', 'System Logs') }}
+                        </h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="logLevel" style="min-width: 140px;">
+                                <option value="all">{{ t('logs.all_levels', 'All') }}</option>
+                                <option value="error">{{ t('logs.errors', 'Errors') }}</option>
+                                <option value="warning">{{ t('logs.warnings', 'Warnings') }}</option>
+                                <option value="info">{{ t('logs.info', 'Info') }}</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-primary" onclick="refreshLogs()" title="{{ t('common.refresh', 'Refresh') }}">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="logs-card-body">
+                <div class="actions-card-body">
                     <div class="logs-container">
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-arrow-clockwise spinning"></i>
