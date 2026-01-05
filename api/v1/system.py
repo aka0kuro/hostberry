@@ -652,30 +652,41 @@ async def update_system_config(
                             from core.async_utils import run_subprocess_async
                             
                             if desired:
-                                # Habilitar SSL: crear symlink a hostberry-ssl y deshabilitar hostberry normal
-                                rc1, out1, err1 = await run_subprocess_async(
-                                    ["sudo", "/usr/bin/ln", "-sf", "/etc/nginx/sites-available/hostberry-ssl", "/etc/nginx/sites-enabled/hostberry-ssl"],
-                                    timeout=10
-                                )
-                                rc2, out2, err2 = await run_subprocess_async(
-                                    ["sudo", "/usr/bin/rm", "-f", "/etc/nginx/sites-enabled/hostberry"],
-                                    timeout=10
-                                )
-                                if rc1 != 0 or rc2 != 0:
-                                    combined = (err1 or out1 or err2 or out2 or "").strip()
-                                    errors.append(get_text("settings.ssl_apply_failed", default="No se pudo habilitar SSL/TLS"))
-                                    if combined:
-                                        logger.warning(f"Error habilitando SSL: {combined}")
+                                # Verificar si el archivo de configuración SSL existe
+                                ssl_config_exists = os.path.exists("/etc/nginx/sites-available/hostberry-ssl")
+                                
+                                if not ssl_config_exists:
+                                    errors.append(get_text("settings.ssl_config_not_found", default="La configuración SSL no existe. Ejecuta setup.sh para configurar SSL/TLS."))
+                                    logger.warning("Archivo de configuración SSL no encontrado: /etc/nginx/sites-available/hostberry-ssl")
                                 else:
-                                    # Recargar nginx
-                                    rc3, out3, err3 = await run_subprocess_async(
-                                        ["sudo", "/usr/local/sbin/hostberry-safe/reload-nginx"],
+                                    # Habilitar SSL: crear symlink a hostberry-ssl y deshabilitar hostberry normal
+                                    rc1, out1, err1 = await run_subprocess_async(
+                                        ["sudo", "/usr/bin/ln", "-sf", "/etc/nginx/sites-available/hostberry-ssl", "/etc/nginx/sites-enabled/hostberry-ssl"],
                                         timeout=10
                                     )
-                                    if rc3 != 0:
-                                        combined = (err3 or out3 or "").strip()
-                                        errors.append(get_text("settings.ssl_apply_failed", default="No se pudo recargar Nginx"))
+                                    rc2, out2, err2 = await run_subprocess_async(
+                                        ["sudo", "/usr/bin/rm", "-f", "/etc/nginx/sites-enabled/hostberry"],
+                                        timeout=10
+                                    )
+                                    if rc1 != 0 or rc2 != 0:
+                                        combined = (err1 or out1 or err2 or out2 or "").strip()
+                                        error_msg = get_text("settings.ssl_apply_failed", default="No se pudo habilitar SSL/TLS")
                                         if combined:
+                                            error_msg += f": {combined}"
+                                        errors.append(error_msg)
+                                        logger.warning(f"Error habilitando SSL: {combined}")
+                                    else:
+                                        # Recargar nginx
+                                        rc3, out3, err3 = await run_subprocess_async(
+                                            ["sudo", "/usr/local/sbin/hostberry-safe/reload-nginx"],
+                                            timeout=10
+                                        )
+                                        if rc3 != 0:
+                                            combined = (err3 or out3 or "").strip()
+                                            error_msg = get_text("settings.ssl_apply_failed", default="No se pudo recargar Nginx")
+                                            if combined:
+                                                error_msg += f": {combined}"
+                                            errors.append(error_msg)
                                             logger.warning(f"Error recargando Nginx: {combined}")
                             else:
                                 # Deshabilitar SSL: crear symlink a hostberry normal y deshabilitar hostberry-ssl
