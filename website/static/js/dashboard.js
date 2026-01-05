@@ -547,8 +547,8 @@ function openMonitoring() {
     window.location.href = '/monitoring';
 }
 
-function openBackup() {
-    window.location.href = '/security';
+function openUpdate() {
+    window.location.href = '/update';
 }
 
 // Funciones de refresco
