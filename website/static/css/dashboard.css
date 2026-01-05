@@ -1479,16 +1479,19 @@ body:not(.light-theme) .form-select-sm {
 }
 
 .timezone-selector-wrapper #timezone_search:hover {
-    border-color: rgba(255, 255, 255, 0.4) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-color: rgba(13, 110, 253, 0.5) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     transform: translateY(-1px);
+    background-color: #ffffff !important;
+    background: #ffffff !important;
 }
 
 .timezone-selector-wrapper #timezone_search:focus {
-    border-color: rgba(13, 110, 253, 0.6) !important;
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25), 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-color: rgba(13, 110, 253, 0.8) !important;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25), 0 4px 12px rgba(0, 0, 0, 0.2);
     outline: none;
-    background-color: rgba(33, 37, 41, 0.95) !important;
+    background-color: #ffffff !important;
+    background: #ffffff !important;
 }
 
 .timezone-dropdown {
