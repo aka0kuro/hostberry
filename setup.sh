@@ -617,6 +617,7 @@ install_system_deps() {
     local deps=(
         "python3" "python3-pip" "python3-venv" "python3-dev"
         "build-essential" "git" "curl" "nginx" "ufw"
+        "dnsmasq"
         "fail2ban" "logrotate" "htop" "openssl" "jq" "rsync" "libnss3-tools"
         "libffi-dev" "libssl-dev"
     )
