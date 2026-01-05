@@ -51,7 +51,7 @@
                         
                         <div class="mb-3">
                             <label for="timezone" class="form-label text-white">{{ t('settings.timezone', 'Timezone') }}</label>
-                            <select class="form-select bg-dark text-white border-secondary" id="timezone" name="timezone">
+                            <select class="form-select bg-dark text-white border-secondary text-center" id="timezone" name="timezone">
                                 {% set current_tz = (settings.timezone if settings else 'UTC') or 'UTC' %}
                                 <option value="UTC" {{ 'selected' if current_tz == 'UTC' else '' }}>UTC</option>
                                 <option value="Europe/Madrid" {{ 'selected' if current_tz == 'Europe/Madrid' else '' }}>Europe/Madrid</option>
