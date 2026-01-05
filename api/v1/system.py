@@ -672,7 +672,7 @@ async def update_system_config(
 
                 # Log del cambio de configuración
                     try:
-                await db.insert_log("INFO", f"Configuración actualizada: {key}={value_str} por {current_user.get('username', 'unknown')}")
+                        await db.insert_log("INFO", f"Configuración actualizada: {key}={value_str} por {current_user.get('username', 'unknown')}")
                     except Exception as log_error:
                         logger.warning(f"Error insertando log: {str(log_error)}")
                 else:
