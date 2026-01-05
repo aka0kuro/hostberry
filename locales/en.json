@@ -960,7 +960,18 @@
     "test_email_subject": "HostBerry: test email",
     "test_email_body": "This is a test email from HostBerry.",
     "test_email_sent": "Test email sent.",
-    "test_email_failed": "Failed to send test email."
+    "test_email_failed": "Failed to send test email.",
+    "dhcp_interface": "DHCP Interface",
+    "dhcp_range_start": "Range Start",
+    "dhcp_range_end": "Range End",
+    "dhcp_gateway": "Gateway (router)",
+    "dhcp_lease_time": "Lease Time",
+    "dhcp_lease_hint": "Example: 12h, 30m, 1d",
+    "dns_invalid": "Invalid DNS",
+    "dns_apply_failed": "Could not apply DNS to the system",
+    "dhcp_invalid": "Invalid DHCP configuration",
+    "dhcp_apply_failed": "Could not apply DHCP to the system",
+    "firewall_apply_failed": "Could not apply firewall to the system"
   },
   "errors": {
     "general_error": "An error has occurred",
