@@ -412,9 +412,345 @@
     alert(HostBerry.t('network.viewing_firewall_rules','Viewing firewall rules')); 
   };
 
+  // Network Traffic Monitoring
+  let selectedTrafficInterface = '';
+  let lastTrafficSnapshot = null;
+  let netTrafficChart = null;
+  const netTrafficHistory = { labels: [], download: [], upload: [] };
+
+  function formatBytes(bytes) {
+    if (!bytes || bytes === 0 || !Number.isFinite(bytes) || bytes < 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const sizeIndex = Math.max(0, Math.min(i, sizes.length - 1));
+    const value = bytes / Math.pow(k, sizeIndex);
+    return `${value.toFixed(1)} ${sizes[sizeIndex]}`;
+  }
+
+  function computeNetworkRates(current) {
+    if (!current || typeof current !== 'object') {
+      return {
+        download_speed: 0.0,
+        upload_speed: 0.0,
+        bytes_recv: 0,
+        bytes_sent: 0,
+        interface: selectedTrafficInterface || '',
+        ip_address: '--'
+      };
+    }
+    
+    const bytesRecv = typeof current.bytes_recv === 'number' && !isNaN(current.bytes_recv) ? current.bytes_recv : 0;
+    const bytesSent = typeof current.bytes_sent === 'number' && !isNaN(current.bytes_sent) ? current.bytes_sent : 0;
+    
+    if (lastTrafficSnapshot && current.interface && lastTrafficSnapshot.interface && current.interface !== lastTrafficSnapshot.interface) {
+      lastTrafficSnapshot = null;
+      netTrafficHistory.labels.length = 0;
+      netTrafficHistory.download.length = 0;
+      netTrafficHistory.upload.length = 0;
+      if (netTrafficChart) netTrafficChart.update();
+    }
+    
+    const now = Date.now();
+    if (!lastTrafficSnapshot) {
+      lastTrafficSnapshot = { 
+        time: now, 
+        bytes_recv: bytesRecv,
+        bytes_sent: bytesSent,
+        interface: current.interface || selectedTrafficInterface || ''
+      };
+      return {
+        ...current,
+        download_speed: 0.0,
+        upload_speed: 0.0,
+        bytes_recv: bytesRecv,
+        bytes_sent: bytesSent
+      };
+    }
+    
+    const timeDelta = (now - lastTrafficSnapshot.time) / 1000;
+    if (timeDelta <= 0.1 || timeDelta > 60) {
+      lastTrafficSnapshot = { 
+        time: now, 
+        bytes_recv: bytesRecv,
+        bytes_sent: bytesSent,
+        interface: current.interface || selectedTrafficInterface || ''
+      };
+      return {
+        ...current,
+        download_speed: 0.0,
+        upload_speed: 0.0,
+        bytes_recv: bytesRecv,
+        bytes_sent: bytesSent
+      };
+    }
+    
+    const prevBytesRecv = lastTrafficSnapshot.bytes_recv || 0;
+    const prevBytesSent = lastTrafficSnapshot.bytes_sent || 0;
+    
+    let bytesRecvDelta = bytesRecv - prevBytesRecv;
+    let bytesSentDelta = bytesSent - prevBytesSent;
+    
+    if (bytesRecvDelta < 0 && Math.abs(bytesRecvDelta) > prevBytesRecv * 0.5) {
+      bytesRecvDelta = bytesRecv;
+    }
+    if (bytesSentDelta < 0 && Math.abs(bytesSentDelta) > prevBytesSent * 0.5) {
+      bytesSentDelta = bytesSent;
+    }
+    
+    const downloadSpeed = Math.max(0, bytesRecvDelta / timeDelta);
+    const uploadSpeed = Math.max(0, bytesSentDelta / timeDelta);
+    
+    lastTrafficSnapshot = {
+      time: now,
+      bytes_recv: bytesRecv,
+      bytes_sent: bytesSent,
+      interface: current.interface || selectedTrafficInterface || ''
+    };
+    
+    return {
+      ...current,
+      download_speed: downloadSpeed,
+      upload_speed: uploadSpeed,
+      bytes_recv: bytesRecv,
+      bytes_sent: bytesSent
+    };
+  }
+
+  function pushTrafficHistory(download, upload) {
+    const downloadValue = (typeof download === 'number' && !isNaN(download) && isFinite(download)) ? download : 0;
+    const uploadValue = (typeof upload === 'number' && !isNaN(upload) && isFinite(upload)) ? upload : 0;
+    
+    const now = new Date();
+    const timeLabel = now.getHours().toString().padStart(2, '0') + ':' + 
+                      now.getMinutes().toString().padStart(2, '0') + ':' + 
+                      now.getSeconds().toString().padStart(2, '0');
+    
+    netTrafficHistory.labels.push(timeLabel);
+    netTrafficHistory.download.push(Math.max(0, downloadValue));
+    netTrafficHistory.upload.push(Math.max(0, uploadValue));
+    
+    if (netTrafficHistory.labels.length > 30) {
+      netTrafficHistory.labels.shift();
+      netTrafficHistory.download.shift();
+      netTrafficHistory.upload.shift();
+    }
+  }
+
+  function ensureTrafficChart() {
+    const canvas = document.getElementById('net-traffic-chart');
+    if (!canvas) return;
+    
+    if (netTrafficChart) return;
+    
+    if (typeof Chart === 'undefined') {
+      setTimeout(ensureTrafficChart, 500);
+      return;
+    }
+    
+    if (netTrafficHistory.labels.length === 0) {
+      const now = new Date();
+      for (let i = 9; i >= 0; i--) {
+        const time = new Date(now.getTime() - i * 1000);
+        const timeLabel = time.getHours().toString().padStart(2, '0') + ':' + 
+                          time.getMinutes().toString().padStart(2, '0') + ':' + 
+                          time.getSeconds().toString().padStart(2, '0');
+        netTrafficHistory.labels.push(timeLabel);
+        netTrafficHistory.download.push(0);
+        netTrafficHistory.upload.push(0);
+      }
+    }
+    
+    try {
+      const ctx = canvas.getContext('2d');
+      netTrafficChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: netTrafficHistory.labels,
+          datasets: [
+            {
+              label: HostBerry.t('monitoring.download', 'Download'),
+              data: netTrafficHistory.download,
+              borderColor: '#0dcaf0',
+              backgroundColor: 'rgba(13, 202, 240, 0.1)',
+              tension: 0.4,
+              fill: true,
+              pointRadius: 0,
+              pointHoverRadius: 4
+            },
+            {
+              label: HostBerry.t('monitoring.upload', 'Upload'),
+              data: netTrafficHistory.upload,
+              borderColor: '#198754',
+              backgroundColor: 'rgba(25, 135, 84, 0.1)',
+              tension: 0.4,
+              fill: true,
+              pointRadius: 0,
+              pointHoverRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 0 },
+          plugins: {
+            legend: {
+              labels: { color: '#fff' },
+              display: true
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            }
+          },
+          scales: {
+            x: { 
+              ticks: { color: '#fff', maxRotation: 45, minRotation: 0 },
+              grid: { color: 'rgba(255,255,255,0.1)' }
+            },
+            y: { 
+              ticks: { 
+                color: '#fff',
+                callback: function(value) {
+                  return formatBytes(value) + '/s';
+                }
+              },
+              grid: { color: 'rgba(255,255,255,0.1)' },
+              beginAtZero: true
+            }
+          },
+          interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error creating traffic chart:', error);
+    }
+  }
+
+  function populateTrafficInterfaceSelect(interfaces) {
+    const select = document.getElementById('net-traffic-interface-select');
+    if (!select) return;
+    
+    if (Array.isArray(interfaces) && interfaces.length > 0) {
+      while (select.options.length > 1) {
+        select.remove(1);
+      }
+      
+      interfaces.forEach(iface => {
+        const ifaceName = (typeof iface === 'string') ? iface : (iface.name || iface);
+        if (ifaceName && ifaceName !== 'lo') {
+          const option = document.createElement('option');
+          option.value = ifaceName;
+          option.textContent = ifaceName;
+          if (ifaceName === selectedTrafficInterface) {
+            option.selected = true;
+          }
+          select.appendChild(option);
+        }
+      });
+    }
+  }
+
+  async function updateTrafficStats() {
+    try {
+      const url = `/api/v1/system/network${selectedTrafficInterface ? `?interface=${encodeURIComponent(selectedTrafficInterface)}` : ''}`;
+      const resp = await HostBerry.apiRequest(url);
+      
+      if (!resp || !resp.ok) {
+        throw new Error('Network request failed');
+      }
+      
+      const networkStatsRaw = await resp.json();
+      if (!networkStatsRaw || typeof networkStatsRaw !== 'object') {
+        throw new Error('Invalid network stats response');
+      }
+      
+      const networkStats = computeNetworkRates(networkStatsRaw);
+      
+      if (networkStats.interfaces && Array.isArray(networkStats.interfaces)) {
+        populateTrafficInterfaceSelect(networkStats.interfaces);
+      } else if (networkStatsRaw.interfaces && Array.isArray(networkStatsRaw.interfaces)) {
+        populateTrafficInterfaceSelect(networkStatsRaw.interfaces);
+      }
+
+      // Actualizar estadísticas
+      const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+      };
+
+      setText('net-traffic-interface', networkStats.interface || networkStatsRaw.interface || '--');
+      setText('net-traffic-ip', networkStats.ip_address || networkStatsRaw.ip_address || '--');
+      
+      const downloadSpeed = networkStats.download_speed || 0;
+      const uploadSpeed = networkStats.upload_speed || 0;
+      
+      const downloadText = downloadSpeed > 0 ? formatBytes(downloadSpeed) + '/s' : '0 B/s';
+      const uploadText = uploadSpeed > 0 ? formatBytes(uploadSpeed) + '/s' : '0 B/s';
+      
+      setText('net-traffic-download', downloadText);
+      setText('net-traffic-upload', uploadText);
+      
+      const bytesRecv = networkStats.bytes_recv || networkStatsRaw.bytes_recv || 0;
+      const bytesSent = networkStats.bytes_sent || networkStatsRaw.bytes_sent || 0;
+      setText('net-traffic-bytes-recv', formatBytes(bytesRecv));
+      setText('net-traffic-bytes-sent', formatBytes(bytesSent));
+      
+      const packetsSent = networkStats.packets_sent || networkStatsRaw.packets_sent || 0;
+      const packetsRecv = networkStats.packets_recv || networkStatsRaw.packets_recv || 0;
+      setText('net-traffic-packets', `${packetsSent} / ${packetsRecv}`);
+      
+      const errors = (networkStats.errors || networkStatsRaw.errors || 0) + 
+                     (networkStats.drop || networkStatsRaw.drop || 0);
+      setText('net-traffic-errors', errors || '0');
+
+      // Agregar al historial
+      const validDownloadSpeed = (typeof downloadSpeed === 'number' && !isNaN(downloadSpeed) && isFinite(downloadSpeed)) ? downloadSpeed : 0;
+      const validUploadSpeed = (typeof uploadSpeed === 'number' && !isNaN(uploadSpeed) && isFinite(uploadSpeed)) ? uploadSpeed : 0;
+      
+      pushTrafficHistory(validDownloadSpeed, validUploadSpeed);
+
+      ensureTrafficChart();
+      
+      if (netTrafficChart) {
+        netTrafficChart.data.labels = [...netTrafficHistory.labels];
+        netTrafficChart.data.datasets[0].data = [...netTrafficHistory.download];
+        netTrafficChart.data.datasets[1].data = [...netTrafficHistory.upload];
+        netTrafficChart.data.datasets[0].label = HostBerry.t('monitoring.download', 'Download');
+        netTrafficChart.data.datasets[1].label = HostBerry.t('monitoring.upload', 'Upload');
+        netTrafficChart.update('none');
+      }
+    } catch (error) {
+      console.error('Error updating traffic stats:', error);
+    }
+  }
+
   function initNetworkPage() {
     loadInterfaces();
     loadRoutingTable();
+    
+    // Inicializar monitoreo de tráfico
+    const trafficSelect = document.getElementById('net-traffic-interface-select');
+    if (trafficSelect) {
+      trafficSelect.addEventListener('change', function(e) {
+        selectedTrafficInterface = e.target.value || '';
+        lastTrafficSnapshot = null;
+        netTrafficHistory.labels.length = 0;
+        netTrafficHistory.download.length = 0;
+        netTrafficHistory.upload.length = 0;
+        if (netTrafficChart) netTrafficChart.update();
+        updateTrafficStats();
+      });
+    }
+    
+    // Iniciar actualizaciones de tráfico
+    updateTrafficStats();
+    setInterval(updateTrafficStats, 5000);
     
     const configForm = document.getElementById('networkConfigForm');
     if(configForm){
