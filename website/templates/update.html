@@ -345,7 +345,7 @@
       const resp = await HostBerry.apiRequest('/api/v1/system/updates', { method: 'POST' });
       if(!resp || !resp.ok){
         const errorText = resp ? await resp.text() : 'No response';
-        throw new Error(errorText || getTranslation('update.check_failed', 'Error verificando actualizaciones'));
+        throw new Error(errorText || getTranslation('update.check_failed', 'Error checking updates'));
       }
       
       const payload = await resp.json();
