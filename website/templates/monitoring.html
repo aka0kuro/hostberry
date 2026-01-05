@@ -240,6 +240,30 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 (function(){
+  // Esperar a que Chart.js esté completamente cargado
+  if (typeof Chart === 'undefined') {
+    console.warn('Chart.js not loaded, waiting...');
+    const checkChart = setInterval(function() {
+      if (typeof Chart !== 'undefined') {
+        clearInterval(checkChart);
+        initMonitoringScript();
+      }
+    }, 100);
+    
+    // Timeout después de 5 segundos
+    setTimeout(function() {
+      clearInterval(checkChart);
+      if (typeof Chart === 'undefined') {
+        console.error('Chart.js failed to load');
+      } else {
+        initMonitoringScript();
+      }
+    }, 5000);
+  } else {
+    initMonitoringScript();
+  }
+  
+  function initMonitoringScript() {
   // Función para obtener traducciones
   function getTranslation(key, defaultValue) {
     if (!key) return defaultValue || '';
