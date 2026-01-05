@@ -1578,3 +1578,34 @@ body:not(.light-theme) .form-select-sm {
     margin-bottom: 0.5rem;
     font-weight: 500;
 }
+
+/* Hacer que Security tenga la misma altura que Performance */
+.security-settings-card .card {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.security-settings-card .card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.security-settings-card form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-between;
+}
+
+/* Asegurar que General tenga el mismo tamaño que los demás */
+.general-settings-card .card {
+    min-height: 100%;
+}
+
+/* Centrar el campo de timezone */
+.timezone-selector-wrapper {
+    margin: 0 auto;
+}
