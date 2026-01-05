@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     security_headers_enabled: bool = Field(default=True, env="SECURITY_HEADERS_ENABLED")
     hsts_max_age: int = Field(default=31536000, env="HSTS_MAX_AGE")  # 1 año
     content_security_policy: str = Field(
-        default="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' cdn.jsdelivr.net; img-src 'self' data:; font-src 'self' cdn.jsdelivr.net;",
+        default="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self'; frame-ancestors 'self';",
         env="CONTENT_SECURITY_POLICY"
     )
     
