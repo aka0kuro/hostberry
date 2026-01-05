@@ -615,6 +615,37 @@
       }
     });
   }
+
+  // Cargar datos de sistema para "Acerca de"
+  async function loadSystemInfo() {
+    try {
+      const resp = await HostBerry.apiRequest('/api/v1/system/info', {
+        method: 'GET'
+      });
+      
+      if (resp && resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        
+        // Actualizar uptime
+        if (data.uptime && document.getElementById('about-uptime')) {
+          document.getElementById('about-uptime').textContent = data.uptime;
+        }
+        
+        // Actualizar boot time
+        if (data.boot_time && document.getElementById('about-boot-time')) {
+          const bootDate = new Date(data.boot_time);
+          document.getElementById('about-boot-time').textContent = bootDate.toLocaleString();
+        }
+      }
+    } catch (error) {
+      console.error('Error loading system info:', error);
+    }
+  }
+
+  // Cargar datos al iniciar
+  loadSystemInfo();
+  // Actualizar cada 30 segundos
+  setInterval(loadSystemInfo, 30000);
 })();
 </script>
 {% endblock %}
