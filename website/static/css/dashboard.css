@@ -1378,3 +1378,47 @@ body:not(.light-theme) .form-select-sm {
         margin-bottom: 2rem;
     }
 }
+
+/* Settings Cards - Espaciado mejorado */
+.settings-cards-row {
+    --bs-gutter-x: 2rem;
+    --bs-gutter-y: 3rem;
+}
+
+.settings-card {
+    margin-bottom: 3rem;
+}
+
+/* Espaciado adicional en móvil y tablet */
+@media (max-width: 991.98px) {
+    .settings-cards-row {
+        --bs-gutter-x: 2rem;
+        --bs-gutter-y: 3rem;
+    }
+    
+    .settings-card {
+        margin-bottom: 3rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .settings-cards-row {
+        --bs-gutter-x: 1.5rem;
+        --bs-gutter-y: 2.5rem;
+    }
+    
+    .settings-card {
+        margin-bottom: 2.5rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .settings-cards-row {
+        --bs-gutter-x: 1.5rem;
+        --bs-gutter-y: 2rem;
+    }
+    
+    .settings-card {
+        margin-bottom: 2rem;
+    }
+}
