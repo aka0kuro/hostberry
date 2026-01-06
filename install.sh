@@ -408,8 +408,14 @@ show_final_info() {
     PORT=$(grep -E "^  port:" "$CONFIG_FILE" | awk '{print $2}' | tr -d '"' || echo "8000")
     
     echo -e "${GREEN}Accede a la interfaz web:${NC}"
-    echo "  http://${IP}:${PORT}"
-    echo "  http://localhost:${PORT}"
+    if [ -n "$IP" ]; then
+        echo "  http://${IP}:${PORT}  (desde otros dispositivos en la red)"
+    fi
+    echo "  http://localhost:${PORT}  (desde este dispositivo)"
+    echo "  http://127.0.0.1:${PORT}  (desde este dispositivo)"
+    echo ""
+    echo -e "${BLUE}Nota:${NC} El servidor está configurado para escuchar en todas las interfaces (0.0.0.0)"
+    echo "  Esto permite acceso desde cualquier dispositivo en tu red local."
     echo ""
     echo -e "${YELLOW}Credenciales por defecto:${NC}"
     echo "  Usuario: admin"

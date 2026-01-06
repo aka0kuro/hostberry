@@ -1,5 +1,5 @@
 server:
-  host: "0.0.0.0"
+  host: "0.0.0.0"  # Escuchar en todas las interfaces (permite acceso por IP de red)
   port: 8000
   debug: false
   read_timeout: 30
