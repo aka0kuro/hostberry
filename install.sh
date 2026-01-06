@@ -408,14 +408,26 @@ show_final_info() {
     PORT=$(grep -E "^  port:" "$CONFIG_FILE" | awk '{print $2}' | tr -d '"' || echo "8000")
     
     echo -e "${GREEN}Accede a la interfaz web:${NC}"
-    if [ -n "$IP" ]; then
-        echo "  http://${IP}:${PORT}  (desde otros dispositivos en la red)"
+    if [ -n "$IP" ] && [ "$IP" != "127.0.0.1" ] && [ "$IP" != "" ]; then
+        echo "  🌐 http://${IP}:${PORT}  (desde otros dispositivos en la red)"
     fi
-    echo "  http://localhost:${PORT}  (desde este dispositivo)"
-    echo "  http://127.0.0.1:${PORT}  (desde este dispositivo)"
+    echo "  💻 http://localhost:${PORT}  (desde este dispositivo)"
+    echo "  💻 http://127.0.0.1:${PORT}  (desde este dispositivo)"
     echo ""
-    echo -e "${BLUE}Nota:${NC} El servidor está configurado para escuchar en todas las interfaces (0.0.0.0)"
-    echo "  Esto permite acceso desde cualquier dispositivo en tu red local."
+    echo -e "${BLUE}Nota sobre acceso por red:${NC}"
+    echo "  El servidor está configurado para escuchar en 0.0.0.0 (todas las interfaces)"
+    echo "  Esto permite acceso desde cualquier dispositivo en tu red local usando la IP."
+    if command -v ufw &> /dev/null && ufw status 2>/dev/null | grep -q "Status: active"; then
+        if ufw status 2>/dev/null | grep -q "$PORT/tcp"; then
+            echo "  ✅ Firewall UFW configurado - puerto $PORT permitido"
+        else
+            echo "  ⚠️  Firewall UFW activo - verifica que el puerto $PORT esté permitido"
+        fi
+    elif command -v firewall-cmd &> /dev/null; then
+        echo "  ✅ Firewalld configurado - puerto $PORT permitido"
+    else
+        echo "  ℹ️  No se detectó firewall activo"
+    fi
     echo ""
     echo -e "${YELLOW}Credenciales por defecto:${NC}"
     echo "  Usuario: admin"
