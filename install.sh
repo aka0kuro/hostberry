@@ -180,16 +180,55 @@ install_files() {
     
     if [ -d "${SCRIPT_DIR}/website" ]; then
         print_info "Copiando templates y archivos estáticos..."
-        cp -r "${SCRIPT_DIR}/website/"* "${INSTALL_DIR}/website/" 2>/dev/null || true
-        # Verificar que se copiaron correctamente
-        if [ -d "${INSTALL_DIR}/website/templates" ]; then
+        
+        # Asegurar que los directorios destino existen
+        mkdir -p "${INSTALL_DIR}/website/templates"
+        mkdir -p "${INSTALL_DIR}/website/static"
+        
+        # Copiar templates con verificación
+        if [ -d "${SCRIPT_DIR}/website/templates" ]; then
+            print_info "Copiando templates desde ${SCRIPT_DIR}/website/templates..."
+            if ! cp -r "${SCRIPT_DIR}/website/templates/"* "${INSTALL_DIR}/website/templates/" 2>/dev/null; then
+                print_error "Error al copiar templates"
+                exit 1
+            fi
             TEMPLATE_COUNT=$(find "${INSTALL_DIR}/website/templates" -name "*.html" 2>/dev/null | wc -l)
-            print_info "Templates copiados: $TEMPLATE_COUNT archivos .html"
+            if [ "$TEMPLATE_COUNT" -gt 0 ]; then
+                print_success "Templates copiados: $TEMPLATE_COUNT archivos .html"
+                # Verificar que base.html y dashboard.html existen (críticos)
+                if [ -f "${INSTALL_DIR}/website/templates/base.html" ]; then
+                    print_success "  ✅ base.html encontrado"
+                else
+                    print_error "  ❌ base.html NO encontrado (CRÍTICO)"
+                    exit 1
+                fi
+                if [ -f "${INSTALL_DIR}/website/templates/dashboard.html" ]; then
+                    print_success "  ✅ dashboard.html encontrado"
+                else
+                    print_error "  ❌ dashboard.html NO encontrado (CRÍTICO)"
+                    exit 1
+                fi
+            else
+                print_error "Error: No se encontraron templates después de copiar"
+                exit 1
+            fi
         else
-            print_warning "Advertencia: Directorio de templates no se creó correctamente"
+            print_error "Error: Directorio ${SCRIPT_DIR}/website/templates no existe"
+            exit 1
+        fi
+        
+        # Copiar archivos estáticos
+        if [ -d "${SCRIPT_DIR}/website/static" ]; then
+            print_info "Copiando archivos estáticos..."
+            cp -r "${SCRIPT_DIR}/website/static/"* "${INSTALL_DIR}/website/static/" 2>/dev/null || true
+            STATIC_COUNT=$(find "${INSTALL_DIR}/website/static" -type f 2>/dev/null | wc -l)
+            if [ "$STATIC_COUNT" -gt 0 ]; then
+                print_info "Archivos estáticos copiados: $STATIC_COUNT archivos"
+            fi
         fi
     else
-        print_warning "Advertencia: Directorio website no encontrado en ${SCRIPT_DIR}"
+        print_error "Error: Directorio website no encontrado en ${SCRIPT_DIR}"
+        exit 1
     fi
     
     # Configuración
