@@ -179,7 +179,17 @@ install_files() {
     fi
     
     if [ -d "${SCRIPT_DIR}/website" ]; then
+        print_info "Copiando templates y archivos estáticos..."
         cp -r "${SCRIPT_DIR}/website/"* "${INSTALL_DIR}/website/" 2>/dev/null || true
+        # Verificar que se copiaron correctamente
+        if [ -d "${INSTALL_DIR}/website/templates" ]; then
+            TEMPLATE_COUNT=$(find "${INSTALL_DIR}/website/templates" -name "*.html" 2>/dev/null | wc -l)
+            print_info "Templates copiados: $TEMPLATE_COUNT archivos .html"
+        else
+            print_warning "Advertencia: Directorio de templates no se creó correctamente"
+        fi
+    else
+        print_warning "Advertencia: Directorio website no encontrado en ${SCRIPT_DIR}"
     fi
     
     # Configuración
