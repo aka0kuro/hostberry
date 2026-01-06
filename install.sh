@@ -308,9 +308,34 @@ build_project() {
         print_warning "Advertencia: go mod tidy tuvo problemas, continuando..."
     fi
     
+    # Verificar estructura antes de compilar
+    print_info "Verificando estructura antes de compilar..."
+    print_info "  - main.go: ${INSTALL_DIR}/main.go"
+    if [ -f "${INSTALL_DIR}/main.go" ]; then
+        print_success "  ✅ main.go encontrado"
+    else
+        print_error "  ❌ main.go NO encontrado"
+        exit 1
+    fi
+    
+    print_info "  - templates: ${INSTALL_DIR}/website/templates"
+    if [ -d "${INSTALL_DIR}/website/templates" ]; then
+        TEMPLATE_LIST=$(ls -1 "${INSTALL_DIR}/website/templates"/*.html 2>/dev/null | wc -l)
+        print_success "  ✅ Directorio de templates encontrado con $TEMPLATE_LIST archivos"
+        # Listar algunos templates para verificación
+        print_info "  Templates encontrados:"
+        ls -1 "${INSTALL_DIR}/website/templates"/*.html 2>/dev/null | head -5 | while read file; do
+            print_info "    - $(basename "$file")"
+        done
+    else
+        print_error "  ❌ Directorio de templates NO encontrado"
+        exit 1
+    fi
+    
     # Compilar
     print_info "Compilando binario (los templates se embebarán automáticamente desde ${INSTALL_DIR}/website/templates)..."
-    print_info "La directiva //go:embed buscará templates en: website/templates (relativo a main.go)"
+    print_info "La directiva //go:embed buscará templates en: website/templates (relativo a main.go en ${INSTALL_DIR})"
+    print_info "Directorio actual: $(pwd)"
     
     if CGO_ENABLED=1 go build -ldflags="-s -w" -o "${INSTALL_DIR}/hostberry" .; then
         if [ -f "${INSTALL_DIR}/hostberry" ]; then
