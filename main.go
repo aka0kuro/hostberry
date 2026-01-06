@@ -199,6 +199,11 @@ func createApp() *fiber.App {
 }
 
 func setupRoutes(app *fiber.App) {
+	// Health check endpoints (sin autenticación)
+	app.Get("/health", healthCheckHandler)
+	app.Get("/health/ready", readinessCheckHandler)
+	app.Get("/health/live", livenessCheckHandler)
+
 	// Archivos estáticos
 	app.Static("/static", "./website/static", fiber.Static{
 		Compress:  true,
