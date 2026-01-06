@@ -24,7 +24,13 @@ func createTemplateEngine() *html.Engine {
 	tmplFS, err := fs.Sub(templatesFS, "website/templates")
 	if err == nil {
 		engine = html.NewFileSystem(http.FS(tmplFS), ".html")
-		log.Println("✅ Templates cargados desde archivos embebidos")
+		// Listar templates disponibles para debug
+		if entries, err := fs.ReadDir(tmplFS, "."); err == nil {
+			log.Printf("✅ Templates embebidos encontrados: %d archivos", len(entries))
+			for _, entry := range entries {
+				log.Printf("   - %s", entry.Name())
+			}
+		}
 	} else {
 		log.Printf("⚠️  Error cargando templates embebidos: %v", err)
 		// Fallback a sistema de archivos si los embebidos fallan
@@ -34,9 +40,26 @@ func createTemplateEngine() *html.Engine {
 			engine.Reload(!appConfig.Server.Debug)
 			log.Println("✅ Templates cargados desde sistema de archivos")
 		} else {
-			log.Printf("❌ Error: No se encontraron templates (filesystem: %v)", err)
-			// Crear engine vacío para evitar crash, pero mostrará errores
-			engine = html.New(".", ".html")
+			// Intentar ruta absoluta desde el ejecutable
+			exePath, _ := os.Executable()
+			exeDir := filepath.Dir(exePath)
+			templatesPath := filepath.Join(exeDir, "website", "templates")
+			if _, err := os.Stat(templatesPath); err == nil {
+				engine = html.New(templatesPath, ".html")
+				log.Printf("✅ Templates cargados desde: %s", templatesPath)
+			} else {
+				// Intentar ruta de instalación
+				installPath := "/opt/hostberry/website/templates"
+				if _, err := os.Stat(installPath); err == nil {
+					engine = html.New(installPath, ".html")
+					log.Printf("✅ Templates cargados desde: %s", installPath)
+				} else {
+					log.Printf("❌ Error: No se encontraron templates en ninguna ubicación")
+					log.Printf("   Intentado: ./website/templates, %s, %s", templatesPath, installPath)
+					// Crear engine vacío para evitar crash, pero mostrará errores
+					engine = html.New(".", ".html")
+				}
+			}
 		}
 	}
 	
