@@ -104,7 +104,6 @@ func createTemplateEngine() *html.Engine {
 				}
 			}
 		}
-		}
 	}
 	
 	// Verificar que engine no es nil antes de agregar funciones
