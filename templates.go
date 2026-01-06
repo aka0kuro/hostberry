@@ -32,8 +32,27 @@ func createTemplateEngine() *html.Engine {
 				}
 			}
 		}
+		// Verificar que dashboard.html existe en el FS
+		if testFile, err := tmplFS.Open("dashboard.html"); err == nil {
+			testFile.Close()
+			log.Println("✅ dashboard.html verificado en FS embebido")
+		} else {
+			log.Printf("⚠️  No se pudo abrir dashboard.html: %v", err)
+		}
+		// Verificar que base.html existe (necesario para todos los templates)
+		if testFile, err := tmplFS.Open("base.html"); err == nil {
+			testFile.Close()
+			log.Println("✅ base.html verificado en FS embebido")
+		} else {
+			log.Printf("⚠️  No se pudo abrir base.html: %v", err)
+		}
+		
 		engine = html.NewFileSystem(http.FS(tmplFS), ".html")
-		log.Println("✅ Motor de templates configurado con archivos embebidos")
+		if engine == nil {
+			log.Printf("❌ Error: engine es nil después de NewFileSystem")
+		} else {
+			log.Println("✅ Motor de templates configurado con archivos embebidos")
+		}
 	} else {
 		log.Printf("⚠️  Error creando sub-FS de templates embebidos: %v", err)
 		// Intentar acceder directamente sin sub-FS
