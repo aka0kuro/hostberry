@@ -206,7 +206,18 @@ func setupRoutes(app *fiber.App) {
 		web.Get("/dashboard", dashboardHandler)
 		web.Get("/login", loginHandler)
 		web.Get("/settings", settingsHandler)
-		// ... más rutas web
+		web.Get("/network", networkPageHandler)
+		web.Get("/wifi", wifiPageHandler)
+		web.Get("/wifi-scan", wifiScanPageHandler)
+		web.Get("/vpn", vpnPageHandler)
+		web.Get("/wireguard", wireguardPageHandler)
+		web.Get("/adblock", adblockPageHandler)
+		web.Get("/hostapd", hostapdPageHandler)
+		web.Get("/profile", profilePageHandler)
+		web.Get("/system", systemPageHandler)
+		web.Get("/monitoring", monitoringPageHandler)
+		web.Get("/update", updatePageHandler)
+		web.Get("/first-login", firstLoginPageHandler)
 	}
 
 	// API v1
