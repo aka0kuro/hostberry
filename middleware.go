@@ -56,13 +56,7 @@ func requireAuth(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-// rateLimitMiddleware middleware de rate limiting básico
-func rateLimitMiddleware(c *fiber.Ctx) error {
-	// Implementación básica de rate limiting
-	// En producción, usar redis o similar
-	// Por ahora, solo pasar al siguiente middleware
-	return c.Next()
-}
+// rateLimitMiddleware está definido en rate_limiter.go
 
 // loggingMiddleware middleware de logging de requests
 func loggingMiddleware(c *fiber.Ctx) error {
