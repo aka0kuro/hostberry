@@ -1,0 +1,689 @@
+{{ template "base.html" . }}
+
+{{ define "extra_css" }}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+<style>
+    .system-manager-page .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    .system-manager-page .action-buttons .btn {
+        flex: 1;
+        min-width: 120px;
+    }
+    .system-manager-page .service-controls {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    .system-manager-page .service-controls .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+</style>
+{{ .end }}
+
+{{ define "content" }}
+<div class="dashboard-container system-manager-page">
+    <!-- Header Section -->
+    <div class="dashboard-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-12 text-center">
+                <h1 class="dashboard-title d-flex flex-column align-items-center justify-content-center">
+                    <i class="bi bi-gear-wide-connected mb-2"></i>
+                    {{ call .t "system.title" "System Manager" }}
+                </h1>
+                <p class="dashboard-subtitle">{{ call .t "system.overview" "System overview and management" }}</p>
+                <div class="dashboard-time">
+                    <i class="bi bi-clock me-1"></i>
+                    <span id="system-last-update">--:--:--</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status Cards -->
+    <div class="row mb-4 status-cards-row">
+        <div class="col-12 col-md-6 col-lg-3 mb-5">
+            <div class="status-card cpu-card" style="min-height: auto;">
+                <div class="status-card-header">
+                    <div class="status-icon cpu-icon">
+                        <i class="bi bi-cpu"></i>
+                    </div>
+                    <div class="status-info">
+                        <h6>{{ call .t "system.cpu_usage" "CPU Usage" }}</h6>
+                        <h3 id="system-cpu-percent">--%</h3>
+                    </div>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar cpu-progress" id="system-cpu-progress" style="width: 0%"></div>
+                </div>
+                <div class="status-footer">
+                    <span class="status-text" id="system-cpu-status">
+                        <span class="badge bg-secondary">--</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3 mb-5">
+            <div class="status-card memory-card" style="min-height: auto;">
+                <div class="status-card-header">
+                    <div class="status-icon memory-icon">
+                        <i class="bi bi-memory"></i>
+                    </div>
+                    <div class="status-info">
+                        <h6>{{ call .t "system.memory_usage" "Memory Usage" }}</h6>
+                        <h3 id="system-memory-percent">--%</h3>
+                    </div>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar memory-progress" id="system-memory-progress" style="width: 0%"></div>
+                </div>
+                <div class="status-footer">
+                    <span class="status-text" id="system-memory-status">
+                        <span class="badge bg-secondary">--</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3 mb-5">
+            <div class="status-card disk-card" style="min-height: auto;">
+                <div class="status-card-header">
+                    <div class="status-icon disk-icon">
+                        <i class="bi bi-hdd"></i>
+                    </div>
+                    <div class="status-info">
+                        <h6>{{ call .t "system.disk_usage" "Disk Usage" }}</h6>
+                        <h3 id="system-disk-percent">--%</h3>
+                    </div>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar disk-progress" id="system-disk-progress" style="width: 0%"></div>
+                </div>
+                <div class="status-footer">
+                    <span class="status-text" id="system-disk-status">
+                        <span class="badge bg-secondary">--</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3 mb-5">
+            <div class="status-card temp-card" style="min-height: auto;">
+                <div class="status-card-header">
+                    <div class="status-icon temp-icon">
+                        <i class="bi bi-thermometer-half"></i>
+                    </div>
+                    <div class="status-info">
+                        <h6>{{ call .t "system.temperature" "Temperature" }}</h6>
+                        <h3 id="system-temperature">--°C</h3>
+                    </div>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar temp-progress" id="system-temp-progress" style="width: 0%"></div>
+                </div>
+                <div class="status-footer">
+                    <span class="status-text" id="system-temp-status">
+                        <span class="badge bg-secondary">--</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Information & Services -->
+    <div class="row mb-4">
+        <!-- System Information -->
+        <div class="col-12 mb-4">
+            <div class="info-card">
+                <div class="info-card-header">
+                    <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-2">
+                        <h5 class="info-card-title text-center d-flex justify-content-center align-items-center">
+                            <i class="bi bi-info-circle me-2"></i>
+                            {{ call .t "system.information" "System Information" }}
+                        </h5>
+                        <button class="btn btn-sm btn-outline-light" id="refreshSystemInfo">
+                            <i class="bi bi-arrow-clockwise me-1"></i>{{ call .t "common.refresh" "Refresh" }}
+                        </button>
+                    </div>
+                </div>
+                <div class="info-card-body">
+                    <div class="row" id="system-info-grid">
+                        <div class="col-lg-4 col-md-6 col-12 mb-3">
+                            <div class="info-item-grid">
+                                <span class="info-label d-block">{{ call .t "system.hostname" "Hostname" }}</span>
+                                <span class="info-value" id="info-hostname">--</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6 col-12 mb-3">
+                            <div class="info-item-grid">
+                                <span class="info-label d-block">{{ call .t "system.os_version" "OS Version" }}</span>
+                                <span class="info-value" id="info-os-version">--</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6 col-12 mb-3">
+                            <div class="info-item-grid">
+                                <span class="info-label d-block">{{ call .t "system.kernel_version" "Kernel Version" }}</span>
+                                <span class="info-value" id="info-kernel">--</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6 col-12 mb-3">
+                            <div class="info-item-grid">
+                                <span class="info-label d-block">{{ call .t "system.architecture" "Architecture" }}</span>
+                                <span class="info-value" id="info-architecture">--</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6 col-12 mb-3">
+                            <div class="info-item-grid">
+                                <span class="info-label d-block">{{ call .t "system.uptime" "Uptime" }}</span>
+                                <span class="info-value" id="info-uptime">--</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6 col-12 mb-3">
+                            <div class="info-item-grid">
+                                <span class="info-label d-block">{{ call .t "system.cpu_cores" "CPU Cores" }}</span>
+                                <span class="info-value" id="info-cpu-cores">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Actions -->
+    <div class="row mb-4 justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6 mb-4">
+            <div class="actions-card">
+                <div class="actions-card-header">
+                    <h5 class="actions-card-title text-center d-flex justify-content-center align-items-center">
+                        <i class="bi bi-lightning me-2"></i>
+                        {{ call .t "system.actions" "System Actions" }}
+                    </h5>
+                </div>
+                <div class="actions-card-body">
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="action-backup">
+                            <i class="bi bi-hdd-network me-2"></i>
+                            {{ call .t "system.backup" "Backup" }}
+                        </button>
+                        <button class="btn btn-success" id="action-update-system">
+                            <i class="bi bi-arrow-up-circle me-2"></i>
+                            {{ call .t "update.update_system" "Actualizar Debian" }}
+                        </button>
+                        <button class="btn btn-info" id="action-update-project">
+                            <i class="bi bi-code-slash me-2"></i>
+                            {{ call .t "update.update_project" "Actualizar HostBerry" }}
+                        </button>
+                        <button class="btn btn-warning" id="action-restart">
+                            <i class="bi bi-arrow-clockwise me-2"></i>
+                            {{ call .t "system.restart" "Restart" }}
+                        </button>
+                        <button class="btn btn-danger" id="action-shutdown">
+                            <i class="bi bi-power me-2"></i>
+                            {{ call .t "system.shutdown" "Shutdown" }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Services Management -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="services-card">
+                <div class="services-card-header">
+                    <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-2">
+                        <h5 class="services-card-title text-center d-flex justify-content-center align-items-center">
+                            <i class="bi bi-server me-2"></i>
+                            {{ call .t "system.services" "Services" }}
+                        </h5>
+                        <button class="btn btn-sm btn-outline-light" id="refreshServices">
+                            <i class="bi bi-arrow-clockwise me-1"></i>{{ call .t "common.refresh" "Refresh" }}
+                        </button>
+                    </div>
+                </div>
+                <div class="services-card-body">
+                    <div id="services-list">
+                        <div class="text-center py-4 text-white-50">
+                            <i class="bi bi-arrow-clockwise spinning"></i>
+                            <p class="mb-0 mt-2">{{ call .t "system.loading_services" "Loading services..." }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Logs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="logs-card">
+                <div class="logs-card-header">
+                    <div class="d-flex flex-column flex-md-row justify-content-center align-items-center flex-wrap gap-3">
+                        <div class="text-center">
+                            <h5 class="logs-card-title text-center d-flex justify-content-center align-items-center">
+                                <i class="bi bi-journal-text me-2"></i>
+                                {{ call .t "system.logs" "System Logs" }}
+                            </h5>
+                            <p class="text-white-50 mb-0 small">{{ call .t "system.logs_caption" "Recent system events and logs" }}</p>
+                        </div>
+                        <div class="d-flex justify-content-center align-items-center gap-2">
+                            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="logLevel">
+                                <option value="all">{{ call .t "system.logs_all" "All" }}</option>
+                                <option value="info">{{ call .t "system.logs_info" "Info" }}</option>
+                                <option value="warning">{{ call .t "system.logs_warning" "Warning" }}</option>
+                                <option value="error">{{ call .t "system.logs_error" "Error" }}</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-light" id="refreshLogs">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="logs-card-body">
+                    <div class="logs-container" id="system-logs">
+                        <div class="text-center py-4 text-white-50">
+                            <i class="bi bi-arrow-clockwise spinning"></i>
+                            <p class="mb-0 mt-2">{{ call .t "system.loading_logs" "Loading logs..." }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{ .end }}
+
+{{ define "extra_js" }}
+<script>
+(function(){
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = value;
+  };
+
+  const setProgress = (id, percent) => {
+    const bar = document.getElementById(id);
+    if(bar && Number.isFinite(percent)){
+      const clamped = Math.min(100, Math.max(0, percent));
+      bar.style.width = `${clamped}%`;
+    }
+  };
+
+  const setStatusBadge = (id, status) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    const badge = el.querySelector('.badge') || el;
+    const statusLower = (status || '').toLowerCase();
+    let badgeClass = 'bg-secondary';
+    let statusText = '--';
+    
+    if(statusLower === 'healthy' || statusLower === 'normal'){
+      badgeClass = 'bg-success';
+      statusText = HostBerry.t?.('system.healthy', 'Healthy') || 'Healthy';
+    } else if(statusLower === 'warning'){
+      badgeClass = 'bg-warning text-dark';
+      statusText = HostBerry.t?.('system.warning', 'Warning') || 'Warning';
+    } else if(statusLower === 'critical'){
+      badgeClass = 'bg-danger';
+      statusText = HostBerry.t?.('system.critical', 'Critical') || 'Critical';
+    }
+    
+    badge.className = 'badge ' + badgeClass;
+    badge.textContent = statusText;
+  };
+
+  function formatUptime(seconds){
+    if(!Number.isFinite(seconds) || seconds < 0) return '--';
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${days}d ${hours}h ${minutes}m`;
+  }
+
+  function calculateHealthStatus(value, thresholds){
+    if(value >= thresholds.critical) return 'critical';
+    if(value >= thresholds.warning) return 'warning';
+    return 'healthy';
+  }
+
+  async function fetchSystemStats(){
+    try{
+      const resp = await HostBerry.apiRequest('/api/v1/system/stats');
+      if(!resp.ok) throw new Error('Stats request failed');
+      const payload = await resp.json();
+      const stats = payload.data || payload;
+      
+      // CPU
+      const cpuUsage = stats.cpu_usage || 0;
+      setText('system-cpu-percent', `${cpuUsage.toFixed(1)}%`);
+      setProgress('system-cpu-progress', cpuUsage);
+      setStatusBadge('system-cpu-status', calculateHealthStatus(cpuUsage, {warning: 70, critical: 90}));
+      
+      // Memory
+      const memUsage = stats.memory_usage || 0;
+      setText('system-memory-percent', `${memUsage.toFixed(1)}%`);
+      setProgress('system-memory-progress', memUsage);
+      setStatusBadge('system-memory-status', calculateHealthStatus(memUsage, {warning: 75, critical: 90}));
+      
+      // Disk
+      const diskUsage = stats.disk_usage || 0;
+      setText('system-disk-percent', `${diskUsage.toFixed(1)}%`);
+      setProgress('system-disk-progress', diskUsage);
+      setStatusBadge('system-disk-status', calculateHealthStatus(diskUsage, {warning: 80, critical: 95}));
+      
+      // Temperature
+      const temp = stats.cpu_temperature || 0;
+      setText('system-temperature', temp > 0 ? `${temp.toFixed(1)}°C` : '--°C');
+      if(temp > 0){
+        setProgress('system-temp-progress', (temp / 100) * 100);
+        setStatusBadge('system-temp-status', calculateHealthStatus(temp, {warning: 60, critical: 80}));
+      }
+      
+      // System Info
+      setText('info-hostname', stats.hostname || '--');
+      setText('info-os-version', stats.os_version || '--');
+      setText('info-kernel', stats.kernel_version || '--');
+      setText('info-architecture', stats.architecture || '--');
+      setText('info-uptime', formatUptime(stats.uptime || 0));
+      setText('info-cpu-cores', stats.cpu_cores || '--');
+      
+      const now = new Date();
+      const timeStr = (window.HostBerry && typeof window.HostBerry.formatTime === 'function')
+        ? window.HostBerry.formatTime(now)
+        : now.toLocaleTimeString();
+      setText('system-last-update', timeStr);
+    }catch(error){
+      console.error('Error fetching system stats:', error);
+      HostBerry.showAlert?.('danger', HostBerry.t?.('errors.system_stats_error', 'Unable to fetch system statistics') || 'Unable to fetch system statistics');
+    }
+  }
+
+  async function loadServices(){
+    const container = document.getElementById('services-list');
+    if(!container) return;
+    try{
+      const resp = await HostBerry.apiRequest('/api/v1/system/services');
+      if(!resp.ok) throw new Error('Services request failed');
+      const payload = await resp.json();
+      const services = payload.services || {};
+      
+      if(!Object.keys(services).length){
+        container.innerHTML = `
+          <div class="text-center py-4 text-white-50">
+            <i class="bi bi-journal-x"></i>
+            <p class="mb-0 mt-2">${HostBerry.t?.('system.no_services', 'No services found') || 'No services found'}</p>
+          </div>`;
+        return;
+      }
+      
+      const serviceIcons = {
+        'hostberry': 'bi-gear-fill hostberry-icon',
+        'nginx': 'bi-shield-check nginx-icon',
+        'fail2ban': 'bi-shield-fill fail2ban-icon',
+        'ufw': 'bi-shield-lock ufw-icon',
+        'ssh': 'bi-terminal ssh-icon',
+        'hostapd': 'bi-wifi wifi-icon',
+        'openvpn': 'bi-shield-check openvpn-icon',
+        'wg-quick': 'bi-shield-lock wireguard-icon',
+        'wireguard': 'bi-shield-lock wireguard-icon',
+        'dnsmasq': 'bi-diagram-3 dns-icon',
+        'adblock': 'bi-shield-x adblock-icon'
+      };
+      
+      container.innerHTML = '';
+      Object.keys(services).forEach(serviceName => {
+        const service = services[serviceName];
+        const status = service.status || service;
+        const statusLower = (typeof status === 'string' ? status : 'unknown').toLowerCase();
+        const isRunning = statusLower === 'running' || statusLower === 'active';
+        const statusText = isRunning 
+          ? (HostBerry.t?.('system.running', 'Running') || 'Running')
+          : (HostBerry.t?.('system.stopped', 'Stopped') || 'Stopped');
+        const statusClass = isRunning ? 'bg-success' : 'bg-danger';
+        
+        const normalizedName = serviceName.toLowerCase().replace(/[_-]/g, '');
+        const iconClass = serviceIcons[normalizedName] || serviceIcons[serviceName.toLowerCase()] || 'bi-gear-fill default-icon';
+        
+        const item = document.createElement('div');
+        item.className = 'service-item';
+        item.innerHTML = `
+          <div class="service-info">
+            <i class="bi ${iconClass} service-icon"></i>
+            <span class="service-name">${serviceName}</span>
+          </div>
+          <div class="service-controls">
+            <span class="status-badge ${statusClass}">${statusText}</span>
+            <button class="btn btn-sm ${isRunning ? 'btn-danger' : 'btn-success'}" 
+                    onclick="toggleService('${serviceName}', ${isRunning})"
+                    title="${isRunning ? (HostBerry.t?.('system.stop_service', 'Stop service') || 'Stop') : (HostBerry.t?.('system.start_service', 'Start service') || 'Start')}">
+              <i class="bi ${isRunning ? 'bi-stop' : 'bi-play'}"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }catch(error){
+      console.error('Services load failed', error);
+      container.innerHTML = `
+        <div class="text-center py-4 text-danger">
+          <i class="bi bi-exclamation-triangle"></i>
+          <p class="mb-0 mt-2">${HostBerry.t?.('system.services_error', 'Unable to load services') || 'Unable to load services'}</p>
+        </div>`;
+    }
+  }
+
+  async function toggleService(serviceName, isRunning){
+    try{
+      const action = isRunning ? (HostBerry.t?.('system.stop_service', 'stop') || 'stop') : (HostBerry.t?.('system.start_service', 'start') || 'start');
+      const actionText = isRunning ? (HostBerry.t?.('system.stop_service', 'Stop service') || 'stop') : (HostBerry.t?.('system.start_service', 'Start service') || 'start');
+      const confirmMsg = `${HostBerry.t?.('system.service_confirm', 'Are you sure you want to {action} {service}?') || 'Are you sure you want to {action} {service}?'}`.replace('{action}', actionText).replace('{service}', serviceName);
+      if(!confirm(confirmMsg)) return;
+      
+      // TODO: Implementar endpoint para iniciar/detener servicios
+      HostBerry.showAlert?.('info', HostBerry.t?.('system.service_action_pending', 'Service action pending...') || 'Service action pending...');
+      await loadServices();
+    }catch(error){
+      console.error('Service toggle failed', error);
+      HostBerry.showAlert?.('danger', HostBerry.t?.('system.service_toggle_error', 'Unable to toggle service') || 'Unable to toggle service');
+    }
+  }
+
+  window.toggleService = toggleService;
+
+  async function loadLogs(){
+    const container = document.getElementById('system-logs');
+    const level = document.getElementById('logLevel')?.value || 'all';
+    if(!container) return;
+    try{
+      const params = new URLSearchParams({ limit: '50' });
+      if(level !== 'all') params.set('level', level.toUpperCase());
+      const resp = await HostBerry.apiRequest(`/api/v1/system/logs?${params.toString()}`);
+      if(!resp.ok) throw new Error('logs failed');
+      const payload = await resp.json();
+      const logs = Array.isArray(payload.logs) ? payload.logs : (Array.isArray(payload) ? payload : []);
+      if(!logs.length){
+        container.innerHTML = `
+          <div class="text-center py-4 text-white-50">
+            <i class="bi bi-journal-x"></i>
+            <p class="mb-0 mt-2">${HostBerry.t?.('system.no_logs', 'No logs found') || 'No logs found'}</p>
+          </div>`;
+        return;
+      }
+      container.innerHTML = '';
+      logs.forEach(log => {
+        const item = document.createElement('div');
+        item.className = 'log-item';
+        const levelLabel = (log.level || log.log_level || 'INFO').toUpperCase();
+        const ts = log.timestamp ? new Date(log.timestamp).toLocaleString() : (log.created_at ? new Date(log.created_at).toLocaleString() : '--');
+        const message = log.message || log.log_message || log.content || '';
+        item.innerHTML = `
+          <span class="text-white-50 small">${ts}</span>
+          <span class="badge bg-${getLevelColor(levelLabel)} log-level">${levelLabel}</span>
+          <span class="text-white flex-grow-1">${message}</span>`;
+        container.appendChild(item);
+      });
+    }catch(error){
+      console.error('Logs load failed', error);
+      container.innerHTML = `
+        <div class="text-center py-4 text-danger">
+          <i class="bi bi-exclamation-triangle"></i>
+          <p class="mb-0 mt-2">${HostBerry.t?.('system.logs_error', 'Unable to load logs') || 'Unable to load logs'}</p>
+        </div>`;
+    }
+  }
+
+  function getLevelColor(level){
+    switch(level){
+      case 'ERROR': return 'danger';
+      case 'WARNING': return 'warning text-dark';
+      case 'INFO': return 'info';
+      default: return 'secondary';
+    }
+  }
+
+  async function createBackup(){
+    try{
+      const confirmMsg = HostBerry.t?.('system.backup_confirm', 'Are you sure you want to create a system backup?') || 'Are you sure you want to create a system backup?';
+      if(!confirm(confirmMsg)) return;
+      
+      HostBerry.showAlert?.('info', HostBerry.t?.('system.backup_creating', 'Creating backup...') || 'Creating backup...');
+      const resp = await HostBerry.apiRequest('/api/v1/security/backup?include_logs=true&include_uploads=true', { method: 'POST' });
+      if(!resp.ok) throw new Error('Backup failed');
+      const payload = await resp.json();
+      HostBerry.showAlert?.('success', payload.message || HostBerry.t?.('system.backup_success', 'Backup created successfully') || 'Backup created successfully');
+    }catch(error){
+      console.error('Backup failed', error);
+      HostBerry.showAlert?.('danger', HostBerry.t?.('system.backup_error', 'Unable to create backup') || 'Unable to create backup');
+    }
+  }
+
+  async function restartSystem(){
+    try{
+      const confirmMsg = HostBerry.t?.('system.restart_confirm', 'Are you sure you want to restart the system? This will disconnect all users.') || 'Are you sure you want to restart the system? This will disconnect all users.';
+      if(!confirm(confirmMsg)) return;
+      
+      HostBerry.showAlert?.('warning', HostBerry.t?.('system.restarting', 'Restarting system...') || 'Restarting system...');
+      // TODO: Implementar endpoint para reiniciar sistema
+      HostBerry.showAlert?.('info', HostBerry.t?.('system.restart_pending', 'Restart command sent') || 'Restart command sent');
+    }catch(error){
+      console.error('Restart failed', error);
+      HostBerry.showAlert?.('danger', HostBerry.t?.('system.restart_error', 'Unable to restart system') || 'Unable to restart system');
+    }
+  }
+
+  async function shutdownSystem(){
+    try{
+      const confirmMsg = HostBerry.t?.('system.shutdown_confirm', 'Are you sure you want to shutdown the system? This will disconnect all users.') || 'Are you sure you want to shutdown the system? This will disconnect all users.';
+      if(!confirm(confirmMsg)) return;
+      
+      const doubleConfirm = HostBerry.t?.('system.shutdown_double_confirm', 'Type SHUTDOWN to confirm') || 'Type SHUTDOWN to confirm';
+      const userInput = prompt(doubleConfirm);
+      if(userInput !== 'SHUTDOWN') return;
+      
+      HostBerry.showAlert?.('warning', HostBerry.t?.('system.shutting_down', 'Shutting down system...') || 'Shutting down system...');
+      // TODO: Implementar endpoint para apagar sistema
+      HostBerry.showAlert?.('info', HostBerry.t?.('system.shutdown_pending', 'Shutdown command sent') || 'Shutdown command sent');
+    }catch(error){
+      console.error('Shutdown failed', error);
+      HostBerry.showAlert?.('danger', HostBerry.t?.('system.shutdown_error', 'Unable to shutdown system') || 'Unable to shutdown system');
+    }
+  }
+
+  async function updateSystem(){
+    try{
+      const confirmMsg = HostBerry.t?.('update.system_confirm', '¿Actualizar el sistema Debian?') || '¿Actualizar el sistema Debian?';
+      if(!confirm(confirmMsg)) return;
+      
+      HostBerry.showAlert?.('info', HostBerry.t?.('update.updating_system', 'Actualizando sistema...') || 'Actualizando sistema...');
+      const resp = await HostBerry.apiRequest('/api/v1/system/updates/execute', { method: 'POST' });
+      if(!resp || !resp.ok) {
+        const errorData = await resp.json().catch(() => ({}));
+        throw new Error(errorData.detail || HostBerry.t?.('update.system_failed', 'Error al actualizar el sistema') || 'Error al actualizar el sistema');
+      }
+      const payload = await resp.json();
+      HostBerry.showAlert?.('success', payload.message || HostBerry.t?.('update.system_success', 'Sistema actualizado correctamente') || 'Sistema actualizado correctamente');
+    }catch(error){
+      console.error('System update failed', error);
+      HostBerry.showAlert?.('danger', error.message || HostBerry.t?.('update.system_failed', 'Error al actualizar el sistema') || 'Error al actualizar el sistema');
+    }
+  }
+
+  async function updateProject(){
+    try{
+      const confirmMsg = HostBerry.t?.('update.project_confirm', '¿Actualizar el proyecto HostBerry?') || '¿Actualizar el proyecto HostBerry?';
+      if(!confirm(confirmMsg)) return;
+      
+      HostBerry.showAlert?.('info', HostBerry.t?.('update.updating_project', 'Actualizando proyecto...') || 'Actualizando proyecto...');
+      const resp = await HostBerry.apiRequest('/api/v1/system/updates/project', { method: 'POST' });
+      if(!resp || !resp.ok) {
+        const errorData = await resp.json().catch(() => ({}));
+        throw new Error(errorData.detail || HostBerry.t?.('update.project_failed', 'Error al actualizar el proyecto') || 'Error al actualizar el proyecto');
+      }
+      const payload = await resp.json();
+      HostBerry.showAlert?.('success', payload.message || HostBerry.t?.('update.project_success', 'Proyecto actualizado correctamente') || 'Proyecto actualizado correctamente');
+    }catch(error){
+      console.error('Project update failed', error);
+      HostBerry.showAlert?.('danger', error.message || HostBerry.t?.('update.project_failed', 'Error al actualizar el proyecto') || 'Error al actualizar el proyecto');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    fetchSystemStats();
+    loadServices();
+    loadLogs();
+    
+    document.getElementById('refreshSystemInfo')?.addEventListener('click', fetchSystemStats);
+    document.getElementById('refreshServices')?.addEventListener('click', loadServices);
+    document.getElementById('refreshLogs')?.addEventListener('click', loadLogs);
+    document.getElementById('logLevel')?.addEventListener('change', loadLogs);
+    document.getElementById('action-backup')?.addEventListener('click', createBackup);
+    document.getElementById('action-update-system')?.addEventListener('click', updateSystem);
+    document.getElementById('action-update-project')?.addEventListener('click', updateProject);
+    document.getElementById('action-restart')?.addEventListener('click', restartSystem);
+    document.getElementById('action-shutdown')?.addEventListener('click', shutdownSystem);
+    
+    setInterval(fetchSystemStats, 30000);
+    setInterval(loadServices, 60000);
+    setInterval(loadLogs, 20000);
+  });
+})();
+</script>
+<style>
+.spinning {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.log-item {
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+.log-item:last-child {
+    margin-bottom: 0;
+}
+.log-level {
+    min-width: 80px;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+}
+.logs-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+</style>
+{{ .end }}
+

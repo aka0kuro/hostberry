@@ -1,0 +1,807 @@
+{{ template "base.html" . }}
+
+{{ define "title" }}{% trans %}WiFi Center{% endtrans %}{{ .end }}
+
+{{ define "content" }}
+<div class="container-fluid">
+
+    {{ if .wifi_blocked }}
+    <button id="enableWifiBtnTop" class="btn btn-warning btn-sm ms-2 mb-3" aria-label="Enable WiFi">
+        <i class="fas fa-power-off me-1" aria-hidden="true"></i> {% trans %}Enable WiFi{% endtrans %}
+    </button>
+    {{ end }}
+
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-wifi me-2"></i>{% trans %}WiFi Center{% endtrans %}</h1>
+        <div>
+            <button id="rescanBtn" class="btn btn-primary btn-sm">
+                <i class="fas fa-sync-alt me-1"></i> {% trans %}Rescan{% endtrans %}
+            </button>
+        </div>
+    </div>
+
+    <!-- WiFi Status Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row align-items-center g-0">
+                        <div class="col flex-grow-1">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1" id="wifiStatusLabel">
+                                {% trans %}WiFi Status{% endtrans %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="wifiStatusTextCard" aria-labelledby="wifiStatusLabel">
+                                <span id="wifiStatusText">-</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-wifi fa-2x text-gray-300" aria-hidden="true" title="WiFi status"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                {% trans %}Current Connection{% endtrans %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="currentConnection">-</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-network-wired fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-12 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                {% trans %}Available Networks{% endtrans %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="networksCount">-</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-signal fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WiFi Networks List & Activity Log -->
+    <div class="row">
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-list-ul me-1"></i> {% trans %}WiFi Networks{% endtrans %}
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div id="wifiStatusAlert" class="alert alert-warning d-none mb-0 rounded-0 border-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="wifiStatusTextInline"></span>
+                        <button id="enableWifiBtnInline" class="btn btn-sm btn-outline-dark ms-2 d-none">
+                            {% trans %}Enable WiFi{% endtrans %}
+                        </button>
+                    </div>
+                    <div id="network-list" class="list-group list-group-flush">
+                        <!-- Network items will be added here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-history me-1"></i> {% trans %}Recent WiFi Activity{% endtrans %}
+                    </h6>
+                    <button id="clearHistoryBtn" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-trash-alt me-1"></i> {% trans %}Clear History{% endtrans %}
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="activity-feed" class="activity-feed" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Activity items will be added here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WiFi Connect Modal -->
+    <div class="modal fade" id="connectModal" tabindex="-1" aria-labelledby="connectModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white">
+          <div class="modal-header border-bottom border-secondary">
+            <h5 class="modal-title fw-bold" id="connectModalLabel"><i class="fas fa-wifi me-2"></i>{% trans %}Connect to Network{% endtrans %}</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="wifiConnectForm">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <div class="mb-3">
+                <label for="connectSSID" class="form-label fw-bold">{% trans %}Network Name (SSID){% endtrans %}</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-network-wired"></i></span>
+                  <input type="text" class="form-control" id="connectSSID" name="ssid" readonly>
+                  <input type="hidden" id="connectSSIDHidden" name="ssid_hidden">
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="connectSecurity" class="form-label fw-bold">{% trans %}Security Type{% endtrans %}</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                  <input type="text" class="form-control" id="connectSecurity" name="security" readonly>
+                  <input type="hidden" id="connectSecurityHidden" name="security_hidden">
+                </div>
+              </div>
+              <div class="mb-4" id="passwordField">
+                <label for="connectPassword" class="form-label fw-bold">{% trans %}Password{% endtrans %}</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-key"></i></span>
+                  <input type="password" class="form-control" id="connectPassword" name="password" placeholder="Contraseña" autocomplete="current-password" required>
+                  <button class="btn btn-outline-secondary" type="button" id="togglePwd" aria-label="Toggle password visibility">
+                    <i class="fas fa-eye" id="togglePwdIcon"></i>
+                  </button>
+                </div>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="saveCredentials" name="save_credentials" checked>
+                    <label class="form-check-label" for="saveCredentials">
+                        <i class="fas fa-save me-1"></i>{% trans %}Save password for automatic reconnection{% endtrans %}
+                    </label>
+                </div>
+              </div>
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold py-2" id="connectSubmitBtn">
+                  <i class="fas fa-plug me-2"></i>{% trans %}Connect Now{% endtrans %}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" style="position: fixed; top: 1rem; right: 1rem; z-index: 9999;"></div>
+</div>
+
+{{ define "extra_css" }}
+<link rel="stylesheet" href="/static/css/wifi_scan.css?v={{ .last_update }}">
+{{ .end }}
+
+{{ define "extra_js" }}
+<script src="/static/js/wifi_scan.js?v={{ .last_update }}"></script>
+{{ .end }}
+// Global variable to store current SSID
+window.currentSSID = null;
+
+// Helper to get CSRF token
+function getCSRFToken() {
+    const metaTag = document.querySelector('meta[name="csrf-token"]');
+    return metaTag ? metaTag.getAttribute('content') : null;
+}
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+// Date formatting
+function formatDate(date) {
+    return new Date(date).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'medium' });
+}
+
+// Core logic: Fetch status, then trigger scan
+async function loadStatusAndScan() {
+    try {
+        const response = await fetch('/api/wifi/status');
+        const data = await response.json();
+        const statusData = data.status || data; // Soporta ambos formatos
+        window.currentSSID = statusData.ssid ? statusData.ssid.trim() : (statusData.current_connection ? statusData.current_connection.trim() : null);
+        // Update status display based on this initial fetch
+        updateStatusDisplay(statusData);
+    } catch (e) {
+        console.error("Error fetching initial status:", e);
+        window.currentSSID = null;
+        updateStatusDisplay({ enabled: false, connected: false, current_connection: null, soft_blocked: false, hard_blocked: false }); // Assume disabled on error
+    }
+    // Now trigger the scan, which will use the updated window.currentSSID
+    $('#rescanBtn').trigger('click');
+}
+
+// Only refresh visual status and buttons in list, NO full scan
+async function refreshWifiStatusAndButtons() {
+    try {
+        const response = await fetch('/api/wifi/status');
+        const data = await response.json();
+        const statusData = data.status || data; // Soporta ambos formatos
+        
+        const newCurrentSSID = statusData.ssid ? statusData.ssid.trim() : (statusData.current_connection ? statusData.current_connection.trim() : null);
+        if (window.currentSSID !== newCurrentSSID) {
+            window.currentSSID = newCurrentSSID;
+        }
+        
+        updateStatusDisplay(statusData); // Update general status elements (cards, alerts)
+
+        console.log(`refreshWifiStatusAndButtons: Current SSID from API is "${newCurrentSSID}"`);
+
+        $('.list-group-item').each(function() {
+            const itemSsidFromDataAttr = $(this).attr('data-ssid-name');
+            const originalSecurityType = $(this).attr('data-original-security');
+            const currentDomButton = $(this).find('.connect-btn, .disconnect-btn');
+
+            if (window.currentSSID && itemSsidFromDataAttr && window.currentSSID === itemSsidFromDataAttr) {
+                // Si está conectado a esta red, muestra botón de desconexión
+                if (!currentDomButton.hasClass('disconnect-btn')) {
+                    const disconnectButton = $(`<button class="btn btn-sm btn-danger disconnect-btn" data-ssid="${itemSsidFromDataAttr}"><i class="fas fa-power-off me-1"></i>{% trans %}Disconnect{% endtrans %}</button>`);
+                    currentDomButton.replaceWith(disconnectButton);
+                }
+            } else {
+                // Si no está conectado, muestra botón de conexión
+                if (!currentDomButton.hasClass('connect-btn')) {
+                     // console.log(`    SHOULD BE CONNECT BUTTON for ${itemSsidFromDataAttr}. Current button has classes: ${currentDomButton.attr('class')}`);
+                    const connectButton = $(`<button class="btn btn-sm btn-outline-primary connect-btn" data-ssid="${itemSsidFromDataAttr}" data-security="${originalSecurityType}"><i class="fas fa-plug me-1"></i>{% trans %}Connect{% endtrans %}</button>`);
+                    currentDomButton.replaceWith(connectButton);
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error in refreshWifiStatusAndButtons:', error);
+        updateStatusDisplay({ enabled: false, connected: false, current_connection: null, soft_blocked: false, hard_blocked: false, error: true });
+    }
+}
+
+// Activity Log Functions
+function addActivity(type, details) {
+    const activityFeed = $('#activity-feed');
+    const now = new Date();
+    let icon, color, title;
+
+    switch(type) {
+        case 'scan': icon = 'fa-search'; color = 'info'; title = '{% trans %}Network Scan{% endtrans %}'; break;
+        case 'connect': icon = 'fa-plug'; color = 'success'; title = '{% trans %}Connection{% endtrans %}'; break;
+        case 'disconnect': icon = 'fa-power-off'; color = 'warning'; title = '{% trans %}Disconnection{% endtrans %}'; break;
+        case 'error': icon = 'fa-exclamation-triangle'; color = 'danger'; title = '{% trans %}Error{% endtrans %}'; break;
+        default: icon = 'fa-info-circle'; color = 'info'; title = '{% trans %}Information{% endtrans %}';
+    }
+
+    const activity = `
+        <div class="activity-item">
+            <div class="activity-badge ${color}"><i class="fas ${icon}"></i></div>
+            <div class="activity-content">
+                <div class="font-weight-bold">${title}</div>
+                <div class="text-muted small">${formatDate(now)}</div>
+                <div>${details}</div>
+            </div>
+        </div>`;
+    activityFeed.prepend(activity);
+    if (activityFeed.children().length > 10) { // Keep last 10 activities
+        activityFeed.children().last().remove();
+    }
+    saveActivities();
+}
+
+function saveActivities() {
+    const activities = [];
+    $('#activity-feed .activity-item').each(function() {
+        const item = $(this);
+        activities.push({
+            type: item.find('.activity-badge').attr('class').split(' ')[1], // e.g., 'info', 'success'
+            icon: item.find('.activity-badge i').attr('class'), // e.g., 'fas fa-search'
+            title: item.find('.font-weight-bold').text(),
+            time: item.find('.text-muted').text(), // This will be the formatted string
+            details: item.find('.activity-content div:last-child').text()
+        });
+    });
+    localStorage.setItem('wifiActivities', JSON.stringify(activities));
+}
+
+function loadActivities() {
+    const activities = JSON.parse(localStorage.getItem('wifiActivities') || '[]');
+    const activityFeed = $('#activity-feed');
+    activityFeed.empty();
+    activities.forEach(activity => { // Assumes activities are stored newest first
+        activityFeed.append(`
+            <div class="activity-item">
+                <div class="activity-badge ${activity.type || 'info'}"><i class="${activity.icon || 'fas fa-info-circle'}"></i></div>
+                <div class="activity-content">
+                    <div class="font-weight-bold">${activity.title}</div>
+                    <div class="text-muted small">${activity.time}</div>
+                    <div>${activity.details}</div>
+                </div>
+            </div>`);
+    });
+}
+
+// Store connection start time when connecting
+$('#wifiConnectForm').submit(async function(e) {
+    e.preventDefault();
+    const btn = $('#connectSubmitBtn');
+    const originalText = btn.html();
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> {% trans %}Connecting...{% endtrans %}');
+    
+    const ssid = $('#connectSSIDHidden').val();
+    const security = $('#connectSecurityHidden').val();
+    const password = $('#connectPassword').val();
+    const saveCredentials = $('#saveCredentials').is(':checked');
+    const csrfToken = $('input[name="csrf_token"]').val();
+    
+    if (!ssid) {
+        showToast('{% trans %}Please select a WiFi network.{% endtrans %}', 'danger');
+        return btn.prop('disabled', false).html(originalText);
+    }
+    if (security !== 'Open' && !password) {
+        showToast('{% trans %}Please enter the network password.{% endtrans %}', 'danger');
+        return btn.prop('disabled', false).html(originalText);
+    }
+
+    try {
+        console.log('Intentando conectar a:', ssid);
+        
+        // Utilizar fetch con timeout para evitar esperas indefinidas
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+        
+        const response = await fetch('/api/wifi/connect', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json', 
+                'Accept': 'application/json', 
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ 
+                ssid: ssid, 
+                password: password, 
+                security: security, 
+                save_credentials: saveCredentials 
+            }),
+            signal: controller.signal,
+            credentials: 'same-origin'
+        }).finally(() => clearTimeout(timeoutId));
+        
+        const responseData = await response.json();
+        
+        if (responseData.success) {
+            // 1. Guardar información de conexión en localStorage
+            localStorage.setItem(`connection_start_${ssid}`, Date.now().toString());
+            
+            // 2. Cerrar el modal primero antes de mostrar mensajes
+            $('#connectModal').modal('hide');
+            
+            // 3. Mostrar mensaje de éxito
+            showToast(`{% trans %}Connected to{% endtrans %} ${ssid}!`, 'success');
+            addActivity('connect', `{% trans %}Connected to{% endtrans %} ${ssid}`);
+            
+            // 4. Dar tiempo al sistema para completar la conexión antes de actualizar la UI
+            setTimeout(function() {
+                // 5. Intentar actualizar la interfaz con un manejo de errores robusto
+                try {
+                    refreshWifiStatusAndButtons().catch(err => {
+                        console.warn('Error refrescando estado WiFi:', err);
+                    });
+                    
+                    // Esperar un poco más antes de intentar un escaneo completo
+                    setTimeout(function() {
+                        $('#rescanBtn').trigger('click');
+                    }, 3000);
+                } catch (refreshError) {
+                    console.warn('Error actualizando UI después de conexión:', refreshError);
+                }
+            }, 2000);
+        } else {
+            throw new Error(responseData.error || '{% trans %}Error connecting to network.{% endtrans %}');
+        }
+    } catch (error) {
+        console.error('Error connecting:', error);
+        
+        // Manejar distintos tipos de errores de red
+        let errorMessage = error.message;
+        if (error.name === 'AbortError') {
+            errorMessage = '{% trans %}Connection timeout. The server took too long to respond.{% endtrans %}';
+        } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+            errorMessage = '{% trans %}Network error. Try again in a few seconds.{% endtrans %}';
+        }
+        
+        showToast(errorMessage, 'danger');
+        addActivity('error', `{% trans %}Failed to connect to{% endtrans %} ${ssid}: ${errorMessage}`);
+    } finally {
+        btn.prop('disabled', false).html(originalText);
+    }
+});
+
+// Helper to update general status display elements
+function updateStatusDisplay(statusData) {
+    let wifiStatusText, wifiStatusClass = 'text-gray-800';
+    const isConnected = statusData.connected || statusData.current_connection;
+    const isEnabled = statusData.enabled;
+    const isBlocked = statusData.hard_blocked || statusData.soft_blocked;
+
+    if (isBlocked) {
+        wifiStatusText = '{% trans %}Blocked{% endtrans %}'; wifiStatusClass = 'text-danger';
+        $('#wifiStatusAlert').removeClass('d-none alert-success alert-warning').addClass('alert-danger').find('#wifiStatusTextInline').text('{% trans %}WiFi is blocked.{% endtrans %}');
+        $('#enableWifiBtnInline, #enableWifiBtnTop').removeClass('d-none');
+    } else if (!isEnabled) {
+        wifiStatusText = '{% trans %}Disabled{% endtrans %}'; wifiStatusClass = 'text-warning';
+        $('#wifiStatusAlert').removeClass('d-none alert-success alert-danger').addClass('alert-warning').find('#wifiStatusTextInline').text('{% trans %}WiFi is disabled.{% endtrans %}');
+        $('#enableWifiBtnInline, #enableWifiBtnTop').removeClass('d-none');
+    } else if (isConnected) {
+        wifiStatusText = '{% trans %}Connected{% endtrans %}'; wifiStatusClass = 'text-success';
+        $('#wifiStatusAlert').addClass('d-none');
+        $('#enableWifiBtnInline, #enableWifiBtnTop').addClass('d-none');
+    } else {
+        wifiStatusText = '{% trans %}Enabled{% endtrans %}'; wifiStatusClass = 'text-info';
+        $('#wifiStatusAlert').removeClass('d-none alert-danger alert-success').addClass('alert-info').find('#wifiStatusTextInline').text('{% trans %}WiFi is enabled but not connected.{% endtrans %}');
+        $('#enableWifiBtnInline, #enableWifiBtnTop').addClass('d-none');
+    }
+
+    if (statusData.error) {
+        wifiStatusText = '{% trans %}Error{% endtrans %}'; wifiStatusClass = 'text-danger';
+        $('#wifiStatusAlert').removeClass('d-none alert-success alert-warning').addClass('alert-danger').find('#wifiStatusTextInline').text('{% trans %}Error fetching WiFi status.{% endtrans %}');
+    }
+
+    $('#wifiStatusText').text(wifiStatusText).removeClass('text-success text-danger text-warning text-info').addClass(wifiStatusClass);
+    $('#wifiStatusTextCard').text(wifiStatusText).removeClass('text-success text-danger text-warning text-info').addClass(wifiStatusClass);
+
+    if (isConnected && (statusData.current_connection || statusData.ssid)) {
+        let connectionText = statusData.current_connection || statusData.ssid;
+        if (statusData.connection_info && statusData.connection_info.signal) {
+            const signalStrength = parseInt(statusData.connection_info.signal);
+            let signalQuality = '';
+            if (signalStrength >= 80) signalQuality = 'Excelente';
+            else if (signalStrength >= 60) signalQuality = 'Buena';
+            else if (signalStrength >= 40) signalQuality = 'Regular';
+            else signalQuality = 'Débil';
+            connectionText += ` (${signalQuality} - ${signalStrength}%)`;
+        } else if (statusData.signal) {
+            connectionText += ` (${statusData.signal})`;
+        }
+        $('#currentConnection').text(connectionText);
+    } else if (statusData.error) {
+        $('#currentConnection').text('{% trans %}Error{% endtrans %}');
+    } else {
+        $('#currentConnection').text('{% trans %}Not connected{% endtrans %}');
+    }
+}
+
+// Update Network List UI
+function updateNetworkList(networks) {
+    const list = $('#network-list');
+    list.empty();
+    $('#networksCount').text(networks.length);
+
+    if (!networks.length) {
+        list.append(`<div class="list-group-item text-warning text-center"><i class="fas fa-wifi-slash me-2"></i>{% trans %}No WiFi networks found.{% endtrans %}</div>`);
+        return;
+    }
+
+    networks.sort((a, b) => parseInt(b.signal) - parseInt(a.signal)); // Strongest signal first
+    const currentConnectedSSID = (window.currentSSID || '').trim();
+
+    networks.forEach(network => {
+        const signalStrength = parseInt(network.signal);
+        let signalClass = signalStrength > 70 ? 'text-success' : (signalStrength > 40 ? 'text-warning' : 'text-danger');
+        
+        let securityType = 'Open';
+        let securityIcon = 'fa-unlock';
+        if (network.security && network.security.toLowerCase() !== 'open' && network.security.toLowerCase() !== '') {
+            const secLower = network.security.toLowerCase();
+            if (secLower.includes('wpa3')) securityType = 'WPA3';
+            else if (secLower.includes('wpa2')) securityType = 'WPA2';
+            else if (secLower.includes('wpa')) securityType = 'WPA';
+            else if (secLower.includes('wep')) securityType = 'WEP';
+            else securityType = network.security.split('/')[0].toUpperCase(); // Best guess
+            securityIcon = 'fa-lock';
+        }
+        
+        const networkSSID = (network.ssid || '{% trans %}Hidden Network{% endtrans %}').trim();
+        const isConnectedToThisNetwork = currentConnectedSSID && networkSSID && (currentConnectedSSID === networkSSID);
+        const isSavedNetwork = window.savedNetworks && window.savedNetworks.some(savedNetwork => savedNetwork.ssid === networkSSID);
+        const isLastNetwork = window.lastConnected && window.lastConnected.length > 0 && window.lastConnected[0] === networkSSID;
+
+        const listItemHtml = $(`
+            <div class="list-group-item list-group-item-action" data-original-security="${securityType}" data-ssid-name="${networkSSID}">
+                <div class="d-flex w-100 justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1 d-inline-block">
+                            ${networkSSID}
+                            ${isSavedNetwork ? '<i class="fas fa-bookmark text-info ms-1" title="{% trans %}Saved network{% endtrans %}"></i>' : ''}
+                            ${isLastNetwork ? '<i class="fas fa-history text-success ms-1" title="{% trans %}Last connected network{% endtrans %}"></i>' : ''}
+                        </h6>
+                        <div class="d-flex align-items-center mt-1">
+                            <small class="ms-2"><i class="fas ${securityIcon} me-1"></i>${securityType}</small>
+                            <small class="${signalClass} ms-2"><i class="fas fa-signal me-1"></i>${signalStrength}%</small>
+                            ${isSavedNetwork ? '<small class="text-info ms-2"><i class="fas fa-key me-1"></i>{% trans %}Password saved{% endtrans %}</small>' : ''}
+                        </div>
+                    </div>
+                    ${isConnectedToThisNetwork ? 
+                        `<button class="btn btn-sm btn-danger disconnect-btn" data-ssid="${networkSSID}"><i class="fas fa-power-off me-1"></i>{% trans %}Disconnect{% endtrans %}</button>` :
+                        `<button class="btn btn-sm btn-outline-primary connect-btn" data-ssid="${networkSSID}" data-security="${securityType}"><i class="fas fa-plug me-1"></i>{% trans %}Connect{% endtrans %}</button>`
+                    }
+                </div>
+            </div>`);
+        list.append(listItemHtml);
+    });
+}
+
+$(document).ready(function() {
+    // Load initial data
+    loadActivities();
+    loadStatusAndScan(); // Fetches status, then triggers a scan
+    setInterval(refreshWifiStatusAndButtons, 5000); // Periodically refresh status and buttons
+
+    // Toggle Password Visibility
+    $('#togglePwd').click(function() {
+        const pwdInput = $('#connectPassword');
+        const icon = $('#togglePwdIcon');
+        if (pwdInput.attr('type') === 'password') {
+            pwdInput.attr('type', 'text');
+            icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            pwdInput.attr('type', 'password');
+            icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    });
+
+    // Rescan Button
+    $('#rescanBtn').on('click', async function() {
+        const btn = $(this);
+        const originalHtml = btn.html();
+        btn.prop("disabled", true).html('<i class="fas fa-spinner fa-spin me-1"></i> {% trans %}Scanning...{% endtrans %}');
+        $('#network-list').html(`<div class="list-group-item text-center"><div class="spinner-border text-primary mb-2" role="status"><span class="visually-hidden">Loading...</span></div><p class="mb-1">{% trans %}Scanning for WiFi networks...{% endtrans %}</p><small class="text-muted">{% trans %}This may take 10-15 seconds{% endtrans %}</small></div>`);
+
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+            const response = await fetch('/api/wifi/scan', { signal: controller.signal }).finally(() => clearTimeout(timeoutId)); // Replace with your actual API endpoint
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({})); // Try to parse error
+                throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+            }
+            const data = await response.json();
+            if (!data.success) {
+                throw new Error(data.error || '{% trans %}Server did not return valid results{% endtrans %}');
+            }
+            
+            updateNetworkList(data.networks);
+            if (data.networks.length > 0) {
+                const strongestSignal = Math.max(...data.networks.map(n => parseInt(n.signal)));
+                addActivity('scan', `{% trans %}Found{% endtrans %} ${data.networks.length} {% trans %}networks{% endtrans %}`, {
+                    signal: strongestSignal
+                });
+            } else {
+                 addActivity('scan', '{% trans %}No networks found during scan.{% endtrans %}');
+            }
+        } catch (error) {
+            let errorMessage = error.message;
+            let icon = 'fa-exclamation-triangle';
+            if (error.name === 'AbortError') { errorMessage = '{% trans %}Scan timed out. Please try again.{% endtrans %}'; icon = 'fa-clock'; }
+            else if (error.message.includes('Failed to fetch')) { errorMessage = '{% trans %}Connection error with the server.{% endtrans %}'; icon = 'fa-plug';}
+            
+            $('#network-list').html(`<div class="list-group-item text-center text-danger"><i class="fas ${icon} fa-2x mb-2"></i><h5>${errorMessage}</h5><button class="btn btn-sm btn-outline-secondary mt-2" onclick="$('#rescanBtn').click()"><i class="fas fa-redo me-1"></i> {% trans %}Retry{% endtrans %}</button></div>`);
+            addActivity('error', `{% trans %}Scan failed:{% endtrans %} ${errorMessage}`);
+        } finally {
+            btn.prop("disabled", false).html(originalHtml);
+        }
+    });
+
+    // Connect Modal Setup (Delegated)
+    $(document).on('click', '.connect-btn', async function() {
+        const ssid = $(this).data('ssid');
+        const security = $(this).data('security');
+        $('#connectSSID').val(ssid);
+        $('#connectSSIDHidden').val(ssid);
+        $('#connectSecurity').val(security);
+        $('#connectSecurityHidden').val(security);
+        
+        // Restaurar el campo de contraseña y configurarlo según el tipo de seguridad
+        $('#connectPassword').val('').prop('disabled', security === 'Open');
+        $('#passwordField').toggle(security !== 'Open');
+        
+        // Robust check for saved network (object with .ssid property)
+        const isSavedNetwork = Array.isArray(window.savedNetworks) && window.savedNetworks.some(n => n.ssid === ssid);
+        if (isSavedNetwork && security !== 'Open') {
+            try {
+                $('#connectPassword').val('').attr('placeholder', '{% trans %}Loading password...{% endtrans %}');
+                const response = await fetch('/api/wifi/get_password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRFToken': getCSRFToken() || getCookie('csrf_token')
+                    },
+                    body: JSON.stringify({ ssid: ssid })
+                });
+                const data = await response.json();
+                if (data.success && data.password) {
+                    $('#connectPassword').val(data.password);
+                } else {
+                    $('#connectPassword').attr('placeholder', '{% trans %}Enter password{% endtrans %}');
+                }
+            } catch (e) {
+                console.error('Error recuperando contraseña guardada:', e);
+                $('#connectPassword').attr('placeholder', '{% trans %}Enter password{% endtrans %}');
+            }
+        } else {
+            // Not a saved network or open network: always clear password
+            $('#connectPassword').val('').attr('placeholder', '{% trans %}Enter password{% endtrans %}');
+        }
+        
+        $('#connectModal').modal('show');
+    });
+
+    // Disconnect Button (Delegated, as it's dynamically added)
+    $(document).on('click', '.disconnect-btn', async function() {
+        const btn = $(this);
+        const ssidToDisconnect = btn.data('ssid');
+        if (confirm(`{% trans %}Are you sure you want to disconnect from{% endtrans %} ${ssidToDisconnect}?`)) {
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> {% trans %}Disconnecting...{% endtrans %}');
+            try {
+                const response = await fetch('/api/wifi/disconnect', { // Replace with your actual API endpoint
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRFToken': getCSRFToken() || getCookie('csrf_token') },
+                    body: JSON.stringify({ ssid: ssidToDisconnect })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast(`{% trans %}Disconnected from{% endtrans %} ${ssidToDisconnect}`, 'success');
+                    addActivity('disconnect', `{% trans %}Disconnected from{% endtrans %} ${ssidToDisconnect}`, {
+                        duration: calculateConnectionDuration(ssidToDisconnect)
+                    });
+                    await loadStatusAndScan(); // Refresh status and then re-scan/re-draw list
+                } else {
+                    throw new Error(data.error || '{% trans %}Error disconnecting.{% endtrans %}');
+                }
+            } catch (error) {
+                console.error('Error disconnecting:', error);
+                showToast(error.message, 'danger');
+                addActivity('error', `{% trans %}Failed to disconnect from{% endtrans %} ${ssidToDisconnect}: ${error.message}`);
+                btn.prop('disabled', false).html('<i class="fas fa-power-off me-1"></i> {% trans %}Disconnect{% endtrans %}');
+            }
+        }
+    });
+    
+    // Clear History Button
+    $('#clearHistoryBtn').click(function() {
+        if (confirm('{% trans %}Are you sure you want to clear the activity history?{% endtrans %}')) {
+            $('#activity-feed').empty();
+            localStorage.removeItem('wifiActivities');
+            addActivity('info', '{% trans %}Activity log cleared.{% endtrans %}');
+        }
+    });
+
+    // Enable WiFi Buttons (Top and Inline)
+    $(document).on('click', '#enableWifiBtnTop, #enableWifiBtnInline', function() {
+        var btn = $(this);
+        var originalHtml = btn.html();
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> {% trans %}Enabling...{% endtrans %}');
+        $.ajax({
+            url: "/api/v1/wifi/scan", // FastAPI endpoint
+            type: "POST",
+            headers: { 'X-CSRFToken': getCSRFToken() || getCookie('csrf_token') },
+            success: async function(response) {
+                if (response.success) {
+                    showToast('{% trans %}WiFi enabled successfully!{% endtrans %}', 'success');
+                    await loadStatusAndScan(); // Refresh everything
+                } else {
+                    showToast(response.error || '{% trans %}Error enabling WiFi.{% endtrans %}', 'danger');
+                    btn.prop('disabled', false).html(originalHtml);
+                }
+            },
+            error: function() {
+                showToast('{% trans %}Server error enabling WiFi interface.{% endtrans %}', 'danger');
+                btn.prop('disabled', false).html(originalHtml);
+            }
+        });
+    });
+
+    // Cargar las redes guardadas al inicio
+    loadSavedNetworks();
+
+    // Autoconectar a la última red usada
+    attemptAutoConnect();
+
+});
+
+// Toast Notification Function
+function showToast(message, type = 'info') {
+    const toastContainer = $('#toast-container');
+    let bgColorClass = 'bg-info';
+    if (type === 'success') bgColorClass = 'bg-success';
+    else if (type === 'danger') bgColorClass = 'bg-danger';
+    else if (type === 'warning') bgColorClass = 'bg-warning text-dark';
+
+    const toastId = 'toast-' + Date.now();
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white ${bgColorClass} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000" style="min-width:250px;">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" style="color: white; opacity: 1; font-size: 1.2em; padding: 0 8px; border-radius: 50%; background: rgba(255,255,255,0.1); transition: all 0.3s ease;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>`;
+    toastContainer.append(toastHtml);
+    const newToast = new bootstrap.Toast(document.getElementById(toastId));
+    newToast.show();
+    // Remove the toast from DOM after it's hidden
+    $(`#${toastId}`).on('hidden.bs.toast', function () { $(this).remove(); });
+}
+
+// Helper function to calculate connection duration
+function calculateConnectionDuration(ssid) {
+    const connectionStart = localStorage.getItem(`connection_start_${ssid}`);
+    if (connectionStart) {
+        const duration = Math.floor((Date.now() - parseInt(connectionStart)) / 1000);
+        const hours = Math.floor(duration / 3600);
+        const minutes = Math.floor((duration % 3600) / 60);
+        const seconds = duration % 60;
+        return `${hours}h ${minutes}m ${seconds}s`;
+    }
+    return '-';
+}
+
+// Cargar las redes guardadas al inicio
+async function loadSavedNetworks() {
+    try {
+        const response = await fetch('/api/wifi/stored_networks');
+        const data = await response.json();
+        if (data.success) {
+            window.savedNetworks = data.networks || [];
+            window.lastConnected = data.last_connected || [];
+            console.log('Redes guardadas:', window.savedNetworks);
+            console.log('Últimas conexiones:', window.lastConnected);
+        }
+    } catch (e) {
+        console.error('Error cargando redes guardadas:', e);
+        window.savedNetworks = [];
+        window.lastConnected = [];
+    }
+}
+
+// Autoconectar a la última red usada
+async function attemptAutoConnect() {
+    try {
+        // No autoconectar si ya estamos conectados
+        const statusResponse = await fetch('/api/wifi/status');
+        const statusData = await statusResponse.json();
+        if (statusData.connected && statusData.current_connection) {
+            console.log(`Ya conectado a ${statusData.current_connection}, no se intenta autoconexión.`);
+            return;
+        }
+        
+        const response = await fetch('/api/wifi/autoconnect');
+        const data = await response.json();
+        if (data.success) {
+            showToast(`{% trans %}Auto-connected to{% endtrans %} ${data.ssid}`, 'success');
+            addActivity('connect', `{% trans %}Auto-connected to{% endtrans %} ${data.ssid}`);
+            await loadStatusAndScan(); // Actualizar estado
+        } else {
+            console.log('No se pudo autoconectar:', data.message);
+        }
+    } catch (e) {
+        console.error('Error en autoconexión:', e);
+    }
+}
+</script>
+{{ .end }}
+
+{{ define "scripts" }}
+{{ super() }}
+{# Specific scripts for enable_wifi are now in the main script block #}
+{{ .end }}

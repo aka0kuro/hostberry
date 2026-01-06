@@ -1,0 +1,839 @@
+{{ template "base.html" . }}
+
+{{ define "extra_css" }}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+<style>
+  .security-settings-card .card-body {
+    display: flex;
+    flex-direction: column;
+  }
+  .security-settings-card .security-save-wrapper {
+    margin-top: auto;
+  }
+</style>
+{{ .end }}
+
+{{ define "content" }}
+<div class="dashboard-container">
+    <!-- Header Section -->
+    <div class="dashboard-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-12 text-center">
+                <h1 class="dashboard-title">
+                    <i class="bi bi-gear me-2"></i>
+                    {{ call .t "navigation.settings" "Settings" }}
+                </h1>
+                <p class="dashboard-subtitle">{{ call .t "settings.subtitle" "Configure your HostBerry system preferences" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row settings-cards-row">
+        <!-- Configuración General -->
+        <div class="col-12 settings-card general-settings-card">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
+                    <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
+                        <i class="bi bi-gear me-2"></i>{{ call .t "settings.general" "General" }}
+                    </h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <form id="generalConfigForm">
+                        <div class="mb-3">
+                            <label for="language" class="form-label text-white">{{ call .t "settings.language" "Language" }}</label>
+                            <select class="form-select form-select-custom bg-white text-dark border-secondary" id="language" name="language" style="width: 100%; background-color: #ffffff !important;">
+                                {{/* set current_lang  = (settings.language if settings else (language if language else 'es')) or 'es'  */}}
+                                <option value="es" {{ 'selected' if current_lang == 'es' else '' }}>🇪🇸 Español</option>
+                                <option value="en" {{ 'selected' if current_lang == 'en' else '' }}>🇺🇸 English</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="theme" class="form-label text-white">{{ call .t "settings.theme" "Theme" }}</label>
+                            <select class="form-select form-select-custom bg-white text-dark border-secondary" id="theme" name="theme" style="width: 100%; background-color: #ffffff !important;">
+                                {{/* set current_theme  = (settings.theme if settings else 'dark') or 'dark'  */}}
+                                <option value="light" {{ 'selected' if current_theme == 'light' else '' }}>{{ call .t "settings.theme_light" "Light" }}</option>
+                                <option value="dark" {{ 'selected' if current_theme == 'dark' else '' }}>{{ call .t "settings.theme_dark" "Dark" }}</option>
+                                <option value="auto" {{ 'selected' if current_theme == 'auto' else '' }}>{{ call .t "settings.theme_auto" "Auto" }}</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="timezone" class="form-label text-white">{{ call .t "settings.timezone" "Timezone" }}</label>
+                            <div class="timezone-selector-wrapper position-relative" style="width: 100%;">
+                                <input type="text" 
+                                       class="form-control bg-white text-dark border-secondary text-center" 
+                                       id="timezone_search" 
+                                       placeholder="{{ call .t "settings.search_timezone" "Search timezone..." }}"
+                                       autocomplete="off"
+                                       style="background-color: #ffffff !important;">
+                                <input type="hidden" id="timezone" name="timezone" value="{{ (settings.timezone if settings else 'UTC') or 'UTC' }}">
+                                <div class="timezone-dropdown bg-dark border border-secondary rounded mt-1 position-absolute w-100" 
+                                     id="timezone_dropdown" 
+                                     style="display: none; max-height: 300px; overflow-y: auto; z-index: 1000;">
+                                    <div class="text-center text-white-50 p-2">
+                                        <i class="bi bi-arrow-clockwise spinning"></i> {{ call .t "settings.loading_timezones" "Loading timezones..." }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {{ call .t "common.save" "Save" }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración de Red -->
+        <div class="col-12 settings-card">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
+                    <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
+                        <i class="bi bi-wifi me-2"></i>{{ call .t "settings.network" "Network" }}
+                    </h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <form id="networkConfigForm">
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ call .t "settings.dhcp_server" "DHCP Server" }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="dhcp_enabled" name="dhcp_enabled" {{ 'checked' if (network_config.dhcp_enabled if network_config else False) else '' }}>
+                                <label class="form-check-label text-white" for="dhcp_enabled">
+                                    {{ call .t "settings.enable_dhcp" "Enable DHCP server" }}
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="dhcp_interface" class="form-label text-white">{{ call .t "settings.dhcp_interface" "DHCP Interface" }}</label>
+                                <select class="form-select form-select-custom bg-white text-dark border-secondary text-center" id="dhcp_interface" name="dhcp_interface" style="background-color: #ffffff !important;">
+                                    <option value="">{{ call .t "settings.loading_interfaces" "Loading interfaces..." }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="dhcp_range_start" class="form-label text-white">{{ call .t "settings.dhcp_range_start" "Range Start" }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_range_start" name="dhcp_range_start" value="{{ network_config.dhcp_range_start if network_config else '' }}" placeholder="192.168.1.100">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="dhcp_range_end" class="form-label text-white">{{ call .t "settings.dhcp_range_end" "Range End" }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_range_end" name="dhcp_range_end" value="{{ network_config.dhcp_range_end if network_config else '' }}" placeholder="192.168.1.200">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="dhcp_gateway" class="form-label text-white">{{ call .t "settings.dhcp_gateway" "Gateway (router)" }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_gateway" name="dhcp_gateway" value="{{ network_config.dhcp_gateway if network_config else '' }}" placeholder="192.168.1.1">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="dhcp_lease_time" class="form-label text-white">{{ call .t "settings.dhcp_lease_time" "Lease Time" }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_lease_time" name="dhcp_lease_time" value="{{ network_config.dhcp_lease_time if network_config else '12h' }}" placeholder="12h">
+                                <small class="text-white-50">{{ call .t "settings.dhcp_lease_hint" "Example: 12h, 30m, 1d" }}</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="dns_primary" class="form-label text-white">{{ call .t "settings.dns_primary" "Primary DNS" }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary text-center" id="dns_primary" name="dns_primary" placeholder="8.8.8.8">
+                        </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="dns_secondary" class="form-label text-white">{{ call .t "settings.dns_secondary" "Secondary DNS" }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary text-center" id="dns_secondary" name="dns_secondary" placeholder="8.8.4.4">
+                            </div>
+                        </div>
+                        <!-- Campo oculto para mantener compatibilidad con el backend -->
+                        <input type="hidden" id="dns_server" name="dns_server">
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {{ call .t "common.save" "Save" }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración de Seguridad -->
+        <div class="col-lg-6 col-md-12 settings-card security-settings-card">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
+                    <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
+                        <i class="bi bi-shield-check me-2"></i>{{ call .t "settings.security" "Security" }}
+                    </h5>
+                </div>
+                <div class="card-body px-4 pb-4 d-flex flex-column">
+                    <form id="securityConfigForm" class="d-flex flex-column flex-grow-1">
+                        <div class="mb-3">
+                            <label for="max_login_attempts" class="form-label text-white">{{ call .t "settings.max_login_attempts" "Max Login Attempts" }}</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary text-center" id="max_login_attempts" name="max_login_attempts" value="{{ security_config.max_login_attempts if security_config else 3 }}" min="1" max="10">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="session_timeout" class="form-label text-white">{{ call .t "settings.session_timeout" "Session Timeout" }}</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary text-center" id="session_timeout" name="session_timeout" value="{{ security_config.session_timeout if security_config else 30 }}" min="5" max="1440">
+                            <small class="text-white-50">{{ call .t "settings.minutes" "minutes" }}</small>
+                        </div>
+                    </form>
+
+                    <div class="d-grid security-save-wrapper">
+                        <button type="submit" class="btn btn-primary" form="securityConfigForm">
+                            <i class="bi bi-check-circle me-2"></i>
+                            {{ call .t "common.save" "Save" }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración de Rendimiento -->
+        <div class="col-lg-6 col-md-12 settings-card">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
+                    <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
+                        <i class="bi bi-speedometer2 me-2"></i>{{ call .t "settings.performance" "Performance" }}
+                    </h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <form id="performanceConfigForm">
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ call .t "settings.cache" "Cache" }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="cache_enabled" name="cache_enabled" {{ 'checked' if (performance_config.cache_enabled if performance_config else True) else '' }}>
+                                <label class="form-check-label text-white" for="cache_enabled">
+                                    {{ call .t "settings.enable_cache" "Enable cache" }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="cache_size" class="form-label text-white">{{ call .t "settings.cache_size" "Cache Size" }}</label>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" id="cache_size" name="cache_size" value="{{ performance_config.cache_size if performance_config else 50 }}" min="10" max="500">
+                            <small class="text-white-50">{{ call .t "settings.mb" "MB" }}</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ call .t "settings.compression" "Compression" }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="compression_enabled" name="compression_enabled" {{ 'checked' if (performance_config.compression_enabled if performance_config else True) else '' }}>
+                                <label class="form-check-label text-white" for="compression_enabled">
+                                    {{ call .t "settings.enable_compression" "Enable compression" }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {{ call .t "common.save" "Save" }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración de Notificaciones -->
+        <div class="col-12 settings-card">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
+                    <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
+                        <i class="bi bi-bell me-2"></i>{{ call .t "settings.notifications" "Notifications" }}
+                    </h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <form id="notificationConfigForm">
+                        <div class="mb-3">
+                            <label class="form-label text-white d-flex align-items-center justify-content-between">
+                                <span>{{ call .t "settings.email_notifications" "Email Notifications" }}</span>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {{ 'checked' if (notification_config.email_notifications if notification_config else False) else '' }}>
+                                    <label class="form-check-label text-white" for="email_notifications"></label>
+                                </div>
+                                </label>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email_address" class="form-label text-white">{{ call .t "settings.email_address" "Email Address" }}</label>
+                            <input type="email" class="form-control bg-dark text-white border-secondary" id="email_address" name="email_address" value="{{ notification_config.email_address if notification_config else '' }}">
+                        </div>
+
+                        <hr class="border-secondary">
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="smtp_host" class="form-label text-white">{{ call .t "settings.smtp_host" "SMTP Host" }}</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="smtp_host" name="smtp_host" value="{{ notification_config.smtp_host if notification_config else '' }}" placeholder="smtp.gmail.com">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="smtp_port" class="form-label text-white">{{ call .t "settings.smtp_port" "SMTP Port" }}</label>
+                                <input type="number" class="form-control bg-dark text-white border-secondary" id="smtp_port" name="smtp_port" value="{{ notification_config.smtp_port if notification_config else 587 }}" min="1" max="65535">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="smtp_user" class="form-label text-white">{{ call .t "settings.smtp_user" "SMTP User" }}</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="smtp_user" name="smtp_user" value="{{ notification_config.smtp_user if notification_config else '' }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="smtp_password" class="form-label text-white">{{ call .t "settings.smtp_password" "SMTP Password" }}</label>
+                            <input type="password" class="form-control bg-dark text-white border-secondary" id="smtp_password" name="smtp_password" value="{{ notification_config.smtp_password if notification_config else '' }}" autocomplete="new-password">
+                            <small class="text-white-50">{{ call .t "settings.smtp_password_hint" "If you use Gmail, use an App Password" }}</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="smtp_from" class="form-label text-white">{{ call .t "settings.smtp_from" "From Email" }}</label>
+                            <input type="email" class="form-control bg-dark text-white border-secondary" id="smtp_from" name="smtp_from" value="{{ notification_config.smtp_from if notification_config else '' }}" placeholder="hostberry@tu-dominio.com">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ call .t "settings.smtp_tls" "Use TLS (STARTTLS)" }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="smtp_tls" name="smtp_tls" {{ 'checked' if (notification_config.smtp_tls if notification_config else True) else '' }}>
+                                <label class="form-check-label text-white" for="smtp_tls">
+                                    {{ call .t "settings.enable_smtp_tls" "Enable TLS" }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-white">{{ call .t "settings.system_alerts" "System Alerts" }}</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="system_alerts" name="system_alerts" {{ 'checked' if (notification_config.system_alerts if notification_config else True) else '' }}>
+                                <label class="form-check-label text-white" for="system_alerts">
+                                    {{ call .t "settings.enable_system_alerts" "Enable system alerts" }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {{ call .t "common.save" "Save" }}
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="d-grid mt-3">
+                        <button type="button" class="btn btn-outline-info" id="sendTestEmailBtn">
+                            <i class="bi bi-send me-2"></i>
+                            {{ call .t "settings.send_test_email" "Send test email" }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del Sistema -->
+        <div class="col-12 settings-card">
+            <div class="card h-100 glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
+                    <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
+                        <i class="bi bi-info-circle me-2"></i>{{ call .t "settings.about" "About" }}
+                    </h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div class="row">
+                        <div class="col-md-4 mb-3 text-center">
+                            <h6 class="text-white">{{ call .t "settings.version" "Version" }}</h6>
+                            <p class="text-white-50">{{ (version_info.app_version if version_info else '') or (system_info.app_version if system_info else '') or '-' }}</p>
+                            
+                            <h6 class="text-white mt-3">{{ call .t "system.hostname" "Hostname" }}</h6>
+                            <p class="text-white-50">{{ system_info.hostname if system_info else '-' }}</p>
+                            
+                            <h6 class="text-white mt-3">{{ call .t "system.architecture" "Architecture" }}</h6>
+                            <p class="text-white-50">{{ system_info.architecture if system_info else '-' }}</p>
+                        </div>
+                        <div class="col-md-4 mb-3 text-center">
+                            <h6 class="text-white">{{ call .t "system.os" "OS" }}</h6>
+                            <p class="text-white-50">{{ system_info.os_version if system_info else '-' }}</p>
+                            
+                            <h6 class="text-white mt-3">{{ call .t "system.kernel" "Kernel" }}</h6>
+                            <p class="text-white-50">{{ system_info.kernel_version if system_info else '-' }}</p>
+                            
+                            <h6 class="text-white mt-3">{{ call .t "monitoring.processor" "Processor" }}</h6>
+                            <p class="text-white-50">{{ system_info.processor if system_info else '-' }}</p>
+                        </div>
+                        <div class="col-md-4 mb-3 text-center">
+                            <h6 class="text-white">{{ call .t "monitoring.uptime" "Uptime" }}</h6>
+                            <p class="text-white-50" id="about-uptime">--</p>
+                            
+                            <h6 class="text-white mt-3">{{ call .t "system.boot_time" "Boot Time" }}</h6>
+                            <p class="text-white-50" id="about-boot-time">--</p>
+                            
+                            <h6 class="text-white mt-3">{{ call .t "system.python_version" "Python Version" }}</h6>
+                            <p class="text-white-50">{{ system_info.python_version if system_info else '-' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{ .end }}
+
+{{ define "extra_js" }}
+<script>
+(function(){
+  // Notificaciones estilo dashboard (toast)
+  function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+      <div class="notification-content">
+        <span class="notification-message">${message || ''}</span>
+        <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+      </div>
+    `;
+    
+    if (!document.querySelector('#notification-styles')) {
+      const style = document.createElement('style');
+      style.id = 'notification-styles';
+      style.textContent = `
+        .notification {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 9999;
+          min-width: 300px;
+          padding: 1rem;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+          animation: slideInRight 0.3s ease;
+        }
+        .notification-content {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          color: #fff;
+        }
+        .notification-close {
+          background: none;
+          border: none;
+          color: #fff;
+          font-size: 1.2rem;
+          cursor: pointer;
+          padding: 0;
+          margin-left: 1rem;
+        }
+        .notification-success { border-left: 4px solid #198754; }
+        .notification-error { border-left: 4px solid #dc3545; }
+        .notification-warning { border-left: 4px solid #ffc107; }
+        .notification-info { border-left: 4px solid #0dcaf0; }
+        @keyframes slideInRight {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        body.light-theme .notification {
+          background: rgba(255, 255, 255, 0.95);
+          color: #212529;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        body.light-theme .notification-content { color: #212529; }
+        body.light-theme .notification-close { color: #212529; }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      if (notification.parentElement) notification.remove();
+    }, 5000);
+  }
+
+  function t(key, fallback) {
+    return window.HostBerry?.t ? window.HostBerry.t(key, fallback) : (fallback || key);
+  }
+
+  // Función para bindear formularios
+  function bindForm(formId, endpoint){
+    const form = document.getElementById(formId);
+    if(!form) return;
+    
+    form.addEventListener('submit', async function(e){
+      e.preventDefault();
+      
+      // Construir payload robusto (incluye checkboxes aunque estén apagados)
+      const obj = {};
+      const elements = Array.from(form.elements || []);
+      for(const el of elements){
+        if(!el || !el.name || el.disabled) continue;
+        const name = el.name;
+        const type = (el.type || '').toLowerCase();
+        
+        // Omitir dns_primary, dns_secondary y el campo hidden dns_server del loop
+        if(formId === 'networkConfigForm' && (name === 'dns_primary' || name === 'dns_secondary' || (name === 'dns_server' && type === 'hidden'))){
+          continue;
+        }
+        
+        if(type === 'checkbox'){
+          obj[name] = !!el.checked;
+        } else if(type === 'number'){
+          obj[name] = el.value === '' ? null : parseInt(el.value, 10);
+        } else {
+          obj[name] = el.value;
+        }
+      }
+      
+      // Combinar DNS primario y secundario en dns_server para el backend (solo para networkConfigForm)
+      if(formId === 'networkConfigForm'){
+        const dnsPrimary = document.getElementById('dns_primary')?.value?.trim() || '';
+        const dnsSecondary = document.getElementById('dns_secondary')?.value?.trim() || '';
+        if(dnsPrimary){
+          obj['dns_server'] = dnsSecondary ? `${dnsPrimary},${dnsSecondary}` : dnsPrimary;
+        }
+      }
+
+      showNotification(t('settings.saving', 'Saving...'), 'info');
+      
+      try{
+        const resp = await HostBerry.apiRequest(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: obj
+        });
+
+        if(!resp || !resp.ok){
+          const errorData = await resp.json().catch(() => ({}));
+          const errorMsg = errorData.detail || errorData.message || t('errors.configuration_error', 'Error saving configuration');
+          showNotification(errorMsg, 'error');
+          return;
+        }
+
+        const data = await resp.json().catch(() => ({}));
+        let message = data.message || t('settings.saved', 'Settings saved successfully');
+        const extraErrors = Array.isArray(data.errors) ? data.errors.filter(Boolean) : [];
+        if (extraErrors.length && !String(message).includes('Algunos errores')) {
+          message += ` (Algunos errores: ${extraErrors.join(', ')})`;
+        }
+        showNotification(message, extraErrors.length ? 'warning' : 'success');
+          
+        // Aplicar cambios UX
+          if(formId === 'generalConfigForm'){
+            setTimeout(() => {
+              if(obj.language){
+              const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('lang', obj.language);
+                window.location.href = currentUrl.toString();
+              return;
+            }
+            if(obj.theme){
+              if(obj.theme === 'auto'){
+                localStorage.removeItem('theme');
+                window.ThemeManager?.initTheme?.();
+                } else {
+                window.ThemeManager?.setTheme?.(obj.theme);
+              }
+            }
+              if(obj.timezone){
+              showNotification(t('settings.timezone_updated', 'Timezone updated. Changes will take effect on next page reload.'), 'info');
+              // Aplicar en todo el proyecto: recargar para que base.html exporte el nuevo timezone a JS global.
+              setTimeout(() => window.location.reload(), 800);
+            }
+          }, 600);
+        }
+      } catch(error){
+        console.error('Error saving settings:', error);
+        showNotification(t('errors.network_error', 'Network error. Please try again.'), 'error');
+      }
+    });
+  }
+
+  // Bindear todos los formularios
+  bindForm('generalConfigForm', '/api/v1/system/config');
+  bindForm('networkConfigForm', '/api/v1/system/config');
+  bindForm('securityConfigForm', '/api/v1/system/config');
+  bindForm('performanceConfigForm', '/api/v1/system/config');
+  bindForm('notificationConfigForm', '/api/v1/system/config');
+
+  // Email de prueba
+  const testBtn = document.getElementById('sendTestEmailBtn');
+  if (testBtn) {
+    testBtn.addEventListener('click', async function () {
+      try {
+        const to = (document.getElementById('email_address')?.value || '').trim();
+        if (!to) {
+          showNotification(t('settings.test_email_missing_to', 'Please enter an email address first.'), 'warning');
+          return;
+        }
+
+        showNotification(t('settings.sending_test_email', 'Sending test email...'), 'info');
+        const resp = await HostBerry.apiRequest('/api/v1/system/notifications/test-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: { to }
+        });
+        const msg = resp?.message || t('settings.test_email_sent', 'Test email sent.');
+        showNotification(msg, 'success');
+      } catch (e) {
+        console.error('Test email error:', e);
+        const detail = (e && (e.detail || e.message)) ? (e.detail || e.message) : '';
+        showNotification(detail || t('settings.test_email_failed', 'Failed to send test email.'), 'error');
+      }
+    });
+  }
+
+  // Función para formatear uptime
+  function formatUptime(seconds) {
+    if (typeof seconds !== 'number' || !isFinite(seconds) || seconds < 0) return '--';
+    const mins = Math.floor(seconds / 60);
+    const hrs = Math.floor(mins / 60);
+    const days = Math.floor(hrs / 24);
+    const remHrs = hrs % 24;
+    const remMins = mins % 60;
+    if (days > 0) return `${days}d ${remHrs}h ${remMins}m`;
+    if (hrs > 0) return `${hrs}h ${remMins}m`;
+    return `${remMins}m`;
+  }
+
+  // Cargar datos de sistema para "Acerca de"
+  async function loadSystemInfo() {
+    try {
+      const resp = await HostBerry.apiRequest('/api/v1/system/stats', {
+        method: 'GET'
+      });
+      
+      if (resp && resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        
+        // Actualizar uptime
+        const uptimeSeconds = data.uptime_seconds !== undefined ? data.uptime_seconds : data.uptime;
+        if (uptimeSeconds !== undefined && document.getElementById('about-uptime')) {
+          document.getElementById('about-uptime').textContent = formatUptime(uptimeSeconds);
+        }
+        
+        // Actualizar boot time
+        if (data.boot_time && document.getElementById('about-boot-time')) {
+          const bootDate = new Date(data.boot_time * 1000); // Convertir timestamp a milisegundos
+          document.getElementById('about-boot-time').textContent = bootDate.toLocaleString();
+        } else if (uptimeSeconds !== undefined) {
+          // Calcular boot time desde uptime
+          const bootTimestamp = Math.floor(Date.now() / 1000) - uptimeSeconds;
+          const bootDate = new Date(bootTimestamp * 1000);
+          if (document.getElementById('about-boot-time')) {
+            document.getElementById('about-boot-time').textContent = bootDate.toLocaleString();
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading system info:', error);
+    }
+  }
+
+  // Cargar datos al iniciar
+  loadSystemInfo();
+  // Actualizar cada 30 segundos
+  setInterval(loadSystemInfo, 30000);
+
+  // Cargar interfaces de red para el desplegable DHCP
+  async function loadNetworkInterfaces() {
+    const select = document.getElementById('dhcp_interface');
+    if (!select) return;
+
+    try {
+      const resp = await HostBerry.apiRequest('/api/v1/system/network/interfaces', {
+        method: 'GET'
+      });
+
+      if (resp && resp.ok) {
+        const interfaces = await resp.json().catch(() => []);
+        
+        // Limpiar opciones existentes
+        select.innerHTML = '';
+        
+        // Obtener el valor actual del formulario (desde el template)
+        const currentValue = '{{ network_config.dhcp_interface if network_config else "eth0" }}';
+        
+        if (interfaces && interfaces.length > 0) {
+          // Agregar cada interfaz como opción
+          interfaces.forEach(iface => {
+            const option = document.createElement('option');
+            option.value = iface.name;
+            option.textContent = `${iface.name}${iface.ip && iface.ip !== 'N/A' ? ` (${iface.ip})` : ''}`;
+            if (iface.name === currentValue || (currentValue === 'eth0' && iface.name === 'eth0' && !select.value)) {
+              option.selected = true;
+            }
+            select.appendChild(option);
+          });
+        } else {
+          // Fallback si no hay interfaces
+          const option = document.createElement('option');
+          option.value = currentValue || 'eth0';
+          option.textContent = currentValue || 'eth0';
+          option.selected = true;
+          select.appendChild(option);
+        }
+      } else {
+        // Fallback en caso de error
+        const currentValue = '{{ network_config.dhcp_interface if network_config else "eth0" }}';
+        select.innerHTML = `<option value="${currentValue || 'eth0'}" selected>${currentValue || 'eth0'}</option>`;
+      }
+    } catch (error) {
+      console.error('Error loading network interfaces:', error);
+      // Fallback en caso de error
+      const currentValue = '{{ network_config.dhcp_interface if network_config else "eth0" }}';
+      select.innerHTML = `<option value="${currentValue || 'eth0'}" selected>${currentValue || 'eth0'}</option>`;
+    }
+  }
+
+  // Cargar interfaces al iniciar
+  loadNetworkInterfaces();
+
+  // Separar DNS actual en primario y secundario
+  function loadDNSValues() {
+    const dnsServerValue = '{{ network_config.dns_server if network_config else "8.8.8.8" }}';
+    const dnsPrimaryInput = document.getElementById('dns_primary');
+    const dnsSecondaryInput = document.getElementById('dns_secondary');
+    
+    if (dnsServerValue && dnsPrimaryInput && dnsSecondaryInput) {
+      // Separar por coma o espacio
+      const parts = dnsServerValue.split(/[,\s]+/).map(p => p.trim()).filter(p => p);
+      if (parts.length > 0) {
+        dnsPrimaryInput.value = parts[0];
+      }
+      if (parts.length > 1) {
+        dnsSecondaryInput.value = parts[1];
+      }
+    }
+  }
+
+  // Cargar valores DNS al iniciar
+  loadDNSValues();
+
+  // Selector de zona horaria con búsqueda
+  let allTimezones = [];
+  let filteredTimezones = [];
+  const timezoneSearch = document.getElementById('timezone_search');
+  const timezoneHidden = document.getElementById('timezone');
+  const timezoneDropdown = document.getElementById('timezone_dropdown');
+  const currentTimezone = '{{ (settings.timezone if settings else "UTC") or "UTC" }}';
+
+  // Cargar todas las zonas horarias
+  async function loadTimezones() {
+    try {
+      const resp = await HostBerry.apiRequest('/api/v1/system/timezones', {
+        method: 'GET'
+      });
+
+      if (resp && resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        allTimezones = data.timezones || [];
+        
+        // Establecer el valor actual en el campo de búsqueda
+        if (timezoneSearch && currentTimezone) {
+          timezoneSearch.value = currentTimezone;
+        }
+        
+        // Mostrar todas las zonas horarias inicialmente
+        filterTimezones('');
+      } else {
+        // Fallback: usar algunas zonas horarias comunes
+        allTimezones = [
+          'UTC', 'Europe/Madrid', 'Europe/London', 'America/New_York',
+          'America/Los_Angeles', 'America/Mexico_City', 'America/Bogota', 'Asia/Tokyo'
+        ];
+        if (timezoneSearch && currentTimezone) {
+          timezoneSearch.value = currentTimezone;
+        }
+        filterTimezones('');
+      }
+    } catch (error) {
+      console.error('Error loading timezones:', error);
+      // Fallback
+      allTimezones = [
+        'UTC', 'Europe/Madrid', 'Europe/London', 'America/New_York',
+        'America/Los_Angeles', 'America/Mexico_City', 'America/Bogota', 'Asia/Tokyo'
+      ];
+      if (timezoneSearch && currentTimezone) {
+        timezoneSearch.value = currentTimezone;
+      }
+      filterTimezones('');
+    }
+  }
+
+  // Filtrar zonas horarias según la búsqueda
+  function filterTimezones(searchTerm) {
+    if (!timezoneDropdown) return;
+    
+    const term = searchTerm.toLowerCase().trim();
+    filteredTimezones = allTimezones.filter(tz => 
+      tz.toLowerCase().includes(term)
+    ).slice(0, 50); // Limitar a 50 resultados para mejor rendimiento
+
+    // Renderizar resultados
+    if (filteredTimezones.length === 0) {
+      timezoneDropdown.innerHTML = `
+        <div class="text-center text-white-50 p-2">
+          ${t('settings.no_timezone_found', 'No timezone found')}
+        </div>
+      `;
+    } else {
+      timezoneDropdown.innerHTML = filteredTimezones.map(tz => {
+        const isSelected = tz === currentTimezone ? 'bg-primary text-white' : 'text-white';
+        return `
+          <div class="timezone-option p-2 border-bottom border-secondary cursor-pointer ${isSelected}" 
+               data-timezone="${tz}" 
+               style="cursor: pointer;">
+            ${tz}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Agregar event listeners a las opciones
+    timezoneDropdown.querySelectorAll('.timezone-option').forEach(option => {
+      option.addEventListener('click', function() {
+        const selectedTz = this.getAttribute('data-timezone');
+        if (timezoneSearch) timezoneSearch.value = selectedTz;
+        if (timezoneHidden) timezoneHidden.value = selectedTz;
+        timezoneDropdown.style.display = 'none';
+      });
+    });
+  }
+
+  // Event listeners para el campo de búsqueda
+  if (timezoneSearch) {
+    timezoneSearch.addEventListener('input', function(e) {
+      const searchTerm = e.target.value;
+      filterTimezones(searchTerm);
+      if (searchTerm && timezoneDropdown) {
+        timezoneDropdown.style.display = 'block';
+      } else if (!searchTerm && timezoneDropdown) {
+        timezoneDropdown.style.display = 'none';
+      }
+    });
+
+    timezoneSearch.addEventListener('focus', function() {
+      if (this.value && timezoneDropdown) {
+        filterTimezones(this.value);
+        timezoneDropdown.style.display = 'block';
+      }
+    });
+
+    // Cerrar dropdown al hacer clic fuera
+    document.addEventListener('click', function(e) {
+      if (timezoneDropdown && timezoneSearch && 
+          !timezoneDropdown.contains(e.target) && 
+          e.target !== timezoneSearch) {
+        timezoneDropdown.style.display = 'none';
+      }
+    });
+  }
+
+  // Cargar zonas horarias al iniciar
+  loadTimezones();
+})();
+</script>
+{{ .end }}

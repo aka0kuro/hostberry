@@ -1,0 +1,486 @@
+{{ template "base.html" . }}
+
+{{ define "content" }}
+<div class="row">
+    <!-- Vista General de AdBlock -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-shield-x"></i>
+                    {{ t('adblock.overview') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <i class="bi bi-list text-primary" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">{{ t('adblock.lists') }}</h6>
+                            <h4 class="text-primary">{{ adblock_stats.lists_count | default(3) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <i class="bi bi-globe text-success" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">{{ t('adblock.domains') }}</h6>
+                            <h4 class="text-success">{{ adblock_stats.domains_count | default(50000) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <i class="bi bi-shield-check text-warning" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">{{ t('adblock.blocked_domains') }}</h6>
+                            <h4 class="text-warning">{{ adblock_stats.blocked_count | default(1500) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <i class="bi bi-clock text-info" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">{{ t('adblock.last_update') }}</h6>
+                            <h4 class="text-info">{{ or .adblock_stats.last_update "2 horas" }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estado de AdBlock -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-heart-pulse"></i>
+                    {{ t('adblock.status') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-{{ 'online' if adblock_status.enabled else 'offline' }}"></span>
+                    <span>{{ t('adblock.adblock_enabled' if adblock_status.enabled else 'adblock.adblock_disabled') }}</span>
+                </div>
+                
+                <div class="d-flex align-items-center mb-3">
+                    <span class="status-indicator status-{{ 'online' if adblock_status.running else 'offline' }}"></span>
+                    <span>{{ t('adblock.adblock_running' if adblock_status.running else 'adblock.adblock_stopped') }}</span>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">{{ t('adblock.blocked_today') }}</label>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-shield-x text-danger me-2"></i>
+                        <span class="h6 mb-0">{{ adblock_status.blocked_today | default(45) }}</span>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">{{ t('adblock.whitelisted_domains') }}</label>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-shield-check text-success me-2"></i>
+                        <span class="h6 mb-0">{{ adblock_status.whitelisted_count | default(25) }}</span>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-success" onclick="toggleAdBlock()">
+                        <i class="bi bi-shield-x"></i>
+                        {{ t('adblock.enable_adblock') if not adblock_status.enabled else t('adblock.disable_adblock') }}
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="updateLists()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                        {{ t('adblock.update_lists') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listas de AdBlock -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-list"></i>
+                    {{ t('adblock.lists') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>{{ t('adblock.list_name') }}</th>
+                                <th>{{ t('adblock.list_status') }}</th>
+                                <th>{{ t('adblock.list_domains') }}</th>
+                                <th>{{ t('adblock.list_last_update') }}</th>
+                                <th>{{ t('common.actions') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listsTable">
+                            <!-- Las listas se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuración de AdBlock -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-gear"></i>
+                    {{ t('adblock.configuration') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="adblockConfigForm">
+                    <div class="mb-3">
+                        <label for="update_interval" class="form-label">{{ t('adblock.update_interval') }}</label>
+                        <select class="form-select" id="update_interval" name="update_interval">
+                            <option value="daily" {{ 'selected' if adblock_config.update_interval == 'daily' else '' }}>Daily</option>
+                            <option value="weekly" {{ 'selected' if adblock_config.update_interval == 'weekly' else '' }}>Weekly</option>
+                            <option value="monthly" {{ 'selected' if adblock_config.update_interval == 'monthly' else '' }}>Monthly</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="max_lists" class="form-label">{{ t('adblock.max_lists') }}</label>
+                        <input type="number" class="form-control" id="max_lists" name="max_lists" value="{{ adblock_config.max_lists | default(5) }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="cache_size" class="form-label">{{ t('adblock.cache_size') }}</label>
+                        <input type="number" class="form-control" id="cache_size" name="cache_size" value="{{ adblock_config.cache_size | default(50) }}">
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            {{ t('common.save') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dominios Bloqueados -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-shield-x"></i>
+                    {{ t('adblock.blocked_domains') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>{{ t('adblock.domain_name') }}</th>
+                                <th>{{ t('adblock.domain_status') }}</th>
+                                <th>{{ t('common.actions') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="domainsTable">
+                            <!-- Los dominios se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas de AdBlock -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-graph-up"></i>
+                    {{ t('adblock.statistics') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <h6>{{ t('adblock.total_blocked') }}</h6>
+                            <h4 class="text-danger">{{ or .adblock_stats.total_blocked "1500" }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <h6>{{ t('adblock.blocked_today') }}</h6>
+                            <h4 class="text-warning">{{ or .adblock_stats.blocked_today "45" }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <h6>{{ t('adblock.whitelisted') }}</h6>
+                            <h4 class="text-success">{{ or .adblock_stats.whitelisted "25" }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <h6>{{ t('adblock.uptime') }}</h6>
+                            <h4 class="text-info">{{ or .adblock_stats.uptime "10 días" }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Función para cargar listas de AdBlock
+async function loadLists() {
+    try {
+        const response = await fetch('/api/v1/adblock/lists', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const lists = await response.json();
+            const tbody = document.getElementById('listsTable');
+            tbody.innerHTML = '';
+            
+            lists.forEach(list => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${list.name}</td>
+                    <td>
+                        <span class="badge bg-${list.enabled ? 'success' : 'danger'}">
+                            ${list.enabled ? 'Enabled' : 'Disabled'}
+                        </span>
+                    </td>
+                    <td>${list.domains_count}</td>
+                    <td>${list.last_update}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="toggleList('${list.name}')">
+                            <i class="bi bi-${list.enabled ? 'pause' : 'play'}"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading lists:', error);
+    }
+}
+
+// Función para cargar dominios bloqueados
+async function loadDomains() {
+    try {
+        const response = await fetch('/api/v1/adblock/domains', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const domains = await response.json();
+            const tbody = document.getElementById('domainsTable');
+            tbody.innerHTML = '';
+            
+            domains.slice(0, 10).forEach(domain => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${domain.name}</td>
+                    <td>
+                        <span class="badge bg-${domain.blocked ? 'danger' : 'success'}">
+                            ${domain.blocked ? 'Blocked' : 'Allowed'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-${domain.blocked ? 'success' : 'danger'}" onclick="toggleDomain('${domain.name}')">
+                            <i class="bi bi-${domain.blocked ? 'check' : 'x'}"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading domains:', error);
+    }
+}
+
+// Función para alternar AdBlock
+async function toggleAdBlock() {
+    try {
+        const response = await fetch('/api/v1/adblock/toggle', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+        
+        if (response.ok) {
+            showAlert('success', t('messages.operation_successful'));
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showAlert('danger', t('errors.operation_failed'));
+        }
+    } catch (error) {
+        showAlert('danger', t('errors.network_error'));
+    }
+}
+
+// Función para actualizar listas
+async function updateLists() {
+    try {
+        const response = await fetch('/api/v1/adblock/update', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+        
+        if (response.ok) {
+            showAlert('info', t('adblock.updating_lists'));
+            setTimeout(() => {
+                loadLists();
+            }, 5000);
+        } else {
+            showAlert('danger', t('errors.operation_failed'));
+        }
+    } catch (error) {
+        showAlert('danger', t('errors.network_error'));
+    }
+}
+
+// Función para alternar lista
+async function toggleList(listName) {
+    try {
+        const response = await fetch(`/api/v1/adblock/lists/${listName}/toggle`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+        
+        if (response.ok) {
+            showAlert('success', t('messages.operation_successful'));
+            setTimeout(() => {
+                loadLists();
+            }, 1000);
+        } else {
+            showAlert('danger', t('errors.operation_failed'));
+        }
+    } catch (error) {
+        showAlert('danger', t('errors.network_error'));
+    }
+}
+
+// Función para alternar dominio
+async function toggleDomain(domainName) {
+    try {
+        const response = await fetch(`/api/v1/adblock/domains/${domainName}/toggle`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+        
+        if (response.ok) {
+            showAlert('success', t('messages.operation_successful'));
+            setTimeout(() => {
+                loadDomains();
+            }, 1000);
+        } else {
+            showAlert('danger', t('errors.operation_failed'));
+        }
+    } catch (error) {
+        showAlert('danger', t('errors.network_error'));
+    }
+}
+
+// Función para guardar configuración de AdBlock
+document.getElementById('adblockConfigForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        update_interval: formData.get('update_interval'),
+        max_lists: parseInt(formData.get('max_lists')),
+        cache_size: parseInt(formData.get('cache_size'))
+    };
+    
+    try {
+        const response = await fetch('/api/v1/adblock/config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            showAlert('success', t('messages.changes_saved'));
+        } else {
+            showAlert('danger', t('errors.configuration_error'));
+        }
+    } catch (error) {
+        showAlert('danger', t('errors.network_error'));
+    }
+});
+
+// Función para mostrar alertas
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Función de traducción para JavaScript
+function t(key, defaultValue = '') {
+    const keys = key.split('.');
+    let value = window.translations;
+    
+    for (const k of keys) {
+        if (value && typeof value === 'object' && k in value) {
+            value = value[k];
+        } else {
+            return defaultValue || key;
+        }
+    }
+    
+    return typeof value === 'string' ? value : (defaultValue || key);
+}
+
+// Cargar datos al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    loadLists();
+    loadDomains();
+    
+    // Auto-refresh cada 30 segundos
+    setInterval(() => {
+        loadLists();
+        loadDomains();
+    }, 30000);
+});
+</script>
+{{ .end }}
