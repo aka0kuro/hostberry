@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"os/signal"
@@ -201,11 +202,23 @@ func setupRoutes(app *fiber.App) {
 	app.Get("/health/ready", readinessCheckHandler)
 	app.Get("/health/live", livenessCheckHandler)
 
-	// Archivos estáticos
-	app.Static("/static", "./website/static", fiber.Static{
-		Compress:  true,
-		ByteRange: true,
-	})
+	// Archivos estáticos embebidos
+	staticFS, err := fs.Sub(staticFS, "website/static")
+	if err != nil {
+		log.Printf("⚠️  Error preparando archivos estáticos embebidos: %v", err)
+		// Fallback a sistema de archivos si existe
+		if _, err := os.Stat("./website/static"); err == nil {
+			app.Static("/static", "./website/static", fiber.Static{
+				Compress:  true,
+				ByteRange: true,
+			})
+		}
+	} else {
+		app.StaticFS("/static", staticFS, fiber.Static{
+			Compress:  true,
+			ByteRange: true,
+		})
+	}
 
 	// Rutas web
 	web := app.Group("/")
