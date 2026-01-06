@@ -20,6 +20,18 @@ func loginAPIHandler(c *fiber.Ctx) error {
 		})
 	}
 
+	// Validar username
+	if err := ValidateUsername(req.Username); err != nil {
+		return err
+	}
+
+	// Validar password (solo formato, no longitud mínima para login)
+	if req.Password == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "La contraseña es requerida",
+		})
+	}
+
 	user, token, err := Login(req.Username, req.Password)
 	if err != nil {
 		return c.Status(401).JSON(fiber.Map{
