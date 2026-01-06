@@ -43,7 +43,7 @@ func loginAPIHandler(c *fiber.Ctx) error {
 	InsertLog("INFO", "Usuario autenticado: "+user.Username, "auth", &userID)
 
 	return c.JSON(fiber.Map{
-		"token":    token,
+		"access_token":    token,
 		"user": fiber.Map{
 			"id":       user.ID,
 			"username": user.Username,
