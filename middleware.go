@@ -98,7 +98,9 @@ func errorHandler(c *fiber.Ctx, err error) error {
 		message = e.Message
 	}
 
-	// Log del error
+	// Log detallado del error
+	log.Printf("❌ Error en %s %s: %v", c.Method(), c.Path(), err)
+	
 	userID := c.Locals("user_id")
 	var userIDPtr *int
 	if userID != nil {
@@ -121,13 +123,24 @@ func errorHandler(c *fiber.Ctx, err error) error {
 			"error":   message,
 			"path":    c.Path(),
 			"method":  c.Method(),
+			"details": err.Error(),
 		})
 	}
 
-	// Si es una página web, renderizar página de error
-	return renderTemplate(c, "error", fiber.Map{
+	// Si es una página web, intentar renderizar página de error
+	// Si falla el render, retornar error simple
+	if renderErr := renderTemplate(c, "error", fiber.Map{
 		"Title":   "Error",
 		"Code":    code,
 		"Message": message,
-	})
+		"Details": err.Error(),
+	}); renderErr != nil {
+		log.Printf("❌ Error al renderizar página de error: %v", renderErr)
+		// Fallback: retornar HTML simple
+		return c.Status(code).SendString(fmt.Sprintf(
+			"<html><body><h1>Error %d</h1><p>%s</p><p>%s</p></body></html>",
+			code, message, err.Error(),
+		))
+	}
+	return nil
 }
