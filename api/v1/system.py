@@ -643,12 +643,17 @@ async def update_system_config(
                                     if "sudo" in combined.lower() and ("password" in combined.lower() or "a password is required" in combined.lower()):
                                         errors.append(get_text("update.sudo_error", default="Permisos insuficientes (sudo requerido)"))
                                     else:
-                                        errors.append(get_text("settings.timezone_apply_failed", default="No se pudo aplicar la zona horaria al sistema"))
+                                        base_msg = get_text("settings.timezone_apply_failed", default="No se pudo aplicar la zona horaria al sistema")
                                         if combined:
+                                            details = combined[:200]
+                                            errors.append(f"{base_msg}: {details}")
                                             logger.warning(f"Error aplicando timezone al sistema: {combined}")
+                                        else:
+                                            errors.append(base_msg)
                         except Exception as tz_err:
                             logger.warning(f"Excepción aplicando timezone al sistema: {tz_err}")
-                            errors.append(get_text("settings.timezone_apply_failed", default="No se pudo aplicar la zona horaria al sistema"))
+                            base_msg = get_text("settings.timezone_apply_failed", default="No se pudo aplicar la zona horaria al sistema")
+                            errors.append(f"{base_msg}: {str(tz_err)[:200]}")
 
                     # Aplicar firewall (UFW) al sistema si corresponde
                     if key == "firewall_enabled":
