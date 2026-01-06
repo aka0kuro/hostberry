@@ -272,11 +272,13 @@ create_database() {
         print_info "Base de datos existente encontrada: $DB_FILE"
         chown "$USER_NAME:$GROUP_NAME" "$DB_FILE"
         chmod 644 "$DB_FILE"
+        print_warning "Si la BD tiene datos antiguos, el usuario admin puede no crearse automáticamente"
     else
         print_info "Base de datos se creará automáticamente al iniciar el servicio"
+        print_info "El usuario admin se creará automáticamente si la BD está vacía"
     fi
     
-    print_success "Directorio de base de datos preparado"
+    print_success "Directorio de base de datos preparado: $DATA_DIR"
 }
 
 # Crear servicio systemd
