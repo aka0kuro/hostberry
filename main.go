@@ -189,6 +189,12 @@ func createApp() *fiber.App {
 	// Middleware de idioma (debe ir antes de las rutas)
 	app.Use(LanguageMiddleware)
 
+	// Middleware de Request ID para tracing
+	app.Use(requestIDMiddleware)
+
+	// Rate limiting (solo para APIs)
+	app.Use("/api/", rateLimitMiddleware)
+
 	return app
 }
 
