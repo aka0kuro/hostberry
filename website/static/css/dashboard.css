@@ -1614,23 +1614,29 @@ body:not(.light-theme) .form-select-sm {
     justify-content: space-between;
 }
 
-/* Bajar el botón Save en Security */
+/* Bajar el botón Save en Security al borde inferior */
+.security-settings-card .card-body {
+    padding-bottom: 1rem !important;
+}
+
+.security-settings-card form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 100%;
+}
+
 .security-settings-card form .d-grid {
     margin-top: auto;
-    padding-top: 2rem;
+    margin-bottom: 0;
+    padding-top: 0;
 }
 
-/* Asegurar que General tenga el mismo tamaño y ancho que los demás */
+/* General ocupa todo el ancho */
 .general-settings-card {
-    flex: 0 0 50%;
-    max-width: 50%;
-}
-
-@media (max-width: 991px) {
-    .general-settings-card {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
 }
 
 .general-settings-card .card {
