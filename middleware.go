@@ -70,6 +70,12 @@ func loggingMiddleware(c *fiber.Ctx) error {
 	// Log después de procesar
 	duration := time.Since(start)
 	
+	// Capturar valores del contexto ANTES de la goroutine
+	// (el contexto no es seguro para usar en goroutines)
+	method := c.Method()
+	path := c.Path()
+	ip := c.IP()
+	
 	userID := c.Locals("user_id")
 	var userIDPtr *int
 	if userID != nil {
@@ -81,7 +87,7 @@ func loggingMiddleware(c *fiber.Ctx) error {
 	go func() {
 		InsertLog(
 			"INFO",
-			c.Method()+" "+c.Path()+" - "+c.IP()+" - "+duration.String(),
+			method+" "+path+" - "+ip+" - "+duration.String(),
 			"http",
 			userIDPtr,
 		)
@@ -100,8 +106,14 @@ func errorHandler(c *fiber.Ctx, err error) error {
 		message = e.Message
 	}
 
+	// Capturar valores del contexto ANTES de la goroutine
+	// (el contexto no es seguro para usar en goroutines)
+	method := c.Method()
+	path := c.Path()
+	errMsg := err.Error()
+	
 	// Log detallado del error
-	log.Printf("❌ Error en %s %s: %v", c.Method(), c.Path(), err)
+	log.Printf("❌ Error en %s %s: %v", method, path, err)
 	
 	userID := c.Locals("user_id")
 	var userIDPtr *int
@@ -113,7 +125,7 @@ func errorHandler(c *fiber.Ctx, err error) error {
 	go func() {
 		InsertLog(
 			"ERROR",
-			"Error en "+c.Path()+": "+err.Error(),
+			"Error en "+path+": "+errMsg,
 			"http",
 			userIDPtr,
 		)
