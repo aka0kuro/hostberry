@@ -274,64 +274,21 @@ func indexHandler(c *fiber.Ctx) error {
 }
 
 func dashboardHandler(c *fiber.Ctx) error {
-	language := GetCurrentLanguage(c)
-	i18nFuncs := TemplateFuncs(c)
-	
-	// Convertir traducciones a JSON para JavaScript
-	translationsJSON, _ := json.Marshal(i18nFuncs["translations"])
-	
-	data := fiber.Map{
-		"Title":         T(c, "dashboard.title", "Dashboard"),
-		"language":      language,
-		"current_user": c.Locals("user"),
-		"translations_json": string(translationsJSON),
-	}
-	
-	// Agregar funciones i18n
-	for k, v := range i18nFuncs {
-		data[k] = v
-	}
-	
-	return c.Render("dashboard", data)
+	return renderTemplate(c, "dashboard", fiber.Map{
+		"Title": T(c, "dashboard.title", "Dashboard"),
+	})
 }
 
 func loginHandler(c *fiber.Ctx) error {
-	language := GetCurrentLanguage(c)
-	i18nFuncs := TemplateFuncs(c)
-	
-	data := fiber.Map{
-		"Title":    T(c, "auth.login", "Login"),
-		"language": language,
-	}
-	
-	// Agregar funciones i18n
-	for k, v := range i18nFuncs {
-		data[k] = v
-	}
-	
-	return c.Render("login", data)
+	return renderTemplate(c, "login", fiber.Map{
+		"Title": T(c, "auth.login", "Login"),
+	})
 }
 
 func settingsHandler(c *fiber.Ctx) error {
-	language := GetCurrentLanguage(c)
-	i18nFuncs := TemplateFuncs(c)
-	
-	// Convertir traducciones a JSON para JavaScript
-	translationsJSON, _ := json.Marshal(i18nFuncs["translations"])
-	
-	data := fiber.Map{
-		"Title":            T(c, "navigation.settings", "Settings"),
-		"language":         language,
-		"current_user":     c.Locals("user"),
-		"translations_json": string(translationsJSON),
-	}
-	
-	// Agregar funciones i18n
-	for k, v := range i18nFuncs {
-		data[k] = v
-	}
-	
-	return c.Render("settings", data)
+	return renderTemplate(c, "settings", fiber.Map{
+		"Title": T(c, "navigation.settings", "Settings"),
+	})
 }
 
 // Handlers de API que usan Lua
