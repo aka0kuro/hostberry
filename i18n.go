@@ -217,6 +217,12 @@ func isLanguageSupported(lang string) bool {
 
 // T es un helper para obtener traducciones en templates
 func T(c *fiber.Ctx, key string, defaultValue string) string {
+	if i18nManager == nil {
+		if defaultValue != "" {
+			return defaultValue
+		}
+		return key
+	}
 	language := GetCurrentLanguage(c)
 	return i18nManager.GetText(key, language, defaultValue)
 }
@@ -224,6 +230,33 @@ func T(c *fiber.Ctx, key string, defaultValue string) string {
 // TemplateFuncs retorna funciones para usar en templates
 func TemplateFuncs(c *fiber.Ctx) fiber.Map {
 	language := GetCurrentLanguage(c)
+	
+	// Si i18nManager no está inicializado, retornar funciones vacías pero seguras
+	if i18nManager == nil {
+		return fiber.Map{
+			"t": func(key string, defaultValue ...string) string {
+				if len(defaultValue) > 0 {
+					return defaultValue[0]
+				}
+				return key
+			},
+			"language": language,
+			"translations": make(map[string]interface{}),
+			"common": make(map[string]interface{}),
+			"navigation": make(map[string]interface{}),
+			"dashboard": make(map[string]interface{}),
+			"auth": make(map[string]interface{}),
+			"system": make(map[string]interface{}),
+			"network": make(map[string]interface{}),
+			"wifi": make(map[string]interface{}),
+			"vpn": make(map[string]interface{}),
+			"wireguard": make(map[string]interface{}),
+			"adblock": make(map[string]interface{}),
+			"settings": make(map[string]interface{}),
+			"errors": make(map[string]interface{}),
+		}
+	}
+
 	translations := i18nManager.GetTranslations(language)
 
 	return fiber.Map{
