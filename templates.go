@@ -137,7 +137,18 @@ func renderTemplate(c *fiber.Ctx, name string, data fiber.Map) error {
 		data["current_user"] = user
 	}
 	
-	return c.Render(name, data)
+	// Intentar renderizar el template
+	if err := c.Render(name, data); err != nil {
+		log.Printf("❌ Error renderizando template '%s': %v", name, err)
+		// Intentar con extensión .html si no se especificó
+		if !strings.HasSuffix(name, ".html") {
+			if err2 := c.Render(name+".html", data); err2 == nil {
+				return nil
+			}
+		}
+		return err
+	}
+	return nil
 }
 
 // copyStaticFiles copia archivos estáticos al directorio de Go
