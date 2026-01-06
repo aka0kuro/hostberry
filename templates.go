@@ -68,8 +68,8 @@ func createTemplateEngine() *html.Engine {
 		
 		// Añadir ruta relativa al final (menos confiable)
 		paths = append(paths, "./website/templates")
-	
-	for _, path := range paths {
+		
+		for _, path := range paths {
 		if stat, err := os.Stat(path); err == nil {
 			if stat.IsDir() {
 				// Verificar que hay archivos .html en el directorio
