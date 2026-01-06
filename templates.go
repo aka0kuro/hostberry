@@ -14,11 +14,27 @@ import (
 
 // createTemplateEngine crea el motor de templates con funciones personalizadas
 func createTemplateEngine() *html.Engine {
-	// Crear engine
-	engine := html.New("./website/templates", ".html")
+	var engine *html.Engine
 	
-	// Configurar reload solo en desarrollo
-	engine.Reload(!appConfig.Server.Debug)
+	// Intentar usar templates embebidos primero
+	if templatesFS != nil {
+		// Crear sub-FS para templates
+		tmplFS, err := fs.Sub(templatesFS, "website/templates")
+		if err == nil {
+			engine = html.NewFileSystem(http.FS(tmplFS), ".html")
+		}
+	}
+	
+	// Fallback a sistema de archivos si los embebidos fallan
+	if engine == nil {
+		if _, err := os.Stat("./website/templates"); err == nil {
+			engine = html.New("./website/templates", ".html")
+			// Configurar reload solo en desarrollo
+			engine.Reload(!appConfig.Server.Debug)
+		} else {
+			log.Fatal("No se encontraron templates ni embebidos ni en sistema de archivos")
+		}
+	}
 	
 	// Agregar funciones personalizadas a los templates
 	engine.AddFunc("t", func(key string, defaultValue ...string) string {
