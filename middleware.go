@@ -11,13 +11,16 @@ import (
 
 // requireAuth middleware que requiere autenticación
 func requireAuth(c *fiber.Ctx) error {
-	// Obtener token del header Authorization
-	authHeader := c.Get("Authorization")
-	if authHeader == "" {
-		return c.Status(401).JSON(fiber.Map{
-			"error": "No autorizado - token requerido",
-		})
-	}
+	// Para rutas web, verificar si hay usuario en el contexto (de cookie/sesión)
+	// Para APIs, verificar token en header
+	if strings.HasPrefix(c.Path(), "/api/") {
+		// API: requiere token en header
+		authHeader := c.Get("Authorization")
+		if authHeader == "" {
+			return c.Status(401).JSON(fiber.Map{
+				"error": "No autorizado - token requerido",
+			})
+		}
 
 	// Extraer token (formato: "Bearer <token>")
 	parts := strings.Split(authHeader, " ")
