@@ -203,7 +203,7 @@ func setupRoutes(app *fiber.App) {
 	app.Get("/health/live", livenessCheckHandler)
 
 	// Archivos estáticos embebidos
-	staticFS, err := fs.Sub(staticFS, "website/static")
+	staticSubFS, err := fs.Sub(staticFS, "website/static")
 	if err != nil {
 		log.Printf("⚠️  Error preparando archivos estáticos embebidos: %v", err)
 		// Fallback a sistema de archivos si existe
@@ -212,9 +212,11 @@ func setupRoutes(app *fiber.App) {
 				Compress:  true,
 				ByteRange: true,
 			})
+		} else {
+			log.Printf("⚠️  No se encontraron archivos estáticos ni embebidos ni en filesystem")
 		}
 	} else {
-		app.StaticFS("/static", staticFS, fiber.Static{
+		app.StaticFS("/static", staticSubFS, fiber.Static{
 			Compress:  true,
 			ByteRange: true,
 		})
