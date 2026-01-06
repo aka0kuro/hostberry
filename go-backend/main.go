@@ -160,8 +160,7 @@ func loadConfig() error {
 
 func createApp() *fiber.App {
 	// Configurar templates
-	engine := html.NewFileSystem(http.FS(templatesFS), ".html")
-	engine.Reload(true) // Solo en desarrollo
+	engine := createTemplateEngine()
 
 	app := fiber.New(fiber.Config{
 		Views:        engine,
