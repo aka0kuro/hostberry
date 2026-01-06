@@ -89,6 +89,9 @@ func main() {
 		log.Fatalf("Error inicializando base de datos: %v", err)
 	}
 
+	// Crear usuario admin por defecto si no existe
+	createDefaultAdmin()
+
 	// Crear aplicación Fiber
 	app := createApp()
 
@@ -303,8 +306,9 @@ func systemStatsHandler(c *fiber.Ctx) error {
 func systemRestartHandler(c *fiber.Ctx) error {
 	if luaEngine != nil {
 		// Ejecutar script Lua para reiniciar el sistema
+		user := c.Locals("user").(*User)
 		result, err := luaEngine.Execute("system_restart.lua", fiber.Map{
-			"user": c.Locals("user"),
+			"user": user.Username,
 		})
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{
@@ -341,38 +345,8 @@ func securityMiddleware(c *fiber.Ctx) error {
 	c.Set("X-Content-Type-Options", "nosniff")
 	c.Set("X-Frame-Options", "DENY")
 	c.Set("X-XSS-Protection", "1; mode=block")
+	c.Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 	return c.Next()
-}
-
-func requireAuth(c *fiber.Ctx) error {
-	// Verificar token JWT
-	token := c.Get("Authorization")
-	if token == "" {
-		return c.Status(401).JSON(fiber.Map{
-			"error": "No autorizado",
-		})
-	}
-	// Validar token y agregar usuario a locals
-	// c.Locals("user", user)
-	return c.Next()
-}
-
-func errorHandler(c *fiber.Ctx, err error) error {
-	code := fiber.StatusInternalServerError
-	if e, ok := err.(*fiber.Error); ok {
-		code = e.Code
-	}
-	return c.Status(code).JSON(fiber.Map{
-		"error": err.Error(),
-	})
-}
-
-// Funciones auxiliares
-func initDatabase() error {
-	// Inicializar base de datos según configuración
-	log.Println("📦 Inicializando base de datos...")
-	// Implementar según tipo de BD
-	return nil
 }
 
 func getSystemStats() fiber.Map {
