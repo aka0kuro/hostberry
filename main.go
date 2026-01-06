@@ -338,7 +338,13 @@ func setupRoutes(app *fiber.App) {
 
 // Handlers básicos
 func indexHandler(c *fiber.Ctx) error {
-	return c.Redirect("/dashboard")
+	// Verificar si el usuario está autenticado
+	if user := c.Locals("user"); user != nil {
+		// Usuario autenticado, redirigir a dashboard
+		return c.Redirect("/dashboard")
+	}
+	// Usuario no autenticado, redirigir a login
+	return c.Redirect("/login")
 }
 
 func dashboardHandler(c *fiber.Ctx) error {
