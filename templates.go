@@ -70,35 +70,36 @@ func createTemplateEngine() *html.Engine {
 		paths = append(paths, "./website/templates")
 		
 		for _, path := range paths {
-		if stat, err := os.Stat(path); err == nil {
-			if stat.IsDir() {
-				// Verificar que hay archivos .html en el directorio
-				if entries, err := os.ReadDir(path); err == nil {
-					htmlFiles := 0
-					for _, entry := range entries {
-						if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".html") {
-							htmlFiles++
-						}
-					}
-					if htmlFiles > 0 {
-						engine = html.New(path, ".html")
-						if engine == nil {
-							log.Printf("❌ Error: engine es nil después de html.New para %s", path)
-							continue
-						}
-						engine.Reload(!appConfig.Server.Debug)
-						log.Printf("✅ Templates cargados desde sistema de archivos: %s (%d archivos .html)", path, htmlFiles)
-						// Listar algunos archivos para verificación
-						if htmlFiles <= 5 {
-							for _, entry := range entries {
-								if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".html") {
-									log.Printf("   - %s", entry.Name())
-								}
+			if stat, err := os.Stat(path); err == nil {
+				if stat.IsDir() {
+					// Verificar que hay archivos .html en el directorio
+					if entries, err := os.ReadDir(path); err == nil {
+						htmlFiles := 0
+						for _, entry := range entries {
+							if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".html") {
+								htmlFiles++
 							}
 						}
-						return engine
-					} else {
-						log.Printf("⚠️  Directorio %s existe pero no contiene archivos .html", path)
+						if htmlFiles > 0 {
+							engine = html.New(path, ".html")
+							if engine == nil {
+								log.Printf("❌ Error: engine es nil después de html.New para %s", path)
+								continue
+							}
+							engine.Reload(!appConfig.Server.Debug)
+							log.Printf("✅ Templates cargados desde sistema de archivos: %s (%d archivos .html)", path, htmlFiles)
+							// Listar algunos archivos para verificación
+							if htmlFiles <= 5 {
+								for _, entry := range entries {
+									if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".html") {
+										log.Printf("   - %s", entry.Name())
+									}
+								}
+							}
+							break // Salir del loop, engine encontrado
+						} else {
+							log.Printf("⚠️  Directorio %s existe pero no contiene archivos .html", path)
+						}
 					}
 				}
 			}
