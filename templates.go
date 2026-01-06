@@ -21,17 +21,24 @@ func createTemplateEngine() *html.Engine {
 	
 	// PRIORIDAD: Usar sistema de archivos si está disponible (más confiable)
 	// Esto es especialmente importante en producción donde los templates pueden no estar embebidos
+	// ORDEN DE PRIORIDAD (más específico primero):
 	paths := []string{
-		"./website/templates",
-		"/opt/hostberry/website/templates",
+		"/opt/hostberry/website/templates",  // Ruta de instalación estándar (más confiable)
 	}
 	
+	// Añadir ruta del ejecutable si es diferente
 	exePath, _ := os.Executable()
 	if exePath != "" {
 		exeDir := filepath.Dir(exePath)
 		templatesPath := filepath.Join(exeDir, "website", "templates")
-		paths = append([]string{templatesPath}, paths...)
+		// Solo añadir si es diferente a /opt/hostberry
+		if templatesPath != "/opt/hostberry/website/templates" {
+			paths = append(paths, templatesPath)
+		}
 	}
+	
+	// Añadir ruta relativa al final (menos confiable)
+	paths = append(paths, "./website/templates")
 	
 	for _, path := range paths {
 		if stat, err := os.Stat(path); err == nil {
