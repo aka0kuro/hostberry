@@ -168,14 +168,22 @@ func renderTemplate(c *fiber.Ctx, name string, data fiber.Map) error {
 	}
 	
 	// Intentar renderizar el template
-	if err := c.Render(name, data); err != nil {
-		log.Printf("❌ Error renderizando template '%s': %v", name, err)
-		// Intentar con extensión .html si no se especificó
-		if !strings.HasSuffix(name, ".html") {
-			if err2 := c.Render(name+".html", data); err2 == nil {
+	// Fiber busca el template por nombre sin extensión cuando usas .html como extensión
+	templateName := name
+	if !strings.HasSuffix(templateName, ".html") {
+		templateName = name + ".html"
+	}
+	
+	if err := c.Render(templateName, data); err != nil {
+		log.Printf("❌ Error renderizando template '%s' (intentado: '%s'): %v", name, templateName, err)
+		// Intentar sin extensión
+		if strings.HasSuffix(templateName, ".html") {
+			if err2 := c.Render(strings.TrimSuffix(templateName, ".html"), data); err2 == nil {
 				return nil
 			}
 		}
+		// Log detallado del error
+		log.Printf("   Detalles del error: %+v", err)
 		return err
 	}
 	return nil
