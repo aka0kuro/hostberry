@@ -27,6 +27,23 @@ func createTemplateEngine() *html.Engine {
 		"/opt/hostberry/website/templates",  // Ruta de instalación estándar
 	}
 	
+	// Buscar templates desde el directorio de trabajo actual subiendo niveles
+	// (útil si el binario se ejecuta desde una subcarpeta)
+	if wd, err := os.Getwd(); err == nil && wd != "" {
+		cur := wd
+		for i := 0; i < 6; i++ {
+			candidate := filepath.Join(cur, "website", "templates")
+			if candidate != "/opt/hostberry/website/templates" {
+				paths = append(paths, candidate)
+			}
+			parent := filepath.Dir(cur)
+			if parent == cur {
+				break
+			}
+			cur = parent
+		}
+	}
+	
 	// Añadir ruta del ejecutable si es diferente
 	exePath, _ := os.Executable()
 	if exePath != "" {
