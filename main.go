@@ -89,10 +89,11 @@ func main() {
 
 	// Inicializar base de datos
 	if err := initDatabase(); err != nil {
-		log.Fatalf("Error inicializando base de datos: %v", err)
+		log.Fatalf("❌ Error inicializando base de datos: %v", err)
 	}
 
 	// Crear usuario admin por defecto si no existe
+	log.Println("🔐 Verificando usuario admin por defecto...")
 	createDefaultAdmin()
 
 	// Crear aplicación Fiber

@@ -71,6 +71,7 @@ func initDatabase() error {
 	}
 
 	log.Println("✅ Base de datos inicializada correctamente")
+	log.Printf("📁 Ubicación BD: %s", appConfig.Database.Path)
 	return nil
 }
 

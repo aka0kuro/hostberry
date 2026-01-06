@@ -100,6 +100,16 @@ func Login(username, password string) (*User, string, error) {
 
 // Register crea un nuevo usuario
 func Register(username, password, email string) (*User, error) {
+	// Validar username
+	if username == "" {
+		return nil, errors.New("el nombre de usuario no puede estar vacío")
+	}
+	
+	// Validar password
+	if password == "" {
+		return nil, errors.New("la contraseña no puede estar vacía")
+	}
+	
 	// Verificar si el usuario ya existe
 	var existingUser User
 	if err := db.Where("username = ?", username).First(&existingUser).Error; err == nil {
@@ -109,7 +119,7 @@ func Register(username, password, email string) (*User, error) {
 	// Hashear contraseña
 	hashedPassword, err := HashPassword(password)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error hasheando contraseña: %v", err)
 	}
 
 	user := User{
@@ -120,7 +130,7 @@ func Register(username, password, email string) (*User, error) {
 	}
 
 	if err := db.Create(&user).Error; err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creando usuario en BD: %v", err)
 	}
 
 	return &user, nil
