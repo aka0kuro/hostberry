@@ -22,6 +22,9 @@ CONFIG_FILE="${INSTALL_DIR}/config.yaml"
 LOG_DIR="/var/log/hostberry"
 DATA_DIR="${INSTALL_DIR}/data"
 
+# Modo de operación
+MODE="install"  # install o update
+
 # Función para imprimir mensajes
 print_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
