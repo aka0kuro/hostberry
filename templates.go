@@ -162,6 +162,11 @@ func createTemplateEngine() *html.Engine {
 		}
 	}
 	
+	// Verificar que engine no es nil antes de agregar funciones
+	if engine == nil {
+		log.Fatal("❌ Error crítico: engine es nil después de todos los intentos de carga")
+	}
+	
 	// Agregar funciones personalizadas a los templates
 	engine.AddFunc("t", func(key string, defaultValue ...string) string {
 		// Esta función se sobrescribirá en cada request con el contexto correcto
