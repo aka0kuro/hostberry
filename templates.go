@@ -90,9 +90,10 @@ func createTemplateEngine() *html.Engine {
 	}
 	
 	// FALLBACK: Sistema de archivos (más lento pero más flexible)
-	// Solo usar si los embebidos no están disponibles
+	// IMPORTANTE: Si los embebidos fallan, usar sistema de archivos
+	// Esto es más confiable aunque más lento
 	if engine == nil {
-		log.Println("⚠️  Usando templates desde sistema de archivos (más lento pero flexible)")
+		log.Println("⚠️  Templates embebidos no disponibles, usando sistema de archivos")
 		paths := []string{
 			"/opt/hostberry/website/templates",  // Ruta de instalación estándar
 		}
@@ -117,9 +118,13 @@ func createTemplateEngine() *html.Engine {
 					// Verificar que hay archivos .html en el directorio
 					if entries, err := os.ReadDir(path); err == nil {
 						htmlFiles := 0
+						var foundTemplates []string
 						for _, entry := range entries {
 							if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".html") {
 								htmlFiles++
+								if len(foundTemplates) < 10 {
+									foundTemplates = append(foundTemplates, entry.Name())
+								}
 							}
 						}
 						if htmlFiles > 0 {
@@ -130,12 +135,14 @@ func createTemplateEngine() *html.Engine {
 							}
 							engine.Reload(!appConfig.Server.Debug)
 							log.Printf("✅ Templates cargados desde sistema de archivos: %s (%d archivos .html)", path, htmlFiles)
-							// Listar algunos archivos para verificación
-							if htmlFiles <= 5 {
-								for _, entry := range entries {
-									if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".html") {
-										log.Printf("   - %s", entry.Name())
-									}
+							log.Printf("   Templates encontrados: %v", foundTemplates)
+							// Verificar templates críticos
+							criticalTemplates := []string{"dashboard.html", "login.html", "base.html", "error.html"}
+							for _, tmpl := range criticalTemplates {
+								if _, err := os.Stat(filepath.Join(path, tmpl)); err == nil {
+									log.Printf("   ✅ %s encontrado", tmpl)
+								} else {
+									log.Printf("   ⚠️  %s NO encontrado", tmpl)
 								}
 							}
 							break // Salir del loop, engine encontrado
@@ -144,6 +151,19 @@ func createTemplateEngine() *html.Engine {
 						}
 					}
 				}
+			}
+		}
+	}
+	
+	// Si aún no hay engine, forzar uso de sistema de archivos desde /opt/hostberry
+	if engine == nil {
+		log.Println("⚠️  No se encontró engine, intentando forzar carga desde /opt/hostberry/website/templates")
+		forcePath := "/opt/hostberry/website/templates"
+		if stat, err := os.Stat(forcePath); err == nil && stat.IsDir() {
+			engine = html.New(forcePath, ".html")
+			if engine != nil {
+				engine.Reload(!appConfig.Server.Debug)
+				log.Printf("✅ Engine forzado desde %s", forcePath)
 			}
 		}
 	}
