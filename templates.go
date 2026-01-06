@@ -247,8 +247,11 @@ func renderTemplate(c *fiber.Ctx, name string, data fiber.Map) error {
 		
 		// Log detallado del error original
 		log.Printf("   Detalles del error original: %+v", err)
+		log.Printf("   Template solicitado: '%s'", name)
+		log.Printf("   Template intentado (sin ext): '%s'", templateName)
+		log.Printf("   Template intentado (con ext): '%s'", templateNameWithExt)
 		
-		// Intentar listar templates disponibles para debug
+		// Verificar motor de templates
 		if views := c.App().Config().Views; views != nil {
 			log.Printf("   Motor de templates está configurado")
 		} else {
