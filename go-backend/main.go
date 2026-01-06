@@ -12,7 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/compress"
@@ -188,6 +187,9 @@ func createApp() *fiber.App {
 	// Middleware de logging
 	app.Use(loggingMiddleware)
 
+	// Middleware de idioma (debe ir antes de las rutas)
+	app.Use(LanguageMiddleware)
+
 	return app
 }
 
@@ -273,21 +275,64 @@ func indexHandler(c *fiber.Ctx) error {
 }
 
 func dashboardHandler(c *fiber.Ctx) error {
-	return c.Render("dashboard", fiber.Map{
-		"Title": "HostBerry Dashboard",
-	})
+	language := GetCurrentLanguage(c)
+	i18nFuncs := TemplateFuncs(c)
+	
+	// Convertir traducciones a JSON para JavaScript
+	translationsJSON, _ := json.Marshal(i18nFuncs["translations"])
+	
+	data := fiber.Map{
+		"Title":         T(c, "dashboard.title", "Dashboard"),
+		"language":      language,
+		"current_user": c.Locals("user"),
+		"translations_json": string(translationsJSON),
+	}
+	
+	// Agregar funciones i18n
+	for k, v := range i18nFuncs {
+		data[k] = v
+	}
+	
+	return c.Render("dashboard", data)
 }
 
 func loginHandler(c *fiber.Ctx) error {
-	return c.Render("login", fiber.Map{
-		"Title": "Login - HostBerry",
-	})
+	language := GetCurrentLanguage(c)
+	i18nFuncs := TemplateFuncs(c)
+	
+	data := fiber.Map{
+		"Title":    T(c, "auth.login", "Login"),
+		"language": language,
+	}
+	
+	// Agregar funciones i18n
+	for k, v := range i18nFuncs {
+		data[k] = v
+	}
+	
+	return c.Render("login", data)
 }
 
 func settingsHandler(c *fiber.Ctx) error {
-	return c.Render("settings", fiber.Map{
-		"Title": "Settings - HostBerry",
-	})
+	language := GetCurrentLanguage(c)
+	i18nFuncs := TemplateFuncs(c)
+	
+	// Convertir traducciones a JSON para JavaScript
+	translationsJSON, _ := json.Marshal(i18nFuncs["translations"])
+	
+	data := fiber.Map{
+		"Title":            T(c, "navigation.settings", "Settings"),
+		"language":         language,
+		"current_user":     c.Locals("user"),
+		"translations_json": string(translationsJSON),
+	}
+	
+	// Agregar funciones i18n
+	for k, v := range i18nFuncs {
+		data[k] = v
+	}
+	
+	return c.Render("settings", data)
 }
 
 // Handlers de API que usan Lua
