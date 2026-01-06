@@ -1621,7 +1621,7 @@ body:not(.light-theme) .form-select-sm {
     padding-top: 0;
 }
 
-/* General ocupa todo el ancho */
+/* General ocupa todo el ancho como los otros */
 .general-settings-card {
     width: 100%;
     max-width: 100%;
@@ -1630,6 +1630,7 @@ body:not(.light-theme) .form-select-sm {
 
 .general-settings-card .card {
     min-height: 100%;
+    height: 100%;
 }
 
 /* Bajar el primer campo (language) para que no esté sobre el nav */

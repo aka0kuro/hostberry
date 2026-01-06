@@ -580,19 +580,21 @@ body.light-theme { background: #f6f7f9; color: #212529; }
     transform: scale(1.1);
 }
 
-/* Language Selector */
+/* Language Selector - debajo del nav */
 .lang-dropdown {
     position: fixed;
-    top: 60px;
+    top: 90px;
     right: 20px;
     z-index: 1000;
 }
 
+/* Menú se abre hacia la izquierda */
 .lang-dropdown-menu {
     right: 0 !important;
     left: auto !important;
     transform: translateX(0) !important;
     margin-top: 8px;
+    min-width: 150px;
 }
 
 .lang-toggle {
