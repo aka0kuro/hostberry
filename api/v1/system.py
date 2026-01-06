@@ -143,14 +143,34 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
                 load_average = "0.00, 0.00, 0.00"
         
         try:
-            # Processor info
+            # Processor info - buscar múltiples campos posibles
             with open('/proc/cpuinfo', 'r') as f:
-                for line in f:
-                    if 'model name' in line.lower():
-                        processor = line.split(':')[1].strip()
+                cpuinfo_content = f.read()
+                # Buscar en orden de prioridad: model name, Processor, Hardware
+                for search_key in ['model name', 'Processor', 'Hardware']:
+                    for line in cpuinfo_content.split('\n'):
+                        if search_key.lower() in line.lower() and ':' in line:
+                            processor = line.split(':', 1)[1].strip()
+                            if processor:  # Solo usar si no está vacío
+                                break
+                    if processor:
                         break
         except:
-            processor = platform.processor() or "ARM"
+            processor = None
+        
+        # Fallback si no se encontró
+        if not processor:
+            try:
+                processor = platform.processor()
+            except:
+                pass
+            if not processor or processor == '':
+                # Intentar obtener desde /proc/device-tree/model (Raspberry Pi)
+                try:
+                    with open('/proc/device-tree/model', 'r') as f:
+                        processor = f.read().strip()
+                except:
+                    processor = "ARM Processor"
         
         stats = SystemStats(
             cpu_usage=cpu_usage,
