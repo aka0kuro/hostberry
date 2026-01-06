@@ -1604,28 +1604,17 @@ body:not(.light-theme) .form-select-sm {
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-}
-
-.security-settings-card form {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    justify-content: space-between;
-}
-
-/* Bajar el botón Save en Security al borde inferior */
-.security-settings-card .card-body {
     padding-bottom: 1rem !important;
 }
 
 .security-settings-card form {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex: 1;
     min-height: 100%;
 }
 
+/* Bajar el botón Save en Security al borde inferior de la tarjeta */
 .security-settings-card form .d-grid {
     margin-top: auto;
     margin-bottom: 0;
