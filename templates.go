@@ -43,12 +43,15 @@ func createTemplateEngine() *html.Engine {
 					engine.Reload(false)
 					log.Printf("✅ Templates embebidos cargados (MÁS RÁPIDO): %d archivos .html", htmlFiles)
 					log.Printf("   Templates encontrados: %v", templateNames)
-					// Verificar que dashboard.html está disponible
-					if testFile, err := tmplFS.Open("dashboard.html"); err == nil {
-						testFile.Close()
-						log.Printf("   ✅ dashboard.html verificado en FS embebido")
-					} else {
-						log.Printf("   ⚠️  No se pudo abrir dashboard.html: %v", err)
+					// Verificar templates críticos
+					criticalTemplates := []string{"dashboard.html", "login.html", "base.html"}
+					for _, tmpl := range criticalTemplates {
+						if testFile, err := tmplFS.Open(tmpl); err == nil {
+							testFile.Close()
+							log.Printf("   ✅ %s verificado en FS embebido", tmpl)
+						} else {
+							log.Printf("   ⚠️  No se pudo abrir %s: %v", tmpl, err)
+						}
 					}
 					// Continuar para añadir funciones personalizadas
 				} else {
