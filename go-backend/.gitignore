@@ -1,0 +1,48 @@
+# Binarios
+hostberry
+hostberry-arm
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Archivos de prueba
+*.test
+*.out
+
+# Directorio de dependencias
+vendor/
+
+# Archivos de configuración local
+config.yaml
+*.local.yaml
+
+# Logs
+logs/
+*.log
+
+# Base de datos
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Archivos temporales
+tmp/
+temp/
+*.tmp
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Air (hot-reload)
+tmp/
