@@ -23,15 +23,39 @@ func createTemplateEngine() *html.Engine {
 	// Crear sub-FS para templates
 	tmplFS, err := fs.Sub(templatesFS, "website/templates")
 	if err == nil {
-		engine = html.NewFileSystem(http.FS(tmplFS), ".html")
 		// Listar templates disponibles para debug
 		if entries, err := fs.ReadDir(tmplFS, "."); err == nil {
 			log.Printf("✅ Templates embebidos encontrados: %d archivos", len(entries))
 			for _, entry := range entries {
-				log.Printf("   - %s", entry.Name())
+				if !entry.IsDir() {
+					log.Printf("   - %s", entry.Name())
+				}
 			}
 		}
+		engine = html.NewFileSystem(http.FS(tmplFS), ".html")
+		log.Println("✅ Motor de templates configurado con archivos embebidos")
 	} else {
+		log.Printf("⚠️  Error creando sub-FS de templates embebidos: %v", err)
+		// Intentar acceder directamente sin sub-FS
+		if entries, err := fs.ReadDir(templatesFS, "."); err == nil {
+			log.Printf("📁 Estructura del FS embebido (raíz):")
+			for _, entry := range entries {
+				log.Printf("   - %s (dir: %v)", entry.Name(), entry.IsDir())
+			}
+		}
+		// Intentar acceder directamente a website/templates
+		if entries, err := fs.ReadDir(templatesFS, "website/templates"); err == nil {
+			log.Printf("✅ Templates encontrados directamente en website/templates: %d archivos", len(entries))
+			for _, entry := range entries {
+				if !entry.IsDir() {
+					log.Printf("   - %s", entry.Name())
+				}
+			}
+			// Usar el FS completo pero especificar el path
+			engine = html.NewFileSystem(http.FS(templatesFS), ".html")
+			// Necesitamos configurar el path base
+			log.Println("⚠️  Usando FS completo, puede requerir ajustes")
+		}
 		log.Printf("⚠️  Error cargando templates embebidos: %v", err)
 		// Fallback a sistema de archivos si los embebidos fallan
 		if _, err := os.Stat("./website/templates"); err == nil {

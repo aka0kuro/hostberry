@@ -19,10 +19,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-//go:embed website/templates/*.html
+//go:embed website/templates
 var templatesFS embed.FS
 
-//go:embed website/static/*
+//go:embed website/static
 var staticFS embed.FS
 
 // Configuración de la aplicación
