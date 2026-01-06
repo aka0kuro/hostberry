@@ -11,10 +11,10 @@ import (
 
 // requireAuth middleware que requiere autenticación
 func requireAuth(c *fiber.Ctx) error {
-	// Para rutas web, verificar si hay usuario en el contexto (de cookie/sesión)
-	// Para APIs, verificar token en header
+	var token string
+	
+	// Para APIs, obtener token del header Authorization
 	if strings.HasPrefix(c.Path(), "/api/") {
-		// API: requiere token en header
 		authHeader := c.Get("Authorization")
 		if authHeader == "" {
 			return c.Status(401).JSON(fiber.Map{
@@ -22,36 +22,58 @@ func requireAuth(c *fiber.Ctx) error {
 			})
 		}
 
-	// Extraer token (formato: "Bearer <token>")
-	parts := strings.Split(authHeader, " ")
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		return c.Status(401).JSON(fiber.Map{
-			"error": "Formato de token inválido",
-		})
+		// Extraer token (formato: "Bearer <token>")
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			return c.Status(401).JSON(fiber.Map{
+				"error": "Formato de token inválido",
+			})
+		}
+		token = parts[1]
+	} else {
+		// Para rutas web, intentar obtener token de cookie o query parameter
+		// (el frontend puede enviarlo en cookie o el JS lo maneja con localStorage)
+		token = c.Cookies("access_token")
+		if token == "" {
+			token = c.Query("token")
+		}
+		
+		// Si no hay token, redirigir a login
+		if token == "" {
+			return c.Redirect("/login")
+		}
 	}
-
-	token := parts[1]
 
 	// Validar token
 	claims, err := ValidateToken(token)
 	if err != nil {
-		return c.Status(401).JSON(fiber.Map{
-			"error": "Token inválido o expirado",
-		})
+		if strings.HasPrefix(c.Path(), "/api/") {
+			return c.Status(401).JSON(fiber.Map{
+				"error": "Token inválido o expirado",
+			})
+		}
+		// Para web, redirigir a login
+		return c.Redirect("/login")
 	}
 
 	// Obtener usuario de la base de datos
 	var user User
 	if err := db.First(&user, claims.UserID).Error; err != nil {
-		return c.Status(401).JSON(fiber.Map{
-			"error": "Usuario no encontrado",
-		})
+		if strings.HasPrefix(c.Path(), "/api/") {
+			return c.Status(401).JSON(fiber.Map{
+				"error": "Usuario no encontrado",
+			})
+		}
+		return c.Redirect("/login")
 	}
 
 	if !user.IsActive {
-		return c.Status(401).JSON(fiber.Map{
-			"error": "Usuario inactivo",
-		})
+		if strings.HasPrefix(c.Path(), "/api/") {
+			return c.Status(401).JSON(fiber.Map{
+				"error": "Usuario inactivo",
+			})
+		}
+		return c.Redirect("/login")
 	}
 
 	// Agregar usuario al contexto

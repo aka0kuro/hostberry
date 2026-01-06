@@ -338,12 +338,26 @@ func setupRoutes(app *fiber.App) {
 
 // Handlers básicos
 func indexHandler(c *fiber.Ctx) error {
-	// Verificar si el usuario está autenticado
-	if user := c.Locals("user"); user != nil {
-		// Usuario autenticado, redirigir a dashboard
-		return c.Redirect("/dashboard")
+	// Intentar obtener token de cookie o query
+	token := c.Cookies("access_token")
+	if token == "" {
+		token = c.Query("token")
 	}
-	// Usuario no autenticado, redirigir a login
+	
+	// Si hay token, validarlo
+	if token != "" {
+		claims, err := ValidateToken(token)
+		if err == nil {
+			// Token válido, verificar usuario
+			var user User
+			if err := db.First(&user, claims.UserID).Error; err == nil && user.IsActive {
+				// Usuario válido y activo, redirigir a dashboard
+				return c.Redirect("/dashboard")
+			}
+		}
+	}
+	
+	// No hay token válido o usuario no válido, redirigir a login
 	return c.Redirect("/login")
 }
 
