@@ -37,26 +37,35 @@ func createTemplateEngine() *html.Engine {
 				}
 			}
 			if htmlFiles > 0 {
-				engine = html.NewFileSystem(http.FS(tmplFS), ".html")
-				if engine != nil {
-					// Configurar reload (deshabilitado para embebidos)
-					engine.Reload(false)
-					log.Printf("✅ Templates embebidos cargados (MÁS RÁPIDO): %d archivos .html", htmlFiles)
-					log.Printf("   Templates encontrados: %v", templateNames)
-					// Verificar templates críticos
-					criticalTemplates := []string{"dashboard.html", "login.html", "base.html"}
-					for _, tmpl := range criticalTemplates {
-						if testFile, err := tmplFS.Open(tmpl); err == nil {
-							testFile.Close()
-							log.Printf("   ✅ %s verificado en FS embebido", tmpl)
-						} else {
-							log.Printf("   ⚠️  No se pudo abrir %s: %v", tmpl, err)
-						}
+				// Verificar templates críticos ANTES de crear el engine
+				criticalTemplates := []string{"dashboard.html", "login.html", "base.html"}
+				allCriticalFound := true
+				for _, tmpl := range criticalTemplates {
+					if testFile, err := tmplFS.Open(tmpl); err == nil {
+						testFile.Close()
+						log.Printf("   ✅ %s verificado en FS embebido", tmpl)
+					} else {
+						log.Printf("   ⚠️  No se pudo abrir %s: %v", tmpl, err)
+						allCriticalFound = false
 					}
-					// Continuar para añadir funciones personalizadas
+				}
+				
+				// Si no se encuentran todos los templates críticos, usar fallback
+				if !allCriticalFound {
+					log.Printf("⚠️  No todos los templates críticos están disponibles en embebidos, usando fallback")
+					err = fmt.Errorf("templates críticos faltantes")
 				} else {
-					log.Printf("⚠️  Error: engine es nil después de NewFileSystem con embebidos")
-					err = fmt.Errorf("engine es nil")
+					engine = html.NewFileSystem(http.FS(tmplFS), ".html")
+					if engine != nil {
+						// Configurar reload (deshabilitado para embebidos)
+						engine.Reload(false)
+						log.Printf("✅ Templates embebidos cargados (MÁS RÁPIDO): %d archivos .html", htmlFiles)
+						log.Printf("   Templates encontrados: %v", templateNames)
+						// Continuar para añadir funciones personalizadas
+					} else {
+						log.Printf("⚠️  Error: engine es nil después de NewFileSystem con embebidos")
+						err = fmt.Errorf("engine es nil")
+					}
 				}
 			} else {
 				log.Printf("⚠️  Templates embebidos vacíos, usando fallback")
