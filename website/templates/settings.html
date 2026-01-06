@@ -509,7 +509,7 @@
         if (extraErrors.length && !String(message).includes('Algunos errores')) {
           message += ` (Algunos errores: ${extraErrors.join(', ')})`;
         }
-        showNotification(message, 'success');
+        showNotification(message, extraErrors.length ? 'warning' : 'success');
           
         // Aplicar cambios UX
           if(formId === 'generalConfigForm'){
