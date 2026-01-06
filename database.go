@@ -198,3 +198,18 @@ func InsertStatistic(statType string, value float64) error {
 	}
 	return db.Create(&stat).Error
 }
+
+// SetConfig guarda o actualiza una configuración
+func SetConfig(key, value string) error {
+	config := SystemConfig{Key: key, Value: value}
+	return db.Save(&config).Error
+}
+
+// GetConfig obtiene el valor de una configuración
+func GetConfig(key string) (string, error) {
+	var config SystemConfig
+	if err := db.First(&config, "key = ?", key).Error; err != nil {
+		return "", err
+	}
+	return config.Value, nil
+}
