@@ -133,7 +133,7 @@
                             <div class="col-md-6 mb-3">
                                 <label for="dns_primary" class="form-label text-white">{{ t('settings.dns_primary', 'Primary DNS') }}</label>
                                 <input type="text" class="form-control bg-dark text-white border-secondary text-center" id="dns_primary" name="dns_primary" placeholder="8.8.8.8">
-                            </div>
+                        </div>
                             <div class="col-md-6 mb-3">
                                 <label for="dns_secondary" class="form-label text-white">{{ t('settings.dns_secondary', 'Secondary DNS') }}</label>
                                 <input type="text" class="form-control bg-dark text-white border-secondary text-center" id="dns_secondary" name="dns_secondary" placeholder="8.8.4.4">
@@ -245,11 +245,11 @@
                         <div class="mb-3">
                             <label class="form-label text-white d-flex align-items-center justify-content-between">
                                 <span>{{ t('settings.email_notifications', 'Email Notifications') }}</span>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {{ 'checked' if (notification_config.email_notifications if notification_config else False) else '' }}>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {{ 'checked' if (notification_config.email_notifications if notification_config else False) else '' }}>
                                     <label class="form-check-label text-white" for="email_notifications"></label>
                                 </div>
-                            </label>
+                                </label>
                         </div>
                         
                         <div class="mb-3">

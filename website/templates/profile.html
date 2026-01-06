@@ -20,151 +20,151 @@
     </div>
 
     <div class="row settings-cards-row">
-        <!-- Información del Perfil -->
+    <!-- Información del Perfil -->
         <div class="col-lg-8 col-md-12 settings-card">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
                     <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
                         <i class="bi bi-person-circle me-2"></i>{{ t('auth.profile', 'Profile Information') }}
-                    </h5>
-                </div>
+                </h5>
+            </div>
                 <div class="card-body px-4 pb-4">
-                    <form id="profileForm">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
+                <form id="profileForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
                                 <label for="username" class="form-label text-white">{{ t('auth.username', 'Username') }}</label>
                                 <input type="text" class="form-control bg-dark text-white border-secondary text-center" id="username" name="username" value="{{ user.username }}" readonly>
-                            </div>
-                            <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
                                 <label for="email" class="form-label text-white">{{ t('auth.email', 'Email') }}</label>
                                 <input type="email" class="form-control bg-dark text-white border-secondary text-center" id="email" name="email" value="{{ user.email | default('') }}">
-                            </div>
                         </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
                                 <label for="first_name" class="form-label text-white">{{ t('profile.first_name', 'First Name') }}</label>
                                 <input type="text" class="form-control bg-dark text-white border-secondary text-center" id="first_name" name="first_name" value="{{ user.first_name | default('') }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
                                 <label for="last_name" class="form-label text-white">{{ t('profile.last_name', 'Last Name') }}</label>
                                 <input type="text" class="form-control bg-dark text-white border-secondary text-center" id="last_name" name="last_name" value="{{ user.last_name | default('') }}">
-                            </div>
                         </div>
-                        
-                        <div class="mb-3">
+                    </div>
+                    
+                    <div class="mb-3">
                             <label for="role" class="form-label text-white">{{ t('profile.role', 'Role') }}</label>
                             <input type="text" class="form-control bg-dark text-white border-secondary text-center" id="role" name="role" value="{{ user.role | default('admin') }}" readonly>
-                        </div>
-                        
-                        <div class="mb-3">
+                    </div>
+                    
+                    <div class="mb-3">
                             <label for="timezone" class="form-label text-white text-center d-block">{{ t('settings.timezone', 'Timezone') }}</label>
                             <select class="form-select bg-dark text-white border-secondary text-center" id="timezone" name="timezone">
-                                <option value="UTC" {{ 'selected' if user.timezone == 'UTC' else '' }}>UTC</option>
-                                <option value="Europe/Madrid" {{ 'selected' if user.timezone == 'Europe/Madrid' else '' }}>Europe/Madrid</option>
-                                <option value="America/New_York" {{ 'selected' if user.timezone == 'America/New_York' else '' }}>America/New_York</option>
-                            </select>
-                        </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
+                            <option value="UTC" {{ 'selected' if user.timezone == 'UTC' else '' }}>UTC</option>
+                            <option value="Europe/Madrid" {{ 'selected' if user.timezone == 'Europe/Madrid' else '' }}>Europe/Madrid</option>
+                            <option value="America/New_York" {{ 'selected' if user.timezone == 'America/New_York' else '' }}>America/New_York</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-check-circle me-2"></i>
                                 {{ t('common.save', 'Save') }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
 
-        <!-- Cambiar Contraseña -->
+    <!-- Cambiar Contraseña -->
         <div class="col-lg-4 col-md-12 settings-card">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
                     <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
                         <i class="bi bi-key me-2"></i>{{ t('auth.change_password', 'Change Password') }}
-                    </h5>
-                </div>
+                </h5>
+            </div>
                 <div class="card-body px-4 pb-4">
-                    <form id="passwordForm">
-                        <div class="mb-3">
+                <form id="passwordForm">
+                    <div class="mb-3">
                             <label for="current_password" class="form-label text-white">{{ t('auth.current_password', 'Current Password') }}</label>
                             <input type="password" class="form-control bg-dark text-white border-secondary text-center" id="current_password" name="current_password" required>
-                        </div>
-                        
-                        <div class="mb-3">
+                    </div>
+                    
+                    <div class="mb-3">
                             <label for="new_password" class="form-label text-white">{{ t('auth.new_password', 'New Password') }}</label>
                             <input type="password" class="form-control bg-dark text-white border-secondary text-center" id="new_password" name="new_password" required>
-                        </div>
-                        
-                        <div class="mb-3">
+                    </div>
+                    
+                    <div class="mb-3">
                             <label for="confirm_password" class="form-label text-white">{{ t('auth.confirm_password', 'Confirm Password') }}</label>
                             <input type="password" class="form-control bg-dark text-white border-secondary text-center" id="confirm_password" name="confirm_password" required>
-                        </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-warning">
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-warning">
                                 <i class="bi bi-key me-2"></i>
                                 {{ t('auth.change_password', 'Change Password') }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
 
-        <!-- Estadísticas del Usuario -->
+    <!-- Estadísticas del Usuario -->
         <div class="col-lg-6 col-md-12 settings-card">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
                     <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
                         <i class="bi bi-graph-up me-2"></i>{{ t('profile.statistics', 'Statistics') }}
-                    </h5>
-                </div>
+                </h5>
+            </div>
                 <div class="card-body px-4 pb-4">
-                    <div class="row">
-                        <div class="col-6 mb-3">
-                            <div class="text-center">
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
                                 <h6 class="text-white">{{ t('profile.last_login', 'Last Login') }}</h6>
                                 <p class="text-white-50 mb-0">{{ user.last_login | default('Nunca') }}</p>
-                            </div>
                         </div>
-                        <div class="col-6 mb-3">
-                            <div class="text-center">
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
                                 <h6 class="text-white">{{ t('profile.login_count', 'Login Count') }}</h6>
                                 <p class="text-white-50 mb-0">{{ user.login_count | default(0) }}</p>
-                            </div>
                         </div>
-                        <div class="col-6 mb-3">
-                            <div class="text-center">
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
                                 <h6 class="text-white">{{ t('profile.failed_attempts', 'Failed Attempts') }}</h6>
                                 <p class="text-white-50 mb-0">{{ user.failed_attempts | default(0) }}</p>
-                            </div>
                         </div>
-                        <div class="col-6 mb-3">
-                            <div class="text-center">
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
                                 <h6 class="text-white">{{ t('profile.account_age', 'Account Age') }}</h6>
                                 <p class="text-white-50 mb-0">{{ user.account_age | default('0 días') }}</p>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Actividad Reciente -->
+    <!-- Actividad Reciente -->
         <div class="col-lg-6 col-md-12 settings-card">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
                     <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
                         <i class="bi bi-clock-history me-2"></i>{{ t('profile.recent_activity', 'Recent Activity') }}
-                    </h5>
-                </div>
+                </h5>
+            </div>
                 <div class="card-body px-4 pb-4">
-                    <div class="list-group list-group-flush">
-                        {% for activity in recent_activities %}
+                <div class="list-group list-group-flush">
+                    {% for activity in recent_activities %}
                         <div class="list-group-item bg-transparent border-secondary text-white mb-2">
-                            <div class="d-flex w-100 justify-content-between">
+                        <div class="d-flex w-100 justify-content-between">
                                 <h6 class="mb-1 text-white">{{ activity.action }}</h6>
                                 <small class="text-white-50">{{ activity.timestamp }}</small>
                             </div>
@@ -174,111 +174,111 @@
                         {% else %}
                         <div class="text-center text-white-50">
                             <p>{{ t('profile.no_activity', 'No recent activity') }}</p>
-                        </div>
-                        {% endfor %}
                     </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Configuración de Notificaciones -->
+    <!-- Configuración de Notificaciones -->
         <div class="col-lg-6 col-md-12 settings-card">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
                     <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
                         <i class="bi bi-bell me-2"></i>{{ t('profile.notifications', 'Notifications') }}
-                    </h5>
-                </div>
+                </h5>
+            </div>
                 <div class="card-body px-4 pb-4">
-                    <form id="notificationForm">
-                        <div class="mb-3">
+                <form id="notificationForm">
+                    <div class="mb-3">
                             <label class="form-label text-white">{{ t('profile.email_notifications', 'Email Notifications') }}</label>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {{ 'checked' if user.email_notifications else '' }}>
+                            <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {{ 'checked' if user.email_notifications else '' }}>
                                 <label class="form-check-label text-white" for="email_notifications">
                                     {{ t('profile.enable_email_notifications', 'Enable email notifications') }}
-                                </label>
-                            </div>
+                            </label>
                         </div>
-                        
-                        <div class="mb-3">
+                    </div>
+                    
+                    <div class="mb-3">
                             <label class="form-label text-white">{{ t('profile.system_alerts', 'System Alerts') }}</label>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="system_alerts" name="system_alerts" {{ 'checked' if user.system_alerts else '' }}>
+                            <input class="form-check-input" type="checkbox" id="system_alerts" name="system_alerts" {{ 'checked' if user.system_alerts else '' }}>
                                 <label class="form-check-label text-white" for="system_alerts">
                                     {{ t('profile.enable_system_alerts', 'Enable system alerts') }}
-                                </label>
-                            </div>
+                            </label>
                         </div>
-                        
-                        <div class="mb-3">
+                    </div>
+                    
+                    <div class="mb-3">
                             <label class="form-label text-white">{{ t('profile.security_alerts', 'Security Alerts') }}</label>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="security_alerts" name="security_alerts" {{ 'checked' if user.security_alerts else '' }}>
+                            <input class="form-check-input" type="checkbox" id="security_alerts" name="security_alerts" {{ 'checked' if user.security_alerts else '' }}>
                                 <label class="form-check-label text-white" for="security_alerts">
                                     {{ t('profile.enable_security_alerts', 'Enable security alerts') }}
-                                </label>
-                            </div>
+                            </label>
                         </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-check-circle me-2"></i>
                                 {{ t('common.save', 'Save') }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
 
-        <!-- Configuración de Privacidad -->
+    <!-- Configuración de Privacidad -->
         <div class="col-lg-6 col-md-12 settings-card">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
                     <h5 class="card-title mb-0 fw-bold text-white text-center d-flex align-items-center justify-content-center">
                         <i class="bi bi-shield-lock me-2"></i>{{ t('profile.privacy', 'Privacy') }}
-                    </h5>
-                </div>
+                </h5>
+            </div>
                 <div class="card-body px-4 pb-4">
-                    <form id="privacyForm">
-                        <div class="mb-3">
+                <form id="privacyForm">
+                    <div class="mb-3">
                             <label class="form-label text-white">{{ t('profile.show_activity', 'Show Activity') }}</label>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="show_activity" name="show_activity" {{ 'checked' if user.show_activity else '' }}>
+                            <input class="form-check-input" type="checkbox" id="show_activity" name="show_activity" {{ 'checked' if user.show_activity else '' }}>
                                 <label class="form-check-label text-white" for="show_activity">
                                     {{ t('profile.enable_activity_visibility', 'Enable activity visibility') }}
-                                </label>
-                            </div>
+                            </label>
                         </div>
-                        
-                        <div class="mb-3">
+                    </div>
+                    
+                    <div class="mb-3">
                             <label class="form-label text-white">{{ t('profile.data_collection', 'Data Collection') }}</label>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="data_collection" name="data_collection" {{ 'checked' if user.data_collection else '' }}>
+                            <input class="form-check-input" type="checkbox" id="data_collection" name="data_collection" {{ 'checked' if user.data_collection else '' }}>
                                 <label class="form-check-label text-white" for="data_collection">
                                     {{ t('profile.enable_data_collection', 'Enable data collection') }}
-                                </label>
-                            </div>
+                            </label>
                         </div>
-                        
-                        <div class="mb-3">
+                    </div>
+                    
+                    <div class="mb-3">
                             <label class="form-label text-white">{{ t('profile.analytics', 'Analytics') }}</label>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="analytics" name="analytics" {{ 'checked' if user.analytics else '' }}>
+                            <input class="form-check-input" type="checkbox" id="analytics" name="analytics" {{ 'checked' if user.analytics else '' }}>
                                 <label class="form-check-label text-white" for="analytics">
                                     {{ t('profile.enable_analytics', 'Enable analytics') }}
-                                </label>
-                            </div>
+                            </label>
                         </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-check-circle me-2"></i>
                                 {{ t('common.save', 'Save') }}
-                            </button>
-                        </div>
-                    </form>
+                        </button>
+                    </div>
+                </form>
                 </div>
             </div>
         </div>
@@ -288,4 +288,4 @@
 
 {% block extra_js %}
 <script src="/static/js/profile.js?v={{ last_update }}"></script>
-{% endblock %}
+{% endblock %} 

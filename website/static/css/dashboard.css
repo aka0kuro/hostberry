@@ -1595,7 +1595,6 @@ body:not(.light-theme) .form-select-sm {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding-bottom: 2rem !important;
 }
 
 .security-settings-card form {
@@ -1605,73 +1604,12 @@ body:not(.light-theme) .form-select-sm {
     justify-content: space-between;
 }
 
-.security-settings-card form .d-grid {
-    margin-top: auto;
-    padding-top: 1.5rem;
-}
-
-/* Asegurar que General tenga el mismo ancho que Security y Performance */
-.settings-cards-row > .col-lg-6:first-child {
-    flex: 0 0 50%;
-    max-width: 50%;
-}
-
-@media (max-width: 991px) {
-    .settings-cards-row > .col-lg-6:first-child {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
+/* Asegurar que General tenga el mismo tamaño que los demás */
+.general-settings-card .card {
+    min-height: 100%;
 }
 
 /* Centrar el campo de timezone */
 .timezone-selector-wrapper {
     margin: 0 auto;
-}
-
-/* Asegurar que timezone tenga fondo blanco */
-.timezone-selector-wrapper #timezone_search,
-.timezone-selector-wrapper #timezone_search:focus,
-.timezone-selector-wrapper #timezone_search:hover {
-    background-color: #ffffff !important;
-    background: #ffffff !important;
-    color: #212529 !important;
-}
-
-/* Bajar el botón de language para que no esté sobre el nav */
-#generalConfigForm > div:first-child {
-    margin-top: 1rem !important;
-    padding-top: 0.5rem;
-    position: relative;
-    z-index: 999;
-}
-
-#generalConfigForm #language {
-    position: relative;
-    z-index: 999;
-}
-
-#generalConfigForm #theme {
-    position: relative;
-    z-index: 999;
-}
-
-/* Asegurar que los selects abiertos no se superpongan con el navbar */
-.form-select-custom:focus {
-    z-index: 1002 !important;
-}
-
-select.form-select-custom:focus {
-    z-index: 1002 !important;
-}
-
-/* Asegurar que los dropdowns de select no se superpongan con el navbar */
-.form-select-custom {
-    position: relative;
-    z-index: 999 !important;
-}
-
-/* Cuando el select está abierto, asegurar que no se superponga */
-.form-select:focus,
-.form-select-custom:focus {
-    z-index: 1002 !important;
 }
