@@ -163,6 +163,11 @@ func (i *I18nManager) GetTranslations(language string) map[string]interface{} {
 
 // GetCurrentLanguage obtiene el idioma actual del contexto
 func GetCurrentLanguage(c *fiber.Ctx) string {
+	// Verificar que i18nManager esté inicializado
+	if i18nManager == nil {
+		return "es" // Fallback seguro
+	}
+
 	// Intentar obtener del query parameter
 	if lang := c.Query("lang"); lang != "" {
 		if isLanguageSupported(lang) {
@@ -199,6 +204,9 @@ func GetCurrentLanguage(c *fiber.Ctx) string {
 
 // isLanguageSupported verifica si un idioma está soportado
 func isLanguageSupported(lang string) bool {
+	if i18nManager == nil {
+		return lang == "es" || lang == "en" // Fallback seguro
+	}
 	for _, supported := range i18nManager.supportedLanguages {
 		if lang == supported {
 			return true
