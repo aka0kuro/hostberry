@@ -9,7 +9,7 @@ GO_TEST=$(GO_CMD) test
 GO_MOD=$(GO_CMD) mod
 
 # Build para sistema actual
-build:
+build: deps
 	@echo "🔨 Compilando $(BINARY_NAME)..."
 	$(GO_BUILD) -ldflags="-s -w" -o $(BINARY_NAME) .
 	@echo "✅ Compilado: $(BINARY_NAME)"
