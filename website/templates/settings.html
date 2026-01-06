@@ -103,7 +103,7 @@
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="dhcp_interface" class="form-label text-white">{{ t('settings.dhcp_interface', 'DHCP Interface') }}</label>
-                                <select class="form-select bg-dark text-white border-secondary text-center" id="dhcp_interface" name="dhcp_interface">
+                                <select class="form-select form-select-custom bg-white text-dark border-secondary text-center" id="dhcp_interface" name="dhcp_interface" style="background-color: #ffffff !important;">
                                     <option value="">{{ t('settings.loading_interfaces', 'Loading interfaces...') }}</option>
                                 </select>
                             </div>
@@ -173,14 +173,14 @@
                             <input type="number" class="form-control bg-dark text-white border-secondary text-center" id="session_timeout" name="session_timeout" value="{{ security_config.session_timeout if security_config else 30 }}" min="5" max="1440">
                             <small class="text-white-50">{{ t('settings.minutes', 'minutes') }}</small>
                         </div>
-                        
-                        <div class="d-grid mt-auto">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle me-2"></i>
-                                {{ t('common.save', 'Save') }}
-                            </button>
-                        </div>
                     </form>
+
+                    <div class="d-grid mt-auto">
+                        <button type="submit" class="btn btn-primary" form="securityConfigForm">
+                            <i class="bi bi-check-circle me-2"></i>
+                            {{ t('common.save', 'Save') }}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -504,8 +504,12 @@
         }
 
         const data = await resp.json().catch(() => ({}));
-        const message = data.message || t('settings.saved', 'Settings saved successfully');
-          showNotification(message, 'success');
+        let message = data.message || t('settings.saved', 'Settings saved successfully');
+        const extraErrors = Array.isArray(data.errors) ? data.errors.filter(Boolean) : [];
+        if (extraErrors.length && !String(message).includes('Algunos errores')) {
+          message += ` (Algunos errores: ${extraErrors.join(', ')})`;
+        }
+        showNotification(message, 'success');
           
         // Aplicar cambios UX
           if(formId === 'generalConfigForm'){
