@@ -144,6 +144,7 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
         
         try:
             # Processor info - buscar múltiples campos posibles
+            processor = None
             with open('/proc/cpuinfo', 'r') as f:
                 cpuinfo_content = f.read()
                 # Buscar en orden de prioridad: model name, Processor, Hardware
@@ -170,7 +171,10 @@ async def get_system_statistics(current_user: Dict[str, Any] = Depends(get_curre
                     with open('/proc/device-tree/model', 'r') as f:
                         processor = f.read().strip()
                 except:
-                    processor = "ARM Processor"
+                    pass
+            # Último fallback
+            if not processor or processor == '':
+                processor = "ARM Processor"
         
         stats = SystemStats(
             cpu_usage=cpu_usage,
