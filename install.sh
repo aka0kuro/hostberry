@@ -333,6 +333,21 @@ start_service() {
     if systemctl is-active --quiet "${SERVICE_NAME}"; then
         print_success "Servicio iniciado correctamente"
         print_info "Estado: $(systemctl is-active ${SERVICE_NAME})"
+        
+        # Esperar un poco más para que se cree el usuario admin
+        sleep 2
+        
+        # Verificar si se creó el usuario admin
+        print_info "Verificando creación de usuario admin..."
+        if journalctl -u "${SERVICE_NAME}" -n 20 --no-pager | grep -q "Usuario admin creado exitosamente"; then
+            print_success "Usuario admin creado correctamente"
+        elif journalctl -u "${SERVICE_NAME}" -n 20 --no-pager | grep -q "Error creando usuario admin"; then
+            print_warning "Hubo un error al crear el usuario admin"
+            print_info "Revisa los logs: sudo journalctl -u ${SERVICE_NAME} -n 50"
+        else
+            print_info "Revisa los logs para ver el estado del usuario admin:"
+            print_info "  sudo journalctl -u ${SERVICE_NAME} -n 50 | grep -i admin"
+        fi
     else
         print_warning "El servicio no se inició correctamente"
         print_info "Revisa los logs con: journalctl -u ${SERVICE_NAME} -f"
