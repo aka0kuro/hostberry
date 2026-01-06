@@ -233,6 +233,25 @@ build_project() {
     
     cd "$INSTALL_DIR"
     
+    # Verificar que los templates están presentes antes de compilar
+    if [ ! -d "${INSTALL_DIR}/website/templates" ]; then
+        print_error "Error: Directorio de templates no encontrado: ${INSTALL_DIR}/website/templates"
+        exit 1
+    fi
+    
+    TEMPLATE_COUNT=$(find "${INSTALL_DIR}/website/templates" -name "*.html" 2>/dev/null | wc -l)
+    if [ "$TEMPLATE_COUNT" -eq 0 ]; then
+        print_error "Error: No se encontraron archivos .html en ${INSTALL_DIR}/website/templates"
+        exit 1
+    fi
+    print_info "Verificado: $TEMPLATE_COUNT templates encontrados en ${INSTALL_DIR}/website/templates"
+    
+    # Verificar que main.go existe
+    if [ ! -f "${INSTALL_DIR}/main.go" ]; then
+        print_error "Error: main.go no encontrado en ${INSTALL_DIR}"
+        exit 1
+    fi
+    
     # Asegurar que Go está en el PATH
     export PATH=$PATH:/usr/local/go/bin
     
@@ -242,14 +261,14 @@ build_project() {
     /usr/local/go/bin/go mod tidy 2>/dev/null || go mod tidy
     
     # Compilar
-    print_info "Compilando binario..."
+    print_info "Compilando binario (los templates se embebarán automáticamente)..."
     CGO_ENABLED=1 /usr/local/go/bin/go build -ldflags="-s -w" -o "${INSTALL_DIR}/hostberry" . 2>/dev/null || \
     CGO_ENABLED=1 go build -ldflags="-s -w" -o "${INSTALL_DIR}/hostberry" .
     
     if [ -f "${INSTALL_DIR}/hostberry" ]; then
         chmod +x "${INSTALL_DIR}/hostberry"
         chown "$USER_NAME:$GROUP_NAME" "${INSTALL_DIR}/hostberry"
-        print_success "Compilación exitosa"
+        print_success "Compilación exitosa (templates embebidos en el binario)"
     else
         print_error "Error en la compilación"
         exit 1
