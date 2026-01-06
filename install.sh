@@ -372,6 +372,11 @@ show_final_info() {
     echo "  Contraseña: admin"
     echo -e "${RED}(Cambia la contraseña en el primer inicio)${NC}"
     echo ""
+    echo -e "${BLUE}Nota sobre el usuario admin:${NC}"
+    echo "  El usuario admin se crea automáticamente si la base de datos está vacía."
+    echo "  Revisa los logs para verificar la creación:"
+    echo "  sudo journalctl -u ${SERVICE_NAME} -n 50 | grep -i admin"
+    echo ""
 }
 
 # Función principal
