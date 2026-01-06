@@ -9,17 +9,30 @@ import (
 // createDefaultAdmin crea un usuario administrador por defecto
 func createDefaultAdmin() {
 	var count int64
-	db.Model(&User{}).Count(&count)
+	if err := db.Model(&User{}).Count(&count).Error; err != nil {
+		log.Printf("⚠️  Error contando usuarios: %v", err)
+		return
+	}
+	
+	log.Printf("📊 Usuarios en BD: %d", count)
 	
 	if count == 0 {
+		log.Println("🔧 Creando usuario admin por defecto...")
 		// Crear usuario admin por defecto
 		admin, err := Register("admin", "admin", "admin@hostberry.local")
 		if err != nil {
-			log.Printf("⚠️  Error creando usuario admin: %v", err)
+			log.Printf("❌ Error creando usuario admin: %v", err)
+			log.Printf("⚠️  Intenta crear el usuario manualmente o elimina la BD y reinicia")
 		} else {
-			log.Printf("✅ Usuario admin creado: admin/admin")
+			log.Printf("✅ Usuario admin creado exitosamente")
+			log.Printf("   Usuario: admin")
+			log.Printf("   Contraseña: admin")
+			log.Printf("   Email: admin@hostberry.local")
+			log.Printf("⚠️  IMPORTANTE: Cambia la contraseña después del primer inicio")
+			_ = admin
 		}
-		_ = admin
+	} else {
+		log.Printf("ℹ️  Ya existen %d usuarios en la BD, no se crea admin por defecto", count)
 	}
 }
 
