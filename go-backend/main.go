@@ -163,7 +163,7 @@ func createApp() *fiber.App {
 		ErrorHandler: errorHandler,
 	})
 
-	// Middlewares
+	// Middlewares globales
 	app.Use(logger.New())
 	app.Use(compress.New())
 	app.Use(cors.New(cors.Config{
@@ -177,8 +177,8 @@ func createApp() *fiber.App {
 	// Middleware de seguridad
 	app.Use(securityMiddleware)
 
-	// Middleware de autenticación (para rutas protegidas)
-	// app.Use(authMiddleware)
+	// Middleware de logging
+	app.Use(loggingMiddleware)
 
 	return app
 }
