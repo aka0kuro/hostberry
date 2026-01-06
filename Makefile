@@ -15,7 +15,7 @@ build: deps
 	@echo "✅ Compilado: $(BINARY_NAME)"
 
 # Build para Raspberry Pi 3 (ARM)
-build-arm:
+build-arm: deps
 	@echo "🔨 Compilando para Raspberry Pi 3 (ARM)..."
 	CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=7 $(GO_BUILD) -ldflags="-s -w" -o $(BINARY_NAME)-arm .
 	@echo "✅ Compilado: $(BINARY_NAME)-arm"
