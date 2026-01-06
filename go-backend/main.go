@@ -84,6 +84,11 @@ func main() {
 		defer luaEngine.Close()
 	}
 
+	// Inicializar i18n
+	if err := InitI18n("locales"); err != nil {
+		log.Printf("⚠️  Advertencia: Error inicializando i18n: %v", err)
+	}
+
 	// Inicializar base de datos
 	if err := initDatabase(); err != nil {
 		log.Fatalf("Error inicializando base de datos: %v", err)
