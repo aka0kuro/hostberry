@@ -51,10 +51,16 @@ func createTemplateEngine() *html.Engine {
 					log.Printf("   - %s", entry.Name())
 				}
 			}
-			// Usar el FS completo pero especificar el path
-			engine = html.NewFileSystem(http.FS(templatesFS), ".html")
-			// Necesitamos configurar el path base
-			log.Println("⚠️  Usando FS completo, puede requerir ajustes")
+			// Crear sub-FS desde website/templates
+			if tmplFS2, err2 := fs.Sub(templatesFS, "website/templates"); err2 == nil {
+				engine = html.NewFileSystem(http.FS(tmplFS2), ".html")
+				log.Println("✅ Motor de templates configurado usando sub-FS directo")
+			} else {
+				log.Printf("⚠️  Error creando sub-FS directo: %v", err2)
+				// Usar el FS completo como último recurso
+				engine = html.NewFileSystem(http.FS(templatesFS), ".html")
+				log.Println("⚠️  Usando FS completo, los templates deben estar en website/templates/")
+			}
 		}
 		log.Printf("⚠️  Error cargando templates embebidos: %v", err)
 		// Fallback a sistema de archivos si los embebidos fallan
