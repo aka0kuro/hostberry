@@ -175,8 +175,8 @@ func (le *LuaEngine) Close() {
 }
 
 // executeCommand ejecuta un comando del sistema (helper)
+// Esta función se llama desde Lua a través de la función global "exec"
 func executeCommand(cmd string) (string, error) {
-	// Implementar ejecución de comandos
-	// Por seguridad, validar comandos permitidos
-	return "", fmt.Errorf("not implemented")
+	// Usar la función de utils.go que valida comandos
+	return executeCommand(cmd)
 }
