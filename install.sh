@@ -239,48 +239,93 @@ EOF
 
 # Compilar el proyecto
 build_project() {
-    print_info "Compilando HostBerry..."
+    print_info "Compilando HostBerry en ${INSTALL_DIR}..."
     
-    cd "$INSTALL_DIR"
+    # Verificar que estamos en el directorio correcto
+    if [ ! -d "$INSTALL_DIR" ]; then
+        print_error "Error: Directorio de instalación no existe: $INSTALL_DIR"
+        exit 1
+    fi
+    
+    # Cambiar al directorio de instalación
+    cd "$INSTALL_DIR" || {
+        print_error "Error: No se pudo cambiar al directorio $INSTALL_DIR"
+        exit 1
+    }
+    
+    print_info "Directorio de trabajo: $(pwd)"
     
     # Verificar que los templates están presentes antes de compilar
     if [ ! -d "${INSTALL_DIR}/website/templates" ]; then
         print_error "Error: Directorio de templates no encontrado: ${INSTALL_DIR}/website/templates"
+        print_info "Verificando estructura del directorio..."
+        ls -la "${INSTALL_DIR}/" 2>/dev/null || true
         exit 1
     fi
     
     TEMPLATE_COUNT=$(find "${INSTALL_DIR}/website/templates" -name "*.html" 2>/dev/null | wc -l)
     if [ "$TEMPLATE_COUNT" -eq 0 ]; then
         print_error "Error: No se encontraron archivos .html en ${INSTALL_DIR}/website/templates"
+        print_info "Contenido del directorio:"
+        ls -la "${INSTALL_DIR}/website/templates/" 2>/dev/null || true
         exit 1
     fi
-    print_info "Verificado: $TEMPLATE_COUNT templates encontrados en ${INSTALL_DIR}/website/templates"
+    print_success "Verificado: $TEMPLATE_COUNT templates encontrados en ${INSTALL_DIR}/website/templates"
     
     # Verificar que main.go existe
     if [ ! -f "${INSTALL_DIR}/main.go" ]; then
         print_error "Error: main.go no encontrado en ${INSTALL_DIR}"
+        print_info "Archivos .go encontrados:"
+        ls -la "${INSTALL_DIR}"/*.go 2>/dev/null || true
+        exit 1
+    fi
+    
+    # Verificar que go.mod existe
+    if [ ! -f "${INSTALL_DIR}/go.mod" ]; then
+        print_error "Error: go.mod no encontrado en ${INSTALL_DIR}"
         exit 1
     fi
     
     # Asegurar que Go está en el PATH
     export PATH=$PATH:/usr/local/go/bin
     
+    # Verificar que Go está disponible
+    if ! command -v go &> /dev/null; then
+        print_error "Error: Go no está instalado o no está en el PATH"
+        exit 1
+    fi
+    
+    print_info "Go versión: $(go version)"
+    
     # Descargar dependencias
     print_info "Descargando dependencias de Go..."
-    /usr/local/go/bin/go mod download 2>/dev/null || go mod download
-    /usr/local/go/bin/go mod tidy 2>/dev/null || go mod tidy
+    if ! go mod download; then
+        print_error "Error al descargar dependencias"
+        exit 1
+    fi
+    
+    if ! go mod tidy; then
+        print_warning "Advertencia: go mod tidy tuvo problemas, continuando..."
+    fi
     
     # Compilar
-    print_info "Compilando binario (los templates se embebarán automáticamente)..."
-    CGO_ENABLED=1 /usr/local/go/bin/go build -ldflags="-s -w" -o "${INSTALL_DIR}/hostberry" . 2>/dev/null || \
-    CGO_ENABLED=1 go build -ldflags="-s -w" -o "${INSTALL_DIR}/hostberry" .
+    print_info "Compilando binario (los templates se embebarán automáticamente desde ${INSTALL_DIR}/website/templates)..."
+    print_info "La directiva //go:embed buscará templates en: website/templates (relativo a main.go)"
     
-    if [ -f "${INSTALL_DIR}/hostberry" ]; then
-        chmod +x "${INSTALL_DIR}/hostberry"
-        chown "$USER_NAME:$GROUP_NAME" "${INSTALL_DIR}/hostberry"
-        print_success "Compilación exitosa (templates embebidos en el binario)"
+    if CGO_ENABLED=1 go build -ldflags="-s -w" -o "${INSTALL_DIR}/hostberry" .; then
+        if [ -f "${INSTALL_DIR}/hostberry" ]; then
+            chmod +x "${INSTALL_DIR}/hostberry"
+            chown "$USER_NAME:$GROUP_NAME" "${INSTALL_DIR}/hostberry"
+            BINARY_SIZE=$(du -h "${INSTALL_DIR}/hostberry" | cut -f1)
+            print_success "Compilación exitosa (templates embebidos en el binario)"
+            print_info "Tamaño del binario: $BINARY_SIZE"
+        else
+            print_error "Error: El binario no se creó en ${INSTALL_DIR}/hostberry"
+            exit 1
+        fi
     else
         print_error "Error en la compilación"
+        print_info "Revisa los errores de compilación arriba"
         exit 1
     fi
 }
