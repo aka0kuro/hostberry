@@ -19,8 +19,31 @@ import (
 func createTemplateEngine() *html.Engine {
 	var engine *html.Engine
 	
-	// Intentar usar templates embebidos primero
-	// Crear sub-FS para templates
+	// PRIORIDAD: Usar sistema de archivos si está disponible (más confiable)
+	// Esto es especialmente importante en producción donde los templates pueden no estar embebidos
+	paths := []string{
+		"./website/templates",
+		"/opt/hostberry/website/templates",
+	}
+	
+	exePath, _ := os.Executable()
+	if exePath != "" {
+		exeDir := filepath.Dir(exePath)
+		templatesPath := filepath.Join(exeDir, "website", "templates")
+		paths = append([]string{templatesPath}, paths...)
+	}
+	
+	for _, path := range paths {
+		if _, err := os.Stat(path); err == nil {
+			engine = html.New(path, ".html")
+			engine.Reload(!appConfig.Server.Debug)
+			log.Printf("✅ Templates cargados desde sistema de archivos: %s", path)
+			return engine
+		}
+	}
+	
+	// Fallback: Intentar usar templates embebidos
+	log.Println("⚠️  No se encontraron templates en sistema de archivos, intentando embebidos...")
 	tmplFS, err := fs.Sub(templatesFS, "website/templates")
 	if err == nil {
 		// Listar templates disponibles para debug
