@@ -167,6 +167,11 @@ func loadConfig() error {
 func createApp() *fiber.App {
 	// Configurar templates
 	engine := createTemplateEngine()
+	if engine == nil {
+		log.Fatal("❌ Error crítico: No se pudo crear el engine de templates")
+	}
+	
+	log.Printf("✅ Engine de templates creado, asignando a Fiber app...")
 
 	app := fiber.New(fiber.Config{
 		Views:        engine,
@@ -174,6 +179,12 @@ func createApp() *fiber.App {
 		WriteTimeout: time.Duration(appConfig.Server.WriteTimeout) * time.Second,
 		ErrorHandler: errorHandler,
 	})
+	
+	// Verificar que el engine se asignó correctamente
+	if app.Config().Views == nil {
+		log.Fatal("❌ Error crítico: Views no se asignó correctamente a la app")
+	}
+	log.Println("✅ Engine de templates asignado correctamente a Fiber app")
 
 	// Middlewares globales
 	app.Use(logger.New())
