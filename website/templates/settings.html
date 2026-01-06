@@ -2,6 +2,15 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="/static/css/dashboard.css">
+<style>
+  .security-settings-card .card-body {
+    display: flex;
+    flex-direction: column;
+  }
+  .security-settings-card .security-save-wrapper {
+    margin-top: auto;
+  }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -175,7 +184,7 @@
                         </div>
                     </form>
 
-                    <div class="d-grid mt-auto">
+                    <div class="d-grid security-save-wrapper">
                         <button type="submit" class="btn btn-primary" form="securityConfigForm">
                             <i class="bi bi-check-circle me-2"></i>
                             {{ t('common.save', 'Save') }}
