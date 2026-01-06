@@ -39,8 +39,17 @@ func createTemplateEngine() *html.Engine {
 			if htmlFiles > 0 {
 				engine = html.NewFileSystem(http.FS(tmplFS), ".html")
 				if engine != nil {
+					// Configurar reload (deshabilitado para embebidos)
+					engine.Reload(false)
 					log.Printf("✅ Templates embebidos cargados (MÁS RÁPIDO): %d archivos .html", htmlFiles)
 					log.Printf("   Templates encontrados: %v", templateNames)
+					// Verificar que dashboard.html está disponible
+					if testFile, err := tmplFS.Open("dashboard.html"); err == nil {
+						testFile.Close()
+						log.Printf("   ✅ dashboard.html verificado en FS embebido")
+					} else {
+						log.Printf("   ⚠️  No se pudo abrir dashboard.html: %v", err)
+					}
 					// Continuar para añadir funciones personalizadas
 				} else {
 					log.Printf("⚠️  Error: engine es nil después de NewFileSystem con embebidos")
