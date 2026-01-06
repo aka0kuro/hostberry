@@ -88,7 +88,7 @@ func createTemplateEngine() *html.Engine {
 	// NOTA: html.NewFileSystem con embed.FS puede tener problemas de acceso
 	if engine == nil {
 		log.Println("⚠️  Sistema de archivos no disponible, intentando templates embebidos...")
-	tmplFS, err := fs.Sub(templatesFS, "website/templates")
+		tmplFS, err := fs.Sub(templatesFS, "website/templates")
 	if err == nil {
 		// Verificar que hay templates embebidos
 		if entries, err := fs.ReadDir(tmplFS, "."); err == nil {
