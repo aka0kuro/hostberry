@@ -234,7 +234,27 @@ go build -o hostberry .
 
 ## Actualización
 
-### Actualizar HostBerry
+### Actualización Automática (Recomendado)
+
+```bash
+# Desde el directorio del proyecto
+cd Hostberry
+git pull
+sudo ./install.sh --update
+
+# O usar el script de actualización
+sudo ./update.sh
+```
+
+El actualizador automáticamente:
+- ✅ Crea backup de datos y configuración
+- ✅ Detiene el servicio
+- ✅ Actualiza archivos del proyecto
+- ✅ Recompila el binario
+- ✅ Reinicia el servicio
+- ✅ Preserva tu configuración y datos
+
+### Actualización Manual
 
 ```bash
 cd /opt/hostberry
@@ -243,10 +263,16 @@ cd /opt/hostberry
 sudo cp -r data data.backup
 sudo cp config.yaml config.yaml.backup
 
-# Actualizar código
-sudo git pull
+# Actualizar código (si usas git)
+cd /ruta/al/proyecto
+git pull
+sudo cp -r * /opt/hostberry/
 
 # Recompilar
+cd /opt/hostberry
+export PATH=$PATH:/usr/local/go/bin
+sudo -u hostberry go mod download
+sudo -u hostberry go mod tidy
 sudo -u hostberry go build -o hostberry .
 
 # Reiniciar servicio
