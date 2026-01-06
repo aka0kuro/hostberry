@@ -256,6 +256,29 @@ build_project() {
     fi
 }
 
+# Crear base de datos inicial
+create_database() {
+    print_info "Preparando base de datos..."
+    
+    # Asegurar que el directorio de datos existe
+    mkdir -p "$DATA_DIR"
+    chown -R "$USER_NAME:$GROUP_NAME" "$DATA_DIR"
+    chmod 755 "$DATA_DIR"
+    
+    # El archivo de BD se creará automáticamente al iniciar el servicio
+    # pero creamos el directorio y verificamos permisos
+    DB_FILE="${DATA_DIR}/hostberry.db"
+    if [ -f "$DB_FILE" ]; then
+        print_info "Base de datos existente encontrada: $DB_FILE"
+        chown "$USER_NAME:$GROUP_NAME" "$DB_FILE"
+        chmod 644 "$DB_FILE"
+    else
+        print_info "Base de datos se creará automáticamente al iniciar el servicio"
+    fi
+    
+    print_success "Directorio de base de datos preparado"
+}
+
 # Crear servicio systemd
 create_systemd_service() {
     print_info "Creando servicio systemd..."
@@ -294,7 +317,7 @@ EOF
     # Recargar systemd
     systemctl daemon-reload
     
-    print_success "Servicio systemd creado"
+    print_success "Servicio systemd creado: $SERVICE_FILE"
 }
 
 # Iniciar servicio
@@ -365,6 +388,7 @@ main() {
     create_user
     install_files
     build_project
+    create_database
     create_systemd_service
     start_service
     show_final_info
