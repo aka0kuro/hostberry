@@ -1,6 +1,6 @@
 {{ template "base.html" . }}
 
-{{ define "title" }}{% trans %}WiFi Center{% endtrans %}{{ .end }}
+{{ define "title" }}{% trans %}WiFi Center{% endtrans %}{{ end }}
 
 {{ define "content" }}
 <div class="container-fluid">
@@ -180,11 +180,11 @@
 
 {{ define "extra_css" }}
 <link rel="stylesheet" href="/static/css/wifi_scan.css?v={{ .last_update }}">
-{{ .end }}
+{{ end }}
 
 {{ define "extra_js" }}
 <script src="/static/js/wifi_scan.js?v={{ .last_update }}"></script>
-{{ .end }}
+{{ end }}
 // Global variable to store current SSID
 window.currentSSID = null;
 
@@ -799,9 +799,9 @@ async function attemptAutoConnect() {
     }
 }
 </script>
-{{ .end }}
+{{ end }}
 
 {{ define "scripts" }}
 {{ super() }}
 {# Specific scripts for enable_wifi are now in the main script block #}
-{{ .end }}
+{{ end }}

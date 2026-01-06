@@ -322,6 +322,81 @@ func adblockDisableHandler(c *fiber.Ctx) error {
 }
 
 // Handler de logs del sistema
+// Handlers de páginas web
+func networkPageHandler(c *fiber.Ctx) error {
+	return renderTemplate(c, "network", fiber.Map{
+		"Title": T(c, "network.title", "Network Management"),
+	})
+}
+
+func wifiPageHandler(c *fiber.Ctx) error {
+	return renderTemplate(c, "wifi", fiber.Map{
+		"Title": T(c, "wifi.overview", "WiFi Overview"),
+	})
+}
+
+func wifiScanPageHandler(c *fiber.Ctx) error {
+	return renderTemplate(c, "wifi_scan", fiber.Map{
+		"Title": T(c, "wifi.scan", "WiFi Scan"),
+	})
+}
+
+func vpnPageHandler(c *fiber.Ctx) error {
+	return renderTemplate(c, "vpn", fiber.Map{
+		"Title": T(c, "vpn.overview", "VPN Overview"),
+	})
+}
+
+func wireguardPageHandler(c *fiber.Ctx) error {
+	return renderTemplate(c, "wireguard", fiber.Map{
+		"Title": T(c, "wireguard.overview", "WireGuard Overview"),
+	})
+}
+
+func adblockPageHandler(c *fiber.Ctx) error {
+	return renderTemplate(c, "adblock", fiber.Map{
+		"Title": T(c, "adblock.overview", "AdBlock Overview"),
+	})
+}
+
+func hostapdPageHandler(c *fiber.Ctx) error {
+	return renderTemplate(c, "hostapd", fiber.Map{
+		"Title": T(c, "hostapd.overview", "Hotspot Overview"),
+	})
+}
+
+func profilePageHandler(c *fiber.Ctx) error {
+	user := c.Locals("user")
+	return renderTemplate(c, "profile", fiber.Map{
+		"Title": T(c, "auth.profile", "Profile"),
+		"user":  user,
+	})
+}
+
+func systemPageHandler(c *fiber.Ctx) error {
+	return renderTemplate(c, "system", fiber.Map{
+		"Title": T(c, "system.title", "System Manager"),
+	})
+}
+
+func monitoringPageHandler(c *fiber.Ctx) error {
+	return renderTemplate(c, "monitoring", fiber.Map{
+		"Title": T(c, "monitoring.title", "Monitoring"),
+	})
+}
+
+func updatePageHandler(c *fiber.Ctx) error {
+	return renderTemplate(c, "update", fiber.Map{
+		"Title": T(c, "update.title", "Updates"),
+	})
+}
+
+func firstLoginPageHandler(c *fiber.Ctx) error {
+	return renderTemplate(c, "first_login", fiber.Map{
+		"Title": T(c, "auth.first_login", "First Login"),
+	})
+}
+
 func systemLogsHandler(c *fiber.Ctx) error {
 	level := c.Query("level", "all")
 	limitStr := c.Query("limit", "20")
