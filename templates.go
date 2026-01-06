@@ -18,29 +18,23 @@ import (
 // createTemplateEngine crea el motor de templates con funciones personalizadas
 func createTemplateEngine() *html.Engine {
 	var engine *html.Engine
-	var err error
 	
 	// Intentar usar templates embebidos primero
-	if templatesFS != nil {
-		// Crear sub-FS para templates
-		tmplFS, err := fs.Sub(templatesFS, "website/templates")
-		if err == nil {
-			engine = html.NewFileSystem(http.FS(tmplFS), ".html")
-			log.Println("✅ Templates cargados desde archivos embebidos")
-		} else {
-			log.Printf("⚠️  Error cargando templates embebidos: %v", err)
-		}
-	}
-	
-	// Fallback a sistema de archivos si los embebidos fallan
-	if engine == nil {
+	// Crear sub-FS para templates
+	tmplFS, err := fs.Sub(templatesFS, "website/templates")
+	if err == nil {
+		engine = html.NewFileSystem(http.FS(tmplFS), ".html")
+		log.Println("✅ Templates cargados desde archivos embebidos")
+	} else {
+		log.Printf("⚠️  Error cargando templates embebidos: %v", err)
+		// Fallback a sistema de archivos si los embebidos fallan
 		if _, err := os.Stat("./website/templates"); err == nil {
 			engine = html.New("./website/templates", ".html")
 			// Configurar reload solo en desarrollo
 			engine.Reload(!appConfig.Server.Debug)
 			log.Println("✅ Templates cargados desde sistema de archivos")
 		} else {
-			log.Printf("❌ Error: No se encontraron templates (embebidos: %v, filesystem: %v)", templatesFS != nil, err)
+			log.Printf("❌ Error: No se encontraron templates (filesystem: %v)", err)
 			// Crear engine vacío para evitar crash, pero mostrará errores
 			engine = html.New(".", ".html")
 		}
