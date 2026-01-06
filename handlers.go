@@ -2,7 +2,6 @@ package main
 
 import (
 	"strconv"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
