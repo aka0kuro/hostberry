@@ -649,7 +649,7 @@ async def update_system_config(
                                             errors.append(f"{base_msg}: {details}")
                                             logger.warning(f"Error aplicando timezone al sistema: {combined}")
                                         else:
-                                            errors.append(base_msg)
+                                            errors.append(f"{base_msg} (rc={rc})")
                         except Exception as tz_err:
                             logger.warning(f"Excepción aplicando timezone al sistema: {tz_err}")
                             base_msg = get_text("settings.timezone_apply_failed", default="No se pudo aplicar la zona horaria al sistema")
