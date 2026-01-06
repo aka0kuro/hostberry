@@ -595,6 +595,13 @@ body.light-theme { background: #f6f7f9; color: #212529; }
     transform: translateX(0) !important;
     margin-top: 8px;
     min-width: 150px;
+    text-align: left;
+}
+
+/* Asegurar que el menú se alinee a la izquierda del botón */
+.lang-dropdown .dropdown-menu {
+    right: 0;
+    left: auto;
 }
 
 .lang-toggle {
