@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  hostberry:
+    build: .
+    container_name: hostberry
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./config.yaml:/app/config.yaml
+    environment:
+      - TZ=UTC
+    restart: unless-stopped
+    network_mode: host  # Para acceso a interfaces de red del host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_ADMIN
+    privileged: true  # Necesario para operaciones de red avanzadas
