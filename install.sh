@@ -208,6 +208,12 @@ install_files() {
                     print_error "  ❌ dashboard.html NO encontrado (CRÍTICO)"
                     exit 1
                 fi
+                if [ -f "${INSTALL_DIR}/website/templates/login.html" ]; then
+                    print_success "  ✅ login.html encontrado"
+                else
+                    print_error "  ❌ login.html NO encontrado (CRÍTICO)"
+                    exit 1
+                fi
             else
                 print_error "Error: No se encontraron templates después de copiar"
                 exit 1
