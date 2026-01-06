@@ -131,7 +131,7 @@ func errorHandler(c *fiber.Ctx, err error) error {
 	}
 
 	// Si es una página web, renderizar página de error
-	return c.Status(code).Render("error", fiber.Map{
+	return renderTemplate(c, "error", fiber.Map{
 		"Title":   "Error",
 		"Code":    code,
 		"Message": message,
