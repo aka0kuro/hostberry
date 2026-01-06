@@ -103,6 +103,10 @@ func main() {
 	// Iniciar servidor
 	addr := fmt.Sprintf("%s:%d", appConfig.Server.Host, appConfig.Server.Port)
 	log.Printf("🚀 HostBerry iniciando en %s", addr)
+	log.Printf("📋 Configuración: Debug=%v, Timeout=%ds/%ds", 
+		appConfig.Server.Debug, 
+		appConfig.Server.ReadTimeout, 
+		appConfig.Server.WriteTimeout)
 
 	// Manejo graceful de shutdown
 	go func() {
@@ -115,10 +119,12 @@ func main() {
 		if err := app.ShutdownWithContext(ctx); err != nil {
 			log.Printf("Error en shutdown: %v", err)
 		}
+		os.Exit(0)
 	}()
 
+	log.Println("✅ Servidor listo, escuchando en", addr)
 	if err := app.Listen(addr); err != nil {
-		log.Fatalf("Error iniciando servidor: %v", err)
+		log.Fatalf("❌ Error iniciando servidor: %v", err)
 	}
 }
 
