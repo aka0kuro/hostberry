@@ -29,8 +29,15 @@ run:
 # Instalar dependencias
 deps:
 	@echo "📦 Instalando dependencias..."
+	@if ! command -v $(GO_CMD) > /dev/null; then \
+		echo "❌ Error: Go no está instalado"; \
+		echo "   Instala Go con: sudo apt install golang-go"; \
+		echo "   O descarga desde: https://go.dev/dl/"; \
+		exit 1; \
+	fi
 	$(GO_MOD) download
 	$(GO_MOD) tidy
+	@echo "✅ Dependencias instaladas"
 
 # Limpiar archivos compilados
 clean:
