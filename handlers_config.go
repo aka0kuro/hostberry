@@ -55,13 +55,13 @@ func systemConfigHandler(c *fiber.Ctx) error {
 			
 			// Validar timezone (básico)
 			if strings.Contains(tz, "..") || strings.Contains(tz, ";") {
-				errors.append("Zona horaria inválida")
+				errors = append(errors, "Zona horaria inválida")
 				continue
 			}
 			
 			zonePath := filepath.Join("/usr/share/zoneinfo", tz)
 			if _, err := os.Stat(zonePath); os.IsNotExist(err) {
-				errors.append("Zona horaria no encontrada")
+				errors = append(errors, "Zona horaria no encontrada")
 				continue
 			}
 			
@@ -77,12 +77,12 @@ func systemConfigHandler(c *fiber.Ctx) error {
 					// Detectar error de sudo
 					if strings.Contains(strings.ToLower(combined), "sudo") && 
 					   (strings.Contains(strings.ToLower(combined), "password") || strings.Contains(strings.ToLower(combined), "required")) {
-						errors.append("Permisos insuficientes (sudo requerido)")
+						errors = append(errors, "Permisos insuficientes (sudo requerido)")
 					} else {
-						errors.append(fmt.Sprintf("%s: %s", baseMsg, combined[:min(len(combined), 200)]))
+						errors = append(errors, fmt.Sprintf("%s: %s", baseMsg, combined[:min(len(combined), 200)]))
 					}
 				} else {
-					errors.append(fmt.Sprintf("%s (rc=%v)", baseMsg, err))
+					errors = append(errors, fmt.Sprintf("%s (rc=%v)", baseMsg, err))
 				}
 			} else {
 				log.Printf("✅ Timezone aplicado exitosamente: %s", tz)
