@@ -20,8 +20,74 @@ import (
 func createTemplateEngine() *html.Engine {
 	var engine *html.Engine
 	
-	// PRIORIDAD: Templates embebidos (MÁS RÁPIDOS - en memoria)
-	// Intentar usar templates embebidos primero para mejor rendimiento
+	// PRIORIDAD: Sistema de archivos (MÁS CONFIABLE)
+	// Los templates embebidos tienen problemas de acceso con html.NewFileSystem
+	// Usar sistema de archivos primero, embebidos como último recurso
+	paths := []string{
+		"/opt/hostberry/website/templates",  // Ruta de instalación estándar
+	}
+	
+	// Añadir ruta del ejecutable si es diferente
+	exePath, _ := os.Executable()
+	if exePath != "" {
+		exeDir := filepath.Dir(exePath)
+		templatesPath := filepath.Join(exeDir, "website", "templates")
+		// Solo añadir si es diferente a /opt/hostberry
+		if templatesPath != "/opt/hostberry/website/templates" {
+			paths = append(paths, templatesPath)
+		}
+	}
+	
+	// Añadir ruta relativa al final (menos confiable)
+	paths = append(paths, "./website/templates")
+	
+	for _, path := range paths {
+		if stat, err := os.Stat(path); err == nil {
+			if stat.IsDir() {
+				// Verificar que hay archivos .html en el directorio
+				if entries, err := os.ReadDir(path); err == nil {
+					htmlFiles := 0
+					var foundTemplates []string
+					for _, entry := range entries {
+						if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".html") {
+							htmlFiles++
+							if len(foundTemplates) < 10 {
+								foundTemplates = append(foundTemplates, entry.Name())
+							}
+						}
+					}
+					if htmlFiles > 0 {
+						engine = html.New(path, ".html")
+						if engine == nil {
+							log.Printf("❌ Error: engine es nil después de html.New para %s", path)
+							continue
+						}
+						engine.Reload(!appConfig.Server.Debug)
+						log.Printf("✅ Templates cargados desde sistema de archivos: %s (%d archivos .html)", path, htmlFiles)
+						log.Printf("   Templates encontrados: %v", foundTemplates)
+						// Verificar templates críticos
+						criticalTemplates := []string{"dashboard.html", "login.html", "base.html", "error.html"}
+						for _, tmpl := range criticalTemplates {
+							if _, err := os.Stat(filepath.Join(path, tmpl)); err == nil {
+								log.Printf("   ✅ %s encontrado", tmpl)
+							} else {
+								log.Printf("   ⚠️  %s NO encontrado", tmpl)
+							}
+						}
+						// Continuar para añadir funciones personalizadas
+						break // Salir del loop, engine encontrado
+					} else {
+						log.Printf("⚠️  Directorio %s existe pero no contiene archivos .html", path)
+					}
+				}
+			}
+		}
+	}
+	
+	// FALLBACK: Templates embebidos (solo si sistema de archivos falla)
+	// NOTA: html.NewFileSystem con embed.FS puede tener problemas de acceso
+	if engine == nil {
+		log.Println("⚠️  Sistema de archivos no disponible, intentando templates embebidos...")
 	tmplFS, err := fs.Sub(templatesFS, "website/templates")
 	if err == nil {
 		// Verificar que hay templates embebidos
