@@ -1,0 +1,14 @@
+*.db
+*.log
+data/
+tmp/
+.git/
+.gitignore
+*.md
+go-backend/
+*.py
+__pycache__/
+*.pyc
+.DS_Store
+.vscode/
+.idea/
