@@ -14,28 +14,12 @@ build:
 	$(GO_BUILD) -ldflags="-s -w" -o $(BINARY_NAME) .
 	@echo "✅ Compilado: $(BINARY_NAME)"
 
-# Build para Raspberry Pi (ARM)
+# Build para Raspberry Pi 3 (ARM)
 build-arm:
-	@echo "🔨 Compilando para Raspberry Pi (ARM)..."
+	@echo "🔨 Compilando para Raspberry Pi 3 (ARM)..."
 	CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=7 $(GO_BUILD) -ldflags="-s -w" -o $(BINARY_NAME)-arm .
 	@echo "✅ Compilado: $(BINARY_NAME)-arm"
-
-# Build con Docker
-docker-build:
-	@echo "🐳 Construyendo imagen Docker..."
-	docker build -t hostberry:latest .
-	@echo "✅ Imagen construida: hostberry:latest"
-
-# Ejecutar con Docker Compose
-docker-up:
-	@echo "🐳 Iniciando contenedores..."
-	docker-compose up -d
-	@echo "✅ Contenedores iniciados"
-
-docker-down:
-	@echo "🐳 Deteniendo contenedores..."
-	docker-compose down
-	@echo "✅ Contenedores detenidos"
+	@echo "📦 Copia $(BINARY_NAME)-arm a tu Raspberry Pi y ejecuta: ./$(BINARY_NAME)-arm"
 
 # Ejecutar en modo desarrollo
 run:
