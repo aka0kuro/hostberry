@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
