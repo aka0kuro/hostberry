@@ -20,38 +20,26 @@ Sistema de gestión de red para Raspberry Pi, migrado a Go + Lua para mejor rend
 
 ## 🔧 Instalación en Raspberry Pi 3
 
-### Opción 1: Compilar directamente en Raspberry Pi
+Ver la guía completa de instalación en [INSTALL_RASPBERRY.md](INSTALL_RASPBERRY.md)
+
+### Resumen rápido:
 
 ```bash
-# Instalar Go en Raspberry Pi
-sudo apt update
+# 1. Instalar Go
 sudo apt install golang-go
 
-# Clonar repositorio
+# 2. Clonar y compilar
 git clone https://github.com/aka0kuro/Hostberry.git
 cd Hostberry
-
-# Instalar dependencias
 go mod download
-
-# Compilar
 make build
 
-# O directamente
-go build -o hostberry
-```
+# 3. Configurar
+cp config.yaml.example config.yaml
+nano config.yaml
 
-### Opción 2: Compilar en otra máquina y transferir
-
-```bash
-# En tu máquina de desarrollo
-git clone https://github.com/aka0kuro/Hostberry.git
-cd Hostberry
-make build-arm
-
-# Transferir a Raspberry Pi
-scp hostberry-arm pi@raspberrypi.local:~/
-scp -r website locales lua config.yaml.example pi@raspberrypi.local:~/Hostberry/
+# 4. Ejecutar
+./hostberry
 ```
 
 ### En Raspberry Pi 3
