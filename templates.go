@@ -89,75 +89,76 @@ func createTemplateEngine() *html.Engine {
 	if engine == nil {
 		log.Println("⚠️  Sistema de archivos no disponible, intentando templates embebidos...")
 		tmplFS, err := fs.Sub(templatesFS, "website/templates")
-	if err == nil {
-		// Verificar que hay templates embebidos
-		if entries, err := fs.ReadDir(tmplFS, "."); err == nil {
-			htmlFiles := 0
-			var templateNames []string
-			for _, entry := range entries {
-				if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".html") {
-					htmlFiles++
-					if len(templateNames) < 5 {
-						templateNames = append(templateNames, entry.Name())
+		if err == nil {
+			// Verificar que hay templates embebidos
+			if entries, err := fs.ReadDir(tmplFS, "."); err == nil {
+				htmlFiles := 0
+				var templateNames []string
+				for _, entry := range entries {
+					if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".html") {
+						htmlFiles++
+						if len(templateNames) < 5 {
+							templateNames = append(templateNames, entry.Name())
+						}
 					}
 				}
-			}
-			if htmlFiles > 0 {
-				// Verificar templates críticos ANTES de crear el engine
-				criticalTemplates := []string{"dashboard.html", "login.html", "base.html"}
-				allCriticalFound := true
-				for _, tmpl := range criticalTemplates {
-					if testFile, err := tmplFS.Open(tmpl); err == nil {
-						testFile.Close()
-						log.Printf("   ✅ %s verificado en FS embebido", tmpl)
+				if htmlFiles > 0 {
+					// Verificar templates críticos ANTES de crear el engine
+					criticalTemplates := []string{"dashboard.html", "login.html", "base.html"}
+					allCriticalFound := true
+					for _, tmpl := range criticalTemplates {
+						if testFile, err := tmplFS.Open(tmpl); err == nil {
+							testFile.Close()
+							log.Printf("   ✅ %s verificado en FS embebido", tmpl)
+						} else {
+							log.Printf("   ⚠️  No se pudo abrir %s: %v", tmpl, err)
+							allCriticalFound = false
+						}
+					}
+					
+					// Si no se encuentran todos los templates críticos, usar fallback
+					if !allCriticalFound {
+						log.Printf("⚠️  No todos los templates críticos están disponibles en embebidos, usando fallback")
+						err = fmt.Errorf("templates críticos faltantes")
 					} else {
-						log.Printf("   ⚠️  No se pudo abrir %s: %v", tmpl, err)
-						allCriticalFound = false
+						engine = html.NewFileSystem(http.FS(tmplFS), ".html")
+						if engine != nil {
+							// Configurar reload (deshabilitado para embebidos)
+							engine.Reload(false)
+							log.Printf("✅ Templates embebidos cargados (MÁS RÁPIDO): %d archivos .html", htmlFiles)
+							log.Printf("   Templates encontrados: %v", templateNames)
+							// Continuar para añadir funciones personalizadas
+						} else {
+							log.Printf("⚠️  Error: engine es nil después de NewFileSystem con embebidos")
+							err = fmt.Errorf("engine es nil")
+						}
 					}
-				}
-				
-				// Si no se encuentran todos los templates críticos, usar fallback
-				if !allCriticalFound {
-					log.Printf("⚠️  No todos los templates críticos están disponibles en embebidos, usando fallback")
-					err = fmt.Errorf("templates críticos faltantes")
 				} else {
-					engine = html.NewFileSystem(http.FS(tmplFS), ".html")
-					if engine != nil {
-						// Configurar reload (deshabilitado para embebidos)
-						engine.Reload(false)
-						log.Printf("✅ Templates embebidos cargados (MÁS RÁPIDO): %d archivos .html", htmlFiles)
-						log.Printf("   Templates encontrados: %v", templateNames)
-						// Continuar para añadir funciones personalizadas
-					} else {
-						log.Printf("⚠️  Error: engine es nil después de NewFileSystem con embebidos")
-						err = fmt.Errorf("engine es nil")
-					}
+					log.Printf("⚠️  Templates embebidos vacíos, usando fallback")
+					err = fmt.Errorf("templates embebidos vacíos")
 				}
 			} else {
-				log.Printf("⚠️  Templates embebidos vacíos, usando fallback")
-				err = fmt.Errorf("templates embebidos vacíos")
+				log.Printf("⚠️  Error leyendo directorio embebido: %v", err)
 			}
 		} else {
-			log.Printf("⚠️  Error leyendo directorio embebido: %v", err)
-		}
-	} else {
-		log.Printf("⚠️  Error creando sub-FS de templates embebidos: %v", err)
-		log.Printf("   Intentando acceder directamente al FS...")
-		// Intentar acceder directamente sin sub-FS
-		if entries, err := fs.ReadDir(templatesFS, "website/templates"); err == nil {
-			htmlFiles := 0
-			for _, entry := range entries {
-				if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".html") {
-					htmlFiles++
+			log.Printf("⚠️  Error creando sub-FS de templates embebidos: %v", err)
+			log.Printf("   Intentando acceder directamente al FS...")
+			// Intentar acceder directamente sin sub-FS
+			if entries, err := fs.ReadDir(templatesFS, "website/templates"); err == nil {
+				htmlFiles := 0
+				for _, entry := range entries {
+					if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".html") {
+						htmlFiles++
+					}
 				}
-			}
-			if htmlFiles > 0 {
-				log.Printf("✅ Templates encontrados directamente en website/templates: %d archivos", htmlFiles)
-				// Crear sub-FS desde website/templates
-				if tmplFS2, err2 := fs.Sub(templatesFS, "website/templates"); err2 == nil {
-					engine = html.NewFileSystem(http.FS(tmplFS2), ".html")
-					if engine != nil {
-						log.Printf("✅ Motor de templates configurado usando sub-FS directo")
+				if htmlFiles > 0 {
+					log.Printf("✅ Templates encontrados directamente en website/templates: %d archivos", htmlFiles)
+					// Crear sub-FS desde website/templates
+					if tmplFS2, err2 := fs.Sub(templatesFS, "website/templates"); err2 == nil {
+						engine = html.NewFileSystem(http.FS(tmplFS2), ".html")
+						if engine != nil {
+							log.Printf("✅ Motor de templates configurado usando sub-FS directo")
+						}
 					}
 				}
 			}
