@@ -225,22 +225,32 @@ func renderTemplate(c *fiber.Ctx, name string, data fiber.Map) error {
 	}
 	
 	// Intentar renderizar el template
-	// Fiber busca el template por nombre sin extensión cuando usas .html como extensión
+	// Fiber con html.NewFileSystem espera el nombre sin extensión cuando se especifica ".html"
+	// Pero también puede necesitar la extensión dependiendo de la configuración
 	templateName := name
-	if !strings.HasSuffix(templateName, ".html") {
-		templateName = name + ".html"
-	}
 	
+	// Primero intentar sin extensión (comportamiento estándar de Fiber con .html)
 	if err := c.Render(templateName, data); err != nil {
-		log.Printf("❌ Error renderizando template '%s' (intentado: '%s'): %v", name, templateName, err)
-		// Intentar sin extensión
-		if strings.HasSuffix(templateName, ".html") {
-			if err2 := c.Render(strings.TrimSuffix(templateName, ".html"), data); err2 == nil {
-				return nil
-			}
+		log.Printf("❌ Error renderizando template '%s' (sin extensión): %v", templateName, err)
+		
+		// Intentar con extensión .html
+		templateNameWithExt := templateName + ".html"
+		if err2 := c.Render(templateNameWithExt, data); err2 == nil {
+			log.Printf("✅ Template renderizado con extensión: %s", templateNameWithExt)
+			return nil
 		}
-		// Log detallado del error
-		log.Printf("   Detalles del error: %+v", err)
+		log.Printf("❌ Error renderizando template '%s' (con extensión): %v", templateNameWithExt, err2)
+		
+		// Log detallado del error original
+		log.Printf("   Detalles del error original: %+v", err)
+		
+		// Intentar listar templates disponibles para debug
+		if views := c.App().Config().Views; views != nil {
+			log.Printf("   Motor de templates está configurado")
+		} else {
+			log.Printf("   ⚠️  Motor de templates NO está configurado en la app")
+		}
+		
 		return err
 	}
 	return nil
