@@ -27,22 +27,52 @@ func createTemplateEngine() *html.Engine {
 		// Verificar que hay templates embebidos
 		if entries, err := fs.ReadDir(tmplFS, "."); err == nil {
 			htmlFiles := 0
+			var templateNames []string
 			for _, entry := range entries {
 				if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".html") {
 					htmlFiles++
+					if len(templateNames) < 5 {
+						templateNames = append(templateNames, entry.Name())
+					}
 				}
 			}
 			if htmlFiles > 0 {
 				engine = html.NewFileSystem(http.FS(tmplFS), ".html")
 				if engine != nil {
 					log.Printf("✅ Templates embebidos cargados (MÁS RÁPIDO): %d archivos .html", htmlFiles)
+					log.Printf("   Templates encontrados: %v", templateNames)
 					// Continuar para añadir funciones personalizadas
 				} else {
 					log.Printf("⚠️  Error: engine es nil después de NewFileSystem con embebidos")
+					err = fmt.Errorf("engine es nil")
 				}
 			} else {
 				log.Printf("⚠️  Templates embebidos vacíos, usando fallback")
 				err = fmt.Errorf("templates embebidos vacíos")
+			}
+		} else {
+			log.Printf("⚠️  Error leyendo directorio embebido: %v", err)
+		}
+	} else {
+		log.Printf("⚠️  Error creando sub-FS de templates embebidos: %v", err)
+		log.Printf("   Intentando acceder directamente al FS...")
+		// Intentar acceder directamente sin sub-FS
+		if entries, err := fs.ReadDir(templatesFS, "website/templates"); err == nil {
+			htmlFiles := 0
+			for _, entry := range entries {
+				if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".html") {
+					htmlFiles++
+				}
+			}
+			if htmlFiles > 0 {
+				log.Printf("✅ Templates encontrados directamente en website/templates: %d archivos", htmlFiles)
+				// Crear sub-FS desde website/templates
+				if tmplFS2, err2 := fs.Sub(templatesFS, "website/templates"); err2 == nil {
+					engine = html.NewFileSystem(http.FS(tmplFS2), ".html")
+					if engine != nil {
+						log.Printf("✅ Motor de templates configurado usando sub-FS directo")
+					}
+				}
 			}
 		}
 	}
