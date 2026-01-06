@@ -18,6 +18,7 @@ import (
 // createTemplateEngine crea el motor de templates con funciones personalizadas
 func createTemplateEngine() *html.Engine {
 	var engine *html.Engine
+	var err error
 	
 	// Intentar usar templates embebidos primero
 	if templatesFS != nil {
@@ -25,6 +26,9 @@ func createTemplateEngine() *html.Engine {
 		tmplFS, err := fs.Sub(templatesFS, "website/templates")
 		if err == nil {
 			engine = html.NewFileSystem(http.FS(tmplFS), ".html")
+			log.Println("✅ Templates cargados desde archivos embebidos")
+		} else {
+			log.Printf("⚠️  Error cargando templates embebidos: %v", err)
 		}
 	}
 	
@@ -34,8 +38,11 @@ func createTemplateEngine() *html.Engine {
 			engine = html.New("./website/templates", ".html")
 			// Configurar reload solo en desarrollo
 			engine.Reload(!appConfig.Server.Debug)
+			log.Println("✅ Templates cargados desde sistema de archivos")
 		} else {
-			log.Fatal("No se encontraron templates ni embebidos ni en sistema de archivos")
+			log.Printf("❌ Error: No se encontraron templates (embebidos: %v, filesystem: %v)", templatesFS != nil, err)
+			// Crear engine vacío para evitar crash, pero mostrará errores
+			engine = html.New(".", ".html")
 		}
 	}
 	
