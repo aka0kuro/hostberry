@@ -20,6 +20,8 @@ cd Hostberry
 sudo ./install.sh
 ```
 
+**Nota:** Si HostBerry ya está instalado, el instalador detectará la instalación existente y te preguntará si deseas actualizar. También puedes usar `sudo ./install.sh --update` para actualizar directamente.
+
 El instalador automáticamente:
 - ✅ Instala Go (si no está instalado)
 - ✅ Instala dependencias (Lua, build-essential, etc.)
