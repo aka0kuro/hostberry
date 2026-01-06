@@ -444,6 +444,7 @@ main() {
     install_files
     build_project
     create_database
+    configure_firewall
     create_systemd_service
     start_service
     show_final_info
