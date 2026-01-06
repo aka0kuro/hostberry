@@ -223,11 +223,6 @@ func setupRoutes(app *fiber.App) {
 			log.Printf("⚠️  No se encontraron archivos estáticos ni embebidos ni en filesystem")
 		}
 	} else {
-		// Servir archivos estáticos embebidos usando http.FileServer
-		app.Static("/static", ".", fiber.Static{
-			Compress:  true,
-			ByteRange: true,
-		})
 		// Usar handler personalizado para archivos embebidos
 		app.Get("/static/*", func(c *fiber.Ctx) error {
 			path := c.Params("*")
