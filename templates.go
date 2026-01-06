@@ -235,11 +235,11 @@ func renderTemplate(c *fiber.Ctx, name string, data fiber.Map) error {
 		
 		// Intentar con extensión .html
 		templateNameWithExt := templateName + ".html"
-		if err2 := c.Render(templateNameWithExt, data); err2 == nil {
+		if renderErr := c.Render(templateNameWithExt, data); renderErr == nil {
 			log.Printf("✅ Template renderizado con extensión: %s", templateNameWithExt)
 			return nil
 		}
-		log.Printf("❌ Error renderizando template '%s' (con extensión): %v", templateNameWithExt, err2)
+		log.Printf("❌ Error renderizando template '%s' (con extensión): %v", templateNameWithExt, renderErr)
 		
 		// Log detallado del error original
 		log.Printf("   Detalles del error original: %+v", err)
