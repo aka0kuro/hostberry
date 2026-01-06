@@ -40,7 +40,7 @@ func (le *LuaEngine) registerFunctions() {
 	// Función para ejecutar comandos del sistema
 	le.L.SetGlobal("exec", le.L.NewFunction(func(L *lua.LState) int {
 		cmd := L.CheckString(1)
-		result, err := executeCommandSafe(cmd)
+		result, err := executeCommandFromLua(cmd)
 		if err != nil {
 			L.Push(lua.LNil)
 			L.Push(lua.LString(err.Error()))
@@ -174,8 +174,8 @@ func (le *LuaEngine) Close() {
 	}
 }
 
-// executeCommandSafe ejecuta un comando de forma segura (llamado desde Lua)
-func executeCommandSafe(cmd string) (string, error) {
+// executeCommandFromLua ejecuta un comando de forma segura (llamado desde Lua)
+func executeCommandFromLua(cmd string) (string, error) {
 	// Usar la función de utils.go que valida comandos
 	return executeCommand(cmd)
 }
