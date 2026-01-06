@@ -19,26 +19,54 @@ import (
 func createTemplateEngine() *html.Engine {
 	var engine *html.Engine
 	
-	// PRIORIDAD: Usar sistema de archivos si está disponible (más confiable)
-	// Esto es especialmente importante en producción donde los templates pueden no estar embebidos
-	// ORDEN DE PRIORIDAD (más específico primero):
-	paths := []string{
-		"/opt/hostberry/website/templates",  // Ruta de instalación estándar (más confiable)
-	}
-	
-	// Añadir ruta del ejecutable si es diferente
-	exePath, _ := os.Executable()
-	if exePath != "" {
-		exeDir := filepath.Dir(exePath)
-		templatesPath := filepath.Join(exeDir, "website", "templates")
-		// Solo añadir si es diferente a /opt/hostberry
-		if templatesPath != "/opt/hostberry/website/templates" {
-			paths = append(paths, templatesPath)
+	// PRIORIDAD: Templates embebidos (MÁS RÁPIDOS - en memoria)
+	// Intentar usar templates embebidos primero para mejor rendimiento
+	tmplFS, err := fs.Sub(templatesFS, "website/templates")
+	if err == nil {
+		// Verificar que hay templates embebidos
+		if entries, err := fs.ReadDir(tmplFS, "."); err == nil {
+			htmlFiles := 0
+			for _, entry := range entries {
+				if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".html") {
+					htmlFiles++
+				}
+			}
+			if htmlFiles > 0 {
+				engine = html.NewFileSystem(http.FS(tmplFS), ".html")
+				if engine != nil {
+					log.Printf("✅ Templates embebidos cargados (MÁS RÁPIDO): %d archivos .html", htmlFiles)
+					// Continuar para añadir funciones personalizadas
+				} else {
+					log.Printf("⚠️  Error: engine es nil después de NewFileSystem con embebidos")
+				}
+			} else {
+				log.Printf("⚠️  Templates embebidos vacíos, usando fallback")
+				err = fmt.Errorf("templates embebidos vacíos")
+			}
 		}
 	}
 	
-	// Añadir ruta relativa al final (menos confiable)
-	paths = append(paths, "./website/templates")
+	// FALLBACK: Sistema de archivos (más lento pero más flexible)
+	// Solo usar si los embebidos no están disponibles
+	if engine == nil {
+		log.Println("⚠️  Usando templates desde sistema de archivos (más lento pero flexible)")
+		paths := []string{
+			"/opt/hostberry/website/templates",  // Ruta de instalación estándar
+		}
+		
+		// Añadir ruta del ejecutable si es diferente
+		exePath, _ := os.Executable()
+		if exePath != "" {
+			exeDir := filepath.Dir(exePath)
+			templatesPath := filepath.Join(exeDir, "website", "templates")
+			// Solo añadir si es diferente a /opt/hostberry
+			if templatesPath != "/opt/hostberry/website/templates" {
+				paths = append(paths, templatesPath)
+			}
+		}
+		
+		// Añadir ruta relativa al final (menos confiable)
+		paths = append(paths, "./website/templates")
 	
 	for _, path := range paths {
 		if stat, err := os.Stat(path); err == nil {
