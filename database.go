@@ -85,6 +85,7 @@ func autoMigrate() error {
 		&VPNConfig{},
 		&WireGuardConfig{},
 		&AdBlockConfig{},
+		&SystemConfig{},
 	)
 }
 
@@ -96,6 +97,12 @@ type SystemLog struct {
 	Source    string
 	UserID    *int
 	CreatedAt time.Time `gorm:"index"`
+}
+
+// SystemConfig modelo para configuraciones clave-valor
+type SystemConfig struct {
+	Key   string `gorm:"primaryKey"`
+	Value string `gorm:"type:text"`
 }
 
 // SystemStatistic modelo para estadísticas
