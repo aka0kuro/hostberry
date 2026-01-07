@@ -141,8 +141,10 @@
     {{ if or (eq .page "login") (eq .page "first_login") }}
         {{embed}}
     {{ else }}
-        <div class="container-fluid mt-4">
-            {{embed}}
+        <div class="main-content">
+            <div class="container-fluid mt-4">
+                {{embed}}
+            </div>
         </div>
     {{ end }}
 
