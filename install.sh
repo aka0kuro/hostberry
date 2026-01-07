@@ -95,7 +95,7 @@ install_dependencies() {
     apt-get update -qq
     
     # Instalar dependencias básicas
-    DEPS="wget curl build-essential"
+    DEPS="wget curl build-essential iw"
     
     # Verificar si Go está instalado
     if ! command -v go &> /dev/null; then
