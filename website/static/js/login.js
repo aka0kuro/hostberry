@@ -100,18 +100,21 @@
             }
           }, 800);
         } else {
+          // Preferir mensaje real del backend si viene en {error: "..."}
+          const backendError = (result && result.error) ? String(result.error) : '';
           if(resp.status === 422){
-            showAlert('danger', i18n.login_generic_error);
+            showAlert('danger', backendError || i18n.login_generic_error);
             return;
           }
           if(resp.status === 404){
-            showAlert('warning', i18n.user_not_found);
+            showAlert('warning', backendError || i18n.user_not_found);
           } else if(resp.status === 401){
-            showAlert('danger', i18n.incorrect_password);
+            // Puede ser contraseña incorrecta O ruta protegida por auth (token requerido)
+            showAlert('danger', backendError || i18n.incorrect_password);
           } else if(resp.status === 429){
-            showAlert('warning', i18n.too_many_attempts);
+            showAlert('warning', backendError || i18n.too_many_attempts);
           } else {
-            showAlert('danger', i18n.login_generic_error);
+            showAlert('danger', backendError || i18n.login_generic_error);
           }
         }
       } catch(err){
