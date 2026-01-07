@@ -254,6 +254,39 @@
     }
   }
   
+  // Load WiFi interfaces
+  async function loadWiFiInterfaces() {
+    try {
+      const resp = await apiRequest('/api/v1/wifi/interfaces');
+      if (resp.ok) {
+        const data = await resp.json();
+        const interfaceSelect = document.getElementById('wifi-interface');
+        if (interfaceSelect && data.interfaces) {
+          // Limpiar opciones existentes (excepto auto-detect)
+          while (interfaceSelect.options.length > 1) {
+            interfaceSelect.remove(1);
+          }
+          
+          // Agregar interfaces
+          data.interfaces.forEach(function(iface) {
+            const option = document.createElement('option');
+            option.value = iface.name;
+            option.textContent = iface.name + (iface.state ? ' (' + iface.state + ')' : '');
+            interfaceSelect.appendChild(option);
+          });
+          
+          // Cargar interfaz guardada
+          const savedInterface = localStorage.getItem('wifi_interface');
+          if (savedInterface) {
+            interfaceSelect.value = savedInterface;
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error loading WiFi interfaces:', e);
+    }
+  }
+  
   // Scan networks
   async function scanNetworks() {
     const loadingEl = document.getElementById('networks-loading');
@@ -261,6 +294,13 @@
     const tableEl = document.getElementById('networks-table-container');
     const tbody = document.getElementById('networksTable');
     const scanBtn = document.getElementById('scan-networks-btn');
+    const interfaceSelect = document.getElementById('wifi-interface');
+    
+    // Obtener interfaz seleccionada
+    const selectedInterface = interfaceSelect ? interfaceSelect.value : '';
+    if (selectedInterface) {
+      localStorage.setItem('wifi_interface', selectedInterface);
+    }
     
     // Verificar estado del WiFi primero
     const wifiStatus = await checkWiFiStatus();
