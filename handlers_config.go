@@ -89,6 +89,33 @@ func systemConfigHandler(c *fiber.Ctx) error {
 			}
 		}
 		
+		// Aplicar cambios de seguridad
+		if key == "session_timeout" {
+			// Actualizar TokenExpiry en la configuración de la app
+			if timeout, err := strconv.Atoi(valueStr); err == nil && timeout > 0 {
+				appConfig.Security.TokenExpiry = timeout
+				log.Printf("✅ Session timeout actualizado: %d minutos", timeout)
+			}
+		}
+		
+		if key == "max_login_attempts" {
+			// Esta configuración se usa en el middleware de autenticación
+			// Se guarda en BD y se lee cuando es necesario
+			log.Printf("✅ Max login attempts actualizado: %s", valueStr)
+		}
+		
+		// Aplicar cambios de rendimiento
+		if key == "cache_enabled" {
+			// La configuración de cache se guarda en BD y se aplica cuando se usa
+			log.Printf("✅ Cache enabled actualizado: %s", valueStr)
+		}
+		
+		if key == "compression_enabled" {
+			// La compresión ya está habilitada globalmente en Fiber
+			// Esta configuración se guarda para referencia
+			log.Printf("✅ Compression enabled actualizado: %s", valueStr)
+		}
+		
 		updatedKeys = append(updatedKeys, key)
 	}
 
