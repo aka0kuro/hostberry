@@ -1,6 +1,4 @@
-{{ template "base.html" . }}
-
-{{ define "content" }}
+ 
 <div class="container-fluid">
 
     {{ if .wifi_blocked }}
@@ -175,12 +173,4 @@
     <!-- Toast Container -->
     <div id="toast-container" style="position: fixed; top: 1rem; right: 1rem; z-index: 9999;"></div>
 </div>
-{{ end }}
-
-{{ define "extra_css" }}
-<link rel="stylesheet" href="/static/css/wifi_scan.css">
-{{ end }}
-
-{{ define "extra_js" }}
-<script src="/static/js/wifi_scan.js"></script>
-{{ end }}
+<script defer src="/static/js/wifi_scan.js"></script>
