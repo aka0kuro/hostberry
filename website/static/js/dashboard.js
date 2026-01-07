@@ -49,6 +49,68 @@
         text.textContent = statusText;
     };
 
+    const updateServiceHealth = (serviceName, isActive) => {
+        const dot = document.getElementById('health-' + serviceName);
+        const text = document.getElementById('health-' + serviceName + '-text');
+        if (!dot || !text) return;
+
+        const status = isActive ? 'success' : 'danger';
+        const statusText = isActive 
+            ? ((window.HostBerry && window.HostBerry.t) ? window.HostBerry.t('common.active', 'Active') : 'Active')
+            : ((window.HostBerry && window.HostBerry.t) ? window.HostBerry.t('common.inactive', 'Inactive') : 'Inactive');
+
+        dot.className = 'health-dot health-dot-' + status;
+        text.textContent = statusText;
+    };
+
+    async function loadServices() {
+        try {
+            const apiRequestFn = window.HostBerry && window.HostBerry.apiRequest 
+                ? window.HostBerry.apiRequest 
+                : async function(url) {
+                    const token = localStorage.getItem('access_token');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) {
+                        headers['Authorization'] = 'Bearer ' + token;
+                    }
+                    return fetch(url, { headers: headers });
+                };
+            
+            const resp = await apiRequestFn('/api/v1/system/services');
+            if (!resp.ok) throw new Error('Services request failed');
+            
+            const data = await resp.json();
+            const services = data.services || {};
+            
+            // Actualizar estado de servicios en System Health
+            if (services.wireguard) {
+                const wireguard = services.wireguard;
+                const isActive = wireguard.active === true || wireguard.status === true;
+                updateServiceHealth('wireguard', isActive);
+            }
+            
+            if (services.openvpn) {
+                const openvpn = services.openvpn;
+                const isActive = openvpn.active === true || openvpn.status === 'active';
+                updateServiceHealth('openvpn', isActive);
+            }
+            
+            if (services.hostapd) {
+                const hostapd = services.hostapd;
+                const isActive = hostapd.active === true || hostapd.status === 'active';
+                updateServiceHealth('hostapd', isActive);
+            }
+            
+            if (services.adblock) {
+                const adblock = services.adblock;
+                const isActive = adblock.active === true || adblock.status === true;
+                updateServiceHealth('adblock', isActive);
+            }
+        } catch (error) {
+            console.error('Error loading services:', error);
+        }
+    }
+
     async function fetchDashboardData() {
         try {
             const apiRequestFn = window.HostBerry && window.HostBerry.apiRequest 
