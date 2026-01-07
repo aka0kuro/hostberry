@@ -44,7 +44,9 @@ func requireAuth(c *fiber.Ctx) error {
 		}
 		
 		// Comparación con prefijo (para rutas como /api/v1/translations/:lang)
-		if strings.HasPrefix(path, publicPath+"/") || strings.HasPrefix(normalizedPath, normalizedPublicPath+"/") {
+		// Nota: usar strings.HasPrefix con "/" para evitar coincidencias parciales
+		if (publicPath != "/" && strings.HasPrefix(path, publicPath+"/")) ||
+			(normalizedPublicPath != "/" && strings.HasPrefix(normalizedPath, normalizedPublicPath+"/")) {
 			// Esta ruta es pública, permitir sin autenticación
 			return c.Next()
 		}
