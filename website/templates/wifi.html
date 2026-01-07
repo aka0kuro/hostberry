@@ -180,7 +180,7 @@ body.light-theme .text-info {
                     {{ call .t "wifi.overview" "WiFi Overview" }}
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="wifi-card-body">
                 <div class="row">
                     <div class="col-md-3 mb-3">
                         <div class="text-center">
@@ -224,7 +224,7 @@ body.light-theme .text-info {
                     {{ call .t "wifi.status" "Status" }}
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="wifi-card-body">
                 <div class="d-flex align-items-center mb-3">
                     <span class="status-indicator status-{{ if .wifi_status.enabled }}online{{ else }}offline{{ end }}"></span>
                     <span>{{ if .wifi_status.enabled }}{{ call .t "wifi.wifi_enabled" "WiFi Enabled" }}{{ else }}{{ call .t "wifi.wifi_disabled" "WiFi Disabled" }}{{ end }}</span>
@@ -274,7 +274,7 @@ body.light-theme .text-info {
                     {{ call .t "wifi.available_networks" "Available Networks" }}
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="wifi-card-body">
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
@@ -304,7 +304,7 @@ body.light-theme .text-info {
                     {{ call .t "wifi.connected_clients" "Connected Clients" }}
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="wifi-card-body">
                 <div class="table-responsive">
                     <table class="table table-sm">
                         <thead>
@@ -333,7 +333,7 @@ body.light-theme .text-info {
                     {{ call .t "wifi.configuration" "Configuration" }}
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="wifi-card-body">
                 <form id="wifiConfigForm">
                     <div class="mb-3">
                         <label for="ssid" class="form-label">{{ call .t "wifi.network_ssid" "SSID" }}</label>
@@ -393,7 +393,7 @@ body.light-theme .text-info {
                     {{ call .t "wifi.guest_network" "Guest Network" }}
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="wifi-card-body">
                 <div class="d-flex align-items-center mb-3">
                     <span class="status-indicator status-{{ if .guest_network.enabled }}online{{ else }}offline{{ end }}"></span>
                     <span>{{ if .guest_network.enabled }}{{ call .t "wifi.network_guest_enabled" "Guest Network Enabled" }}{{ else }}{{ call .t "wifi.network_guest_disabled" "Guest Network Disabled" }}{{ end }}</span>
@@ -442,7 +442,7 @@ body.light-theme .text-info {
                     {{ call .t "wifi.statistics" "Statistics" }}
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="wifi-card-body">
                 <div class="row">
                     <div class="col-md-3 mb-3">
                         <div class="text-center">
