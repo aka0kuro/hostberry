@@ -376,13 +376,13 @@
   // Refresh handlers
   document.addEventListener('DOMContentLoaded', function() {
     loadConnectionStatus();
-    loadNetworks();
+    
+    // Mostrar mensaje inicial para escanear redes
+    const emptyEl = document.getElementById('networks-empty');
+    if (emptyEl) emptyEl.style.display = 'block';
     
     // Refresh connection status every 30 seconds
     setInterval(loadConnectionStatus, 30000);
-    
-    // Refresh networks every 60 seconds
-    setInterval(loadNetworks, 60000);
     
     // Manual refresh buttons
     const refreshConnection = document.getElementById('refresh-connection');
@@ -392,7 +392,53 @@
     
     const refreshNetworks = document.getElementById('refresh-networks');
     if (refreshNetworks) {
-      refreshNetworks.addEventListener('click', loadNetworks);
+      refreshNetworks.addEventListener('click', scanNetworks);
+    }
+    
+    // Toggle password visibility
+    const togglePwd = document.getElementById('togglePwd');
+    if (togglePwd) {
+      togglePwd.addEventListener('click', function() {
+        const input = document.getElementById('connectPassword');
+        const icon = document.getElementById('togglePwdIcon');
+        if (!input || !icon) return;
+        const isPass = input.getAttribute('type') === 'password';
+        input.setAttribute('type', isPass ? 'text' : 'password');
+        icon.classList.toggle('bi-eye');
+        icon.classList.toggle('bi-eye-slash');
+      });
+    }
+    
+    // WiFi connect form
+    const wifiConnectForm = document.getElementById('wifiConnectForm');
+    if (wifiConnectForm) {
+      wifiConnectForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const ssid = document.getElementById('connectSSIDHidden')?.value || document.getElementById('connectSSID')?.value;
+        const password = document.getElementById('connectPassword')?.value || '';
+        const security = document.getElementById('connectSecurityHidden')?.value || document.getElementById('connectSecurity')?.value;
+        const submitBtn = document.getElementById('connectSubmitBtn');
+        
+        if (security !== 'Open' && !password) {
+          showAlert('danger', t('wifi.password_required', 'Please enter the network password.'));
+          return;
+        }
+        
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          const originalHtml = submitBtn.innerHTML;
+          submitBtn.innerHTML = '<span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> ' + t('wifi.connecting', 'Connecting...');
+          
+          try {
+            await connectToNetwork(ssid, security, password);
+          } finally {
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalHtml;
+            }
+          }
+        }
+      });
     }
   });
   
