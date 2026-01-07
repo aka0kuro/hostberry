@@ -570,6 +570,34 @@ EOF
     chmod 750 "$SAFE_DIR/set-timezone"
     chown root:$GROUP_NAME "$SAFE_DIR/set-timezone"
     
+    # Detectar rutas de comandos WiFi
+    NMCLI_PATH=""
+    RFKILL_PATH=""
+    IFCONFIG_PATH=""
+    
+    # Buscar nmcli
+    if command -v nmcli &> /dev/null; then
+        NMCLI_PATH=$(command -v nmcli)
+    elif [ -f "/usr/bin/nmcli" ]; then
+        NMCLI_PATH="/usr/bin/nmcli"
+    fi
+    
+    # Buscar rfkill
+    if command -v rfkill &> /dev/null; then
+        RFKILL_PATH=$(command -v rfkill)
+    elif [ -f "/usr/sbin/rfkill" ]; then
+        RFKILL_PATH="/usr/sbin/rfkill"
+    fi
+    
+    # Buscar ifconfig
+    if command -v ifconfig &> /dev/null; then
+        IFCONFIG_PATH=$(command -v ifconfig)
+    elif [ -f "/sbin/ifconfig" ]; then
+        IFCONFIG_PATH="/sbin/ifconfig"
+    elif [ -f "/usr/sbin/ifconfig" ]; then
+        IFCONFIG_PATH="/usr/sbin/ifconfig"
+    fi
+    
     # Configurar sudoers
     cat > "/etc/sudoers.d/hostberry" <<EOF
 # Permisos para HostBerry
@@ -578,9 +606,32 @@ $USER_NAME ALL=(ALL) NOPASSWD: /sbin/shutdown
 $USER_NAME ALL=(ALL) NOPASSWD: /usr/sbin/shutdown
 $USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/shutdown
 EOF
-    chmod 440 "/etc/sudoers.d/hostberry"
     
-    print_success "Permisos y sudoers configurados"
+    # Agregar permisos WiFi si los comandos están disponibles
+    if [ -n "$NMCLI_PATH" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $NMCLI_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para nmcli: $NMCLI_PATH"
+    fi
+    
+    if [ -n "$RFKILL_PATH" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $RFKILL_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para rfkill: $RFKILL_PATH"
+    fi
+    
+    if [ -n "$IFCONFIG_PATH" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $IFCONFIG_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para ifconfig: $IFCONFIG_PATH"
+    fi
+    
+    # Validar configuración de sudoers
+    if visudo -c -f "/etc/sudoers.d/hostberry" 2>/dev/null; then
+        chmod 440 "/etc/sudoers.d/hostberry"
+        print_success "Permisos y sudoers configurados correctamente"
+    else
+        print_warning "Advertencia: Error al validar configuración de sudoers"
+        print_info "Revisa manualmente: visudo -c -f /etc/sudoers.d/hostberry"
+        chmod 440 "/etc/sudoers.d/hostberry"
+    fi
 }
 
 # Crear servicio systemd
