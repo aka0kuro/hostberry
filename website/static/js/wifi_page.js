@@ -207,40 +207,9 @@
     }
   }
   
-  // Scan networks
-  async function scanNetworks() {
-    const btn = document.getElementById('scan-networks-btn');
-    if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> ' + t('wifi.scanning', 'Scanning...');
-    }
-    
-    try {
-      const resp = await apiRequest('/api/v1/wifi/scan', { method: 'POST' });
-      if (resp.ok) {
-        showAlert('info', t('wifi.scanning_networks', 'Scanning networks...'));
-        setTimeout(() => {
-          loadNetworks();
-          if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-search"></i> ' + t('wifi.scan_networks', 'Scan Networks');
-          }
-        }, 3000);
-      } else {
-        showAlert('danger', t('errors.operation_failed', 'Operation failed'));
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = '<i class="bi bi-search"></i> ' + t('wifi.scan_networks', 'Scan Networks');
-        }
-      }
-    } catch (e) {
-      console.error('Error scanning networks:', e);
-      showAlert('danger', t('errors.network_error', 'Network error'));
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-search"></i> ' + t('wifi.scan_networks', 'Scan Networks');
-      }
-    }
+  // Scan networks - redirect to wifi-scan page
+  function scanNetworks() {
+    window.location.href = '/wifi-scan';
   }
   
   // Connect to network
