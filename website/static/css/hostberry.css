@@ -401,7 +401,11 @@ body.dark-theme .sidebar-nav {
 .nav-link:hover { background: rgba(255,255,255,.15); transform: translateY(-1px); }
 
 /* Basic grid (Bootstrap-like) */
-.container-fluid { width: 100%; box-sizing: border-box; }
+.container-fluid { 
+    width: 100%; 
+    box-sizing: border-box; 
+    background: transparent;
+}
 .row { display:flex; flex-wrap:wrap; margin-left:-.75rem; margin-right:-.75rem; }
 [class*="col-"] { padding-left:.75rem; padding-right:.75rem; box-sizing:border-box; }
 
