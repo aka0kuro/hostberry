@@ -157,11 +157,18 @@ func createTemplateEngine() *html.Engine {
 					} else {
 						engine = html.NewFileSystem(http.FS(tmplFS), ".html")
 						if engine != nil {
-							// Configurar reload (deshabilitado para embebidos)
-							engine.Reload(false)
-							log.Printf("✅ Templates embebidos cargados (MÁS RÁPIDO): %d archivos .html", htmlFiles)
-							log.Printf("   Templates encontrados: %v", templateNames)
-							// Continuar para añadir funciones personalizadas
+							// Forzar carga para verificar errores de sintaxis
+							if err := engine.Load(); err != nil {
+								log.Printf("❌ Error cargando templates embebidos: %v", err)
+								engine = nil
+								err = err // para el log de abajo
+							} else {
+								// Configurar reload (deshabilitado para embebidos)
+								engine.Reload(false)
+								log.Printf("✅ Templates embebidos cargados (MÁS RÁPIDO): %d archivos .html", htmlFiles)
+								log.Printf("   Templates encontrados: %v", templateNames)
+								// Continuar para añadir funciones personalizadas
+							}
 						} else {
 							log.Printf("⚠️  Error: engine es nil después de NewFileSystem con embebidos")
 							err = fmt.Errorf("engine es nil")
