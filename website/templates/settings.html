@@ -679,15 +679,25 @@
         // Como estamos en JS, podemos intentar leer el valor 'selected' si existiera, o dejarlo al usuario.
         
         if (interfaces && interfaces.length > 0) {
+          // Agregar opción vacía inicial
+          const emptyOption = document.createElement('option');
+          emptyOption.value = '';
+          emptyOption.textContent = t('settings.select_interface', 'Select interface...');
+          select.appendChild(emptyOption);
+          
           // Agregar cada interfaz como opción
           interfaces.forEach(iface => {
+            if (!iface || !iface.name) return;
             const option = document.createElement('option');
             option.value = iface.name;
-            option.textContent = `${iface.name}${iface.ip && iface.ip !== 'N/A' ? ` (${iface.ip})` : ''}`;
+            const displayText = iface.ip && iface.ip !== 'N/A' && iface.ip !== '' 
+              ? `${iface.name} (${iface.ip})` 
+              : iface.name;
+            option.textContent = displayText;
             select.appendChild(option);
           });
         } else {
-          select.innerHTML = '<option value="">No interfaces found</option>';
+          select.innerHTML = '<option value="">' + t('network.no_interfaces', 'No interfaces found') + '</option>';
         }
       }
     } catch (error) {
