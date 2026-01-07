@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"os/exec"
+	"strings"
 	"strconv"
 	"time"
 
@@ -70,6 +72,15 @@ func logoutAPIHandler(c *fiber.Ctx) error {
 	user := c.Locals("user").(*User)
 	userID := user.ID
 	InsertLog("INFO", "Usuario cerró sesión: "+user.Username, "auth", &userID)
+
+	// Limpiar cookie para rutas web
+	c.Cookie(&fiber.Cookie{
+		Name:     "access_token",
+		Value:    "",
+		Path:     "/",
+		HTTPOnly: true,
+		MaxAge:   -1,
+	})
 
 	return c.JSON(fiber.Map{
 		"message": "Sesión cerrada",
@@ -348,6 +359,140 @@ func wireguardStatusHandler(c *fiber.Ctx) error {
 	})
 }
 
+// wireguardInterfacesHandler adapta el estado a la estructura esperada por wireguard.js
+func wireguardInterfacesHandler(c *fiber.Ctx) error {
+	// Intentar obtener interfaces via wg (más directo que Lua para estructura)
+	out, err := exec.Command("wg", "show", "interfaces").CombinedOutput()
+	if err != nil {
+		// fallback a Lua status
+		if luaEngine != nil {
+			result, err2 := luaEngine.Execute("wireguard_status.lua", nil)
+			if err2 != nil {
+				return c.Status(500).JSON(fiber.Map{"error": string(out)})
+			}
+			_ = result
+		}
+		return c.Status(500).JSON(fiber.Map{"error": strings.TrimSpace(string(out))})
+	}
+
+	ifaces := strings.Fields(strings.TrimSpace(string(out)))
+	var resp []fiber.Map
+	for _, iface := range ifaces {
+		// peers count
+		detailsOut, _ := exec.Command("wg", "show", iface).CombinedOutput()
+		details := string(detailsOut)
+		peersCount := 0
+		for _, line := range strings.Split(details, "\n") {
+			if strings.HasPrefix(strings.TrimSpace(line), "peer:") {
+				peersCount++
+			}
+		}
+		resp = append(resp, fiber.Map{
+			"name":        iface,
+			"status":      "up",
+			"address":     "", // opcional (depende de ip)
+			"peers_count": peersCount,
+		})
+	}
+	return c.JSON(resp)
+}
+
+// wireguardPeersHandler devuelve una lista simple de peers a partir de wg show wg0
+func wireguardPeersHandler(c *fiber.Ctx) error {
+	out, err := exec.Command("wg", "show").CombinedOutput()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": strings.TrimSpace(string(out))})
+	}
+	text := string(out)
+	var peers []fiber.Map
+
+	var curPeer string
+	var handshake string
+	var transfer string
+
+	flush := func() {
+		if curPeer == "" {
+			return
+		}
+		connected := true
+		if strings.Contains(handshake, "never") || handshake == "" {
+			connected = false
+		}
+		name := curPeer
+		if len(name) > 12 {
+			name = name[:12] + "…"
+		}
+		peers = append(peers, fiber.Map{
+			"name":      name,
+			"connected": connected,
+			"bandwidth": transfer,
+			"uptime":    handshake,
+		})
+		curPeer, handshake, transfer = "", "", ""
+	}
+
+	for _, line := range strings.Split(text, "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "peer:") {
+			flush()
+			curPeer = strings.TrimSpace(strings.TrimPrefix(line, "peer:"))
+			continue
+		}
+		if strings.HasPrefix(line, "latest handshake:") {
+			handshake = strings.TrimSpace(strings.TrimPrefix(line, "latest handshake:"))
+			continue
+		}
+		if strings.HasPrefix(line, "transfer:") {
+			transfer = strings.TrimSpace(strings.TrimPrefix(line, "transfer:"))
+			continue
+		}
+	}
+	flush()
+	return c.JSON(peers)
+}
+
+// wireguardGetConfigHandler devuelve el contenido actual de /etc/wireguard/wg0.conf (si existe)
+func wireguardGetConfigHandler(c *fiber.Ctx) error {
+	out, err := exec.Command("sh", "-c", "cat /etc/wireguard/wg0.conf 2>/dev/null").CombinedOutput()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": strings.TrimSpace(string(out))})
+	}
+	return c.JSON(fiber.Map{"config": string(out)})
+}
+
+func wireguardToggleHandler(c *fiber.Ctx) error {
+	// Toggle basado en estado actual
+	statusOut, _ := exec.Command("wg", "show").CombinedOutput()
+	active := strings.TrimSpace(string(statusOut)) != ""
+
+	var cmd *exec.Cmd
+	if active {
+		cmd = exec.Command("sudo", "wg-quick", "down", "wg0")
+	} else {
+		cmd = exec.Command("sudo", "wg-quick", "up", "wg0")
+	}
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": strings.TrimSpace(string(out))})
+	}
+	return c.JSON(fiber.Map{"success": true, "output": strings.TrimSpace(string(out))})
+}
+
+func wireguardRestartHandler(c *fiber.Ctx) error {
+	out1, err1 := exec.Command("sudo", "wg-quick", "down", "wg0").CombinedOutput()
+	out2, err2 := exec.Command("sudo", "wg-quick", "up", "wg0").CombinedOutput()
+	if err1 != nil || err2 != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error":  "Error reiniciando WireGuard (requiere sudo NOPASSWD)",
+			"down":   strings.TrimSpace(string(out1)),
+			"up":     strings.TrimSpace(string(out2)),
+			"downOk": err1 == nil,
+			"upOk":   err2 == nil,
+		})
+	}
+	return c.JSON(fiber.Map{"success": true})
+}
+
 func wireguardConfigHandler(c *fiber.Ctx) error {
 	var req struct {
 		Config string `json:"config"`
@@ -357,6 +502,9 @@ func wireguardConfigHandler(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{
 			"error": "Datos inválidos",
 		})
+	}
+	if strings.TrimSpace(req.Config) == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "config requerido (texto completo wg0.conf)"})
 	}
 
 	user := c.Locals("user").(*User)
