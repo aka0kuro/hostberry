@@ -603,22 +603,47 @@
 
   // Cargar datos de sistema para "Acerca de"
   async function loadSystemInfo() {
+    console.log('Loading system info...');
     try {
+      const apiRequestFn = window.HostBerry && window.HostBerry.apiRequest 
+        ? window.HostBerry.apiRequest 
+        : async function(url) {
+            const token = localStorage.getItem('access_token');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) {
+              headers['Authorization'] = 'Bearer ' + token;
+            }
+            const response = await fetch(url, { headers: headers });
+            return response;
+          };
+      
       // Obtener stats e info en paralelo
       const [statsResp, infoResp] = await Promise.all([
-        HostBerry.apiRequest('/api/v1/system/stats'),
-        HostBerry.apiRequest('/api/v1/system/info')
+        apiRequestFn('/api/v1/system/stats'),
+        apiRequestFn('/api/v1/system/info')
       ]);
       
       let stats = {};
       let info = {};
       
       if (statsResp && statsResp.ok) {
-        stats = await statsResp.json().catch(() => ({}));
+        stats = await statsResp.json().catch((e) => {
+          console.error('Error parsing stats JSON:', e);
+          return {};
+        });
+        console.log('Stats response:', stats);
+      } else {
+        console.error('Stats request failed:', statsResp ? statsResp.status : 'No response');
       }
       
       if (infoResp && infoResp.ok) {
-        info = await infoResp.json().catch(() => ({}));
+        info = await infoResp.json().catch((e) => {
+          console.error('Error parsing info JSON:', e);
+          return {};
+        });
+        console.log('Info response:', info);
+      } else {
+        console.error('Info request failed:', infoResp ? infoResp.status : 'No response');
       }
       
       // Combinar datos de ambos endpoints
@@ -629,23 +654,44 @@
       const processor = info.processor || stats.processor || '--';
       const uptimeSeconds = info.uptime_seconds || stats.uptime || stats.uptime_seconds || 0;
       
+      console.log('Updating DOM with:', { hostname, architecture, osVersion, kernel, processor, uptimeSeconds });
+      
       // Actualizar datos del sistema
-      if (document.getElementById('about-hostname')) document.getElementById('about-hostname').textContent = hostname;
-      if (document.getElementById('about-architecture')) document.getElementById('about-architecture').textContent = architecture;
-      if (document.getElementById('about-os')) document.getElementById('about-os').textContent = osVersion;
-      if (document.getElementById('about-kernel')) document.getElementById('about-kernel').textContent = kernel;
-      if (document.getElementById('about-processor')) document.getElementById('about-processor').textContent = processor;
+      const hostnameEl = document.getElementById('about-hostname');
+      if (hostnameEl) {
+        hostnameEl.textContent = hostname;
+      } else {
+        console.warn('about-hostname element not found');
+      }
+      
+      const archEl = document.getElementById('about-architecture');
+      if (archEl) archEl.textContent = architecture;
+      
+      const osEl = document.getElementById('about-os');
+      if (osEl) osEl.textContent = osVersion;
+      
+      const kernelEl = document.getElementById('about-kernel');
+      if (kernelEl) kernelEl.textContent = kernel;
+      
+      const procEl = document.getElementById('about-processor');
+      if (procEl) procEl.textContent = processor;
 
       // Actualizar uptime
-      if (uptimeSeconds !== undefined && document.getElementById('about-uptime')) {
-        document.getElementById('about-uptime').textContent = formatUptime(uptimeSeconds);
+      if (uptimeSeconds !== undefined) {
+        const uptimeEl = document.getElementById('about-uptime');
+        if (uptimeEl) {
+          uptimeEl.textContent = formatUptime(uptimeSeconds);
+        }
       }
       
       // Actualizar boot time (calculado)
-      if (uptimeSeconds !== undefined && document.getElementById('about-boot-time')) {
-        const bootTimestamp = Math.floor(Date.now() / 1000) - uptimeSeconds;
-        const bootDate = new Date(bootTimestamp * 1000);
-        document.getElementById('about-boot-time').textContent = bootDate.toLocaleString();
+      if (uptimeSeconds !== undefined) {
+        const bootTimeEl = document.getElementById('about-boot-time');
+        if (bootTimeEl) {
+          const bootTimestamp = Math.floor(Date.now() / 1000) - uptimeSeconds;
+          const bootDate = new Date(bootTimestamp * 1000);
+          bootTimeEl.textContent = bootDate.toLocaleString();
+        }
       }
     } catch (error) {
       console.error('Error loading system info:', error);
@@ -653,7 +699,13 @@
   }
 
   // Cargar datos al iniciar
-  loadSystemInfo();
+  document.addEventListener('DOMContentLoaded', function() {
+    loadSystemInfo();
+  });
+  
+  // También intentar cargar después de un pequeño delay por si HostBerry aún no está listo
+  setTimeout(loadSystemInfo, 500);
+  
   // Actualizar cada 30 segundos
   setInterval(loadSystemInfo, 30000);
 
