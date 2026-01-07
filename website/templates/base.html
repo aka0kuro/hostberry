@@ -156,14 +156,34 @@
     {{ end }}
 
     <div class="dropdown lang-dropdown">
-        <button class="btn lang-toggle dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <button class="btn lang-toggle dropdown-toggle" type="button" onclick="event.preventDefault(); event.stopPropagation(); this.closest('.dropdown').classList.toggle('show');" aria-expanded="false">
             {{ if eq .language "es" }}ES{{ else }}EN{{ end }}
         </button>
         <ul class="dropdown-menu lang-dropdown-menu">
-            <li><a class="dropdown-item" href="?lang=es">🇪🇸 Español</a></li>
-            <li><a class="dropdown-item" href="?lang=en">🇺🇸 English</a></li>
+            <li><a class="dropdown-item" href="?lang=es" onclick="setLanguageCookie('es')">🇪🇸 Español</a></li>
+            <li><a class="dropdown-item" href="?lang=en" onclick="setLanguageCookie('en')">🇺🇸 English</a></li>
         </ul>
     </div>
+    
+    <script>
+    // Función para guardar el idioma en cookie
+    function setLanguageCookie(lang) {
+        // Guardar en cookie con expiración de 1 año
+        const expires = new Date();
+        expires.setFullYear(expires.getFullYear() + 1);
+        document.cookie = 'lang=' + lang + '; path=/; expires=' + expires.toUTCString() + '; SameSite=Lax';
+        // También guardar en localStorage como respaldo
+        localStorage.setItem('language', lang);
+    }
+    
+    // Cerrar dropdown de idioma al hacer clic fuera
+    document.addEventListener('click', function(event) {
+        const langDropdown = document.querySelector('.lang-dropdown');
+        if (langDropdown && !langDropdown.contains(event.target)) {
+            langDropdown.classList.remove('show');
+        }
+    });
+    </script>
 
     <button id="theme-toggle" class="theme-toggle" type="button" title="{{ call .t "common.change_theme" "Change theme" }}" aria-label="{{ call .t "common.change_theme" "Change theme" }}" onclick="toggleTheme()"></button>
 
