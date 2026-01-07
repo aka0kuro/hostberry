@@ -168,12 +168,9 @@ func GetCurrentLanguage(c *fiber.Ctx) string {
 		return "es" // Fallback seguro
 	}
 
-	var selectedLang string
-
 	// Intentar obtener del query parameter (prioridad más alta)
 	if lang := c.Query("lang"); lang != "" {
 		if isLanguageSupported(lang) {
-			selectedLang = lang
 			// Guardar en cookie para persistencia
 			c.Cookie(&fiber.Cookie{
 				Name:     "lang",
