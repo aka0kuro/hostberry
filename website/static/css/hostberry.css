@@ -21,6 +21,234 @@ body.light-theme { background: #f6f7f9; color: #212529; }
 .navbar-dark { color: var(--hb-text-light); }
 .bg-primary { background-color: var(--hb-primary); }
 
+/* Sidebar vertical izquierdo */
+.sidebar-nav {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 260px;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 2px 0 32px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.sidebar-header {
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--hb-text-light);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.sidebar-brand img {
+    display: block;
+}
+
+.brand-text {
+    white-space: nowrap;
+}
+
+.sidebar-menu {
+    flex: 1;
+    padding: 1rem 0;
+    overflow-y: auto;
+}
+
+.sidebar-nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav-list .nav-item {
+    margin: 0.25rem 0;
+}
+
+.sidebar-nav-list .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    color: var(--hb-text-light);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-radius: 0;
+    position: relative;
+}
+
+.sidebar-nav-list .nav-link i {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.sidebar-nav-list .nav-link span {
+    flex: 1;
+    white-space: nowrap;
+}
+
+.sidebar-nav-list .nav-link .dropdown-arrow {
+    margin-left: auto;
+    font-size: 0.875rem;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-nav-list .nav-link.dropdown-toggle[aria-expanded="true"] .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.sidebar-nav-list .nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--hb-text-light);
+}
+
+.sidebar-nav-list .nav-link.active {
+    background: rgba(13, 110, 253, 0.2);
+    border-left: 3px solid var(--hb-primary);
+}
+
+.sidebar-dropdown {
+    background: rgba(0, 0, 0, 0.3);
+    border: none;
+    border-radius: 0;
+    padding: 0.5rem 0;
+    margin: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-dropdown .dropdown-item {
+    color: var(--hb-text-light);
+    padding: 0.5rem 1.25rem 0.5rem 3rem;
+    transition: all 0.3s ease;
+}
+
+.sidebar-dropdown .dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--hb-text-light);
+}
+
+.sidebar-dropdown .dropdown-header {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    padding: 0.5rem 1.25rem 0.25rem 3rem;
+}
+
+.sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-dropdown-sidebar {
+    width: 100%;
+}
+
+.user-profile-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    color: var(--hb-text-light);
+    text-decoration: none;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.user-profile-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.user-profile-link .user-avatar {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+}
+
+.user-profile-link span {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Contenido principal con margen para sidebar */
+.main-content {
+    margin-left: 260px;
+    min-height: 100vh;
+    transition: margin-left 0.3s ease;
+}
+
+/* Botón toggle para móviles */
+.sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1001;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--hb-text-light);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive para móviles */
+@media (max-width: 991px) {
+    .sidebar-nav {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .sidebar-nav.show {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
+    .sidebar-toggle {
+        display: block;
+    }
+    
+    /* Overlay cuando el sidebar está abierto en móvil */
+    .sidebar-nav.show::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 260px;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+    }
+}
+
 /* Navbar con efecto cristal */
 .glass-navbar {
     background: rgba(255, 255, 255, 0.08) !important;
