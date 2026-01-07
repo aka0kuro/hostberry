@@ -62,29 +62,59 @@
                         <span>{{ call .t "navigation.dashboard" "Dashboard" }}</span>
                     </a>
                 </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="networkDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-hdd-network"></i>
+                <li class="nav-item">
+                    <a class="nav-link" href="/network">
+                        <i class="bi bi-ethernet"></i>
                         <span>{{ call .t "navigation.network" "Network" }}</span>
-                        <i class="bi bi-chevron-down dropdown-arrow"></i>
                     </a>
-                    <ul class="dropdown-menu sidebar-dropdown">
-                        <li><a class="dropdown-item" href="/network"><i class="bi bi-ethernet me-2"></i>{{ call .t "navigation.network" "Network" }}</a></li>
-                        <li><a class="dropdown-item" href="/wifi"><i class="bi bi-wifi me-2"></i>{{ call .t "navigation.wifi" "WiFi" }}</a></li>
-                        <li><a class="dropdown-item" href="/hostapd"><i class="bi bi-router me-2"></i>{{ call .t "navigation.hostapd" "Hotspot" }}</a></li>
-                    </ul>
                 </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="securityDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-shield-lock"></i>
-                        <span>{{ call .t "navigation.security" "Security" }}</span>
-                        <i class="bi bi-chevron-down dropdown-arrow"></i>
+                <li class="nav-item">
+                    <a class="nav-link" href="/wifi">
+                        <i class="bi bi-wifi"></i>
+                        <span>{{ call .t "navigation.wifi" "WiFi" }}</span>
                     </a>
-                    <ul class="dropdown-menu sidebar-dropdown">
-                        <li><a class="dropdown-item" href="/vpn"><i class="bi bi-shield-lock me-2"></i>{{ call .t "navigation.vpn" "VPN" }}</a></li>
-                        <li><a class="dropdown-item" href="/wireguard"><i class="bi bi-shield-check me-2"></i>{{ call .t "navigation.wireguard" "WireGuard" }}</a></li>
-                        <li><a class="dropdown-item" href="/adblock"><i class="bi bi-shield-x me-2"></i>{{ call .t "navigation.adblock" "AdBlock" }}</a></li>
-                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/hostapd">
+                        <i class="bi bi-router"></i>
+                        <span>{{ call .t "navigation.hostapd" "Hotspot" }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vpn">
+                        <i class="bi bi-shield-lock"></i>
+                        <span>{{ call .t "navigation.vpn" "VPN" }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/wireguard">
+                        <i class="bi bi-shield-check"></i>
+                        <span>{{ call .t "navigation.wireguard" "WireGuard" }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/adblock">
+                        <i class="bi bi-shield-x"></i>
+                        <span>{{ call .t "navigation.adblock" "AdBlock" }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/monitoring">
+                        <i class="bi bi-graph-up"></i>
+                        <span>{{ call .t "navigation.monitoring" "Monitoring" }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/system">
+                        <i class="bi bi-cpu"></i>
+                        <span>{{ call .t "navigation.system" "System" }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/settings">
+                        <i class="bi bi-gear"></i>
+                        <span>{{ call .t "navigation.settings" "Settings" }}</span>
+                    </a>
                 </li>
             </ul>
         </nav>
