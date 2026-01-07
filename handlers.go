@@ -403,12 +403,37 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 			iface["state"] = strings.TrimSpace(string(stateOut))
 		}
 
-		// Obtener IP
-		ipCmd := exec.Command("sh", "-c", fmt.Sprintf("ip addr show %s | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1", ifaceName))
+		// Obtener IP y máscara de red
+		ipCmd := exec.Command("sh", "-c", fmt.Sprintf("ip addr show %s | grep 'inet ' | awk '{print $2}'", ifaceName))
 		if ipOut, err := ipCmd.Output(); err == nil {
-			ip := strings.TrimSpace(string(ipOut))
-			if ip != "" {
-				iface["ip"] = ip
+			ipLine := strings.TrimSpace(string(ipOut))
+			if ipLine != "" {
+				// Formato: "192.168.1.100/24"
+				parts := strings.Split(ipLine, "/")
+				iface["ip"] = parts[0]
+				if len(parts) > 1 {
+					iface["netmask"] = parts[1]
+				}
+			}
+		}
+
+		// Obtener gateway para esta interfaz
+		gatewayCmd := exec.Command("sh", "-c", fmt.Sprintf("ip route | grep %s | grep default | awk '{print $3}' | head -1", ifaceName))
+		if gatewayOut, err := gatewayCmd.Output(); err == nil {
+			gateway := strings.TrimSpace(string(gatewayOut))
+			if gateway != "" {
+				iface["gateway"] = gateway
+			}
+		}
+		
+		// Si no hay gateway específico, intentar obtener el gateway por defecto
+		if _, hasGateway := iface["gateway"]; !hasGateway {
+			defaultGatewayCmd := exec.Command("sh", "-c", "ip route | grep default | awk '{print $3}' | head -1")
+			if defaultGatewayOut, err := defaultGatewayCmd.Output(); err == nil {
+				defaultGateway := strings.TrimSpace(string(defaultGatewayOut))
+				if defaultGateway != "" {
+					iface["gateway"] = defaultGateway
+				}
 			}
 		}
 
