@@ -1,0 +1,306 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+// ---------- System ----------
+
+func systemActivityHandler(c *fiber.Ctx) error {
+	limitStr := c.Query("limit", "10")
+	limit := 10
+	if v, err := strconvAtoiSafe(limitStr); err == nil && v > 0 && v <= 100 {
+		limit = v
+	}
+
+	logs, _, err := GetLogs("all", limit, 0)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	var activities []fiber.Map
+	for _, l := range logs {
+		activities = append(activities, fiber.Map{
+			"timestamp": l.CreatedAt.Format(time.RFC3339),
+			"level":     l.Level,
+			"message":   l.Message,
+			"source":    l.Source,
+		})
+	}
+
+	return c.JSON(activities)
+}
+
+// /api/v1/system/network (usado por monitoring.js)
+func systemNetworkHandler(c *fiber.Ctx) error {
+	// best-effort: leer /proc/net/dev (no requiere privilegios)
+	out, err := os.ReadFile("/proc/net/dev")
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"raw": string(out)})
+}
+
+func systemUpdatesHandler(c *fiber.Ctx) error {
+	// Placeholder: evita 404 y permite UI (actualización real requiere implementación específica del SO)
+	return c.JSON(fiber.Map{"available": false})
+}
+
+func systemBackupHandler(c *fiber.Ctx) error {
+	// Placeholder: por seguridad no generamos backup automático sin path/permiso explícito
+	return c.JSON(fiber.Map{"success": false, "message": "Backup no implementado aún"})
+}
+
+// ---------- Network ----------
+
+func networkRoutingHandler(c *fiber.Ctx) error {
+	out, err := exec.Command("sh", "-c", "ip route 2>/dev/null").CombinedOutput()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": strings.TrimSpace(string(out))})
+	}
+	var routes []fiber.Map
+	for _, line := range strings.Split(string(out), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		parts := strings.Fields(line)
+		if len(parts) < 1 {
+			continue
+		}
+		route := fiber.Map{"raw": line}
+		route["destination"] = parts[0]
+		for i := 0; i < len(parts)-1; i++ {
+			if parts[i] == "via" {
+				route["gateway"] = parts[i+1]
+			}
+			if parts[i] == "dev" {
+				route["interface"] = parts[i+1]
+			}
+			if parts[i] == "metric" {
+				route["metric"] = parts[i+1]
+			}
+		}
+		routes = append(routes, route)
+	}
+	return c.JSON(routes)
+}
+
+func networkFirewallToggleHandler(c *fiber.Ctx) error {
+	return c.Status(501).JSON(fiber.Map{"error": "Firewall toggle no implementado"})
+}
+
+func networkConfigHandler(c *fiber.Ctx) error {
+	// Placeholder: evita 404; aplicar config de red requiere validación y privilegios
+	return c.JSON(fiber.Map{"success": false, "message": "Config de red no implementada"})
+}
+
+// ---------- WiFi ----------
+
+func wifiNetworksHandler(c *fiber.Ctx) error {
+	if luaEngine == nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Lua engine no disponible"})
+	}
+	result, err := luaEngine.Execute("wifi_scan.lua", nil)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+	// wifi_scan.lua retorna { networks: [...] }
+	if v, ok := result["networks"]; ok {
+		return c.JSON(v)
+	}
+	return c.JSON([]fiber.Map{})
+}
+
+func wifiClientsHandler(c *fiber.Ctx) error {
+	// No hay implementación aún: evita 404
+	return c.JSON([]fiber.Map{})
+}
+
+func wifiToggleHandler(c *fiber.Ctx) error {
+	// Toggle usando nmcli (si existe)
+	out, err := exec.Command("sh", "-c", "nmcli -t -f WIFI g 2>/dev/null").CombinedOutput()
+	state := strings.TrimSpace(string(out))
+	if err != nil || state == "" {
+		return c.Status(500).JSON(fiber.Map{"error": "nmcli no disponible"})
+	}
+	var cmd string
+	if strings.Contains(strings.ToLower(state), "enabled") || strings.Contains(strings.ToLower(state), "on") {
+		cmd = "nmcli radio wifi off"
+	} else {
+		cmd = "nmcli radio wifi on"
+	}
+	out2, err2 := exec.Command("sh", "-c", cmd+" 2>/dev/null").CombinedOutput()
+	if err2 != nil {
+		return c.Status(500).JSON(fiber.Map{"error": strings.TrimSpace(string(out2))})
+	}
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func wifiConfigHandler(c *fiber.Ctx) error {
+	// Adaptar config form a "connect" (ssid/password)
+	var req struct {
+		SSID     string `json:"ssid"`
+		Password string `json:"password"`
+		Security string `json:"security"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Datos inválidos"})
+	}
+	if req.SSID == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "ssid requerido"})
+	}
+	// Reusar el handler existente conectando
+	c.Request().Header.SetContentType(fiber.MIMEApplicationJSON)
+	body, _ := json.Marshal(fiber.Map{"ssid": req.SSID, "password": req.Password})
+	c.Request().SetBody(body)
+	return wifiConnectHandler(c)
+}
+
+// ---------- VPN ----------
+
+func vpnConnectionsHandler(c *fiber.Ctx) error {
+	// Derivar desde vpn_status.lua (OpenVPN/WireGuard)
+	if luaEngine == nil {
+		return c.JSON([]fiber.Map{})
+	}
+	result, err := luaEngine.Execute("vpn_status.lua", nil)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	var conns []fiber.Map
+	// openvpn
+	if ov, ok := result["openvpn"].(map[string]interface{}); ok {
+		status := fmt.Sprintf("%v", ov["status"])
+		conns = append(conns, fiber.Map{"name": "openvpn", "type": "openvpn", "status": mapActiveStatus(status), "bandwidth": "-"})
+	}
+	// wireguard
+	if wg, ok := result["wireguard"].(map[string]interface{}); ok {
+		active := fmt.Sprintf("%v", wg["active"])
+		conns = append(conns, fiber.Map{"name": "wireguard", "type": "wireguard", "status": mapBoolStatus(active), "bandwidth": "-"})
+	}
+	return c.JSON(conns)
+}
+
+func vpnServersHandler(c *fiber.Ctx) error  { return c.JSON([]fiber.Map{}) }
+func vpnClientsHandler(c *fiber.Ctx) error  { return c.JSON([]fiber.Map{}) }
+func vpnToggleHandler(c *fiber.Ctx) error   { return c.Status(501).JSON(fiber.Map{"error": "VPN toggle no implementado"}) }
+func vpnConfigHandler(c *fiber.Ctx) error   { return c.Status(501).JSON(fiber.Map{"error": "VPN config no implementado"}) }
+func vpnConnectionToggleHandler(c *fiber.Ctx) error {
+	return c.Status(501).JSON(fiber.Map{"error": "VPN connection toggle no implementado"})
+}
+func vpnCertificatesGenerateHandler(c *fiber.Ctx) error {
+	return c.Status(501).JSON(fiber.Map{"error": "VPN certificates no implementado"})
+}
+
+// ---------- HostAPD ----------
+
+func hostapdAccessPointsHandler(c *fiber.Ctx) error { return c.JSON([]fiber.Map{}) }
+func hostapdClientsHandler(c *fiber.Ctx) error     { return c.JSON([]fiber.Map{}) }
+func hostapdToggleHandler(c *fiber.Ctx) error      { return c.Status(501).JSON(fiber.Map{"error": "HostAPD toggle no implementado"}) }
+func hostapdRestartHandler(c *fiber.Ctx) error     { return c.Status(501).JSON(fiber.Map{"error": "HostAPD restart no implementado"}) }
+func hostapdConfigHandler(c *fiber.Ctx) error      { return c.Status(501).JSON(fiber.Map{"error": "HostAPD config no implementado"}) }
+
+// ---------- Help ----------
+
+func helpContactHandler(c *fiber.Ctx) error {
+	// Aceptar cualquier payload y registrar en logs
+	user := c.Locals("user").(*User)
+	userID := user.ID
+	InsertLog("INFO", "Contacto/help recibido", "help", &userID)
+	return c.JSON(fiber.Map{"success": true})
+}
+
+// ---------- Translations ----------
+
+func translationsHandler(c *fiber.Ctx) error {
+	lang := c.Params("lang", "en")
+	if lang != "en" && lang != "es" {
+		lang = "en"
+	}
+	path := filepath.Join("locales", lang+".json")
+	b, err := os.ReadFile(path)
+	if err != nil {
+		// fallback embebido (en install) o error
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+	var out interface{}
+	if err := json.Unmarshal(b, &out); err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "JSON inválido en locales"})
+	}
+	return c.JSON(out)
+}
+
+// ---------- Legacy /api/wifi/* ----------
+
+func wifiLegacyStatusHandler(c *fiber.Ctx) error {
+	// best-effort: usamos nmcli para SSID actual
+	out, _ := exec.Command("sh", "-c", "nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
+	ssid := strings.TrimSpace(string(out))
+	return c.JSON(fiber.Map{"enabled": true, "connected": ssid != "", "current_connection": ssid, "ssid": ssid})
+}
+
+func wifiLegacyStoredNetworksHandler(c *fiber.Ctx) error {
+	return c.JSON(fiber.Map{"success": true, "networks": []fiber.Map{}, "last_connected": []string{}})
+}
+
+func wifiLegacyAutoconnectHandler(c *fiber.Ctx) error {
+	return c.JSON(fiber.Map{"success": false})
+}
+
+func wifiLegacyScanHandler(c *fiber.Ctx) error {
+	// Reusar el scan Lua
+	if luaEngine == nil {
+		return c.JSON(fiber.Map{"success": true, "networks": []fiber.Map{}})
+	}
+	result, err := luaEngine.Execute("wifi_scan.lua", nil)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"success": true, "networks": result["networks"]})
+}
+
+func wifiLegacyDisconnectHandler(c *fiber.Ctx) error {
+	// best-effort
+	_, _ = exec.Command("sh", "-c", "nmcli networking off; nmcli networking on").CombinedOutput()
+	return c.JSON(fiber.Map{"success": true})
+}
+
+// ---------- helpers ----------
+
+func strconvAtoiSafe(s string) (int, error) {
+	n := 0
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return 0, fmt.Errorf("invalid int")
+		}
+		n = n*10 + int(r-'0')
+	}
+	return n, nil
+}
+
+func mapActiveStatus(status string) string {
+	status = strings.ToLower(strings.TrimSpace(status))
+	if status == "active" {
+		return "connected"
+	}
+	return "disconnected"
+}
+
+func mapBoolStatus(v string) string {
+	v = strings.ToLower(strings.TrimSpace(v))
+	if v == "true" || v == "1" || v == "yes" {
+		return "connected"
+	}
+	return "disconnected"
+}
+
