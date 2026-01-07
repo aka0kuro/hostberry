@@ -1,5 +1,13 @@
 // JS para la página first-login con estética igual al login
 (function(){
+  // Cerrar dropdown de idioma al hacer clic fuera
+  document.addEventListener('click', function(event) {
+    const langDropdown = document.querySelector('.lang-dropdown');
+    if (langDropdown && !langDropdown.contains(event.target)) {
+      langDropdown.classList.remove('show');
+    }
+  });
+
   // Sistema de traducciones mejorado
   function t(key, defaultValue = '') {
     if (!key) return defaultValue || '';
