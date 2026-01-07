@@ -44,7 +44,7 @@
     <script defer src="/static/js/theme.js"></script>
 </head>
 <body class="dark-theme {{ if eq .page "login" }}hb-page-login{{ end }}">
-    {{ if ne .page "login" }}
+    {{ if and (ne .page "login") (ne .page "first_login") }}
     <nav class="navbar navbar-expand-lg navbar-dark glass-navbar sticky-top mb-4">
         <div class="container-fluid px-4">
             <button class="navbar-toggler border-0 me-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
