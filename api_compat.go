@@ -166,7 +166,7 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 			rfkillCmd = "sudo rfkill block wifi"
 		}
 		
-		rfkillToggleOut, rfkillToggleErr := exec.Command("sh", "-c", rfkillCmd+" 2>/dev/null").CombinedOutput()
+		_, rfkillToggleErr := exec.Command("sh", "-c", rfkillCmd+" 2>/dev/null").CombinedOutput()
 		if rfkillToggleErr == nil {
 			InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando rfkill (usuario: %s)", user.Username), "wifi", &userID)
 			return c.JSON(fiber.Map{"success": true, "message": "WiFi toggle exitoso"})
