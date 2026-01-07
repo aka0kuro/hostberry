@@ -291,18 +291,28 @@
         // Obtener idioma actual de la página o cookie
         const currentLang = document.documentElement.lang || document.querySelector('html').getAttribute('lang') || 'es';
         
+        // Obtener token del localStorage o cookie
+        const token = localStorage.getItem('access_token') || '';
+        
         const requestFn = (window.HostBerry && typeof window.HostBerry.apiRequest === 'function')
           ? (url, options) => window.HostBerry.apiRequest(url, options)
           : (url, options) => fetch(url, options);
 
+        const headers = {
+          'Content-Type': 'application/json',
+          'Accept-Language': currentLang
+        };
+        
+        // Agregar token si existe
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
         const resp = await requestFn('/api/v1/auth/first-login/change', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-                        'Accept-Language': currentLang
-                    }, 
-          body: payload
-                });
+          headers: headers,
+          body: JSON.stringify(payload)
+        });
         
         let data = null;
         try {
