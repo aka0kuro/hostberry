@@ -43,11 +43,11 @@ func systemConfigHandler(c *fiber.Ctx) error {
 			valueStr = fmt.Sprintf("%v", v)
 		}
 		
-		// Guardar en BD (si existe tabla de configs, si no, simular por ahora o adaptar)
-		// Asumimos que existe una función o modelo para guardar config.
-		// Por ahora, usaremos una implementación directa si no hay helper.
-		// TODO: Implementar persistencia real en database.go si no existe.
-		// Para este fix, nos enfocamos en la aplicación del cambio (efecto secundario).
+		// Guardar en BD
+		if err := SetConfig(key, valueStr); err != nil {
+			log.Printf("⚠️ Error guardando configuración %s: %v", key, err)
+			errors = append(errors, fmt.Sprintf("Error guardando %s", key))
+		}
 		
 		// Aplicar cambios del sistema
 		if key == "timezone" && valueStr != "" {
