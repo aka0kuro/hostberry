@@ -1,5 +1,18 @@
 // JS extraído desde templates/wireguard.html
 (function(){
+  async function loadConfig(){
+    try{
+      const resp = await fetch('/api/v1/wireguard/config', { headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
+      if(resp.ok){
+        const data = await resp.json();
+        const ta = document.getElementById('wg_config');
+        if(ta && data && typeof data.config === 'string'){
+          ta.value = data.config;
+        }
+      }
+    }catch(e){ console.error('Error loading wireguard config:', e); }
+  }
+
   async function loadInterfaces(){
     try{
       const resp = await fetch('/api/v1/wireguard/interfaces', { headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
@@ -60,7 +73,7 @@
     cfgForm.addEventListener('submit', async function(e){
       e.preventDefault();
       const fd = new FormData(this);
-      const data = { interface_name: fd.get('interface_name'), interface_address: fd.get('interface_address'), listen_port: parseInt(fd.get('listen_port')), mtu: parseInt(fd.get('mtu')) };
+      const data = { config: fd.get('config') };
       try{
         const resp = await fetch('/api/v1/wireguard/config', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }, body: JSON.stringify(data) });
         if(resp.ok){ HostBerry.showAlert('success', HostBerry.t('messages.changes_saved')); }
@@ -70,6 +83,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', function(){
+    loadConfig();
     loadInterfaces(); loadPeers(); setInterval(function(){ loadInterfaces(); loadPeers(); }, 30000);
   });
 
