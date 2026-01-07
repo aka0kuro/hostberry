@@ -979,14 +979,6 @@
             option.setAttribute('data-gateway', iface.gateway || '');
             select.appendChild(option);
           });
-          
-          // Agregar event listener para cuando se seleccione una interfaz
-          select.addEventListener('change', function(e) {
-            const selectedInterface = e.target.value;
-            if (selectedInterface && selectedInterface !== '') {
-              fillDHCPFields(selectedInterface);
-            }
-          });
         } else {
           console.warn('No interfaces found');
           select.innerHTML = '<option value="">' + t('network.no_interfaces', 'No interfaces found') + '</option>';
