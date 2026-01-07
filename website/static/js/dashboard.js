@@ -29,31 +29,43 @@
         setText('dashboard-time', timeStr);
     };
 
-    // Función de traducción local
-    const t = (key, defaultValue) => {
-        if (window.HostBerry && window.HostBerry.t) {
-            return window.HostBerry.t(key, defaultValue);
-        }
-        // Fallback: intentar cargar traducciones directamente
+    // Función de traducción local - carga traducciones una vez
+    let translationsCache = null;
+    const loadTranslations = () => {
+        if (translationsCache) return translationsCache;
         try {
             const el = document.getElementById('i18n-json');
             if (el) {
-                const translations = JSON.parse(el.textContent || el.innerText || '{}');
-                const parts = String(key).split('.');
-                let cur = translations;
-                for (const part of parts) {
-                    if (cur && Object.prototype.hasOwnProperty.call(cur, part)) {
-                        cur = cur[part];
-                    } else {
-                        return defaultValue || key;
-                    }
-                }
-                return typeof cur === 'string' ? cur : (defaultValue || key);
+                translationsCache = JSON.parse(el.textContent || el.innerText || '{}');
+                return translationsCache;
             }
         } catch (e) {
-            // Ignorar errores
+            console.error('Error loading translations:', e);
         }
-        return defaultValue || key;
+        return {};
+    };
+
+    const t = (key, defaultValue) => {
+        // Primero intentar usar window.HostBerry.t si está disponible
+        if (window.HostBerry && window.HostBerry.t) {
+            const translated = window.HostBerry.t(key, defaultValue);
+            if (translated && translated !== key && translated !== defaultValue) {
+                return translated;
+            }
+        }
+        
+        // Fallback: cargar traducciones directamente
+        const translations = loadTranslations();
+        const parts = String(key).split('.');
+        let cur = translations;
+        for (const part of parts) {
+            if (cur && Object.prototype.hasOwnProperty.call(cur, part)) {
+                cur = cur[part];
+            } else {
+                return defaultValue || key;
+            }
+        }
+        return typeof cur === 'string' ? cur : (defaultValue || key);
     };
 
     const updateHealth = (type, value, thresholds) => {
