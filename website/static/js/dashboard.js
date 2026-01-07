@@ -34,7 +34,7 @@
         const text = document.getElementById('health-' + type + '-text');
         if (!dot || !text) return;
 
-        let status = 'healthy';
+        let status = 'success';
         let statusText = (window.HostBerry && window.HostBerry.t) ? window.HostBerry.t('dashboard.healthy', 'Healthy') : 'Healthy';
         
         if (value >= thresholds.critical) {
