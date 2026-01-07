@@ -1,6 +1,4 @@
-{{ template "base.html" . }}
-
-{{ define "content" }}
+ 
 <div class="dashboard-container">
     <!-- Header Section -->
     <div class="dashboard-header mb-4">
@@ -218,10 +216,7 @@
         </div>
     </div>
 </div>
-{{ end }}
-
-{{ define "extra_js" }}
-<script src="/static/js/lib/chart.umd.min.js"></script>
+<script defer src="/static/js/lib/chart.umd.min.js"></script>
 <script>
 (function(){
   // Esperar a que Chart.js esté cargado
@@ -865,4 +860,3 @@
   }
 })();
 </script>
-{{ end }}
