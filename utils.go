@@ -42,7 +42,7 @@ func executeCommand(cmd string) (string, error) {
 	allowedCommands := []string{
 		"hostname", "uname", "cat", "grep", "awk", "sed", "cut", "head", "tail",
 		"top", "free", "df", "nproc",
-		"iwlist", "nmcli",
+		"iwlist", "nmcli", "iw",
 		"ip", "wg", "wg-quick", "systemctl", "pgrep",
 		"sudo", "sh",
 	}
