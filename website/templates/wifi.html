@@ -1,6 +1,3 @@
-{{ template "base.html" . }}
-
-{{ define "content" }}
 <div class="row">
     <!-- Vista General de WiFi -->
     <div class="col-12 mb-4">
@@ -304,8 +301,4 @@
         </div>
     </div>
 </div>
-{{ end }}
-
-{{ define "extra_js" }}
-<script src="/static/js/wifi_page.js?v={{ .last_update }}"></script>
-{{ end }}
+<script defer src="/static/js/wifi_page.js?v={{ .last_update }}"></script>

@@ -1,6 +1,3 @@
-{{ template "base.html" . }}
-
-{{ define "content" }}
 <div class="row">
     <!-- Vista General de HostAPD -->
     <div class="col-12 mb-4">
@@ -253,8 +250,4 @@
         </div>
     </div>
 </div>
-{{ end }}
-
-{{ define "extra_js" }}
-<script src="/static/js/hostapd.js?v={{ .last_update }}"></script>
-{{ end }}
+<script defer src="/static/js/hostapd.js?v={{ .last_update }}"></script>
