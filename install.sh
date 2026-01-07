@@ -158,6 +158,22 @@ create_user() {
 install_files() {
     print_info "Instalando archivos en $INSTALL_DIR..."
     
+    # Verificar que estamos en el directorio correcto con todos los archivos
+    local missing_files=0
+    for item in "website" "lua" "locales" "main.go" "go.mod"; do
+        if [ ! -e "${SCRIPT_DIR}/${item}" ]; then
+            print_warning "No se encontró '${item}' en ${SCRIPT_DIR}"
+            missing_files=$((missing_files + 1))
+        fi
+    done
+
+    if [ $missing_files -gt 0 ]; then
+        print_error "Error: Faltan archivos del proyecto en ${SCRIPT_DIR}"
+        print_info "Asegúrate de ejecutar el script desde la raíz del repositorio clonado."
+        print_info "Si has descargado solo el script, necesitas descargar el proyecto completo."
+        exit 1
+    fi
+
     # Crear directorios
     mkdir -p "$INSTALL_DIR"
     
