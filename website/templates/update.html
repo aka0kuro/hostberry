@@ -1,6 +1,4 @@
-{{ template "base.html" . }}
-
-{{ define "content" }}
+ 
 <div class="dashboard-container">
     <!-- Header Section -->
     <div class="dashboard-header mb-4">
@@ -135,10 +133,7 @@
             </div>
         </div>
     </div>
-</div>
-{{ end }}
-
-{{ define "extra_js" }}
+ 
 <script>
 (function(){
   // Esperar a que HostBerry esté disponible
@@ -286,7 +281,6 @@
   }
 })();
 </script>
-{{ end }}
 <style>
 .spinning {
     animation: spin 1s linear infinite;
