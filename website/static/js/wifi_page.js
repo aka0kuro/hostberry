@@ -207,6 +207,25 @@
     }
   }
   
+  // Check WiFi status before scanning
+  async function checkWiFiStatus() {
+    try {
+      const resp = await apiRequest('/api/wifi/status');
+      if (resp.ok) {
+        const data = await resp.json();
+        const statusData = data.status || data;
+        return {
+          enabled: statusData.enabled !== false,
+          blocked: statusData.hard_blocked || statusData.soft_blocked,
+          connected: statusData.connected || statusData.current_connection
+        };
+      }
+    } catch (e) {
+      console.error('Error checking WiFi status:', e);
+    }
+    return { enabled: false, blocked: false, connected: false };
+  }
+  
   // Scan networks
   async function scanNetworks() {
     const loadingEl = document.getElementById('networks-loading');
@@ -214,6 +233,28 @@
     const tableEl = document.getElementById('networks-table-container');
     const tbody = document.getElementById('networksTable');
     const scanBtn = document.getElementById('scan-networks-btn');
+    
+    // Verificar estado del WiFi primero
+    const wifiStatus = await checkWiFiStatus();
+    
+    if (!wifiStatus.enabled || wifiStatus.blocked) {
+      if (emptyEl) {
+        emptyEl.innerHTML = 
+          '<div class="text-center py-4">' +
+          '<i class="bi bi-wifi-off" style="font-size: 3rem; opacity: 0.5;"></i>' +
+          '<p class="mt-2">' + t('wifi.wifi_disabled', 'WiFi is disabled') + '</p>' +
+          '<p class="text-muted small">' + t('wifi.enable_to_scan', 'Please enable WiFi to scan for networks') + '</p>' +
+          '<button class="btn btn-primary mt-3" onclick="toggleWiFi()">' +
+          '<i class="bi bi-power me-2"></i>' + t('wifi.enable_wifi', 'Enable WiFi') +
+          '</button>' +
+          '</div>';
+        emptyEl.style.display = 'block';
+      }
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (tableEl) tableEl.style.display = 'none';
+      showAlert('warning', t('wifi.wifi_disabled', 'WiFi is disabled. Please enable it first.'));
+      return;
+    }
     
     if (loadingEl) loadingEl.style.display = 'block';
     if (emptyEl) emptyEl.style.display = 'none';
@@ -279,19 +320,54 @@
             }
             showAlert('success', t('wifi.found_networks', 'Found {count} networks').replace('{count}', data.networks.length));
           } else {
-            if (emptyEl) emptyEl.style.display = 'block';
+            if (emptyEl) {
+              emptyEl.innerHTML = 
+                '<div class="text-center py-4">' +
+                '<i class="bi bi-wifi-off" style="font-size: 3rem; opacity: 0.5;"></i>' +
+                '<p class="mt-2">' + t('wifi.no_networks', 'No networks found') + '</p>' +
+                '<p class="text-muted small">' + t('wifi.no_networks_desc', 'No WiFi networks were found in your area. Make sure WiFi is enabled and try again.') + '</p>' +
+                '<button class="btn btn-primary mt-3" onclick="scanNetworks()">' +
+                '<i class="bi bi-search me-2"></i>' + t('wifi.scan_networks', 'Scan Networks') +
+                '</button>' +
+                '</div>';
+              emptyEl.style.display = 'block';
+            }
             showAlert('info', t('wifi.no_networks_scan', 'No networks found during scan.'));
           }
         } else {
           const errorData = await resp.json().catch(() => ({}));
           if (loadingEl) loadingEl.style.display = 'none';
-          if (emptyEl) emptyEl.style.display = 'block';
+          if (emptyEl) {
+            emptyEl.innerHTML = 
+              '<div class="text-center py-4">' +
+              '<i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>' +
+              '<p class="mt-2">' + t('errors.scan_failed', 'Scan failed') + '</p>' +
+              '<p class="text-muted small">' + (errorData.error || t('errors.unknown_error', 'Unknown error')) + '</p>' +
+              '<button class="btn btn-primary mt-3" onclick="scanNetworks()">' +
+              '<i class="bi bi-arrow-clockwise me-2"></i>' + t('common.retry', 'Retry') +
+              '</button>' +
+              '</div>';
+            emptyEl.style.display = 'block';
+          }
+          if (tableEl) tableEl.style.display = 'none';
           showAlert('danger', errorData.error || t('errors.scan_failed', 'Scan failed'));
         }
       } catch (error) {
         console.error('Error scanning networks:', error);
         if (loadingEl) loadingEl.style.display = 'none';
-        if (emptyEl) emptyEl.style.display = 'block';
+        if (emptyEl) {
+          emptyEl.innerHTML = 
+            '<div class="text-center py-4">' +
+            '<i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>' +
+            '<p class="mt-2">' + t('errors.scan_error', 'Scan error') + '</p>' +
+            '<p class="text-muted small">' + error.message + '</p>' +
+            '<button class="btn btn-primary mt-3" onclick="scanNetworks()">' +
+            '<i class="bi bi-arrow-clockwise me-2"></i>' + t('common.retry', 'Retry') +
+            '</button>' +
+            '</div>';
+          emptyEl.style.display = 'block';
+        }
+        if (tableEl) tableEl.style.display = 'none';
         
         let msg = error.message;
         if (error.name === 'AbortError') {
