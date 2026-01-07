@@ -93,6 +93,14 @@ func createTemplateEngine() *html.Engine {
 							log.Printf("❌ Error: engine es nil después de html.New para %s", path)
 							continue
 						}
+						
+						// Forzar carga para verificar errores de sintaxis
+						if err := engine.Load(); err != nil {
+							log.Printf("❌ Error cargando templates desde %s: %v", path, err)
+							engine = nil
+							continue
+						}
+
 						engine.Reload(!appConfig.Server.Debug)
 						log.Printf("✅ Templates cargados desde sistema de archivos: %s (%d archivos .html)", path, htmlFiles)
 						log.Printf("   Templates encontrados: %v", foundTemplates)
