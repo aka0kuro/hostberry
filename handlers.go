@@ -906,3 +906,58 @@ func getSystemInfo() fiber.Map {
 	
 	return info
 }
+
+// systemServicesHandler devuelve el estado de los servicios principales del proyecto
+func systemServicesHandler(c *fiber.Ctx) error {
+	services := make(map[string]interface{})
+	
+	// Verificar WireGuard
+	wgOut, _ := exec.Command("wg", "show").CombinedOutput()
+	wgActive := strings.TrimSpace(string(wgOut)) != ""
+	services["wireguard"] = map[string]interface{}{
+		"status": wgActive,
+		"active": wgActive,
+	}
+	
+	// Verificar OpenVPN
+	openvpnOut, _ := exec.Command("sh", "-c", "systemctl is-active openvpn 2>/dev/null || pgrep openvpn > /dev/null && echo active || echo inactive").CombinedOutput()
+	openvpnStatus := strings.TrimSpace(string(openvpnOut))
+	openvpnActive := openvpnStatus == "active"
+	services["openvpn"] = map[string]interface{}{
+		"status": openvpnStatus,
+		"active": openvpnActive,
+	}
+	
+	// Verificar HostAPD
+	hostapdOut, _ := exec.Command("sh", "-c", "systemctl is-active hostapd 2>/dev/null || pgrep hostapd > /dev/null && echo active || echo inactive").CombinedOutput()
+	hostapdStatus := strings.TrimSpace(string(hostapdOut))
+	hostapdActive := hostapdStatus == "active"
+	services["hostapd"] = map[string]interface{}{
+		"status": hostapdStatus,
+		"active": hostapdActive,
+	}
+	
+	// Verificar AdBlock (dnsmasq o pihole)
+	dnsmasqOut, _ := exec.Command("sh", "-c", "systemctl is-active dnsmasq 2>/dev/null || echo inactive").CombinedOutput()
+	dnsmasqStatus := strings.TrimSpace(string(dnsmasqOut))
+	piholeOut, _ := exec.Command("sh", "-c", "systemctl is-active pihole-FTL 2>/dev/null || echo inactive").CombinedOutput()
+	piholeStatus := strings.TrimSpace(string(piholeOut))
+	adblockActive := dnsmasqStatus == "active" || piholeStatus == "active"
+	services["adblock"] = map[string]interface{}{
+		"status": adblockActive,
+		"active": adblockActive,
+		"type": func() string {
+			if dnsmasqStatus == "active" {
+				return "dnsmasq"
+			}
+			if piholeStatus == "active" {
+				return "pihole"
+			}
+			return "none"
+		}(),
+	}
+	
+	return c.JSON(fiber.Map{
+		"services": services,
+	})
+}
