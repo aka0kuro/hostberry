@@ -452,6 +452,38 @@ create_database() {
     print_success "Directorio de base de datos preparado: $DATA_DIR"
 }
 
+# Configurar permisos y sudoers
+configure_permissions() {
+    print_info "Configurando permisos y sudoers..."
+    
+    # Crear directorio para scripts seguros
+    SAFE_DIR="/usr/local/sbin/hostberry-safe"
+    mkdir -p "$SAFE_DIR"
+    
+    # Crear script set-timezone
+    cat > "$SAFE_DIR/set-timezone" <<EOF
+#!/bin/bash
+TZ="\$1"
+if [ -z "\$TZ" ]; then echo "Timezone required"; exit 1; fi
+if [ ! -f "/usr/share/zoneinfo/\$TZ" ]; then echo "Invalid timezone"; exit 1; fi
+timedatectl set-timezone "\$TZ"
+EOF
+    chmod 750 "$SAFE_DIR/set-timezone"
+    chown root:$GROUP_NAME "$SAFE_DIR/set-timezone"
+    
+    # Configurar sudoers
+    cat > "/etc/sudoers.d/hostberry" <<EOF
+# Permisos para HostBerry
+$USER_NAME ALL=(ALL) NOPASSWD: $SAFE_DIR/set-timezone
+$USER_NAME ALL=(ALL) NOPASSWD: /sbin/shutdown
+$USER_NAME ALL=(ALL) NOPASSWD: /usr/sbin/shutdown
+$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/shutdown
+EOF
+    chmod 440 "/etc/sudoers.d/hostberry"
+    
+    print_success "Permisos y sudoers configurados"
+}
+
 # Crear servicio systemd
 create_systemd_service() {
     print_info "Creando servicio systemd..."
