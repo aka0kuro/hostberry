@@ -28,11 +28,11 @@
     });
   }
 
-  bindForm('generalConfigForm','/api/v1/settings/general');
-  bindForm('systemConfigForm','/api/v1/settings/system');
-  bindForm('networkConfigForm','/api/v1/settings/network');
-  bindForm('securityConfigForm','/api/v1/settings/security');
-  bindForm('performanceConfigForm','/api/v1/settings/performance');
-  bindForm('notificationConfigForm','/api/v1/settings/notifications');
+  bindForm('generalConfigForm','/api/v1/system/config');
+  bindForm('systemConfigForm','/api/v1/system/config');
+  bindForm('networkConfigForm','/api/v1/system/config');
+  bindForm('securityConfigForm','/api/v1/system/config');
+  bindForm('performanceConfigForm','/api/v1/system/config');
+  bindForm('notificationConfigForm','/api/v1/system/config');
 })();
 
