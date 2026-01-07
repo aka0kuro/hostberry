@@ -929,10 +929,22 @@ func getSystemInfo() fiber.Map {
 		info["architecture"] = arch
 	}
 	
-	// Obtener procesador
+	// Obtener procesador - intentar múltiples métodos
 	processorCmd := "cat /proc/cpuinfo | grep -m1 'model name\\|Processor\\|Hardware' | cut -d ':' -f 2 | sed 's/^[[:space:]]*//'"
-	if processor, err := executeCommand(processorCmd); err == nil && processor != "" {
-		info["processor"] = processor
+	if processor, err := executeCommand(processorCmd); err == nil && processor != "" && processor != "unknown" {
+		info["processor"] = strings.TrimSpace(processor)
+	} else {
+		// Fallback: intentar con lscpu
+		if lscpu, err := executeCommand("lscpu | grep 'Model name' | cut -d ':' -f 2 | sed 's/^[[:space:]]*//'"); err == nil && lscpu != "" {
+			info["processor"] = strings.TrimSpace(lscpu)
+		} else {
+			// Fallback: usar architecture como indicador
+			if arch, ok := info["architecture"].(string); ok && arch != "" {
+				info["processor"] = arch + " Processor"
+			} else {
+				info["processor"] = "Unknown Processor"
+			}
+		}
 	}
 	
 	// Obtener OS version
