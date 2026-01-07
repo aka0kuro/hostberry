@@ -129,31 +129,61 @@
         if (!container) return;
         
         try {
-            const resp = await (window.HostBerry && window.HostBerry.apiRequest ? window.HostBerry.apiRequest('/api/v1/system/activity?limit=10') : fetch('/api/v1/system/activity?limit=10'));
-            if (!resp.ok) throw new Error('Activity request failed');
-            const payload = await resp.json();
-            const activities = payload.activities || payload.data || [];
+            const apiRequestFn = window.HostBerry && window.HostBerry.apiRequest 
+                ? window.HostBerry.apiRequest 
+                : async function(url) {
+                    const token = localStorage.getItem('access_token');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) {
+                        headers['Authorization'] = 'Bearer ' + token;
+                    }
+                    return fetch(url, { headers: headers });
+                };
+            
+            const resp = await apiRequestFn('/api/v1/system/activity?limit=10');
+            
+            if (!resp.ok) {
+                console.error('Activity request failed:', resp.status, resp.statusText);
+                throw new Error('Activity request failed: ' + resp.status);
+            }
+            
+            const activities = await resp.json();
+            console.log('Activity response:', activities);
+            
+            // El endpoint devuelve un array directamente, no envuelto
+            const activitiesList = Array.isArray(activities) ? activities : (activities.activities || activities.data || []);
 
-            if (!activities.length) {
+            if (!activitiesList.length) {
                 const noActivityText = (window.HostBerry && window.HostBerry.t) ? window.HostBerry.t('dashboard.no_activity', 'No recent activity') : 'No recent activity';
                 container.innerHTML = '<div class="activity-item"><div class="activity-content"><div class="activity-text">' + noActivityText + '</div></div></div>';
                 return;
             }
 
             container.innerHTML = '';
-            activities.forEach(function(activity) {
+            activitiesList.forEach(function(activity) {
                 const item = document.createElement('div');
                 item.className = 'activity-item';
-                const icon = activity.type === 'error' ? 'bi-exclamation-triangle' : 
-                           activity.type === 'warning' ? 'bi-exclamation-circle' : 'bi-check-circle';
+                
+                // Usar level en lugar de type
+                const level = (activity.level || '').toLowerCase();
+                const icon = level === 'error' ? 'bi-exclamation-triangle' : 
+                           level === 'warning' ? 'bi-exclamation-circle' : 
+                           level === 'info' ? 'bi-info-circle' : 'bi-check-circle';
+                
                 const time = activity.timestamp ? new Date(activity.timestamp).toLocaleString() : '';
-                const message = activity.message || activity.description || '';
+                const message = activity.message || activity.description || activity.content || '';
+                const source = activity.source ? ' [' + activity.source + ']' : '';
                 const timeHtml = time ? '<div class="activity-time">' + time + '</div>' : '';
-                item.innerHTML = '<div class="activity-icon"><i class="bi ' + icon + '"></i></div><div class="activity-content"><div class="activity-text">' + message + '</div>' + timeHtml + '</div>';
+                
+                item.innerHTML = '<div class="activity-icon"><i class="bi ' + icon + '"></i></div><div class="activity-content"><div class="activity-text">' + message + source + '</div>' + timeHtml + '</div>';
                 container.appendChild(item);
             });
         } catch (error) {
             console.error('Error loading activity:', error);
+            const errorText = (window.HostBerry && window.HostBerry.t) ? window.HostBerry.t('errors.unknown_error', 'Error loading activity') : 'Error loading activity';
+            if (container) {
+                container.innerHTML = '<div class="activity-item"><div class="activity-content"><div class="activity-text text-danger">' + errorText + '</div></div></div>';
+            }
         }
     }
 
