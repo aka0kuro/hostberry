@@ -6,9 +6,9 @@ result.networks = {}
 
 -- Intentar usar nmcli primero (más moderno)
 local nmcli_cmd = "nmcli -t -f SSID,SIGNAL,SECURITY dev wifi list 2>/dev/null"
-local nmcli_output = exec(nmcli_cmd)
+local nmcli_output, nmcli_err = exec(nmcli_cmd)
 
-if nmcli_output and nmcli_output ~= "" then
+if not nmcli_err and nmcli_output and nmcli_output ~= "" then
     -- Parsear salida de nmcli
     for line in nmcli_output:gmatch("[^\r\n]+") do
         local ssid, signal, security = line:match("([^:]+):([^:]+):([^:]+)")
@@ -24,9 +24,9 @@ if nmcli_output and nmcli_output ~= "" then
 else
     -- Fallback a iwlist
     local iwlist_cmd = "sudo iwlist wlan0 scan 2>/dev/null | grep -E 'ESSID|Quality|Encryption'"
-    local iwlist_output = exec(iwlist_cmd)
+    local iwlist_output, iwlist_err = exec(iwlist_cmd)
     
-    if iwlist_output then
+    if not iwlist_err and iwlist_output and iwlist_output ~= "" then
         local current_network = {}
         for line in iwlist_output:gmatch("[^\r\n]+") do
             if line:match("ESSID:") then
