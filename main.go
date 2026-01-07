@@ -543,15 +543,72 @@ func wifiScanHandler(c *fiber.Ctx) error {
 	if luaEngine != nil {
 		result, err := luaEngine.Execute("wifi_scan.lua", nil)
 		if err != nil {
-			return c.Status(500).JSON(fiber.Map{
-				"error": err.Error(),
-			})
+			log.Printf("⚠️  Error ejecutando wifi_scan.lua, usando fallback: %v", err)
+			// Fallback: intentar escanear directamente con comandos del sistema
+			return wifiScanFallback(c)
 		}
-		return c.JSON(result)
+		// Verificar que el resultado tenga networks
+		if result != nil {
+			if networks, ok := result["networks"]; ok {
+				return c.JSON(fiber.Map{
+					"success": true,
+					"networks": networks,
+				})
+			}
+		}
+		// Si no hay networks, usar fallback
+		return wifiScanFallback(c)
 	}
 
 	return c.Status(500).JSON(fiber.Map{
 		"error": "Lua engine no disponible",
+	})
+}
+
+// wifiScanFallback escanea WiFi usando comandos del sistema directamente
+func wifiScanFallback(c *fiber.Ctx) error {
+	var networks []fiber.Map
+
+	// Intentar con nmcli
+	cmd := exec.Command("sh", "-c", "nmcli -t -f SSID,SIGNAL,SECURITY dev wifi list 2>/dev/null")
+	out, err := cmd.CombinedOutput()
+	if err == nil && len(out) > 0 {
+		lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+			parts := strings.Split(line, ":")
+			if len(parts) >= 3 {
+				ssid := parts[0]
+				signalStr := parts[1]
+				security := parts[2]
+				if ssid != "" {
+					signal := 0
+					if s, err := strconv.Atoi(signalStr); err == nil {
+						signal = s
+					}
+					networks = append(networks, fiber.Map{
+						"ssid":     ssid,
+						"signal":   signal,
+						"security": security,
+					})
+				}
+			}
+		}
+		if len(networks) > 0 {
+			return c.JSON(fiber.Map{
+				"success": true,
+				"networks": networks,
+			})
+		}
+	}
+
+	// Si no hay redes encontradas, retornar array vacío
+	return c.JSON(fiber.Map{
+		"success": true,
+		"networks": []fiber.Map{},
 	})
 }
 
