@@ -213,8 +213,13 @@ func createTemplateEngine() *html.Engine {
 		if stat, err := os.Stat(forcePath); err == nil && stat.IsDir() {
 			engine = html.New(forcePath, ".html")
 			if engine != nil {
-				engine.Reload(!appConfig.Server.Debug)
-				log.Printf("✅ Engine forzado desde %s", forcePath)
+				if err := engine.Load(); err != nil {
+					log.Printf("❌ Error cargando templates forzados desde %s: %v", forcePath, err)
+					engine = nil
+				} else {
+					engine.Reload(!appConfig.Server.Debug)
+					log.Printf("✅ Engine forzado desde %s", forcePath)
+				}
 			} else {
 				log.Printf("❌ Error: engine es nil después de forzar desde %s", forcePath)
 			}
