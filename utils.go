@@ -40,8 +40,11 @@ func createDefaultAdmin() {
 func executeCommand(cmd string) (string, error) {
 	// Lista blanca de comandos permitidos
 	allowedCommands := []string{
-		"hostname", "uname", "cat", "grep", "awk", "sed",
-		"top", "free", "df", "nproc", "iwlist", "nmcli",
+		"hostname", "uname", "cat", "grep", "awk", "sed", "cut", "head",
+		"top", "free", "df", "nproc",
+		"iwlist", "nmcli",
+		"ip", "wg", "wg-quick", "systemctl", "pgrep",
+		"sudo",
 	}
 	
 	// Validar comando
@@ -60,7 +63,7 @@ func executeCommand(cmd string) (string, error) {
 	}
 	
 	if !allowed {
-		return "", nil // Silenciosamente rechazar comandos no permitidos
+		return "", exec.ErrNotFound // Devolver error para que Lua/handlers lo reporten
 	}
 	
 	// Ejecutar comando
