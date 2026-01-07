@@ -248,8 +248,7 @@ func wifiConfigHandler(c *fiber.Ctx) error {
 		if iwCheck.Run() == nil {
 			// Usar iw reg set
 			cmd := exec.Command("sh", "-c", fmt.Sprintf("sudo iw reg set %s 2>&1", req.Region))
-			out, err := cmd.CombinedOutput()
-			if err == nil {
+			if err := cmd.Run(); err == nil {
 				InsertLog("INFO", fmt.Sprintf("Región WiFi cambiada a %s usando iw (usuario: %s)", req.Region, user.Username), "wifi", &userID)
 				return c.JSON(fiber.Map{"success": true, "message": "Región WiFi cambiada exitosamente"})
 			}
