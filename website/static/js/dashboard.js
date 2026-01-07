@@ -290,26 +290,41 @@
         }
     }
 
+    // Esperar a que las traducciones estén cargadas
+    function waitForTranslations(callback, maxAttempts = 50) {
+        const el = document.getElementById('i18n-json');
+        if (el || (window.HostBerry && window.HostBerry.t)) {
+            callback();
+        } else if (maxAttempts > 0) {
+            setTimeout(() => waitForTranslations(callback, maxAttempts - 1), 100);
+        } else {
+            // Continuar de todos modos después de 5 segundos
+            callback();
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        updateTime();
-        setInterval(updateTime, 1000);
-        
-        fetchDashboardData();
-        loadActivity();
-        loadServices();
-        
-        const refreshSystemInfo = document.getElementById('refresh-system-info');
-        if (refreshSystemInfo) {
-            refreshSystemInfo.addEventListener('click', fetchDashboardData);
-        }
-        
-        const refreshActivity = document.getElementById('refresh-activity');
-        if (refreshActivity) {
-            refreshActivity.addEventListener('click', loadActivity);
-        }
-        
-        setInterval(fetchDashboardData, 30000);
-        setInterval(loadActivity, 60000);
-        setInterval(loadServices, 30000);
+        waitForTranslations(function() {
+            updateTime();
+            setInterval(updateTime, 1000);
+            
+            fetchDashboardData();
+            loadActivity();
+            loadServices();
+            
+            const refreshSystemInfo = document.getElementById('refresh-system-info');
+            if (refreshSystemInfo) {
+                refreshSystemInfo.addEventListener('click', fetchDashboardData);
+            }
+            
+            const refreshActivity = document.getElementById('refresh-activity');
+            if (refreshActivity) {
+                refreshActivity.addEventListener('click', loadActivity);
+            }
+            
+            setInterval(fetchDashboardData, 30000);
+            setInterval(loadActivity, 60000);
+            setInterval(loadServices, 30000);
+        });
     });
 })();
