@@ -103,13 +103,12 @@ install_dependencies() {
         GO_URL="https://go.dev/dl/${GO_TAR}"
         
         print_info "Descargando Go ${GO_VERSION}..."
-        cd /tmp
-        wget -q "${GO_URL}" -O "${GO_TAR}"
+        wget -q "${GO_URL}" -O "/tmp/${GO_TAR}"
         
         print_info "Instalando Go..."
         rm -rf /usr/local/go
-        tar -C /usr/local -xzf "${GO_TAR}"
-        rm "${GO_TAR}"
+        tar -C /usr/local -xzf "/tmp/${GO_TAR}"
+        rm "/tmp/${GO_TAR}"
         
         # Agregar Go al PATH
         if ! grep -q "/usr/local/go/bin" /etc/profile; then
