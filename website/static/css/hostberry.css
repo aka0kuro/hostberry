@@ -156,9 +156,10 @@ body.light-theme { background: #f6f7f9; color: #212529; }
   .col-lg-6 { width: 50%; }
 }
 
-/* Asegurar centrado perfecto sin romper logo/user */
+/* Navbar alineado a la izquierda */
 @media (min-width: 992px) {
-    .navbar-collapse { justify-content: center; }
+    .navbar-collapse { justify-content: flex-start; }
+    .navbar-nav { justify-content: flex-start; }
 }
 
 /* Responsive para móviles */
