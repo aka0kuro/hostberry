@@ -154,9 +154,6 @@ func errorHandler(c *fiber.Ctx, err error) error {
 	path := c.Path()
 	errMsg := err.Error()
 	
-	// Log detallado del error
-	log.Printf("❌ Error en %s %s: %v", method, path, err)
-	
 	userID := c.Locals("user_id")
 	var userIDPtr *int
 	if userID != nil {
@@ -164,14 +161,21 @@ func errorHandler(c *fiber.Ctx, err error) error {
 		userIDPtr = &id
 	}
 
-	go func() {
-		InsertLog(
-			"ERROR",
-			"Error en "+path+": "+errMsg,
-			"http",
-			userIDPtr,
-		)
-	}()
+	// Solo registrar errores del servidor (500+) como ERROR
+	// Los errores de validación (400-499) son esperados y no se registran como ERROR
+	if code >= 500 {
+		// Log detallado del error del servidor
+		log.Printf("❌ Error en %s %s: %v", method, path, err)
+		
+		go func() {
+			InsertLog(
+				"ERROR",
+				"Error en "+path+": "+errMsg,
+				"http",
+				userIDPtr,
+			)
+		}()
+	}
 
 	// Si es una petición de API, retornar JSON
 	if strings.HasPrefix(c.Path(), "/api/") {
