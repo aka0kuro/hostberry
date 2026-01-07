@@ -574,6 +574,7 @@ EOF
     NMCLI_PATH=""
     RFKILL_PATH=""
     IFCONFIG_PATH=""
+    IW_PATH=""
     
     # Buscar nmcli
     if command -v nmcli &> /dev/null; then
@@ -596,6 +597,15 @@ EOF
         IFCONFIG_PATH="/sbin/ifconfig"
     elif [ -f "/usr/sbin/ifconfig" ]; then
         IFCONFIG_PATH="/usr/sbin/ifconfig"
+    fi
+    
+    # Buscar iw (para cambiar región WiFi)
+    if command -v iw &> /dev/null; then
+        IW_PATH=$(command -v iw)
+    elif [ -f "/usr/sbin/iw" ]; then
+        IW_PATH="/usr/sbin/iw"
+    elif [ -f "/sbin/iw" ]; then
+        IW_PATH="/sbin/iw"
     fi
     
     # Configurar sudoers
