@@ -102,15 +102,12 @@ func createTemplateEngine() *html.Engine {
 							continue
 						}
 
+						log.Printf("✅ Templates cargados desde sistema de archivos: %s", path)
+						log.Printf("📊 Total de archivos .html detectados: %d", htmlFiles)
+						log.Printf("📝 Lista de templates registrados: %v", foundTemplates)
+
 						engine.Reload(!appConfig.Server.Debug)
-						log.Printf("✅ Templates cargados desde sistema de archivos: %s (%d archivos .html)", path, htmlFiles)
-						log.Printf("   Templates encontrados: %v", foundTemplates)
-						// Log de templates críticos
-						for _, tmpl := range criticalTemplates {
-							log.Printf("   ✅ %s encontrado", tmpl)
-						}
-						// Continuar para añadir funciones personalizadas
-						break // Salir del loop, engine encontrado
+						break // Salir del loop, engine encontrado y cargado con éxito
 					} else {
 						log.Printf("⚠️  Directorio %s existe pero no contiene archivos .html", path)
 					}
