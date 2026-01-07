@@ -1,3 +1,160 @@
+<div class="wifi-page">
+    <!-- WiFi Header -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <h1 class="dashboard-title">
+                <i class="bi bi-wifi me-2"></i>
+                {{ call .t "wifi.title" "WiFi Management" }}
+            </h1>
+            <p class="dashboard-subtitle">{{ call .t "wifi.subtitle" "Manage your wireless network connections" }}</p>
+        </div>
+    </div>
+
+    <!-- Current Connection Status -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-info-circle me-2"></i>
+                        {{ call .t "wifi.current_connection" "Current Connection" }}
+                    </h5>
+                    <button class="btn btn-sm btn-outline-light" id="refresh-connection">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="info-grid" id="connection-info">
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "wifi.status" "Status" }}</span>
+                            <span class="info-value" id="connection-status">
+                                <span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> {{ call .t "common.loading" "Loading..." }}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "wifi.network_ssid" "SSID" }}</span>
+                            <span class="info-value" id="connection-ssid">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "wifi.network_signal" "Signal" }}</span>
+                            <span class="info-value" id="connection-signal">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "wifi.network_security" "Security" }}</span>
+                            <span class="info-value" id="connection-security">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "wifi.network_channel" "Channel" }}</span>
+                            <span class="info-value" id="connection-channel">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "wifi.ip_address" "IP Address" }}</span>
+                            <span class="info-value" id="connection-ip">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WiFi Controls -->
+    <div class="row mb-4">
+        <div class="col-12 col-md-6 mb-3 mb-md-0">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-gear me-2"></i>
+                        {{ call .t "wifi.controls" "WiFi Controls" }}
+                    </h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" id="toggle-wifi-btn" onclick="toggleWiFi()">
+                            <i class="bi bi-wifi"></i>
+                            <span id="toggle-wifi-text">{{ call .t "wifi.enable_wifi" "Enable WiFi" }}</span>
+                        </button>
+                        <button class="btn btn-outline-primary" id="scan-networks-btn" onclick="scanNetworks()">
+                            <i class="bi bi-search"></i>
+                            {{ call .t "wifi.scan_networks" "Scan Networks" }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-heart-pulse me-2"></i>
+                        {{ call .t "wifi.wifi_status" "WiFi Status" }}
+                    </h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="health-status" id="wifi-health">
+                        <div class="health-item">
+                            <div class="health-label">{{ call .t "wifi.wifi_enabled" "WiFi Enabled" }}</div>
+                            <div class="health-indicator">
+                                <span class="health-dot" id="wifi-enabled-dot"></span>
+                                <span class="health-text" id="wifi-enabled-text">--</span>
+                            </div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-label">{{ call .t "wifi.connected" "Connected" }}</div>
+                            <div class="health-indicator">
+                                <span class="health-dot" id="wifi-connected-dot"></span>
+                                <span class="health-text" id="wifi-connected-text">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Networks -->
+    <div class="row">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-list me-2"></i>
+                        {{ call .t "wifi.available_networks" "Available Networks" }}
+                    </h5>
+                    <button class="btn btn-sm btn-outline-light" id="refresh-networks">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+                <div class="dashboard-card-body">
+                    <div id="networks-loading" class="text-center py-4">
+                        <div class="spinning"><i class="bi bi-arrow-clockwise"></i></div>
+                        <p class="mt-2">{{ call .t "common.loading" "Loading..." }}</p>
+                    </div>
+                    <div id="networks-empty" class="text-center py-4" style="display: none;">
+                        <i class="bi bi-wifi-off" style="font-size: 3rem; opacity: 0.5;"></i>
+                        <p class="mt-2">{{ call .t "wifi.no_networks" "No networks found" }}</p>
+                    </div>
+                    <div class="table-responsive" id="networks-table-container" style="display: none;">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>{{ call .t "wifi.network_ssid" "SSID" }}</th>
+                                    <th>{{ call .t "wifi.network_security" "Security" }}</th>
+                                    <th>{{ call .t "wifi.network_signal" "Signal" }}</th>
+                                    <th>{{ call .t "wifi.network_channel" "Channel" }}</th>
+                                    <th>{{ call .t "common.actions" "Actions" }}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="networksTable">
+                                <!-- Networks will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 .wifi-page {
     padding: 0;
@@ -7,7 +164,45 @@
     margin: 0 auto;
 }
 
-.wifi-card {
+.dashboard-header {
+    margin-bottom: 2rem;
+    padding: 1.5rem 0;
+    text-align: center;
+}
+
+.header-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    flex-direction: column;
+}
+
+.dashboard-title {
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--hb-text-light);
+    display: flex;
+    align-items: center;
+}
+
+body.light-theme .dashboard-title {
+    color: var(--hb-primary);
+}
+
+.dashboard-subtitle {
+    color: var(--hb-text-muted);
+    margin: 0.5rem 0 0 0;
+    font-size: 1rem;
+}
+
+body.light-theme .dashboard-subtitle {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.dashboard-card {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
@@ -17,16 +212,9 @@
     display: flex;
     flex-direction: column;
     color: var(--hb-text-light);
-    transition: all 0.3s ease;
 }
 
-.wifi-card:hover {
-    background: rgba(255, 255, 255, 0.08);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-body.light-theme .wifi-card {
+body.light-theme .dashboard-card {
     background: rgba(255, 255, 255, 0.95) !important;
     border: 1px solid rgba(0, 0, 0, 0.1) !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
@@ -34,21 +222,20 @@ body.light-theme .wifi-card {
     backdrop-filter: blur(20px);
 }
 
-.wifi-card-header {
+.dashboard-card-header {
     padding: 1.25rem 1.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background: transparent;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-body.light-theme .wifi-card-header {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+body.light-theme .dashboard-card-header {
     background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.wifi-card-title {
+.dashboard-card-title {
     font-size: 1.125rem;
     font-weight: 600;
     margin: 0;
@@ -57,47 +244,112 @@ body.light-theme .wifi-card-header {
     align-items: center;
 }
 
-body.light-theme .wifi-card-title {
-    color: var(--hb-primary) !important;
+body.light-theme .dashboard-card-title {
+    color: var(--hb-primary);
     font-weight: 600;
 }
 
-.wifi-card-body {
+.dashboard-card-body {
     padding: 1.5rem;
     flex: 1;
+}
+
+body.light-theme .dashboard-card-body {
+    color: #212529;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.info-label {
+    font-size: 0.875rem;
+    color: var(--hb-text-muted);
+}
+
+body.light-theme .info-label {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.info-value {
+    font-size: 1rem;
+    font-weight: 500;
     color: var(--hb-text-light);
 }
 
-body.light-theme .wifi-card-body {
+body.light-theme .info-value {
     color: #212529;
 }
 
-body.light-theme .wifi-card-body .form-label {
+.health-status {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+}
+
+.health-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.light-theme .health-item {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.health-label {
+    font-size: 0.875rem;
+    color: var(--hb-text-muted);
+}
+
+body.light-theme .health-label {
     color: #212529;
+    font-weight: 500;
 }
 
-body.light-theme .wifi-card-body .form-control,
-body.light-theme .wifi-card-body .form-select {
-    background-color: rgba(0, 0, 0, 0.05) !important;
-    border-color: rgba(0, 0, 0, 0.1) !important;
-    color: #212529 !important;
+.health-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.status-indicator {
+.health-dot {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    display: inline-block;
-    margin-right: 0.5rem;
+    background: #dc3545;
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    animation: pulse-red 2s infinite;
 }
 
-.status-indicator.status-online {
+.health-dot-success,
+.health-dot-healthy {
     background: #28a745;
     box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
     animation: pulse-green 2s infinite;
 }
 
-.status-indicator.status-offline {
+.health-dot-warning {
+    background: #ffc107;
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+    animation: pulse-yellow 2s infinite;
+}
+
+.health-dot-danger {
     background: #dc3545;
     box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
     animation: pulse-red 2s infinite;
@@ -127,6 +379,37 @@ body.light-theme .wifi-card-body .form-select {
     }
 }
 
+@keyframes pulse-yellow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(255, 193, 7, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+    }
+}
+
+.health-text {
+    font-size: 0.875rem;
+    color: var(--hb-text-light);
+}
+
+body.light-theme .health-text {
+    color: #212529;
+    font-weight: 500;
+}
+
+.spinning {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 body.light-theme .table {
     color: #212529;
 }
@@ -140,249 +423,25 @@ body.light-theme .table-hover tbody tr:hover {
     background-color: rgba(0, 0, 0, 0.05);
 }
 
-body.light-theme .btn-outline-success,
 body.light-theme .btn-outline-primary {
     border-color: var(--hb-primary);
     color: var(--hb-primary);
 }
 
-body.light-theme .btn-outline-success:hover,
 body.light-theme .btn-outline-primary:hover {
     background-color: var(--hb-primary);
     color: #fff;
 }
 
-body.light-theme .text-primary {
-    color: var(--hb-primary) !important;
+body.light-theme .btn-outline-light {
+    border-color: rgba(0, 0, 0, 0.2);
+    color: #212529;
 }
 
-body.light-theme .text-success {
-    color: #198754 !important;
-}
-
-body.light-theme .text-warning {
-    color: #ffc107 !important;
-}
-
-body.light-theme .text-info {
-    color: #0dcaf0 !important;
+body.light-theme .btn-outline-light:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #212529;
 }
 </style>
 
-<div class="wifi-page">
-<div class="row">
-    <!-- Vista General de WiFi -->
-    <div class="col-12 mb-4">
-        <div class="wifi-card">
-            <div class="wifi-card-header">
-                <h5 class="wifi-card-title mb-0">
-                    <i class="bi bi-wifi"></i>
-                    {{ call .t "wifi.overview" "WiFi Overview" }}
-                </h5>
-            </div>
-            <div class="wifi-card-body">
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <div class="text-center">
-                            <i class="bi bi-wifi-1 text-primary" style="font-size: 2rem;"></i>
-                            <h6 class="mt-2">{{ call .t "wifi.networks" "Networks" }}</h6>
-                            <h4 class="text-primary">{{ if .wifi_stats.networks_count }}{{ .wifi_stats.networks_count }}{{ else }}8{{ end }}</h4>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="text-center">
-                            <i class="bi bi-people text-success" style="font-size: 2rem;"></i>
-                            <h6 class="mt-2">{{ call .t "wifi.clients" "Clients" }}</h6>
-                            <h4 class="text-success">{{ if .wifi_stats.clients_count }}{{ .wifi_stats.clients_count }}{{ else }}3{{ end }}</h4>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="text-center">
-                            <i class="bi bi-speedometer2 text-warning" style="font-size: 2rem;"></i>
-                            <h6 class="mt-2">{{ call .t "wifi.network_speed" "Speed" }}</h6>
-                            <h4 class="text-warning">{{ if .wifi_stats.current_speed }}{{ .wifi_stats.current_speed }}{{ else }}54 Mbps{{ end }}</h4>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="text-center">
-                            <i class="bi bi-thermometer-half text-info" style="font-size: 2rem;"></i>
-                            <h6 class="mt-2">{{ call .t "wifi.network_signal" "Signal" }}</h6>
-                            <h4 class="text-info">{{ if .wifi_stats.signal_strength }}{{ .wifi_stats.signal_strength }}{{ else }}-45 dBm{{ end }}</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Estado de WiFi -->
-    <div class="col-md-4 mb-4">
-        <div class="wifi-card">
-            <div class="wifi-card-header">
-                <h5 class="wifi-card-title mb-0">
-                    <i class="bi bi-heart-pulse"></i>
-                    {{ call .t "wifi.status" "Status" }}
-                </h5>
-            </div>
-            <div class="wifi-card-body">
-                <div class="d-flex align-items-center mb-3">
-                    <span class="status-indicator status-{{ if .wifi_status.enabled }}online{{ else }}offline{{ end }}"></span>
-                    <span>{{ if .wifi_status.enabled }}{{ call .t "wifi.wifi_enabled" "WiFi Enabled" }}{{ else }}{{ call .t "wifi.wifi_disabled" "WiFi Disabled" }}{{ end }}</span>
-                </div>
-                
-                <div class="d-flex align-items-center mb-3">
-                    <span class="status-indicator status-{{ if .wifi_status.connected }}online{{ else }}offline{{ end }}"></span>
-                    <span>{{ if .wifi_status.connected }}{{ call .t "wifi.wifi_connected" "Connected" }}{{ else }}{{ call .t "wifi.wifi_disconnected" "Disconnected" }}{{ end }}</span>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">{{ call .t "wifi.network_ssid" "SSID" }}</label>
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-wifi text-primary me-2"></i>
-                        <span class="h6 mb-0">{{ if .wifi_status.current_ssid }}{{ .wifi_status.current_ssid }}{{ else }}HostBerry-Network{{ end }}</span>
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">{{ call .t "wifi.network_channel" "Channel" }}</label>
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-arrow-left-right text-info me-2"></i>
-                        <span class="h6 mb-0">{{ if .wifi_status.current_channel }}{{ .wifi_status.current_channel }}{{ else }}6{{ end }}</span>
-                    </div>
-                </div>
-                
-                <div class="d-grid gap-2">
-                    <button class="btn btn-outline-success" onclick="toggleWiFi()">
-                        <i class="bi bi-wifi"></i>
-                        {{ if .wifi_status.enabled }}{{ call .t "wifi.disable_wifi" "Disable WiFi" }}{{ else }}{{ call .t "wifi.enable_wifi" "Enable WiFi" }}{{ end }}
-                    </button>
-                    <button class="btn btn-outline-primary" onclick="scanNetworks()">
-                        <i class="bi bi-search"></i>
-                        {{ call .t "wifi.scan_networks" "Scan Networks" }}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Redes WiFi Disponibles -->
-    <div class="col-md-8 mb-4">
-        <div class="wifi-card">
-            <div class="wifi-card-header">
-                <h5 class="wifi-card-title mb-0">
-                    <i class="bi bi-list"></i>
-                    {{ call .t "wifi.available_networks" "Available Networks" }}
-                </h5>
-            </div>
-            <div class="wifi-card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>{{ call .t "wifi.network_ssid" "SSID" }}</th>
-                                <th>{{ call .t "wifi.network_security" "Security" }}</th>
-                                <th>{{ call .t "wifi.network_signal" "Signal" }}</th>
-                                <th>{{ call .t "wifi.network_channel" "Channel" }}</th>
-                                <th>{{ call .t "common.actions" "Actions" }}</th>
-                            </tr>
-                        </thead>
-                        <tbody id="networksTable">
-                            <!-- Las redes se cargarán dinámicamente -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Red de Invitados -->
-    <div class="col-md-6 mb-4">
-        <div class="wifi-card">
-            <div class="wifi-card-header">
-                <h5 class="wifi-card-title mb-0">
-                    <i class="bi bi-person-plus"></i>
-                    {{ call .t "wifi.guest_network" "Guest Network" }}
-                </h5>
-            </div>
-            <div class="wifi-card-body">
-                <div class="d-flex align-items-center mb-3">
-                    <span class="status-indicator status-{{ if .guest_network.enabled }}online{{ else }}offline{{ end }}"></span>
-                    <span>{{ if .guest_network.enabled }}{{ call .t "wifi.network_guest_enabled" "Guest Network Enabled" }}{{ else }}{{ call .t "wifi.network_guest_disabled" "Guest Network Disabled" }}{{ end }}</span>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">{{ call .t "wifi.network_guest_ssid" "Guest SSID" }}</label>
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-wifi text-info me-2"></i>
-                        <span class="h6 mb-0">{{ if .guest_network.ssid }}{{ .guest_network.ssid }}{{ else }}HostBerry-Guest{{ end }}</span>
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">{{ call .t "wifi.network_guest_timeout" "Timeout" }}</label>
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-clock text-warning me-2"></i>
-                        <span class="h6 mb-0">{{ if .guest_network.timeout }}{{ .guest_network.timeout }}{{ else }}24{{ end }} {{ call .t "common.hours" "Hours" }}</span>
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">{{ call .t "wifi.network_guest_bandwidth" "Bandwidth Limit" }}</label>
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-speedometer2 text-success me-2"></i>
-                        <span class="h6 mb-0">{{ if .guest_network.bandwidth_limit }}{{ .guest_network.bandwidth_limit }}{{ else }}5{{ end }} Mbps</span>
-                    </div>
-                </div>
-                
-                <div class="d-grid">
-                    <button class="btn btn-outline-success" onclick="toggleGuestNetwork()">
-                        <i class="bi bi-person-plus"></i>
-                        {{ if .guest_network.enabled }}{{ call .t "wifi.disable_guest_network" "Disable Guest Network" }}{{ else }}{{ call .t "wifi.enable_guest_network" "Enable Guest Network" }}{{ end }}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Estadísticas de WiFi -->
-    <div class="col-12 mb-4">
-        <div class="wifi-card">
-            <div class="wifi-card-header">
-                <h5 class="wifi-card-title mb-0">
-                    <i class="bi bi-graph-up"></i>
-                    {{ call .t "wifi.statistics" "Statistics" }}
-                </h5>
-            </div>
-            <div class="wifi-card-body">
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <div class="text-center">
-                            <h6>{{ call .t "wifi.total_traffic" "Total Traffic" }}</h6>
-                            <h4 class="text-primary">{{ if .wifi_stats.total_traffic }}{{ .wifi_stats.total_traffic }}{{ else }}2.5 GB{{ end }}</h4>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="text-center">
-                            <h6>{{ call .t "wifi.peak_connections" "Peak Connections" }}</h6>
-                            <h4 class="text-success">{{ if .wifi_stats.peak_connections }}{{ .wifi_stats.peak_connections }}{{ else }}8{{ end }}</h4>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="text-center">
-                            <h6>{{ call .t "wifi.average_signal" "Avg Signal" }}</h6>
-                            <h4 class="text-warning">{{ if .wifi_stats.average_signal }}{{ .wifi_stats.average_signal }}{{ else }}-50 dBm{{ end }}</h4>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="text-center">
-                            <h6>{{ call .t "wifi.uptime" "Uptime" }}</h6>
-                            <h4 class="text-info">{{ if .wifi_stats.uptime }}{{ .wifi_stats.uptime }}{{ else }}5 días{{ end }}</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-</div>
-<script defer src="/static/js/wifi_page.js?v={{ .last_update }}"></script>
+<script src="/static/js/wifi_page.js"></script>
