@@ -307,6 +307,7 @@ func setupRoutes(app *fiber.App) {
 			system.Get("/activity", systemActivityHandler)
 			system.Get("/network", systemNetworkHandler)
 			system.Get("/updates", systemUpdatesHandler)
+			system.Get("/services", systemServicesHandler)
 			system.Post("/backup", systemBackupHandler)
 			system.Post("/config", systemConfigHandler)
 			system.Post("/restart", systemRestartHandler)
