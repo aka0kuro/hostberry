@@ -387,15 +387,13 @@ func setupRoutes(app *fiber.App) {
 	}
 
 	// Compat legacy: /api/wifi/* usado por wifi_scan.js
-	legacyAPI := app.Group("/api", requireAuth)
-	{
-		wifiLegacy := legacyAPI.Group("/wifi")
-		wifiLegacy.Get("/status", wifiLegacyStatusHandler)
-		wifiLegacy.Get("/stored_networks", wifiLegacyStoredNetworksHandler)
-		wifiLegacy.Get("/autoconnect", wifiLegacyAutoconnectHandler)
-		wifiLegacy.Get("/scan", wifiLegacyScanHandler)
-		wifiLegacy.Post("/disconnect", wifiLegacyDisconnectHandler)
-	}
+	// IMPORTANTE: NO usar app.Group("/api", ...) porque intercepta /api/v1/*
+	wifiLegacy := app.Group("/api/wifi", requireAuth)
+	wifiLegacy.Get("/status", wifiLegacyStatusHandler)
+	wifiLegacy.Get("/stored_networks", wifiLegacyStoredNetworksHandler)
+	wifiLegacy.Get("/autoconnect", wifiLegacyAutoconnectHandler)
+	wifiLegacy.Get("/scan", wifiLegacyScanHandler)
+	wifiLegacy.Post("/disconnect", wifiLegacyDisconnectHandler)
 }
 
 // Handlers básicos
