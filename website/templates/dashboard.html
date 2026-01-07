@@ -567,18 +567,10 @@ body.light-theme .action-btn:hover {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
-    .header-content {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .dashboard-title {
-        font-size: 1.5rem;
-    }
-    
+@media (max-width: 991px) {
     .stat-card {
-        padding: 1rem;
+        padding: 1.25rem;
+        min-height: 100px;
     }
     
     .stat-icon {
@@ -587,6 +579,52 @@ body.light-theme .action-btn:hover {
     
     .stat-value {
         font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .dashboard-title {
+        font-size: 1.5rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+        min-height: 90px;
+    }
+    
+    .stat-icon {
+        font-size: 1.75rem;
+    }
+    
+    .stat-value {
+        font-size: 1.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1rem;
+        min-height: auto;
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-content {
+        width: 100%;
     }
 }
 </style>
