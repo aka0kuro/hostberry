@@ -22,6 +22,23 @@ type User struct {
 	Username string `gorm:"unique;not null"`
 	Password string `gorm:"not null"`
 	Email    string
+	FirstName string
+	LastName  string
+	Role      string `gorm:"default:admin"`
+	Timezone  string `gorm:"default:UTC"`
+
+	// Estadísticas / seguridad
+	LastLogin      *time.Time
+	LoginCount     int  `gorm:"default:0"`
+	FailedAttempts int  `gorm:"default:0"`
+	// Preferencias
+	EmailNotifications bool `gorm:"default:false"`
+	SystemAlerts       bool `gorm:"default:false"`
+	SecurityAlerts     bool `gorm:"default:false"`
+	ShowActivity       bool `gorm:"default:true"`
+	DataCollection     bool `gorm:"default:false"`
+	Analytics          bool `gorm:"default:false"`
+
 	IsActive bool   `gorm:"default:true"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -88,8 +105,18 @@ func Login(username, password string) (*User, string, error) {
 	}
 
 	if !CheckPassword(password, user.Password) {
+		// Registrar intento fallido sin filtrar si el usuario existe/no existe
+		user.FailedAttempts++
+		_ = db.Save(&user).Error
 		return nil, "", errors.New("usuario o contraseña incorrectos")
 	}
+
+	// Login exitoso: reset intentos, actualizar last_login/login_count
+	now := time.Now()
+	user.FailedAttempts = 0
+	user.LastLogin = &now
+	user.LoginCount++
+	_ = db.Save(&user).Error
 
 	token, err := GenerateToken(&user)
 	if err != nil {
@@ -127,6 +154,8 @@ func Register(username, password, email string) (*User, error) {
 		Username: username,
 		Password: hashedPassword,
 		Email:    email,
+		Role:     "admin",
+		Timezone: "UTC",
 		IsActive: true,
 	}
 
