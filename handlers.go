@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"strconv"
 	"time"
 
@@ -43,6 +44,16 @@ func loginAPIHandler(c *fiber.Ctx) error {
 	userID := user.ID
 	InsertLog("INFO", "Usuario autenticado: "+user.Username, "auth", &userID)
 
+	// También setear cookie para permitir render protegido en rutas web (HttpOnly)
+	c.Cookie(&fiber.Cookie{
+		Name:     "access_token",
+		Value:    token,
+		Path:     "/",
+		HTTPOnly: true,
+		SameSite: "Lax",
+		// Secure: true, // si sirves por HTTPS
+	})
+
 	return c.JSON(fiber.Map{
 		"access_token":    token,
 		"user": fiber.Map{
@@ -71,7 +82,103 @@ func meHandler(c *fiber.Ctx) error {
 		"id":       user.ID,
 		"username": user.Username,
 		"email":    user.Email,
+		"first_name": user.FirstName,
+		"last_name":  user.LastName,
+		"role":       user.Role,
+		"timezone":   user.Timezone,
 	})
+}
+
+func changePasswordAPIHandler(c *fiber.Ctx) error {
+	user := c.Locals("user").(*User)
+
+	var req struct {
+		CurrentPassword string `json:"current_password"`
+		NewPassword     string `json:"new_password"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Datos inválidos"})
+	}
+	if req.CurrentPassword == "" || req.NewPassword == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Contraseñas requeridas"})
+	}
+	if !CheckPassword(req.CurrentPassword, user.Password) {
+		return c.Status(401).JSON(fiber.Map{"error": "Contraseña actual incorrecta"})
+	}
+
+	hashed, err := HashPassword(req.NewPassword)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Error hasheando contraseña"})
+	}
+	user.Password = hashed
+	if err := db.Save(user).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Error guardando contraseña"})
+	}
+
+	userID := user.ID
+	InsertLog("INFO", "Usuario cambió contraseña", "auth", &userID)
+	return c.JSON(fiber.Map{"message": "Contraseña actualizada"})
+}
+
+func updateProfileAPIHandler(c *fiber.Ctx) error {
+	user := c.Locals("user").(*User)
+
+	var req struct {
+		Email     string `json:"email"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+		Timezone  string `json:"timezone"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Datos inválidos"})
+	}
+
+	// Campos opcionales
+	user.Email = req.Email
+	user.FirstName = req.FirstName
+	user.LastName = req.LastName
+	if req.Timezone != "" {
+		user.Timezone = req.Timezone
+	}
+
+	if err := db.Save(user).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Error guardando perfil"})
+	}
+
+	userID := user.ID
+	InsertLog("INFO", "Usuario actualizó su perfil", "auth", &userID)
+	return c.JSON(fiber.Map{"message": "Perfil actualizado"})
+}
+
+func updatePreferencesAPIHandler(c *fiber.Ctx) error {
+	user := c.Locals("user").(*User)
+
+	var req struct {
+		EmailNotifications bool `json:"email_notifications"`
+		SystemAlerts       bool `json:"system_alerts"`
+		SecurityAlerts     bool `json:"security_alerts"`
+		ShowActivity       bool `json:"show_activity"`
+		DataCollection     bool `json:"data_collection"`
+		Analytics          bool `json:"analytics"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Datos inválidos"})
+	}
+
+	user.EmailNotifications = req.EmailNotifications
+	user.SystemAlerts = req.SystemAlerts
+	user.SecurityAlerts = req.SecurityAlerts
+	user.ShowActivity = req.ShowActivity
+	user.DataCollection = req.DataCollection
+	user.Analytics = req.Analytics
+
+	if err := db.Save(user).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Error guardando preferencias"})
+	}
+
+	userID := user.ID
+	InsertLog("INFO", "Usuario actualizó sus preferencias", "auth", &userID)
+	return c.JSON(fiber.Map{"message": "Preferencias actualizadas"})
 }
 
 // Handlers del sistema
@@ -399,10 +506,34 @@ func hostapdPageHandler(c *fiber.Ctx) error {
 }
 
 func profilePageHandler(c *fiber.Ctx) error {
-	user := c.Locals("user")
+	user := c.Locals("user").(*User)
+	// Actividad real: últimos logs
+	logs, _, _ := GetLogs("all", 10, 0)
+	type activity struct {
+		Action      string
+		Timestamp   string
+		Description string
+		IPAddress   string
+	}
+	var activities []activity
+	for _, l := range logs {
+		activities = append(activities, activity{
+			Action:      l.Source,
+			Timestamp:   l.CreatedAt.Format(time.RFC3339),
+			Description: l.Message,
+			IPAddress:   "-",
+		})
+	}
+
+	configs, _ := GetAllConfigs()
+	configsJSON, _ := json.Marshal(configs)
 	return renderTemplate(c, "profile", fiber.Map{
 		"Title": T(c, "auth.profile", "Profile"),
 		"user":  user,
+		"recent_activities": activities,
+		"settings":          configs,
+		"settings_json":     string(configsJSON),
+		"last_update":       time.Now().Unix(),
 	})
 }
 
