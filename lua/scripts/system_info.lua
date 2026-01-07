@@ -25,10 +25,6 @@ if os_release then
 end
 result.os_version = os_version
 
--- Python version (si existe)
-local python_version = exec("python3 --version 2>/dev/null") or "N/A"
-result.python_version = python_version
-
 -- Uptime
 local uptime_cmd = "cat /proc/uptime | awk '{print int($1)}'"
 result.uptime_seconds = tonumber(exec(uptime_cmd)) or 0
