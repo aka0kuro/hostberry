@@ -735,6 +735,7 @@ main() {
     
     check_root
     detect_os
+    install_git
     download_project
     clean_previous_installation
     install_dependencies
