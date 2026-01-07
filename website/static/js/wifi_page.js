@@ -187,23 +187,44 @@
   
   // Toggle WiFi
   async function toggleWiFi() {
-    try {
-      const resp = await apiRequest('/api/v1/wifi/toggle', { method: 'POST' });
-      const data = await resp.json();
+    const btn = document.getElementById('toggle-wifi-btn');
+    const text = document.getElementById('toggle-wifi-text');
+    
+    if (btn) {
+      btn.disabled = true;
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '<span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> ' + t('wifi.processing', 'Processing...');
       
-      if (resp.ok && data.success) {
-        showAlert('success', t('messages.operation_successful', 'Operation successful'));
-        setTimeout(() => {
-          loadConnectionStatus();
-          loadNetworks();
-        }, 1000);
-      } else {
-        const errorMsg = data.error || t('errors.operation_failed', 'Operation failed');
-        showAlert('danger', errorMsg);
+      try {
+        const resp = await apiRequest('/api/v1/wifi/toggle', { method: 'POST' });
+        const data = await resp.json();
+        
+        if (resp.ok && data.success) {
+          showAlert('success', t('wifi.wifi_toggled', 'WiFi status changed successfully'));
+          // Esperar un momento para que el sistema actualice el estado
+          setTimeout(async () => {
+            await loadConnectionStatus();
+            // Si se activó WiFi, escanear redes automáticamente
+            const status = await checkWiFiStatus();
+            if (status.enabled && !status.blocked) {
+              setTimeout(() => {
+                scanNetworks();
+              }, 2000);
+            }
+          }, 2000);
+        } else {
+          const errorMsg = data.error || t('errors.operation_failed', 'Operation failed');
+          showAlert('danger', errorMsg);
+        }
+      } catch (e) {
+        console.error('Error toggling WiFi:', e);
+        showAlert('danger', t('errors.network_error', 'Network error'));
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+        }
       }
-    } catch (e) {
-      console.error('Error toggling WiFi:', e);
-      showAlert('danger', t('errors.network_error', 'Network error'));
     }
   }
   
