@@ -570,22 +570,45 @@ func wifiScanHandler(c *fiber.Ctx) error {
 func wifiScanFallback(c *fiber.Ctx) error {
 	var networks []fiber.Map
 
-	// Intentar con nmcli
-	cmd := exec.Command("sh", "-c", "nmcli -t -f SSID,SIGNAL,SECURITY dev wifi list 2>/dev/null")
+	// Verificar que WiFi esté habilitado
+	wifiCheck := exec.Command("sh", "-c", "nmcli -t -f WIFI g 2>/dev/null")
+	wifiOut, _ := wifiCheck.Output()
+	wifiState := strings.ToLower(strings.TrimSpace(string(wifiOut)))
+	if !strings.Contains(wifiState, "enabled") && !strings.Contains(wifiState, "on") {
+		log.Printf("⚠️  WiFi no está habilitado")
+		return c.JSON(fiber.Map{
+			"success": false,
+			"error":   "WiFi no está habilitado. Por favor, habilita WiFi primero.",
+			"networks": []fiber.Map{},
+		})
+	}
+
+	// Método 1: Intentar con nmcli (formato mejorado)
+	cmd := exec.Command("sh", "-c", "nmcli -t -f SSID,SIGNAL,SECURITY,CHAN dev wifi list 2>&1")
 	out, err := cmd.CombinedOutput()
-	if err == nil && len(out) > 0 {
-		lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+	output := strings.TrimSpace(string(out))
+	
+	if err == nil && len(output) > 0 && !strings.Contains(output, "Error") && !strings.Contains(output, "permission") {
+		log.Printf("📡 Escaneando con nmcli...")
+		lines := strings.Split(output, "\n")
 		for _, line := range lines {
 			line = strings.TrimSpace(line)
-			if line == "" {
+			if line == "" || line == "--" || strings.HasPrefix(line, "Error") {
 				continue
 			}
 			parts := strings.Split(line, ":")
-			if len(parts) >= 3 {
+			if len(parts) >= 2 {
 				ssid := parts[0]
 				signalStr := parts[1]
-				security := parts[2]
-				if ssid != "" {
+				security := "Open"
+				channel := ""
+				if len(parts) >= 3 {
+					security = parts[2]
+				}
+				if len(parts) >= 4 {
+					channel = parts[3]
+				}
+				if ssid != "" && ssid != "--" {
 					signal := 0
 					if s, err := strconv.Atoi(signalStr); err == nil {
 						signal = s
@@ -594,11 +617,13 @@ func wifiScanFallback(c *fiber.Ctx) error {
 						"ssid":     ssid,
 						"signal":   signal,
 						"security": security,
+						"channel":  channel,
 					})
 				}
 			}
 		}
 		if len(networks) > 0 {
+			log.Printf("✅ Encontradas %d redes con nmcli", len(networks))
 			return c.JSON(fiber.Map{
 				"success": true,
 				"networks": networks,
@@ -606,9 +631,83 @@ func wifiScanFallback(c *fiber.Ctx) error {
 		}
 	}
 
-	// Si no hay redes encontradas, retornar array vacío
+	// Método 2: Intentar con iw si nmcli no funcionó
+	log.Printf("📡 Intentando escanear con iw...")
+	iwCmd := exec.Command("sh", "-c", "sudo iw dev wlan0 scan 2>&1 | grep -E 'SSID|signal|freq' | head -30")
+	iwOut, iwErr := iwCmd.CombinedOutput()
+	if iwErr == nil && len(iwOut) > 0 {
+		lines := strings.Split(string(iwOut), "\n")
+		currentNetwork := make(map[string]interface{})
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if strings.Contains(line, "SSID:") {
+				if ssid, ok := currentNetwork["ssid"].(string); ok && ssid != "" {
+					networks = append(networks, fiber.Map{
+						"ssid":     currentNetwork["ssid"],
+						"signal":   currentNetwork["signal"],
+						"security": currentNetwork["security"],
+						"channel":  currentNetwork["channel"],
+					})
+				}
+				currentNetwork = make(map[string]interface{})
+				ssid := strings.TrimSpace(strings.TrimPrefix(line, "SSID:"))
+				if ssid != "" {
+					currentNetwork["ssid"] = ssid
+					currentNetwork["security"] = "Unknown"
+					currentNetwork["signal"] = 0
+					currentNetwork["channel"] = ""
+				}
+			} else if strings.Contains(line, "signal:") {
+				parts := strings.Fields(line)
+				for i, part := range parts {
+					if part == "signal:" && i+1 < len(parts) {
+						if s, err := strconv.Atoi(parts[i+1]); err == nil {
+							currentNetwork["signal"] = s
+						}
+						break
+					}
+				}
+			} else if strings.Contains(line, "freq:") {
+				parts := strings.Fields(line)
+				for i, part := range parts {
+					if part == "freq:" && i+1 < len(parts) {
+						if f, err := strconv.Atoi(parts[i+1]); err == nil {
+							// Convertir frecuencia a canal
+							if f >= 2412 && f <= 2484 {
+								channel := (f - 2412) / 5 + 1
+								currentNetwork["channel"] = strconv.Itoa(channel)
+							} else if f >= 5000 && f <= 5825 {
+								channel := (f - 5000) / 5
+								currentNetwork["channel"] = strconv.Itoa(channel)
+							}
+						}
+						break
+					}
+				}
+			}
+		}
+		if ssid, ok := currentNetwork["ssid"].(string); ok && ssid != "" {
+			networks = append(networks, fiber.Map{
+				"ssid":     currentNetwork["ssid"],
+				"signal":   currentNetwork["signal"],
+				"security": currentNetwork["security"],
+				"channel":  currentNetwork["channel"],
+			})
+		}
+		if len(networks) > 0 {
+			log.Printf("✅ Encontradas %d redes con iw", len(networks))
+			return c.JSON(fiber.Map{
+				"success": true,
+				"networks": networks,
+			})
+		}
+	}
+
+	// Si no hay redes encontradas, retornar array vacío con mensaje
+	log.Printf("⚠️  No se encontraron redes WiFi")
 	return c.JSON(fiber.Map{
 		"success": true,
+		"error":   "No se encontraron redes WiFi. Verifica que WiFi esté habilitado y que haya redes disponibles en el área.",
 		"networks": []fiber.Map{},
 	})
 }
