@@ -18,20 +18,6 @@
       }
     }catch(e){ console.error('Error loading networks:', e); }
   }
-  async function loadClients(){
-    try{
-      const resp = await fetch('/api/v1/wifi/clients', { headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
-      if(resp.ok){
-        const clients = await resp.json();
-        const tbody = document.getElementById('clientsTable'); if(!tbody) return; tbody.innerHTML='';
-        clients.forEach(function(client){
-          const tr = document.createElement('tr');
-          tr.innerHTML = '<td>'+client.mac_address+'</td><td>'+client.ip_address+'</td><td>'+client.signal+' dBm</td><td>'+client.uptime+'</td>';
-          tbody.appendChild(tr);
-        });
-      }
-    }catch(e){ console.error('Error loading clients:', e); }
-  }
   function getSecurityColor(security){
     const s = String(security||'').toLowerCase();
     if(s==='wpa3') return 'success'; if(s==='wpa2') return 'primary'; if(s==='wep') return 'warning'; if(s==='open') return 'danger'; return 'secondary';
