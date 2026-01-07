@@ -189,7 +189,7 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 				iwCmd = fmt.Sprintf("sudo ifconfig %s down", iface)
 			}
 			
-			iwToggleOut, iwToggleErr := exec.Command("sh", "-c", iwCmd+" 2>/dev/null").CombinedOutput()
+			_, iwToggleErr := exec.Command("sh", "-c", iwCmd+" 2>/dev/null").CombinedOutput()
 			if iwToggleErr == nil {
 				InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando ifconfig (usuario: %s)", user.Username), "wifi", &userID)
 				return c.JSON(fiber.Map{"success": true, "message": "WiFi toggle exitoso"})
