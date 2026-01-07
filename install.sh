@@ -145,6 +145,68 @@ install_dependencies() {
     print_success "Dependencias instaladas"
 }
 
+# Descargar proyecto de GitHub si es necesario
+download_project() {
+    # Verificar si estamos en un repositorio git válido con todos los archivos necesarios
+    local has_all_files=true
+    for item in "website" "lua" "locales" "main.go" "go.mod"; do
+        if [ ! -e "${SCRIPT_DIR}/${item}" ]; then
+            has_all_files=false
+            break
+        fi
+    done
+    
+    # Si tenemos todos los archivos, usar el directorio actual
+    if [ "$has_all_files" = true ]; then
+        print_info "Usando proyecto local en ${SCRIPT_DIR}"
+        return 0
+    fi
+    
+    # Si no, descargar de GitHub
+    print_info "Descargando proyecto desde GitHub..."
+    
+    # Limpiar directorio temporal si existe
+    if [ -d "$TEMP_CLONE_DIR" ]; then
+        rm -rf "$TEMP_CLONE_DIR"
+    fi
+    
+    # Clonar repositorio
+    if git clone "$GITHUB_REPO" "$TEMP_CLONE_DIR" 2>/dev/null; then
+        print_success "Proyecto descargado desde GitHub"
+        SCRIPT_DIR="$TEMP_CLONE_DIR"
+        return 0
+    else
+        print_error "Error al descargar el proyecto desde GitHub"
+        print_info "Verifica tu conexión a internet y que el repositorio sea accesible"
+        exit 1
+    fi
+}
+
+# Limpiar instalación anterior
+clean_previous_installation() {
+    if [ -d "$INSTALL_DIR" ]; then
+        print_info "Eliminando instalación anterior en $INSTALL_DIR..."
+        
+        # Detener servicio si está corriendo
+        if systemctl is-active --quiet "${SERVICE_NAME}" 2>/dev/null; then
+            print_info "Deteniendo servicio ${SERVICE_NAME}..."
+            systemctl stop "${SERVICE_NAME}" 2>/dev/null || true
+        fi
+        
+        # Deshabilitar servicio
+        if systemctl is-enabled --quiet "${SERVICE_NAME}" 2>/dev/null; then
+            print_info "Deshabilitando servicio ${SERVICE_NAME}..."
+            systemctl disable "${SERVICE_NAME}" 2>/dev/null || true
+        fi
+        
+        # Eliminar directorio de instalación
+        rm -rf "$INSTALL_DIR"
+        print_success "Instalación anterior eliminada"
+    else
+        print_info "No hay instalación anterior que eliminar"
+    fi
+}
+
 # Crear usuario del sistema
 create_user() {
     if id "$USER_NAME" &>/dev/null; then
