@@ -131,18 +131,18 @@
                 </a>
                 <ul class="dropdown-menu sidebar-dropdown">
                     <li><div class="dropdown-header text-muted">{{ call .t "navigation.account" "Account" }}</div></li>
-                    <li><a class="dropdown-item" href="/profile">
-                        <i class="bi bi-person me-2"></i>
-                        {{ call .t "navigation.profile" "Profile" }}
-                    </a></li>
-                    <li><a class="dropdown-item" href="/settings">
-                        <i class="bi bi-gear me-2"></i>
-                        {{ call .t "navigation.settings" "Settings" }}
-                    </a></li>
-                    <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item text-danger" href="#" data-action="logout">
                         <i class="bi bi-box-arrow-right me-2"></i>
                         {{ call .t "navigation.logout" "Logout" }}
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-warning" href="#" data-action="restart">
+                        <i class="bi bi-arrow-clockwise me-2"></i>
+                        {{ call .t "system.restart" "Restart" }}
+                    </a></li>
+                    <li><a class="dropdown-item text-danger" href="#" data-action="shutdown">
+                        <i class="bi bi-power me-2"></i>
+                        {{ call .t "system.shutdown" "Shutdown" }}
                     </a></li>
                 </ul>
             </div>
