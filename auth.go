@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -91,10 +92,23 @@ func HashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
+func isBcryptHash(hash string) bool {
+	return strings.HasPrefix(hash, "$2a$") || strings.HasPrefix(hash, "$2b$") || strings.HasPrefix(hash, "$2y$")
+}
+
 // CheckPassword verifica una contraseña contra un hash
 func CheckPassword(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
+	// Compat legacy:
+	// - password en texto plano (versiones antiguas / migraciones)
+	// - hashes bcrypt con prefijo $2y$ (común en otros stacks)
+	if !isBcryptHash(hash) {
+		return password == hash
+	}
+	normalized := hash
+	if strings.HasPrefix(hash, "$2y$") {
+		normalized = "$2a$" + strings.TrimPrefix(hash, "$2y$")
+	}
+	return bcrypt.CompareHashAndPassword([]byte(normalized), []byte(password)) == nil
 }
 
 // Login autentica un usuario
@@ -109,6 +123,14 @@ func Login(username, password string) (*User, string, error) {
 		user.FailedAttempts++
 		_ = db.Save(&user).Error
 		return nil, "", errors.New("usuario o contraseña incorrectos")
+	}
+
+	// Si venía de legacy (texto plano o $2y$), re-hashear a bcrypt estándar
+	if !strings.HasPrefix(user.Password, "$2a$") && !strings.HasPrefix(user.Password, "$2b$") {
+		if hashed, err := HashPassword(password); err == nil {
+			user.Password = hashed
+			_ = db.Save(&user).Error
+		}
 	}
 
 	// Login exitoso: reset intentos, actualizar last_login/login_count
