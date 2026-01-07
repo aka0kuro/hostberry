@@ -1,9 +1,181 @@
+<style>
+.wifi-page {
+    padding: 0;
+    color: var(--hb-text-light);
+    background: transparent;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.wifi-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    color: var(--hb-text-light);
+    transition: all 0.3s ease;
+}
+
+.wifi-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+body.light-theme .wifi-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+    color: #212529;
+    backdrop-filter: blur(20px);
+}
+
+.wifi-card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+body.light-theme .wifi-card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.wifi-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--hb-text-light);
+    display: flex;
+    align-items: center;
+}
+
+body.light-theme .wifi-card-title {
+    color: var(--hb-primary) !important;
+    font-weight: 600;
+}
+
+.wifi-card-body {
+    padding: 1.5rem;
+    flex: 1;
+    color: var(--hb-text-light);
+}
+
+body.light-theme .wifi-card-body {
+    color: #212529;
+}
+
+body.light-theme .wifi-card-body .form-label {
+    color: #212529;
+}
+
+body.light-theme .wifi-card-body .form-control,
+body.light-theme .wifi-card-body .form-select {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+    color: #212529 !important;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.5rem;
+}
+
+.status-indicator.status-online {
+    background: #28a745;
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    animation: pulse-green 2s infinite;
+}
+
+.status-indicator.status-offline {
+    background: #dc3545;
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-green {
+    0% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(40, 167, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+    }
+}
+
+@keyframes pulse-red {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(220, 53, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
+
+body.light-theme .table {
+    color: #212529;
+}
+
+body.light-theme .table thead th {
+    color: var(--hb-primary);
+    font-weight: 600;
+}
+
+body.light-theme .table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .btn-outline-success,
+body.light-theme .btn-outline-primary {
+    border-color: var(--hb-primary);
+    color: var(--hb-primary);
+}
+
+body.light-theme .btn-outline-success:hover,
+body.light-theme .btn-outline-primary:hover {
+    background-color: var(--hb-primary);
+    color: #fff;
+}
+
+body.light-theme .text-primary {
+    color: var(--hb-primary) !important;
+}
+
+body.light-theme .text-success {
+    color: #198754 !important;
+}
+
+body.light-theme .text-warning {
+    color: #ffc107 !important;
+}
+
+body.light-theme .text-info {
+    color: #0dcaf0 !important;
+}
+</style>
+
+<div class="wifi-page">
 <div class="row">
     <!-- Vista General de WiFi -->
     <div class="col-12 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
+        <div class="wifi-card">
+            <div class="wifi-card-header">
+                <h5 class="wifi-card-title mb-0">
                     <i class="bi bi-wifi"></i>
                     {{ call .t "wifi.overview" "WiFi Overview" }}
                 </h5>
