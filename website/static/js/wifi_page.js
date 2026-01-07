@@ -275,10 +275,25 @@
             interfaceSelect.appendChild(option);
           });
           
-          // Cargar interfaz guardada
+          // Cargar interfaz guardada DESPUÉS de agregar las opciones
           const savedInterface = localStorage.getItem('wifi_interface');
           if (savedInterface) {
-            interfaceSelect.value = savedInterface;
+            // Verificar que la interfaz guardada existe en las opciones
+            let found = false;
+            for (let i = 0; i < interfaceSelect.options.length; i++) {
+              if (interfaceSelect.options[i].value === savedInterface) {
+                found = true;
+                break;
+              }
+            }
+            if (found) {
+              interfaceSelect.value = savedInterface;
+              console.log('Interfaz WiFi cargada:', savedInterface);
+            } else {
+              // Si la interfaz guardada no existe, limpiar localStorage
+              localStorage.removeItem('wifi_interface');
+              console.log('Interfaz WiFi guardada no encontrada, usando auto-detect');
+            }
           }
         }
       }
