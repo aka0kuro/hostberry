@@ -73,22 +73,23 @@ func createTemplateEngine() *html.Engine {
 							}
 						}
 					}
-					if htmlFiles > 0 {
-						// Verificar templates críticos antes de aceptar este directorio
-						criticalTemplates := []string{"dashboard.html", "login.html", "base.html", "error.html"}
-						missingCritical := false
-						for _, tmpl := range criticalTemplates {
-							if _, err := os.Stat(filepath.Join(path, tmpl)); err != nil {
-								log.Printf("   ⚠️  %s NO encontrado en %s", tmpl, path)
-								missingCritical = true
+						if htmlFiles > 0 {
+							log.Printf("✅ %d templates encontrados en %s", htmlFiles, path)
+							// Verificar templates críticos antes de aceptar este directorio
+							criticalTemplates := []string{"dashboard.html", "login.html", "base.html", "error.html"}
+							missingCritical := false
+							for _, tmpl := range criticalTemplates {
+								if _, err := os.Stat(filepath.Join(path, tmpl)); err != nil {
+									log.Printf("   ⚠️  %s NO encontrado en %s", tmpl, path)
+									missingCritical = true
+								}
 							}
-						}
-						if missingCritical {
-							log.Printf("⚠️  Directorio de templates rechazado por faltantes críticos: %s", path)
-							continue
-						}
+							if missingCritical {
+								log.Printf("⚠️  Directorio de templates rechazado por faltantes críticos: %s", path)
+								continue
+							}
 
-						engine = html.New(path, ".html")
+							engine = html.New(path, ".html")
 						if engine == nil {
 							log.Printf("❌ Error: engine es nil después de html.New para %s", path)
 							continue
