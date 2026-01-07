@@ -43,7 +43,7 @@
     <script defer src="/static/js/common.js"></script>
     <script defer src="/static/js/theme.js"></script>
 </head>
-<body>
+<body class="dark-theme {{ if eq .page \"login\" }}hb-page-login{{ end }}">
     {{ if ne .page "login" }}
     <nav class="navbar navbar-expand-lg navbar-dark glass-navbar sticky-top mb-4">
         <div class="container-fluid px-4">
@@ -133,9 +133,13 @@
 
     <button id="theme-toggle" class="theme-toggle" type="button" title="{{ call .t "common.change_theme" "Change theme" }}" aria-label="{{ call .t "common.change_theme" "Change theme" }}" onclick="toggleTheme()"></button>
 
-    <div class="container-fluid mt-4">
+    {{ if eq .page "login" }}
         {{embed}}
-    </div>
+    {{ else }}
+        <div class="container-fluid mt-4">
+            {{embed}}
+        </div>
+    {{ end }}
 
     {{ if .translations }}
     <script id="i18n-json" type="application/json">{{ .translations_json }}</script>
