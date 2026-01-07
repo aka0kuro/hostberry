@@ -11,6 +11,23 @@ import (
 
 // requireAuth middleware que requiere autenticación
 func requireAuth(c *fiber.Ctx) error {
+	// Rutas públicas que NO requieren autenticación
+	publicPaths := []string{
+		"/api/v1/auth/login",
+		"/api/v1/translations/",
+		"/health",
+		"/health/ready",
+		"/health/live",
+	}
+	
+	path := c.Path()
+	for _, publicPath := range publicPaths {
+		if path == publicPath || strings.HasPrefix(path, publicPath) {
+			// Esta ruta es pública, permitir sin autenticación
+			return c.Next()
+		}
+	}
+	
 	var token string
 	
 	// Para APIs, obtener token del header Authorization
