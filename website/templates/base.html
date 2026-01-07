@@ -133,7 +133,7 @@
 
     <button id="theme-toggle" class="theme-toggle" type="button" title="{{ call .t "common.change_theme" "Change theme" }}" aria-label="{{ call .t "common.change_theme" "Change theme" }}" onclick="toggleTheme()"></button>
 
-    {{ if eq .page "login" }}
+    {{ if or (eq .page "login") (eq .page "first_login") }}
         {{embed}}
     {{ else }}
         <div class="container-fluid mt-4">
