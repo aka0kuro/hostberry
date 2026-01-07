@@ -758,14 +758,24 @@
       }
       
       // Combinar datos de ambos endpoints
-      const hostname = info.hostname || stats.hostname || '--';
-      const architecture = info.architecture || stats.architecture || '--';
-      const osVersion = info.os_version || stats.os_version || '--';
-      const kernel = info.kernel_version || info.kernel || stats.kernel_version || stats.kernel || '--';
-      const processor = info.processor || stats.processor || '--';
+      const hostname = (info.hostname || stats.hostname || '').trim() || '--';
+      const architecture = (info.architecture || stats.architecture || '').trim() || '--';
+      const osVersion = (info.os_version || stats.os_version || '').trim() || '--';
+      const kernel = (info.kernel_version || info.kernel || stats.kernel_version || stats.kernel || '').trim() || '--';
+      
+      // Procesador - intentar múltiples campos
+      let processor = (info.processor || stats.processor || '').trim();
+      if (!processor || processor === '' || processor === 'unknown' || processor === 'ARM Processor') {
+        // Intentar obtener de otros campos posibles
+        processor = info.cpu_model || stats.cpu_model || info.cpu || stats.cpu || '';
+      }
+      processor = processor.trim() || '--';
+      
       const uptimeSeconds = info.uptime_seconds || stats.uptime || stats.uptime_seconds || 0;
       
       console.log('Updating DOM with:', { hostname, architecture, osVersion, kernel, processor, uptimeSeconds });
+      console.log('Full stats object:', stats);
+      console.log('Full info object:', info);
       
       // Actualizar datos del sistema
       const hostnameEl = document.getElementById('about-hostname');
@@ -785,7 +795,12 @@
       if (kernelEl) kernelEl.textContent = kernel;
       
       const procEl = document.getElementById('about-processor');
-      if (procEl) procEl.textContent = processor;
+      if (procEl) {
+        procEl.textContent = processor;
+        console.log('Processor element updated with:', processor);
+      } else {
+        console.warn('about-processor element not found');
+      }
 
       // Actualizar uptime
       if (uptimeSeconds !== undefined) {
