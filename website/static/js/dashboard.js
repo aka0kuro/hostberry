@@ -62,22 +62,40 @@
                     return fetch(url, { headers: headers });
                 };
             
-            const resp = await apiRequestFn('/api/v1/system/stats');
+            // Obtener stats e info en paralelo
+            const [statsResp, infoResp] = await Promise.all([
+                apiRequestFn('/api/v1/system/stats'),
+                apiRequestFn('/api/v1/system/info')
+            ]);
             
-            if (!resp.ok) {
-                console.error('Stats request failed:', resp.status, resp.statusText);
-                throw new Error('Stats request failed: ' + resp.status);
+            if (!statsResp.ok) {
+                console.error('Stats request failed:', statsResp.status, statsResp.statusText);
+                throw new Error('Stats request failed: ' + statsResp.status);
             }
             
-            const payload = await resp.json();
-            console.log('Dashboard stats response:', payload);
+            if (!infoResp.ok) {
+                console.error('Info request failed:', infoResp.status, infoResp.statusText);
+            }
+            
+            const statsPayload = await statsResp.json();
+            const infoPayload = infoResp.ok ? await infoResp.json() : {};
+            
+            console.log('Dashboard stats response:', statsPayload);
+            console.log('Dashboard info response:', infoPayload);
             
             // Manejar diferentes formatos de respuesta
-            let stats = payload;
-            if (payload.data) {
-                stats = payload.data;
-            } else if (payload.stats) {
-                stats = payload.stats;
+            let stats = statsPayload;
+            if (statsPayload.data) {
+                stats = statsPayload.data;
+            } else if (statsPayload.stats) {
+                stats = statsPayload.stats;
+            }
+            
+            let info = infoPayload;
+            if (infoPayload.data) {
+                info = infoPayload.data;
+            } else if (infoPayload.info) {
+                info = infoPayload.info;
             }
 
             // CPU - intentar diferentes nombres de campo
@@ -107,13 +125,13 @@
                 networkBadge.className = 'badge bg-success';
             }
 
-            // System Info - intentar diferentes nombres de campo
-            setText('info-hostname', stats.hostname || stats.host_name || '--');
-            setText('info-os', stats.os_version || stats.os || '--');
-            setText('info-kernel', stats.kernel_version || stats.kernel || '--');
-            setText('info-arch', stats.architecture || stats.arch || '--');
-            setText('info-uptime', formatUptime(stats.uptime || stats.uptime_seconds || 0));
-            setText('info-cores', stats.cpu_cores || stats.cores || stats.cpu_count || '--');
+            // System Info - combinar datos de stats e info
+            setText('info-hostname', info.hostname || stats.hostname || stats.host_name || '--');
+            setText('info-os', info.os_version || stats.os_version || stats.os || '--');
+            setText('info-kernel', info.kernel_version || stats.kernel_version || stats.kernel || '--');
+            setText('info-arch', info.architecture || stats.architecture || stats.arch || '--');
+            setText('info-uptime', formatUptime(info.uptime_seconds || stats.uptime || stats.uptime_seconds || 0));
+            setText('info-cores', stats.cpu_cores || stats.cores || stats.cpu_count || info.cpu_cores || '--');
 
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
