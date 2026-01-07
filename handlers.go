@@ -359,13 +359,22 @@ func wifiScanPageHandler(c *fiber.Ctx) error {
 
 func vpnPageHandler(c *fiber.Ctx) error {
 	return renderTemplate(c, "vpn", fiber.Map{
-		"Title": T(c, "vpn.overview", "VPN Overview"),
+		"Title":        T(c, "vpn.overview", "VPN Overview"),
+		"vpn_stats":    fiber.Map{},
+		"vpn_status":   fiber.Map{},
+		"vpn_config":   fiber.Map{},
+		"vpn_security": fiber.Map{},
+		"last_update":  time.Now().Unix(),
 	})
 }
 
 func wireguardPageHandler(c *fiber.Ctx) error {
 	return renderTemplate(c, "wireguard", fiber.Map{
-		"Title": T(c, "wireguard.overview", "WireGuard Overview"),
+		"Title":            T(c, "wireguard.overview", "WireGuard Overview"),
+		"wireguard_stats":  fiber.Map{},
+		"wireguard_status": fiber.Map{},
+		"wireguard_config": fiber.Map{},
+		"last_update":      time.Now().Unix(),
 	})
 }
 
