@@ -638,8 +638,8 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 	}
 
 	// Método 2: Intentar con iw si nmcli no funcionó
-	log.Printf("📡 Intentando escanear con iw...")
-	iwCmd := exec.Command("sh", "-c", "sudo iw dev wlan0 scan 2>&1 | grep -E 'SSID|signal|freq' | head -30")
+	log.Printf("📡 Intentando escanear con iw en interfaz %s...", interfaceName)
+	iwCmd := exec.Command("sh", "-c", fmt.Sprintf("sudo iw dev %s scan 2>&1 | grep -E 'SSID|signal|freq' | head -30", interfaceName))
 	iwOut, iwErr := iwCmd.CombinedOutput()
 	if iwErr == nil && len(iwOut) > 0 {
 		lines := strings.Split(string(iwOut), "\n")
