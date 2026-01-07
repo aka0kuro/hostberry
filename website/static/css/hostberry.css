@@ -171,6 +171,7 @@ body.light-theme { background: #f6f7f9; color: #212529; }
 
 .user-dropdown-sidebar {
     width: 100%;
+    position: relative;
 }
 
 .user-profile-link {
