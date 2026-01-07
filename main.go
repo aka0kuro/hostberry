@@ -541,13 +541,124 @@ func systemRestartHandler(c *fiber.Ctx) error {
 	})
 }
 
+// detectWiFiInterface detecta automáticamente la interfaz WiFi
+func detectWiFiInterface() string {
+	// Intentar con nmcli primero
+	cmd := exec.Command("sh", "-c", "nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
+	out, err := cmd.Output()
+	if err == nil {
+		iface := strings.TrimSpace(string(out))
+		if iface != "" {
+			return iface
+		}
+	}
+
+	// Fallback: buscar interfaces wlan*
+	cmd2 := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}' | grep -E '^wlan|^wl' | head -1")
+	out2, err2 := cmd2.Output()
+	if err2 == nil {
+		iface := strings.TrimSpace(string(out2))
+		if iface != "" {
+			return iface
+		}
+	}
+
+	// Último fallback: wlan0
+	return "wlan0"
+}
+
+// wifiInterfacesHandler devuelve las interfaces WiFi disponibles
+func wifiInterfacesHandler(c *fiber.Ctx) error {
+	var interfaces []fiber.Map
+
+	// Método 1: nmcli
+	cmd := exec.Command("sh", "-c", "nmcli -t -f DEVICE,TYPE,STATE dev status 2>/dev/null | grep wifi")
+	out, err := cmd.Output()
+	if err == nil {
+		lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+		for _, line := range lines {
+			parts := strings.Split(line, ":")
+			if len(parts) >= 2 {
+				iface := fiber.Map{
+					"name":  parts[0],
+					"type":  parts[1],
+					"state": "unknown",
+				}
+				if len(parts) >= 3 {
+					iface["state"] = parts[2]
+				}
+				interfaces = append(interfaces, iface)
+			}
+		}
+	}
+
+	// Fallback: buscar interfaces wlan* manualmente
+	if len(interfaces) == 0 {
+		cmd2 := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}' | grep -E '^wlan|^wl'")
+		out2, err2 := cmd2.Output()
+		if err2 == nil {
+			lines := strings.Split(strings.TrimSpace(string(out2)), "\n")
+			for _, ifaceName := range lines {
+				ifaceName = strings.TrimSpace(ifaceName)
+				if ifaceName != "" {
+					// Verificar estado
+					stateCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/operstate 2>/dev/null", ifaceName))
+					stateOut, _ := stateCmd.Output()
+					state := strings.TrimSpace(string(stateOut))
+					if state == "" {
+						state = "unknown"
+					}
+
+					interfaces = append(interfaces, fiber.Map{
+						"name":  ifaceName,
+						"type":  "wifi",
+						"state": state,
+					})
+				}
+			}
+		}
+	}
+
+	// Si no hay interfaces, agregar wlan0 como opción por defecto
+	if len(interfaces) == 0 {
+		interfaces = append(interfaces, fiber.Map{
+			"name":  "wlan0",
+			"type":  "wifi",
+			"state": "unknown",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"success":   true,
+		"interfaces": interfaces,
+	})
+}
+
 func wifiScanHandler(c *fiber.Ctx) error {
+	// Obtener interfaz del query o body
+	interfaceName := c.Query("interface", "")
+	if interfaceName == "" {
+		var req struct {
+			Interface string `json:"interface"`
+		}
+		if err := c.BodyParser(&req); err == nil {
+			interfaceName = req.Interface
+		}
+	}
+
+	// Si no se especifica interfaz, detectar automáticamente
+	if interfaceName == "" {
+		interfaceName = detectWiFiInterface()
+	}
+
 	if luaEngine != nil {
-		result, err := luaEngine.Execute("wifi_scan.lua", nil)
+		result, err := luaEngine.Execute("wifi_scan.lua", fiber.Map{
+			"interface": interfaceName,
+		})
 		if err != nil {
 			log.Printf("⚠️  Error ejecutando wifi_scan.lua, usando fallback: %v", err)
 			// Fallback: intentar escanear directamente con comandos del sistema
-			return wifiScanFallback(c)
+			return wifiScanFallback(c, interfaceName)
 		}
 		// Verificar que el resultado tenga networks
 		if result != nil {
@@ -559,7 +670,7 @@ func wifiScanHandler(c *fiber.Ctx) error {
 			}
 		}
 		// Si no hay networks, usar fallback
-		return wifiScanFallback(c)
+		return wifiScanFallback(c, interfaceName)
 	}
 
 	return c.Status(500).JSON(fiber.Map{
