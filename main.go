@@ -525,15 +525,15 @@ func getSystemStats() fiber.Map {
 	}
 	
 	// Intentar obtener datos reales del sistema
-	// CPU usage - usar método más robusto
-	if cpuOut, err := executeCommand("top -bn1 | grep 'Cpu(s)' | awk '{for(i=1;i<=NF;i++){if($i ~ /id/){split($i,a,\"%\");print 100-a[1]}}}'"); err == nil && strings.TrimSpace(cpuOut) != "" {
+	// CPU usage - usar /proc/stat (más confiable)
+	if cpuOut, err := executeCommand("grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$3+$4+$5)} END {print usage}'"); err == nil && strings.TrimSpace(cpuOut) != "" {
 		if cpu, err := strconv.ParseFloat(strings.TrimSpace(cpuOut), 64); err == nil && cpu >= 0 && cpu <= 100 {
 			stats["cpu_usage"] = cpu
 		}
 	}
-	// Fallback alternativo para CPU
+	// Fallback alternativo para CPU usando top
 	if stats["cpu_usage"] == 0.0 {
-		if cpuOut, err := executeCommand("grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$3+$4+$5)} END {print usage}'"); err == nil && strings.TrimSpace(cpuOut) != "" {
+		if cpuOut, err := executeCommand("top -bn1 | grep 'Cpu(s)' | awk -F'id,' '{split($1,a,\"%\"); for(i in a){if(a[i] ~ /^[0-9]/){print 100-a[i];break}}}'"); err == nil && strings.TrimSpace(cpuOut) != "" {
 			if cpu, err := strconv.ParseFloat(strings.TrimSpace(cpuOut), 64); err == nil && cpu >= 0 && cpu <= 100 {
 				stats["cpu_usage"] = cpu
 			}
