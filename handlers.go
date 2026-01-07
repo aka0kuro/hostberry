@@ -51,9 +51,9 @@ func loginAPIHandler(c *fiber.Ctx) error {
 	InsertLog("INFO", "Usuario autenticado: "+user.Username, "auth", &userID)
 
 	// Determinar si se requiere cambio de contraseña
-	// Se requiere si es el primer login (LoginCount == 1 después del incremento)
-	// o si la contraseña no es un hash bcrypt válido (texto plano)
-	passwordChangeRequired := user.LoginCount == 1 || !isBcryptHash(user.Password)
+	// Se requiere si es el primer login (LoginCount == 1 después del incremento en Login)
+	// Esto significa que el usuario acaba de hacer su primer login exitoso
+	passwordChangeRequired := user.LoginCount == 1
 
 	// También setear cookie para permitir render protegido en rutas web (HttpOnly)
 	c.Cookie(&fiber.Cookie{
