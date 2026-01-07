@@ -126,23 +126,81 @@ func wifiClientsHandler(c *fiber.Ctx) error {
 }
 
 func wifiToggleHandler(c *fiber.Ctx) error {
-	// Toggle usando nmcli (si existe)
+	user := c.Locals("user").(*User)
+	userID := user.ID
+
+	// Método 1: Intentar con nmcli
 	out, err := exec.Command("sh", "-c", "nmcli -t -f WIFI g 2>/dev/null").CombinedOutput()
 	state := strings.TrimSpace(string(out))
-	if err != nil || state == "" {
-		return c.Status(500).JSON(fiber.Map{"error": "nmcli no disponible"})
+	if err == nil && state != "" {
+		var cmd string
+		if strings.Contains(strings.ToLower(state), "enabled") || strings.Contains(strings.ToLower(state), "on") {
+			cmd = "nmcli radio wifi off"
+		} else {
+			cmd = "nmcli radio wifi on"
+		}
+		out2, err2 := exec.Command("sh", "-c", cmd+" 2>/dev/null").CombinedOutput()
+		if err2 == nil {
+			InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando nmcli (usuario: %s)", user.Username), "wifi", &userID)
+			return c.JSON(fiber.Map{"success": true, "message": "WiFi toggle exitoso"})
+		}
+		// Si nmcli falla, intentar con sudo
+		out3, err3 := exec.Command("sh", "-c", "sudo "+cmd+" 2>/dev/null").CombinedOutput()
+		if err3 == nil {
+			InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando nmcli con sudo (usuario: %s)", user.Username), "wifi", &userID)
+			return c.JSON(fiber.Map{"success": true, "message": "WiFi toggle exitoso"})
+		}
 	}
-	var cmd string
-	if strings.Contains(strings.ToLower(state), "enabled") || strings.Contains(strings.ToLower(state), "on") {
-		cmd = "nmcli radio wifi off"
-	} else {
-		cmd = "nmcli radio wifi on"
+
+	// Método 2: Intentar con rfkill
+	rfkillOut, rfkillErr := exec.Command("sh", "-c", "rfkill list wifi 2>/dev/null | grep -i 'wifi' | head -1").CombinedOutput()
+	if rfkillErr == nil && strings.Contains(strings.ToLower(string(rfkillOut)), "wifi") {
+		// Obtener estado actual
+		statusOut, _ := exec.Command("sh", "-c", "rfkill list wifi 2>/dev/null | grep -i 'soft blocked'").CombinedOutput()
+		isBlocked := strings.Contains(strings.ToLower(string(statusOut)), "yes")
+		
+		var rfkillCmd string
+		if isBlocked {
+			rfkillCmd = "sudo rfkill unblock wifi"
+		} else {
+			rfkillCmd = "sudo rfkill block wifi"
+		}
+		
+		rfkillToggleOut, rfkillToggleErr := exec.Command("sh", "-c", rfkillCmd+" 2>/dev/null").CombinedOutput()
+		if rfkillToggleErr == nil {
+			InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando rfkill (usuario: %s)", user.Username), "wifi", &userID)
+			return c.JSON(fiber.Map{"success": true, "message": "WiFi toggle exitoso"})
+		}
 	}
-	out2, err2 := exec.Command("sh", "-c", cmd+" 2>/dev/null").CombinedOutput()
-	if err2 != nil {
-		return c.Status(500).JSON(fiber.Map{"error": strings.TrimSpace(string(out2))})
+
+	// Método 3: Intentar con iwconfig (solo para interfaces específicas)
+	iwOut, iwErr := exec.Command("sh", "-c", "iwconfig 2>/dev/null | grep -i 'wlan' | head -1 | awk '{print $1}'").CombinedOutput()
+	if iwErr == nil {
+		iface := strings.TrimSpace(string(iwOut))
+		if iface != "" {
+			// Obtener estado actual
+			statusOut, _ := exec.Command("sh", "-c", fmt.Sprintf("iwconfig %s 2>/dev/null | grep -i 'unassociated'", iface)).CombinedOutput()
+			isDown := strings.Contains(strings.ToLower(string(statusOut)), "unassociated")
+			
+			var iwCmd string
+			if isDown {
+				iwCmd = fmt.Sprintf("sudo ifconfig %s up", iface)
+			} else {
+				iwCmd = fmt.Sprintf("sudo ifconfig %s down", iface)
+			}
+			
+			iwToggleOut, iwToggleErr := exec.Command("sh", "-c", iwCmd+" 2>/dev/null").CombinedOutput()
+			if iwToggleErr == nil {
+				InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando ifconfig (usuario: %s)", user.Username), "wifi", &userID)
+				return c.JSON(fiber.Map{"success": true, "message": "WiFi toggle exitoso"})
+			}
+		}
 	}
-	return c.JSON(fiber.Map{"success": true})
+
+	// Si todos los métodos fallan
+	errorMsg := "No se pudo cambiar el estado de WiFi. Verifica que tengas permisos sudo configurados o que nmcli/rfkill estén disponibles."
+	InsertLog("ERROR", fmt.Sprintf("Error en WiFi toggle (usuario: %s): %s", user.Username, errorMsg), "wifi", &userID)
+	return c.Status(500).JSON(fiber.Map{"error": errorMsg})
 }
 
 func wifiConfigHandler(c *fiber.Ctx) error {
