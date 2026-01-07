@@ -120,11 +120,6 @@
             const uptimeSeconds = info.uptime_seconds || stats.uptime || stats.uptime_seconds || 0;
             const uptimeFormatted = formatUptime(uptimeSeconds);
             setText('stat-uptime', uptimeFormatted);
-            const uptimeBadge = document.getElementById('stat-uptime-badge');
-            if (uptimeBadge) {
-                uptimeBadge.textContent = 'Running';
-                uptimeBadge.className = 'badge bg-success';
-            }
 
             // System Info - combinar datos de stats e info
             setText('info-hostname', info.hostname || stats.hostname || stats.host_name || '--');
