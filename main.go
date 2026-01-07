@@ -568,8 +568,13 @@ func wifiScanHandler(c *fiber.Ctx) error {
 }
 
 // wifiScanFallback escanea WiFi usando comandos del sistema directamente
-func wifiScanFallback(c *fiber.Ctx) error {
+func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 	var networks []fiber.Map
+	
+	// Si no se especifica interfaz, detectar automáticamente
+	if interfaceName == "" {
+		interfaceName = detectWiFiInterface()
+	}
 
 	// Verificar que WiFi esté habilitado
 	wifiCheck := exec.Command("sh", "-c", "nmcli -t -f WIFI g 2>/dev/null")
