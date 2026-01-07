@@ -996,8 +996,22 @@
     }
   }
 
+  // Función para manejar el cambio de interfaz
+  function handleInterfaceChange(e) {
+    const selectedInterface = e.target.value;
+    if (selectedInterface && selectedInterface !== '') {
+      fillDHCPFields(selectedInterface);
+    }
+  }
+
   // Cargar interfaces al iniciar
   document.addEventListener('DOMContentLoaded', function() {
+    const select = document.getElementById('dhcp_interface');
+    if (select) {
+      // Agregar event listener para cuando se seleccione una interfaz
+      select.addEventListener('change', handleInterfaceChange);
+    }
+    
     loadNetworkInterfaces();
   });
   
