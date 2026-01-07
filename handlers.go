@@ -443,6 +443,5 @@ func getSystemInfo() fiber.Map {
 		"kernel":        "unknown",
 		"architecture":  "unknown",
 		"processor":     "unknown",
-		"python_version": "N/A (Go)",
 	}
 }
