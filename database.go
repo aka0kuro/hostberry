@@ -213,3 +213,17 @@ func GetConfig(key string) (string, error) {
 	}
 	return config.Value, nil
 }
+
+// GetAllConfigs obtiene todas las configuraciones como un mapa
+func GetAllConfigs() (map[string]string, error) {
+	var configs []SystemConfig
+	if err := db.Find(&configs).Error; err != nil {
+		return nil, err
+	}
+	
+	result := make(map[string]string)
+	for _, config := range configs {
+		result[config.Key] = config.Value
+	}
+	return result, nil
+}
