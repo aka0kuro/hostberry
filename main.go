@@ -354,6 +354,7 @@ func setupRoutes(app *fiber.App) {
 		{
 			wifi.Get("/scan", wifiScanHandler)
 			wifi.Post("/scan", wifiScanHandler)
+			wifi.Get("/interfaces", wifiInterfacesHandler)
 			wifi.Post("/connect", wifiConnectHandler)
 			wifi.Get("/networks", wifiNetworksHandler)
 			wifi.Get("/clients", wifiClientsHandler)
