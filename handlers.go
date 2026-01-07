@@ -12,6 +12,9 @@ import (
 
 // Handlers de autenticación
 func loginAPIHandler(c *fiber.Ctx) error {
+	// Debug: log para verificar que el handler se está ejecutando
+	log.Printf("DEBUG loginAPIHandler: Handler ejecutado, path='%s', method=%s", c.Path(), c.Method())
+	
 	var req struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
