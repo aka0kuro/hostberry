@@ -28,7 +28,7 @@ body.light-theme { background: #f6f7f9; color: #212529; }
     top: 0;
     height: 100vh;
     width: 260px;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(33, 37, 41, 0.95);
     backdrop-filter: blur(20px);
     border-right: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 2px 0 32px rgba(0, 0, 0, 0.3);
