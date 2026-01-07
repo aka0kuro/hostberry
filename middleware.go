@@ -32,17 +32,19 @@ func requireAuth(c *fiber.Ctx) error {
 		normalizedPath = "/"
 	}
 	
-	// Verificar si la ruta es pública
+	// Verificar si la ruta es pública (comparación exacta primero, luego con prefijo)
 	for _, publicPath := range publicPaths {
 		// Normalizar también el publicPath
 		normalizedPublicPath := strings.TrimRight(publicPath, "/")
 		
-		// Comparación exacta o con prefijo (para rutas como /api/v1/translations/)
-		if normalizedPath == normalizedPublicPath || 
-			normalizedPath == publicPath || 
-			path == publicPath ||
-			strings.HasPrefix(normalizedPath, normalizedPublicPath+"/") ||
-			strings.HasPrefix(path, publicPath) {
+		// Comparación exacta (caso más común)
+		if path == publicPath || normalizedPath == normalizedPublicPath {
+			// Esta ruta es pública, permitir sin autenticación
+			return c.Next()
+		}
+		
+		// Comparación con prefijo (para rutas como /api/v1/translations/:lang)
+		if strings.HasPrefix(path, publicPath+"/") || strings.HasPrefix(normalizedPath, normalizedPublicPath+"/") {
 			// Esta ruta es pública, permitir sin autenticación
 			return c.Next()
 		}
