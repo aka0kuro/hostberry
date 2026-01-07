@@ -212,6 +212,7 @@
     "general": "General",
     "healthy": "Saludable",
     "warning": "Advertencia",
+    "critical": "Crítico",
     "hostname": "Nombre del Host",
     "os_version": "Versión del SO",
     "kernel_version": "Versión del Kernel",

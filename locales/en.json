@@ -212,6 +212,7 @@
     "general": "Overall",
     "healthy": "Healthy",
     "warning": "Warning",
+    "critical": "Critical",
     "normal": "Normal",
     "hostname": "Hostname",
     "os_version": "OS Version",
