@@ -168,9 +168,21 @@ func GetCurrentLanguage(c *fiber.Ctx) string {
 		return "es" // Fallback seguro
 	}
 
-	// Intentar obtener del query parameter
+	var selectedLang string
+
+	// Intentar obtener del query parameter (prioridad más alta)
 	if lang := c.Query("lang"); lang != "" {
 		if isLanguageSupported(lang) {
+			selectedLang = lang
+			// Guardar en cookie para persistencia
+			c.Cookie(&fiber.Cookie{
+				Name:     "lang",
+				Value:    lang,
+				Path:     "/",
+				MaxAge:   365 * 24 * 60 * 60, // 1 año
+				HTTPOnly: false, // Permitir acceso desde JavaScript
+				SameSite: "Lax",
+			})
 			return lang
 		}
 	}
