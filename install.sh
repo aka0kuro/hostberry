@@ -705,6 +705,14 @@ show_final_info() {
     echo ""
 }
 
+# Limpiar directorio temporal al finalizar
+cleanup_temp() {
+    if [ -d "$TEMP_CLONE_DIR" ] && [ "$TEMP_CLONE_DIR" != "$SCRIPT_DIR" ]; then
+        print_info "Limpiando directorio temporal..."
+        rm -rf "$TEMP_CLONE_DIR"
+    fi
+}
+
 # Función principal
 main() {
     echo ""
@@ -715,14 +723,18 @@ main() {
     
     check_root
     detect_os
+    download_project
+    clean_previous_installation
     install_dependencies
     create_user
     install_files
     build_project
     create_database
+    configure_permissions
     configure_firewall
     create_systemd_service
     start_service
+    cleanup_temp
     show_final_info
 }
 
