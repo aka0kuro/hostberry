@@ -260,22 +260,25 @@ func setupRoutes(app *fiber.App) {
 	// Rutas web
 	web := app.Group("/")
 	{
-		web.Get("/", indexHandler)
-		web.Get("/dashboard", dashboardHandler)
 		web.Get("/login", loginHandler)
-		web.Get("/settings", settingsHandler)
-		web.Get("/network", networkPageHandler)
-		web.Get("/wifi", wifiPageHandler)
-		web.Get("/wifi-scan", wifiScanPageHandler)
-		web.Get("/vpn", vpnPageHandler)
-		web.Get("/wireguard", wireguardPageHandler)
-		web.Get("/adblock", adblockPageHandler)
-		web.Get("/hostapd", hostapdPageHandler)
-		web.Get("/profile", profilePageHandler)
-		web.Get("/system", systemPageHandler)
-		web.Get("/monitoring", monitoringPageHandler)
-		web.Get("/update", updatePageHandler)
 		web.Get("/first-login", firstLoginPageHandler)
+		web.Get("/", indexHandler)
+		
+		// Páginas protegidas (requieren token por cookie o query ?token=)
+		protected := web.Group("/", requireAuth)
+		protected.Get("/dashboard", dashboardHandler)
+		protected.Get("/settings", settingsHandler)
+		protected.Get("/network", networkPageHandler)
+		protected.Get("/wifi", wifiPageHandler)
+		protected.Get("/wifi-scan", wifiScanPageHandler)
+		protected.Get("/vpn", vpnPageHandler)
+		protected.Get("/wireguard", wireguardPageHandler)
+		protected.Get("/adblock", adblockPageHandler)
+		protected.Get("/hostapd", hostapdPageHandler)
+		protected.Get("/profile", profilePageHandler)
+		protected.Get("/system", systemPageHandler)
+		protected.Get("/monitoring", monitoringPageHandler)
+		protected.Get("/update", updatePageHandler)
 	}
 
 	// API v1
@@ -285,8 +288,11 @@ func setupRoutes(app *fiber.App) {
 		auth := api.Group("/auth")
 		{
 			auth.Post("/login", loginAPIHandler)
-			auth.Post("/logout", logoutAPIHandler)
-			auth.Get("/me", meHandler)
+			auth.Post("/logout", requireAuth, logoutAPIHandler)
+			auth.Get("/me", requireAuth, meHandler)
+			auth.Post("/change-password", requireAuth, changePasswordAPIHandler)
+			auth.Post("/profile", requireAuth, updateProfileAPIHandler)
+			auth.Post("/preferences", requireAuth, updatePreferencesAPIHandler)
 		}
 
 		// Sistema
