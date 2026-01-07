@@ -6,7 +6,7 @@ local result = {}
 -- Obtener uso de CPU usando top (método más simple)
 local cpu_cmd = "top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}'"
 local cpu_output, cpu_err = exec(cpu_cmd)
-if cpu_output and cpu_output ~= "" and (not cpu_err or cpu_err == "") then
+if cpu_output and cpu_output ~= "" and cpu_err == nil then
     local cpu_val = tonumber(cpu_output)
     if cpu_val and cpu_val > 0 and cpu_val <= 100 then
         result.cpu_usage = cpu_val
@@ -20,7 +20,7 @@ end
 -- Obtener uso de memoria usando free (método simple)
 local mem_cmd = "free | grep Mem | awk '{printf \"%.2f\", $3/$2 * 100.0}'"
 local mem_output, mem_err = exec(mem_cmd)
-if mem_output and mem_output ~= "" and (not mem_err or mem_err == "") then
+if mem_output and mem_output ~= "" and mem_err == nil then
     local mem_val = tonumber(mem_output)
     if mem_val and mem_val >= 0 and mem_val <= 100 then
         result.memory_usage = mem_val
@@ -34,7 +34,7 @@ end
 -- Obtener uso de disco usando df (método simple)
 local disk_cmd = "df / | tail -1 | awk '{print $5}' | sed 's/%//'"
 local disk_output, disk_err = exec(disk_cmd)
-if disk_output and disk_output ~= "" and (not disk_err or disk_err == "") then
+if disk_output and disk_output ~= "" and disk_err == nil then
     local disk_val = tonumber(disk_output)
     if disk_val and disk_val >= 0 and disk_val <= 100 then
         result.disk_usage = disk_val
