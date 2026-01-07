@@ -604,32 +604,48 @@
   // Cargar datos de sistema para "Acerca de"
   async function loadSystemInfo() {
     try {
-      const resp = await HostBerry.apiRequest('/api/v1/system/stats', {
-        method: 'GET'
-      });
+      // Obtener stats e info en paralelo
+      const [statsResp, infoResp] = await Promise.all([
+        HostBerry.apiRequest('/api/v1/system/stats'),
+        HostBerry.apiRequest('/api/v1/system/info')
+      ]);
       
-      if (resp && resp.ok) {
-        const data = await resp.json().catch(() => ({}));
-        
-        // Actualizar datos del sistema
-        if(data.hostname && document.getElementById('about-hostname')) document.getElementById('about-hostname').textContent = data.hostname;
-        if(data.architecture && document.getElementById('about-architecture')) document.getElementById('about-architecture').textContent = data.architecture;
-        if(data.os_version && document.getElementById('about-os')) document.getElementById('about-os').textContent = data.os_version;
-        if(data.kernel_version && document.getElementById('about-kernel')) document.getElementById('about-kernel').textContent = data.kernel_version;
-        if(data.processor && document.getElementById('about-processor')) document.getElementById('about-processor').textContent = data.processor;
+      let stats = {};
+      let info = {};
+      
+      if (statsResp && statsResp.ok) {
+        stats = await statsResp.json().catch(() => ({}));
+      }
+      
+      if (infoResp && infoResp.ok) {
+        info = await infoResp.json().catch(() => ({}));
+      }
+      
+      // Combinar datos de ambos endpoints
+      const hostname = info.hostname || stats.hostname || '--';
+      const architecture = info.architecture || stats.architecture || '--';
+      const osVersion = info.os_version || stats.os_version || '--';
+      const kernel = info.kernel_version || info.kernel || stats.kernel_version || stats.kernel || '--';
+      const processor = info.processor || stats.processor || '--';
+      const uptimeSeconds = info.uptime_seconds || stats.uptime || stats.uptime_seconds || 0;
+      
+      // Actualizar datos del sistema
+      if (document.getElementById('about-hostname')) document.getElementById('about-hostname').textContent = hostname;
+      if (document.getElementById('about-architecture')) document.getElementById('about-architecture').textContent = architecture;
+      if (document.getElementById('about-os')) document.getElementById('about-os').textContent = osVersion;
+      if (document.getElementById('about-kernel')) document.getElementById('about-kernel').textContent = kernel;
+      if (document.getElementById('about-processor')) document.getElementById('about-processor').textContent = processor;
 
-        // Actualizar uptime
-        const uptimeSeconds = data.uptime;
-        if (uptimeSeconds !== undefined && document.getElementById('about-uptime')) {
-          document.getElementById('about-uptime').textContent = formatUptime(uptimeSeconds);
-        }
-        
-        // Actualizar boot time (calculado)
-        if (uptimeSeconds !== undefined && document.getElementById('about-boot-time')) {
-          const bootTimestamp = Math.floor(Date.now() / 1000) - uptimeSeconds;
-          const bootDate = new Date(bootTimestamp * 1000);
-          document.getElementById('about-boot-time').textContent = bootDate.toLocaleString();
-        }
+      // Actualizar uptime
+      if (uptimeSeconds !== undefined && document.getElementById('about-uptime')) {
+        document.getElementById('about-uptime').textContent = formatUptime(uptimeSeconds);
+      }
+      
+      // Actualizar boot time (calculado)
+      if (uptimeSeconds !== undefined && document.getElementById('about-boot-time')) {
+        const bootTimestamp = Math.floor(Date.now() / 1000) - uptimeSeconds;
+        const bootDate = new Date(bootTimestamp * 1000);
+        document.getElementById('about-boot-time').textContent = bootDate.toLocaleString();
       }
     } catch (error) {
       console.error('Error loading system info:', error);
