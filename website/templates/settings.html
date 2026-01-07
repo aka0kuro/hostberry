@@ -660,25 +660,40 @@
   // Cargar interfaces de red para el desplegable DHCP
   async function loadNetworkInterfaces() {
     const select = document.getElementById('dhcp_interface');
-    if (!select) return;
+    if (!select) {
+      console.error('dhcp_interface select not found');
+      return;
+    }
 
+    console.log('Loading network interfaces...');
     try {
-      const resp = await HostBerry.apiRequest('/api/v1/network/interfaces', {
-        method: 'GET'
-      });
+      const apiRequestFn = window.HostBerry && window.HostBerry.apiRequest 
+        ? window.HostBerry.apiRequest 
+        : async function(url) {
+            const token = localStorage.getItem('access_token');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) {
+              headers['Authorization'] = 'Bearer ' + token;
+            }
+            const response = await fetch(url, { headers: headers });
+            return response;
+          };
+      
+      const resp = await apiRequestFn('/api/v1/network/interfaces');
 
       if (resp && resp.ok) {
-        const result = await resp.json().catch(() => ({}));
+        const result = await resp.json().catch((e) => {
+          console.error('Error parsing JSON:', e);
+          return {};
+        });
+        console.log('Network interfaces response:', result);
         const interfaces = result.interfaces || [];
         
         // Limpiar opciones existentes
         select.innerHTML = '';
         
-        // Obtener el valor actual del formulario (desde el template no se puede leer valor dinámico de JS fácilmente, 
-        // pero asumimos que el usuario lo seleccionará o vendrá de settings si ya está guardado)
-        // Como estamos en JS, podemos intentar leer el valor 'selected' si existiera, o dejarlo al usuario.
-        
         if (interfaces && interfaces.length > 0) {
+          console.log('Found interfaces:', interfaces.length);
           // Agregar opción vacía inicial
           const emptyOption = document.createElement('option');
           emptyOption.value = '';
@@ -687,26 +702,42 @@
           
           // Agregar cada interfaz como opción
           interfaces.forEach(iface => {
-            if (!iface || !iface.name) return;
+            if (!iface || !iface.name) {
+              console.warn('Invalid interface:', iface);
+              return;
+            }
             const option = document.createElement('option');
             option.value = iface.name;
             const displayText = iface.ip && iface.ip !== 'N/A' && iface.ip !== '' 
-              ? `${iface.name} (${iface.ip})` 
+              ? iface.name + ' (' + iface.ip + ')' 
               : iface.name;
             option.textContent = displayText;
             select.appendChild(option);
           });
         } else {
+          console.warn('No interfaces found');
           select.innerHTML = '<option value="">' + t('network.no_interfaces', 'No interfaces found') + '</option>';
         }
+      } else {
+        console.error('Failed to load interfaces:', resp ? resp.status : 'No response');
+        select.innerHTML = '<option value="">Error loading interfaces</option>';
       }
     } catch (error) {
       console.error('Error loading network interfaces:', error);
+      const select = document.getElementById('dhcp_interface');
+      if (select) {
+        select.innerHTML = '<option value="">Error: ' + error.message + '</option>';
+      }
     }
   }
 
   // Cargar interfaces al iniciar
-  loadNetworkInterfaces();
+  document.addEventListener('DOMContentLoaded', function() {
+    loadNetworkInterfaces();
+  });
+  
+  // También intentar cargar después de un pequeño delay por si HostBerry aún no está listo
+  setTimeout(loadNetworkInterfaces, 500);
 
   // Separar DNS actual en primario y secundario
   function loadDNSValues() {
