@@ -26,6 +26,15 @@ DATA_DIR="${INSTALL_DIR}/data"
 # Modo de operación
 MODE="install"  # install o update
 
+# Procesar argumentos
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --update) MODE="update" ;;
+        *) echo "Opción desconocida: $1"; exit 1 ;;
+    esac
+    shift
+done
+
 # Función para imprimir mensajes
 print_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
