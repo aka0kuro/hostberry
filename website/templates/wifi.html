@@ -10,14 +10,128 @@
         </div>
     </div>
 
-    <!-- Current Connection Status -->
+    <!-- WiFi Status Cards -->
+    <div class="row mb-4 g-3">
+        <div class="col-12 col-md-4 mb-3 mb-md-0">
+            <div class="stat-card wifi-status-card">
+                <div class="stat-icon">
+                    <i class="bi bi-wifi" id="wifi-status-icon"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">{{ call .t "wifi.wifi_status" "WiFi Status" }}</div>
+                    <div class="stat-value" id="wifi-status-value">--</div>
+                    <div class="stat-progress">
+                        <div class="stat-progress-bar" id="wifi-status-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4 mb-3 mb-md-0">
+            <div class="stat-card connection-status-card">
+                <div class="stat-icon">
+                    <i class="bi bi-network-chart"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">{{ call .t "wifi.current_connection" "Current Connection" }}</div>
+                    <div class="stat-value" id="connection-ssid-value">--</div>
+                    <div class="stat-progress">
+                        <div class="stat-progress-bar" id="connection-signal-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="stat-card networks-count-card">
+                <div class="stat-icon">
+                    <i class="bi bi-list"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">{{ call .t "wifi.available_networks" "Available Networks" }}</div>
+                    <div class="stat-value" id="networks-count-value">0</div>
+                    <div class="stat-progress">
+                        <div class="stat-progress-bar" id="networks-count-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WiFi Controls and Settings -->
+    <div class="row mb-4 g-3">
+        <div class="col-12 col-lg-6 mb-3 mb-lg-0">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-gear me-2"></i>
+                        {{ call .t "wifi.controls" "WiFi Controls" }}
+                    </h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="d-grid gap-3">
+                        <div class="wifi-toggle-section">
+                            <label class="form-label">{{ call .t "wifi.power" "WiFi Power" }}</label>
+                            <button class="btn btn-lg w-100" id="toggle-wifi-btn" onclick="toggleWiFi()">
+                                <i class="bi bi-wifi" id="toggle-wifi-icon"></i>
+                                <span id="toggle-wifi-text">{{ call .t "wifi.enable_wifi" "Enable WiFi" }}</span>
+                            </button>
+                        </div>
+                        <div class="wifi-scan-section">
+                            <label class="form-label">{{ call .t "wifi.scan_networks" "Scan Networks" }}</label>
+                            <button class="btn btn-outline-primary btn-lg w-100" id="scan-networks-btn" onclick="scanNetworks()">
+                                <i class="bi bi-search"></i>
+                                {{ call .t "wifi.scan_networks" "Scan Networks" }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-6">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-globe me-2"></i>
+                        {{ call .t "wifi.region_settings" "Region Settings" }}
+                    </h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <form id="regionForm">
+                        <div class="mb-3">
+                            <label for="wifi-region" class="form-label">{{ call .t "wifi.region" "WiFi Region" }}</label>
+                            <select class="form-select" id="wifi-region" name="region">
+                                <option value="US">{{ call .t "wifi.region_us" "United States (US)" }}</option>
+                                <option value="ES">{{ call .t "wifi.region_es" "Spain (ES)" }}</option>
+                                <option value="GB">{{ call .t "wifi.region_gb" "United Kingdom (GB)" }}</option>
+                                <option value="DE">{{ call .t "wifi.region_de" "Germany (DE)" }}</option>
+                                <option value="FR">{{ call .t "wifi.region_fr" "France (FR)" }}</option>
+                                <option value="IT">{{ call .t "wifi.region_it" "Italy (IT)" }}</option>
+                                <option value="JP">{{ call .t "wifi.region_jp" "Japan (JP)" }}</option>
+                                <option value="CN">{{ call .t "wifi.region_cn" "China (CN)" }}</option>
+                                <option value="AU">{{ call .t "wifi.region_au" "Australia (AU)" }}</option>
+                                <option value="BR">{{ call .t "wifi.region_br" "Brazil (BR)" }}</option>
+                                <option value="MX">{{ call .t "wifi.region_mx" "Mexico (MX)" }}</option>
+                                <option value="CA">{{ call .t "wifi.region_ca" "Canada (CA)" }}</option>
+                            </select>
+                            <small class="form-text text-muted">{{ call .t "wifi.region_help" "Select your country/region for WiFi compliance" }}</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-save me-2"></i>
+                            {{ call .t "wifi.save_region" "Save Region" }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Connection Details -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="dashboard-card">
                 <div class="dashboard-card-header">
                     <h5 class="dashboard-card-title">
                         <i class="bi bi-info-circle me-2"></i>
-                        {{ call .t "wifi.current_connection" "Current Connection" }}
+                        {{ call .t "wifi.connection_details" "Connection Details" }}
                     </h5>
                     <button class="btn btn-sm btn-outline-light" id="refresh-connection">
                         <i class="bi bi-arrow-clockwise"></i>
@@ -51,59 +165,13 @@
                             <span class="info-label">{{ call .t "wifi.ip_address" "IP Address" }}</span>
                             <span class="info-value" id="connection-ip">--</span>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- WiFi Controls -->
-    <div class="row mb-4">
-        <div class="col-12 col-md-6 mb-3 mb-md-0">
-            <div class="dashboard-card">
-                <div class="dashboard-card-header">
-                    <h5 class="dashboard-card-title">
-                        <i class="bi bi-gear me-2"></i>
-                        {{ call .t "wifi.controls" "WiFi Controls" }}
-                    </h5>
-                </div>
-                <div class="dashboard-card-body">
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-primary" id="toggle-wifi-btn" onclick="toggleWiFi()">
-                            <i class="bi bi-wifi"></i>
-                            <span id="toggle-wifi-text">{{ call .t "wifi.enable_wifi" "Enable WiFi" }}</span>
-                        </button>
-                        <button class="btn btn-outline-primary" id="scan-networks-btn" onclick="scanNetworks()">
-                            <i class="bi bi-search"></i>
-                            {{ call .t "wifi.scan_networks" "Scan Networks" }}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-md-6">
-            <div class="dashboard-card">
-                <div class="dashboard-card-header">
-                    <h5 class="dashboard-card-title">
-                        <i class="bi bi-heart-pulse me-2"></i>
-                        {{ call .t "wifi.wifi_status" "WiFi Status" }}
-                    </h5>
-                </div>
-                <div class="dashboard-card-body">
-                    <div class="health-status" id="wifi-health">
-                        <div class="health-item">
-                            <div class="health-label">{{ call .t "wifi.wifi_enabled" "WiFi Enabled" }}</div>
-                            <div class="health-indicator">
-                                <span class="health-dot" id="wifi-enabled-dot"></span>
-                                <span class="health-text" id="wifi-enabled-text">--</span>
-                            </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "wifi.mac_address" "MAC Address" }}</span>
+                            <span class="info-value" id="connection-mac">--</span>
                         </div>
-                        <div class="health-item">
-                            <div class="health-label">{{ call .t "wifi.connected" "Connected" }}</div>
-                            <div class="health-indicator">
-                                <span class="health-dot" id="wifi-connected-dot"></span>
-                                <span class="health-text" id="wifi-connected-text">--</span>
-                            </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "wifi.speed" "Speed" }}</span>
+                            <span class="info-value" id="connection-speed">--</span>
                         </div>
                     </div>
                 </div>
@@ -120,18 +188,26 @@
                         <i class="bi bi-list me-2"></i>
                         {{ call .t "wifi.available_networks" "Available Networks" }}
                     </h5>
-                    <button class="btn btn-sm btn-outline-light" id="refresh-networks">
-                        <i class="bi bi-arrow-clockwise"></i>
-                    </button>
+                    <div>
+                        <button class="btn btn-sm btn-outline-light me-2" id="refresh-networks">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-light" id="auto-connect-btn" onclick="toggleAutoConnect()">
+                            <i class="bi bi-link-45deg" id="auto-connect-icon"></i>
+                            <span id="auto-connect-text">{{ call .t "wifi.auto_connect" "Auto Connect" }}</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="dashboard-card-body">
-                    <div id="networks-loading" class="text-center py-4" style="display: none;">
-                        <div class="spinning"><i class="bi bi-arrow-clockwise"></i></div>
-                        <p class="mt-2">{{ call .t "common.loading" "Loading..." }}</p>
+                    <div id="networks-loading" class="text-center py-5" style="display: none;">
+                        <div class="spinning mb-3"><i class="bi bi-arrow-clockwise" style="font-size: 2rem;"></i></div>
+                        <p class="mt-2">{{ call .t "wifi.scanning" "Scanning..." }}</p>
+                        <small class="text-muted">{{ call .t "wifi.scan_time" "This may take 10-15 seconds" }}</small>
                     </div>
-                    <div id="networks-empty" class="text-center py-4" style="display: none;">
-                        <i class="bi bi-wifi-off" style="font-size: 3rem; opacity: 0.5;"></i>
-                        <p class="mt-2">{{ call .t "wifi.no_networks" "No networks found" }}</p>
+                    <div id="networks-empty" class="text-center py-5" style="display: none;">
+                        <i class="bi bi-wifi-off" style="font-size: 4rem; opacity: 0.5;"></i>
+                        <p class="mt-3">{{ call .t "wifi.no_networks" "No networks found" }}</p>
+                        <p class="text-muted small">{{ call .t "wifi.no_networks_desc" "No WiFi networks were found in your area. Make sure WiFi is enabled and try again." }}</p>
                         <button class="btn btn-primary mt-3" onclick="scanNetworks()">
                             <i class="bi bi-search me-2"></i>
                             {{ call .t "wifi.scan_networks" "Scan Networks" }}
@@ -145,6 +221,7 @@
                                     <th>{{ call .t "wifi.network_security" "Security" }}</th>
                                     <th>{{ call .t "wifi.network_signal" "Signal" }}</th>
                                     <th>{{ call .t "wifi.network_channel" "Channel" }}</th>
+                                    <th>{{ call .t "wifi.network_frequency" "Frequency" }}</th>
                                     <th>{{ call .t "common.actions" "Actions" }}</th>
                                 </tr>
                             </thead>
@@ -263,6 +340,82 @@ body.light-theme .dashboard-subtitle {
     color: rgba(0, 0, 0, 0.7);
 }
 
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    color: var(--hb-text-light);
+    width: 100%;
+    min-height: 120px;
+}
+
+.stat-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+body.light-theme .stat-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+    color: #212529;
+    backdrop-filter: blur(20px);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    opacity: 0.8;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--hb-text-muted);
+    margin-bottom: 0.5rem;
+}
+
+body.light-theme .stat-label {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--hb-text-light);
+    margin-bottom: 0.5rem;
+}
+
+body.light-theme .stat-value {
+    color: #212529;
+}
+
+.stat-progress {
+    height: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+body.light-theme .stat-progress {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.stat-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--hb-primary), var(--hb-primary-dark));
+    transition: width 0.3s ease;
+}
+
 .dashboard-card {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -350,118 +503,6 @@ body.light-theme .info-value {
     color: #212529;
 }
 
-.health-status {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1.5rem;
-}
-
-.health-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-body.light-theme .health-item {
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.health-label {
-    font-size: 0.875rem;
-    color: var(--hb-text-muted);
-}
-
-body.light-theme .health-label {
-    color: #212529;
-    font-weight: 500;
-}
-
-.health-indicator {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.health-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #dc3545;
-    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
-    animation: pulse-red 2s infinite;
-}
-
-.health-dot-success,
-.health-dot-healthy {
-    background: #28a745;
-    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
-    animation: pulse-green 2s infinite;
-}
-
-.health-dot-warning {
-    background: #ffc107;
-    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
-    animation: pulse-yellow 2s infinite;
-}
-
-.health-dot-danger {
-    background: #dc3545;
-    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
-    animation: pulse-red 2s infinite;
-}
-
-@keyframes pulse-green {
-    0% {
-        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
-    }
-    70% {
-        box-shadow: 0 0 0 8px rgba(40, 167, 69, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
-    }
-}
-
-@keyframes pulse-red {
-    0% {
-        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
-    }
-    70% {
-        box-shadow: 0 0 0 8px rgba(220, 53, 69, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
-    }
-}
-
-@keyframes pulse-yellow {
-    0% {
-        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
-    }
-    70% {
-        box-shadow: 0 0 0 8px rgba(255, 193, 7, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
-    }
-}
-
-.health-text {
-    font-size: 0.875rem;
-    color: var(--hb-text-light);
-}
-
-body.light-theme .health-text {
-    color: #212529;
-    font-weight: 500;
-}
-
 .spinning {
     animation: spin 1s linear infinite;
 }
@@ -502,6 +543,90 @@ body.light-theme .btn-outline-light {
 body.light-theme .btn-outline-light:hover {
     background-color: rgba(0, 0, 0, 0.1);
     color: #212529;
+}
+
+body.light-theme .form-label {
+    color: #212529;
+    font-weight: 500;
+}
+
+body.light-theme .form-select,
+body.light-theme .form-control {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #212529;
+}
+
+body.light-theme .form-select:focus,
+body.light-theme .form-control:focus {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-color: var(--hb-primary);
+    color: #212529;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+body.light-theme .input-group-text {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #212529;
+}
+
+body.light-theme .form-text {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+body.light-theme .modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    color: #212529;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .modal-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .modal-title {
+    color: var(--hb-primary);
+}
+
+.wifi-toggle-section,
+.wifi-scan-section {
+    margin-bottom: 0;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .stat-card {
+        padding: 1.25rem;
+        min-height: 100px;
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .stat-card {
+        padding: 1rem;
+        min-height: 90px;
+    }
+    
+    .stat-icon {
+        font-size: 1.75rem;
+    }
+    
+    .stat-value {
+        font-size: 1.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+    }
 }
 </style>
 
