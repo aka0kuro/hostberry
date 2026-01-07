@@ -301,6 +301,10 @@ func setupRoutes(app *fiber.App) {
 			system.Get("/stats", systemStatsHandler)
 			system.Get("/info", systemInfoHandler)
 			system.Get("/logs", systemLogsHandler)
+			system.Get("/activity", systemActivityHandler)
+			system.Get("/network", systemNetworkHandler)
+			system.Get("/updates", systemUpdatesHandler)
+			system.Post("/backup", systemBackupHandler)
 			system.Post("/config", systemConfigHandler)
 			system.Post("/restart", systemRestartHandler)
 			system.Post("/shutdown", systemShutdownHandler)
@@ -311,13 +315,21 @@ func setupRoutes(app *fiber.App) {
 		{
 			network.Get("/status", networkStatusHandler)
 			network.Get("/interfaces", networkInterfacesHandler)
+			network.Get("/routing", networkRoutingHandler)
+			network.Post("/firewall/toggle", networkFirewallToggleHandler)
+			network.Post("/config", networkConfigHandler)
 		}
 
 		// WiFi
 		wifi := api.Group("/wifi", requireAuth)
 		{
 			wifi.Get("/scan", wifiScanHandler)
+			wifi.Post("/scan", wifiScanHandler)
 			wifi.Post("/connect", wifiConnectHandler)
+			wifi.Get("/networks", wifiNetworksHandler)
+			wifi.Get("/clients", wifiClientsHandler)
+			wifi.Post("/toggle", wifiToggleHandler)
+			wifi.Post("/config", wifiConfigHandler)
 		}
 
 		// VPN
@@ -325,7 +337,33 @@ func setupRoutes(app *fiber.App) {
 		{
 			vpn.Get("/status", vpnStatusHandler)
 			vpn.Post("/connect", vpnConnectHandler)
+			vpn.Get("/connections", vpnConnectionsHandler)
+			vpn.Get("/servers", vpnServersHandler)
+			vpn.Get("/clients", vpnClientsHandler)
+			vpn.Post("/toggle", vpnToggleHandler)
+			vpn.Post("/config", vpnConfigHandler)
+			vpn.Post("/connections/:name/toggle", vpnConnectionToggleHandler)
+			vpn.Post("/certificates/generate", vpnCertificatesGenerateHandler)
 		}
+
+		// HostAPD
+		hostapd := api.Group("/hostapd", requireAuth)
+		{
+			hostapd.Get("/access-points", hostapdAccessPointsHandler)
+			hostapd.Get("/clients", hostapdClientsHandler)
+			hostapd.Post("/toggle", hostapdToggleHandler)
+			hostapd.Post("/restart", hostapdRestartHandler)
+			hostapd.Post("/config", hostapdConfigHandler)
+		}
+
+		// Help
+		help := api.Group("/help", requireAuth)
+		{
+			help.Post("/contact", helpContactHandler)
+		}
+
+		// Translations (para carga dinámica)
+		api.Get("/translations/:lang", translationsHandler)
 
 		// WireGuard
 		wireguard := api.Group("/wireguard", requireAuth)
@@ -346,6 +384,17 @@ func setupRoutes(app *fiber.App) {
 			adblock.Post("/enable", adblockEnableHandler)
 			adblock.Post("/disable", adblockDisableHandler)
 		}
+	}
+
+	// Compat legacy: /api/wifi/* usado por wifi_scan.js
+	legacyAPI := app.Group("/api", requireAuth)
+	{
+		wifiLegacy := legacyAPI.Group("/wifi")
+		wifiLegacy.Get("/status", wifiLegacyStatusHandler)
+		wifiLegacy.Get("/stored_networks", wifiLegacyStoredNetworksHandler)
+		wifiLegacy.Get("/autoconnect", wifiLegacyAutoconnectHandler)
+		wifiLegacy.Get("/scan", wifiLegacyScanHandler)
+		wifiLegacy.Post("/disconnect", wifiLegacyDisconnectHandler)
 	}
 }
 
