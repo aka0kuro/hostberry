@@ -75,6 +75,18 @@ detect_os() {
     fi
 }
 
+# Instalar git (necesario para descargar el proyecto)
+install_git() {
+    if ! command -v git &> /dev/null; then
+        print_info "Instalando git (necesario para descargar el proyecto)..."
+        apt-get update -qq
+        apt-get install -y git
+        print_success "Git instalado"
+    else
+        print_success "Git ya está instalado: $(git --version)"
+    fi
+}
+
 # Instalar dependencias del sistema
 install_dependencies() {
     print_info "Instalando dependencias del sistema..."
@@ -83,13 +95,7 @@ install_dependencies() {
     apt-get update -qq
     
     # Instalar dependencias básicas
-    DEPS="wget curl git build-essential"
-    
-    # Verificar que git está instalado (necesario para descargar el proyecto)
-    if ! command -v git &> /dev/null; then
-        print_info "Git no está instalado, instalando..."
-        apt-get install -y git
-    fi
+    DEPS="wget curl build-essential"
     
     # Verificar si Go está instalado
     if ! command -v go &> /dev/null; then
