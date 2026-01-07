@@ -1,7 +1,3 @@
-{{ template "base.html" . }}
-
-{{ define "extra_css" }}
-<link rel="stylesheet" href="/static/css/dashboard.css">
 <style>
     .system-manager-page .action-buttons {
         display: flex;
@@ -22,9 +18,7 @@
         font-size: 0.75rem;
     }
 </style>
-{{ end }}
 
-{{ define "content" }}
 <div class="dashboard-container system-manager-page">
     <!-- Header Section -->
     <div class="dashboard-header mb-4">
@@ -685,5 +679,4 @@
     overflow-y: auto;
 }
 </style>
-{{ end }}
 
