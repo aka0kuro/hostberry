@@ -269,6 +269,7 @@
         
         fetchDashboardData();
         loadActivity();
+        loadServices();
         
         const refreshSystemInfo = document.getElementById('refresh-system-info');
         if (refreshSystemInfo) {
@@ -282,5 +283,6 @@
         
         setInterval(fetchDashboardData, 30000);
         setInterval(loadActivity, 60000);
+        setInterval(loadServices, 30000);
     });
 })();
