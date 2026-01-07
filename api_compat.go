@@ -129,6 +129,24 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 	user := c.Locals("user").(*User)
 	userID := user.ID
 
+	// Intentar usar el motor Lua primero (tiene mejor manejo de permisos)
+	if luaEngine != nil {
+		result, err := luaEngine.Execute("wifi_toggle.lua", fiber.Map{
+			"user": user.Username,
+		})
+		if err == nil {
+			if success, ok := result["success"].(bool); ok && success {
+				InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando Lua (usuario: %s)", user.Username), "wifi", &userID)
+				return c.JSON(fiber.Map{"success": true, "message": "WiFi toggle exitoso"})
+			}
+			if errorMsg, ok := result["error"].(string); ok {
+				InsertLog("ERROR", fmt.Sprintf("Error en WiFi toggle (usuario: %s): %s", user.Username, errorMsg), "wifi", &userID)
+				return c.Status(500).JSON(fiber.Map{"error": errorMsg})
+			}
+		}
+	}
+
+	// Fallback: Intentar métodos directos
 	// Método 1: Intentar con nmcli
 	out, err := exec.Command("sh", "-c", "nmcli -t -f WIFI g 2>/dev/null").CombinedOutput()
 	state := strings.TrimSpace(string(out))
@@ -198,7 +216,7 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 	}
 
 	// Si todos los métodos fallan
-	errorMsg := "No se pudo cambiar el estado de WiFi. Verifica que tengas permisos sudo configurados o que nmcli/rfkill estén disponibles."
+	errorMsg := "No se pudo cambiar el estado de WiFi. Verifica que tengas permisos sudo configurados (NOPASSWD) o que nmcli/rfkill estén disponibles. Para configurar sudo sin contraseña, ejecuta: sudo visudo y agrega: usuario ALL=(ALL) NOPASSWD: /usr/bin/nmcli, /usr/sbin/rfkill, /sbin/ifconfig"
 	InsertLog("ERROR", fmt.Sprintf("Error en WiFi toggle (usuario: %s): %s", user.Username, errorMsg), "wifi", &userID)
 	return c.Status(500).JSON(fiber.Map{"error": errorMsg})
 }
