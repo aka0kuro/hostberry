@@ -342,7 +342,12 @@ func networkPageHandler(c *fiber.Ctx) error {
 
 func wifiPageHandler(c *fiber.Ctx) error {
 	return renderTemplate(c, "wifi", fiber.Map{
-		"Title": T(c, "wifi.overview", "WiFi Overview"),
+		"Title":         T(c, "wifi.overview", "WiFi Overview"),
+		"wifi_stats":    fiber.Map{},
+		"wifi_status":   fiber.Map{},
+		"wifi_config":   fiber.Map{},
+		"guest_network": fiber.Map{},
+		"last_update":   time.Now().Unix(),
 	})
 }
 
