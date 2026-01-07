@@ -62,15 +62,15 @@
         </div>
 
         <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card network-stat">
+            <div class="stat-card uptime-stat">
                 <div class="stat-icon">
-                    <i class="bi bi-wifi"></i>
+                    <i class="bi bi-clock-history"></i>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-label">{{ call .t "dashboard.network" "Network" }}</div>
-                    <div class="stat-value" id="stat-network">--</div>
+                    <div class="stat-label">{{ call .t "dashboard.uptime" "Uptime" }}</div>
+                    <div class="stat-value" id="stat-uptime">--</div>
                     <div class="stat-status">
-                        <span class="badge bg-success" id="stat-network-badge">Online</span>
+                        <span class="badge bg-success" id="stat-uptime-badge">Online</span>
                     </div>
                 </div>
             </div>
