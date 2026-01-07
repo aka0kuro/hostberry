@@ -161,6 +161,33 @@
 
     <!-- common.js/theme.js ahora cargan en <head> con defer -->
     
+    <!-- Toggle sidebar para móviles -->
+    {{ if and (ne .page "login") (ne .page "first_login") }}
+    <script>
+    (function() {
+        const sidebarToggle = document.querySelector('.sidebar-toggle');
+        const sidebar = document.querySelector('.sidebar-nav');
+        
+        if (sidebarToggle && sidebar) {
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+            });
+            
+            // Cerrar sidebar al hacer clic fuera en móviles
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 991) {
+                    if (sidebar.classList.contains('show') && 
+                        !sidebar.contains(e.target) && 
+                        !sidebarToggle.contains(e.target)) {
+                        sidebar.classList.remove('show');
+                    }
+                }
+            });
+        }
+    })();
+    </script>
+    {{ end }}
+    
     <!-- Auto-refresh global cada 60 segundos -->
     <script>
     (function() {
