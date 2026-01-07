@@ -291,7 +291,7 @@
                         <div class="mb-3">
                             <label for="session_timeout" class="form-label text-white">{{ call .t "settings.session_timeout" "Session Timeout" }}</label>
                             {{ $timeout := index .settings "session_timeout" }}
-                            <input type="number" class="form-control bg-dark text-white border-secondary text-center" id="session_timeout" name="session_timeout" value="{{ if $timeout }}{{ $timeout }}{{ else }}30{{ end }}" min="5" max="1440">
+                            <input type="number" class="form-control bg-dark text-white border-secondary text-center" id="session_timeout" name="session_timeout" value="{{ if $timeout }}{{ $timeout }}{{ else }}60{{ end }}" min="5" max="1440">
                             <small class="text-white-50">{{ call .t "settings.minutes" "minutes" }}</small>
                         </div>
                     </form>
