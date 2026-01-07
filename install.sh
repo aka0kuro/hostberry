@@ -168,9 +168,6 @@ install_files() {
     mkdir -p "${INSTALL_DIR}/website/static"
     mkdir -p "${INSTALL_DIR}/website/templates"
     
-    # Obtener ruta del script actual
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    
     # Copiar archivos necesarios
     print_info "Copiando archivos del proyecto..."
     
