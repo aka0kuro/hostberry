@@ -19,6 +19,53 @@
     }
   }
 
+  async function performRestart(event){
+    if(event){ event.preventDefault(); }
+    const confirmMsg = HostBerry.t ? HostBerry.t('system.restart_confirm', 'Are you sure you want to restart the system? This will disconnect all users.') : 'Are you sure you want to restart the system? This will disconnect all users.';
+    if(!confirm(confirmMsg)) return;
+    
+    try{
+      if(HostBerry.showAlert){
+        HostBerry.showAlert('warning', HostBerry.t ? HostBerry.t('system.restarting', 'Restarting system...') : 'Restarting system...');
+      }
+      await HostBerry.apiRequest('/api/v1/system/restart', { method: 'POST' });
+      if(HostBerry.showAlert){
+        HostBerry.showAlert('info', HostBerry.t ? HostBerry.t('system.restart_pending', 'Restart command sent') : 'Restart command sent');
+      }
+      setTimeout(function(){ window.location.reload(); }, 5000);
+    }catch(error){
+      console.error('Restart failed', error);
+      if(HostBerry.showAlert){
+        HostBerry.showAlert('danger', HostBerry.t ? HostBerry.t('system.restart_error', 'Unable to restart system') : 'Unable to restart system');
+      }
+    }
+  }
+
+  async function performShutdown(event){
+    if(event){ event.preventDefault(); }
+    const confirmMsg = HostBerry.t ? HostBerry.t('system.shutdown_confirm', 'Are you sure you want to shutdown the system? This will disconnect all users.') : 'Are you sure you want to shutdown the system? This will disconnect all users.';
+    if(!confirm(confirmMsg)) return;
+    
+    const doubleConfirm = HostBerry.t ? HostBerry.t('system.shutdown_double_confirm', 'Type SHUTDOWN to confirm') : 'Type SHUTDOWN to confirm';
+    const userInput = prompt(doubleConfirm);
+    if(userInput !== 'SHUTDOWN') return;
+    
+    try{
+      if(HostBerry.showAlert){
+        HostBerry.showAlert('warning', HostBerry.t ? HostBerry.t('system.shutting_down', 'Shutting down system...') : 'Shutting down system...');
+      }
+      await HostBerry.apiRequest('/api/v1/system/shutdown', { method: 'POST' });
+      if(HostBerry.showAlert){
+        HostBerry.showAlert('info', HostBerry.t ? HostBerry.t('system.shutdown_pending', 'Shutdown command sent') : 'Shutdown command sent');
+      }
+    }catch(error){
+      console.error('Shutdown failed', error);
+      if(HostBerry.showAlert){
+        HostBerry.showAlert('danger', HostBerry.t ? HostBerry.t('system.shutdown_error', 'Unable to shutdown system') : 'Unable to shutdown system');
+      }
+    }
+  }
+
   // Simple Dropdown without Bootstrap
   document.addEventListener('click', function(e){
     const toggle = e.target.closest('.dropdown-toggle');
