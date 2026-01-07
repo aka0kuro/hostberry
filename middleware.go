@@ -11,68 +11,50 @@ import (
 
 // requireAuth middleware que requiere autenticación
 func requireAuth(c *fiber.Ctx) error {
-	path := c.Path()
-
-	// Debug: log para todas las rutas /api/v1/auth/login
-	if strings.Contains(path, "auth/login") {
-		log.Printf("DEBUG requireAuth ENTRADA: path='%s', method=%s, originalURL='%s'", path, c.Method(), c.OriginalURL())
-	}
-
 	// Permitir preflight CORS sin autenticación
 	if c.Method() == fiber.MethodOptions {
 		return c.Next()
 	}
 
+	path := c.Path()
+	
 	// Rutas públicas que NO requieren autenticación
-	publicPaths := []string{
-		"/api/v1/auth/login",
-		"/api/v1/translations",
-		"/health",
-		"/health/ready",
-		"/health/live",
+	// Verificar primero las rutas públicas antes de cualquier otra lógica
+	publicPaths := map[string]bool{
+		"/api/v1/auth/login":     true,
+		"/api/v1/auth/login/":    true, // Con slash final
+		"/api/v1/translations":   true,
+		"/api/v1/translations/":  true,
+		"/health":                 true,
+		"/health/":                true,
+		"/health/ready":           true,
+		"/health/ready/":          true,
+		"/health/live":            true,
+		"/health/live/":           true,
 	}
 
-	// Normalizar path para tolerar slash final
+	// Normalizar path (sin slash final para comparación)
 	normalizedPath := strings.TrimRight(path, "/")
 	if normalizedPath == "" {
 		normalizedPath = "/"
 	}
 
-	// Verificar si la ruta es pública (comparación exacta primero, luego con prefijo)
-	for _, publicPath := range publicPaths {
-		// Normalizar también el publicPath
-		normalizedPublicPath := strings.TrimRight(publicPath, "/")
-
-		// Comparación exacta (caso más común)
-		if path == publicPath || normalizedPath == normalizedPublicPath {
-			// Esta ruta es pública, permitir sin autenticación
-			if strings.Contains(path, "auth/login") {
-				log.Printf("DEBUG requireAuth: Ruta pública detectada (exacta), permitiendo acceso")
-			}
-			return c.Next()
-		}
-
-		// Comparación con prefijo (para rutas como /api/v1/translations/:lang)
-		// Nota: usar strings.HasPrefix con "/" para evitar coincidencias parciales
-		if (publicPath != "/" && strings.HasPrefix(path, publicPath+"/")) ||
-			(normalizedPublicPath != "/" && strings.HasPrefix(normalizedPath, normalizedPublicPath+"/")) {
-			// Esta ruta es pública, permitir sin autenticación
-			if strings.Contains(path, "auth/login") {
-				log.Printf("DEBUG requireAuth: Ruta pública detectada (prefijo), permitiendo acceso")
-			}
-			return c.Next()
-		}
+	// Verificar si es una ruta pública (comparación exacta)
+	if publicPaths[path] || publicPaths[normalizedPath] {
+		// Ruta pública, permitir sin autenticación
+		return c.Next()
 	}
 
-	// Debug: log si llegamos aquí y es una ruta de login
-	if strings.Contains(path, "auth/login") {
-		log.Printf("DEBUG requireAuth: Ruta NO detectada como pública, path='%s', normalized='%s'", path, normalizedPath)
+	// Verificar rutas con prefijo (para rutas como /api/v1/translations/:lang)
+	if strings.HasPrefix(path, "/api/v1/translations/") {
+		return c.Next()
 	}
 
+	// Si llegamos aquí, la ruta requiere autenticación
 	var token string
 
 	// Para APIs, obtener token del header Authorization
-	if strings.HasPrefix(c.Path(), "/api/") {
+	if strings.HasPrefix(path, "/api/") {
 		authHeader := c.Get("Authorization")
 		if authHeader == "" {
 			return c.Status(401).JSON(fiber.Map{
@@ -90,7 +72,6 @@ func requireAuth(c *fiber.Ctx) error {
 		token = parts[1]
 	} else {
 		// Para rutas web, intentar obtener token de cookie o query parameter
-		// (el frontend puede enviarlo en cookie o el JS lo maneja con localStorage)
 		token = c.Cookies("access_token")
 		if token == "" {
 			token = c.Query("token")
@@ -105,19 +86,18 @@ func requireAuth(c *fiber.Ctx) error {
 	// Validar token
 	claims, err := ValidateToken(token)
 	if err != nil {
-		if strings.HasPrefix(c.Path(), "/api/") {
+		if strings.HasPrefix(path, "/api/") {
 			return c.Status(401).JSON(fiber.Map{
 				"error": "Token inválido o expirado",
 			})
 		}
-		// Para web, redirigir a login
 		return c.Redirect("/login")
 	}
 
 	// Obtener usuario de la base de datos
 	var user User
 	if err := db.First(&user, claims.UserID).Error; err != nil {
-		if strings.HasPrefix(c.Path(), "/api/") {
+		if strings.HasPrefix(path, "/api/") {
 			return c.Status(401).JSON(fiber.Map{
 				"error": "Usuario no encontrado",
 			})
@@ -126,7 +106,7 @@ func requireAuth(c *fiber.Ctx) error {
 	}
 
 	if !user.IsActive {
-		if strings.HasPrefix(c.Path(), "/api/") {
+		if strings.HasPrefix(path, "/api/") {
 			return c.Status(401).JSON(fiber.Map{
 				"error": "Usuario inactivo",
 			})
