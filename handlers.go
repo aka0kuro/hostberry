@@ -364,14 +364,66 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 	if luaEngine != nil {
 		result, err := luaEngine.Execute("network_interfaces.lua", nil)
 		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+			log.Printf("⚠️ Error ejecutando Lua script: %v", err)
+			// Continuar con fallback
+		} else {
+			return c.JSON(result)
 		}
-		return c.JSON(result)
 	}
 
-	return c.Status(500).JSON(fiber.Map{
-		"error": "Lua engine no disponible",
-	})
+	// Fallback: obtener interfaces directamente
+	interfaces := []map[string]interface{}{}
+	
+	// Obtener lista de interfaces
+	cmd := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}'")
+	output, err := cmd.Output()
+	if err != nil {
+		log.Printf("⚠️ Error obteniendo interfaces: %v", err)
+		return c.JSON(fiber.Map{"interfaces": interfaces})
+	}
+
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+	for _, ifaceName := range lines {
+		ifaceName = strings.TrimSpace(ifaceName)
+		if ifaceName == "" || ifaceName == "lo" {
+			continue // Saltar loopback
+		}
+
+		iface := map[string]interface{}{
+			"name": ifaceName,
+			"ip":   "N/A",
+			"mac":  "N/A",
+			"state": "unknown",
+		}
+
+		// Obtener estado
+		stateCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/operstate 2>/dev/null", ifaceName))
+		if stateOut, err := stateCmd.Output(); err == nil {
+			iface["state"] = strings.TrimSpace(string(stateOut))
+		}
+
+		// Obtener IP
+		ipCmd := exec.Command("sh", "-c", fmt.Sprintf("ip addr show %s | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1", ifaceName))
+		if ipOut, err := ipCmd.Output(); err == nil {
+			ip := strings.TrimSpace(string(ipOut))
+			if ip != "" {
+				iface["ip"] = ip
+			}
+		}
+
+		// Obtener MAC
+		macCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/address 2>/dev/null", ifaceName))
+		if macOut, err := macCmd.Output(); err == nil {
+			mac := strings.TrimSpace(string(macOut))
+			if mac != "" {
+				iface["mac"] = mac
+			}
+		}
+
+		interfaces = append(interfaces, iface)
+	}
+
+	return c.JSON(fiber.Map{"interfaces": interfaces})
 }
 
 // Handlers de WiFi
