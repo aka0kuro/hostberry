@@ -4,6 +4,26 @@
 local result = {}
 result.networks = {}
 
+-- Obtener interfaz WiFi (del parámetro o detectar automáticamente)
+local interface = params.interface or ""
+if interface == "" then
+    -- Detectar automáticamente
+    local nmcli_iface = exec("nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
+    if nmcli_iface and nmcli_iface ~= "" then
+        interface = string.gsub(nmcli_iface, "%s+", "")
+    else
+        -- Fallback: buscar wlan*
+        local ip_iface = exec("ip -o link show | awk -F': ' '{print $2}' | grep -E '^wlan|^wl' | head -1")
+        if ip_iface and ip_iface ~= "" then
+            interface = string.gsub(ip_iface, "%s+", "")
+        else
+            interface = "wlan0"
+        end
+    end
+end
+
+log("INFO", "Usando interfaz WiFi: " .. interface)
+
 -- Verificar que WiFi esté habilitado primero
 local wifi_check = exec("nmcli -t -f WIFI g 2>/dev/null")
 local wifi_enabled = wifi_check and (string.find(string.lower(wifi_check), "enabled") or string.find(string.lower(wifi_check), "on"))
