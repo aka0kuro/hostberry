@@ -633,6 +633,11 @@ EOF
         print_info "Permisos agregados para ifconfig: $IFCONFIG_PATH"
     fi
     
+    if [ -n "$IW_PATH" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $IW_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para iw: $IW_PATH"
+    fi
+    
     # Validar configuración de sudoers
     if visudo -c -f "/etc/sudoers.d/hostberry" 2>/dev/null; then
         chmod 440 "/etc/sudoers.d/hostberry"
