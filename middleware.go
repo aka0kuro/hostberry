@@ -11,6 +11,11 @@ import (
 
 // requireAuth middleware que requiere autenticación
 func requireAuth(c *fiber.Ctx) error {
+	// Permitir preflight CORS sin autenticación
+	if c.Method() == fiber.MethodOptions {
+		return c.Next()
+	}
+
 	// Rutas públicas que NO requieren autenticación
 	publicPaths := []string{
 		"/api/v1/auth/login",
@@ -19,17 +24,24 @@ func requireAuth(c *fiber.Ctx) error {
 		"/health/ready",
 		"/health/live",
 	}
-	
+
 	path := c.Path()
+	// Normalizar path para tolerar slash final
+	normalizedPath := strings.TrimRight(path, "/")
+	if normalizedPath == "" {
+		normalizedPath = "/"
+	}
 	for _, publicPath := range publicPaths {
-		if path == publicPath || strings.HasPrefix(path, publicPath) {
+		// Comparar contra path normalizado y el original (por compatibilidad)
+		if normalizedPath == publicPath || path == publicPath ||
+			strings.HasPrefix(normalizedPath, publicPath) || strings.HasPrefix(path, publicPath) {
 			// Esta ruta es pública, permitir sin autenticación
 			return c.Next()
 		}
 	}
-	
+
 	var token string
-	
+
 	// Para APIs, obtener token del header Authorization
 	if strings.HasPrefix(c.Path(), "/api/") {
 		authHeader := c.Get("Authorization")
@@ -54,7 +66,7 @@ func requireAuth(c *fiber.Ctx) error {
 		if token == "" {
 			token = c.Query("token")
 		}
-		
+
 		// Si no hay token, redirigir a login
 		if token == "" {
 			return c.Redirect("/login")
@@ -111,13 +123,13 @@ func loggingMiddleware(c *fiber.Ctx) error {
 
 	// Log después de procesar
 	duration := time.Since(start)
-	
+
 	// Capturar valores del contexto ANTES de la goroutine
 	// (el contexto no es seguro para usar en goroutines)
 	method := c.Method()
 	path := c.Path()
 	ip := c.IP()
-	
+
 	userID := c.Locals("user_id")
 	var userIDPtr *int
 	if userID != nil {
@@ -153,7 +165,7 @@ func errorHandler(c *fiber.Ctx, err error) error {
 	method := c.Method()
 	path := c.Path()
 	errMsg := err.Error()
-	
+
 	userID := c.Locals("user_id")
 	var userIDPtr *int
 	if userID != nil {
@@ -166,7 +178,7 @@ func errorHandler(c *fiber.Ctx, err error) error {
 	if code >= 500 {
 		// Log detallado del error del servidor
 		log.Printf("❌ Error en %s %s: %v", method, path, err)
-		
+
 		go func() {
 			InsertLog(
 				"ERROR",
