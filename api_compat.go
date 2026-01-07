@@ -139,13 +139,13 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 		} else {
 			cmd = "nmcli radio wifi on"
 		}
-		out2, err2 := exec.Command("sh", "-c", cmd+" 2>/dev/null").CombinedOutput()
+		_, err2 := exec.Command("sh", "-c", cmd+" 2>/dev/null").CombinedOutput()
 		if err2 == nil {
 			InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando nmcli (usuario: %s)", user.Username), "wifi", &userID)
 			return c.JSON(fiber.Map{"success": true, "message": "WiFi toggle exitoso"})
 		}
 		// Si nmcli falla, intentar con sudo
-		out3, err3 := exec.Command("sh", "-c", "sudo "+cmd+" 2>/dev/null").CombinedOutput()
+		_, err3 := exec.Command("sh", "-c", "sudo "+cmd+" 2>/dev/null").CombinedOutput()
 		if err3 == nil {
 			InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando nmcli con sudo (usuario: %s)", user.Username), "wifi", &userID)
 			return c.JSON(fiber.Map{"success": true, "message": "WiFi toggle exitoso"})
