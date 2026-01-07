@@ -1,0 +1,186 @@
+{{ template "base.html" . }}
+
+{{ define "content" }}
+<div class="container-fluid">
+
+    {{ if .wifi_blocked }}
+    <button id="enableWifiBtnTop" class="btn btn-warning btn-sm ms-2 mb-3" aria-label="Enable WiFi">
+        <i class="fas fa-power-off me-1" aria-hidden="true"></i> {{ call .t "wifi.enable_wifi" "Enable WiFi" }}
+    </button>
+    {{ end }}
+
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-wifi me-2"></i>{{ call .t "wifi.center" "WiFi Center" }}</h1>
+        <div>
+            <button id="rescanBtn" class="btn btn-primary btn-sm">
+                <i class="fas fa-sync-alt me-1"></i> {{ call .t "wifi.rescan" "Rescan" }}
+            </button>
+        </div>
+    </div>
+
+    <!-- WiFi Status Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row align-items-center g-0">
+                        <div class="col flex-grow-1">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1" id="wifiStatusLabel">
+                                {{ call .t "wifi.status" "WiFi Status" }}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="wifiStatusTextCard" aria-labelledby="wifiStatusLabel">
+                                <span id="wifiStatusText">-</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-wifi fa-2x text-gray-300" aria-hidden="true" title="WiFi status"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                {{ call .t "wifi.current_connection" "Current Connection" }}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="currentConnection">-</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-network-wired fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-12 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                {{ call .t "wifi.available_networks" "Available Networks" }}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="networksCount">-</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-signal fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WiFi Networks List & Activity Log -->
+    <div class="row">
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-list-ul me-1"></i> {{ call .t "wifi.networks" "WiFi Networks" }}
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div id="wifiStatusAlert" class="alert alert-warning d-none mb-0 rounded-0 border-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="wifiStatusTextInline"></span>
+                        <button id="enableWifiBtnInline" class="btn btn-sm btn-outline-dark ms-2 d-none">
+                            {{ call .t "wifi.enable_wifi" "Enable WiFi" }}
+                        </button>
+                    </div>
+                    <div id="network-list" class="list-group list-group-flush">
+                        <!-- Network items will be added here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-history me-1"></i> {{ call .t "wifi.recent_activity" "Recent WiFi Activity" }}
+                    </h6>
+                    <button id="clearHistoryBtn" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-trash-alt me-1"></i> {{ call .t "common.clear_history" "Clear History" }}
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="activity-feed" class="activity-feed" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Activity items will be added here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WiFi Connect Modal -->
+    <div class="modal fade" id="connectModal" tabindex="-1" aria-labelledby="connectModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white">
+          <div class="modal-header border-bottom border-secondary">
+            <h5 class="modal-title fw-bold" id="connectModalLabel"><i class="fas fa-wifi me-2"></i>{{ call .t "wifi.connect_to_network" "Connect to Network" }}</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="wifiConnectForm">
+              <input type="hidden" name="csrf_token" value="">
+              <div class="mb-3">
+                <label for="connectSSID" class="form-label fw-bold">{{ call .t "wifi.network_ssid" "Network Name (SSID)" }}</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-network-wired"></i></span>
+                  <input type="text" class="form-control" id="connectSSID" name="ssid" readonly>
+                  <input type="hidden" id="connectSSIDHidden" name="ssid_hidden">
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="connectSecurity" class="form-label fw-bold">{{ call .t "wifi.security_type" "Security Type" }}</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                  <input type="text" class="form-control" id="connectSecurity" name="security" readonly>
+                  <input type="hidden" id="connectSecurityHidden" name="security_hidden">
+                </div>
+              </div>
+              <div class="mb-4" id="passwordField">
+                <label for="connectPassword" class="form-label fw-bold">{{ call .t "auth.password" "Password" }}</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-key"></i></span>
+                  <input type="password" class="form-control" id="connectPassword" name="password" placeholder="{{ call .t "auth.password_placeholder" "Password" }}" autocomplete="current-password" required>
+                  <button class="btn btn-outline-secondary" type="button" id="togglePwd" aria-label="Toggle password visibility">
+                    <i class="fas fa-eye" id="togglePwdIcon"></i>
+                  </button>
+                </div>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="saveCredentials" name="save_credentials" checked>
+                    <label class="form-check-label" for="saveCredentials">
+                        <i class="fas fa-save me-1"></i>{{ call .t "wifi.save_password" "Save password for automatic reconnection" }}
+                    </label>
+                </div>
+              </div>
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold py-2" id="connectSubmitBtn">
+                  <i class="fas fa-plug me-2"></i>{{ call .t "wifi.connect_now" "Connect Now" }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" style="position: fixed; top: 1rem; right: 1rem; z-index: 9999;"></div>
+</div>
+{{ end }}
+
+{{ define "extra_css" }}
+<link rel="stylesheet" href="/static/css/wifi_scan.css">
+{{ end }}
+
+{{ define "extra_js" }}
+<script src="/static/js/wifi_scan.js"></script>
+{{ end }}
