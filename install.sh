@@ -151,6 +151,14 @@ install_dependencies() {
         apt-get install -y lua5.1 || apt-get install -y lua
     fi
     
+    # Verificar e instalar iw si no está disponible (ya está en DEPS, pero verificamos por si acaso)
+    if ! command -v iw &> /dev/null; then
+        print_info "Instalando iw (herramienta para gestión WiFi)..."
+        apt-get install -y iw || print_warning "No se pudo instalar iw, puede que no esté disponible en este sistema"
+    else
+        print_success "iw ya está instalado"
+    fi
+    
     # Instalar otras dependencias
     apt-get install -y $DEPS
     
