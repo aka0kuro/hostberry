@@ -207,29 +207,161 @@
     }
   }
   
-  // Scan networks - redirect to wifi-scan page
-  function scanNetworks() {
-    window.location.href = '/wifi-scan';
+  // Scan networks
+  async function scanNetworks() {
+    const loadingEl = document.getElementById('networks-loading');
+    const emptyEl = document.getElementById('networks-empty');
+    const tableEl = document.getElementById('networks-table-container');
+    const tbody = document.getElementById('networksTable');
+    const scanBtn = document.getElementById('scan-networks-btn');
+    
+    if (loadingEl) loadingEl.style.display = 'block';
+    if (emptyEl) emptyEl.style.display = 'none';
+    if (tableEl) tableEl.style.display = 'none';
+    if (tbody) tbody.innerHTML = '';
+    
+    if (scanBtn) {
+      scanBtn.disabled = true;
+      const originalHtml = scanBtn.innerHTML;
+      scanBtn.innerHTML = '<span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> ' + t('wifi.scanning', 'Scanning...');
+      
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+        
+        const resp = await apiRequest('/api/v1/wifi/scan', { 
+          method: 'POST',
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (resp.ok) {
+          const data = await resp.json();
+          
+          if (loadingEl) loadingEl.style.display = 'none';
+          
+          if (data.success && data.networks && data.networks.length > 0) {
+            if (tableEl) tableEl.style.display = 'block';
+            if (tbody) {
+              // Ordenar por señal (mayor a menor)
+              data.networks.sort((a, b) => {
+                const signalA = parseInt(a.signal) || 0;
+                const signalB = parseInt(b.signal) || 0;
+                return signalB - signalA;
+              });
+              
+              data.networks.forEach(function(network) {
+                const tr = document.createElement('tr');
+                const security = network.security || 'Open';
+                const securityColor = getSecurityColor(security);
+                const signalStrength = network.signal || 0;
+                const signalPercent = Math.min(100, Math.max(0, (signalStrength + 100) * 2)); // Convertir dBm a porcentaje aproximado
+                const signalClass = signalPercent > 70 ? 'text-success' : (signalPercent > 40 ? 'text-warning' : 'text-danger');
+                
+                tr.innerHTML = 
+                  '<td><strong>' + (network.ssid || t('wifi.hidden_network', 'Hidden Network')) + '</strong></td>' +
+                  '<td><span class="badge bg-' + securityColor + '">' + security + '</span></td>' +
+                  '<td><span class="' + signalClass + '"><i class="bi bi-signal"></i> ' + signalStrength + ' dBm</span></td>' +
+                  '<td>' + (network.channel || '--') + '</td>' +
+                  '<td><button class="btn btn-sm btn-outline-primary connect-network-btn" data-ssid="' + (network.ssid || '').replace(/"/g, '&quot;') + '" data-security="' + (security || 'Open').replace(/"/g, '&quot;') + '"><i class="bi bi-wifi"></i> ' + t('wifi.connect', 'Connect') + '</button></td>';
+                tbody.appendChild(tr);
+              });
+              
+              // Agregar event listeners a los botones de conexión
+              tbody.querySelectorAll('.connect-network-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                  const ssid = btn.getAttribute('data-ssid');
+                  const security = btn.getAttribute('data-security');
+                  showConnectModal(ssid, security);
+                });
+              });
+            }
+            showAlert('success', t('wifi.found_networks', 'Found {count} networks').replace('{count}', data.networks.length));
+          } else {
+            if (emptyEl) emptyEl.style.display = 'block';
+            showAlert('info', t('wifi.no_networks_scan', 'No networks found during scan.'));
+          }
+        } else {
+          const errorData = await resp.json().catch(() => ({}));
+          if (loadingEl) loadingEl.style.display = 'none';
+          if (emptyEl) emptyEl.style.display = 'block';
+          showAlert('danger', errorData.error || t('errors.scan_failed', 'Scan failed'));
+        }
+      } catch (error) {
+        console.error('Error scanning networks:', error);
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (emptyEl) emptyEl.style.display = 'block';
+        
+        let msg = error.message;
+        if (error.name === 'AbortError') {
+          msg = t('wifi.scan_timeout', 'Scan timed out. Please try again.');
+        } else if (msg.includes('Failed to fetch')) {
+          msg = t('errors.connection_error', 'Connection error with the server.');
+        }
+        showAlert('danger', msg);
+      } finally {
+        if (scanBtn) {
+          scanBtn.disabled = false;
+          scanBtn.innerHTML = originalHtml;
+        }
+      }
+    }
+  }
+  
+  // Show connect modal
+  function showConnectModal(ssid, security) {
+    const modal = document.getElementById('connectModal');
+    const ssidInput = document.getElementById('connectSSID');
+    const ssidHidden = document.getElementById('connectSSIDHidden');
+    const securityInput = document.getElementById('connectSecurity');
+    const securityHidden = document.getElementById('connectSecurityHidden');
+    const passwordField = document.getElementById('passwordField');
+    const passwordInput = document.getElementById('connectPassword');
+    
+    if (ssidInput) ssidInput.value = ssid;
+    if (ssidHidden) ssidHidden.value = ssid;
+    if (securityInput) securityInput.value = security;
+    if (securityHidden) securityHidden.value = security;
+    
+    if (security === 'Open' && passwordField) {
+      passwordField.style.display = 'none';
+      if (passwordInput) passwordInput.required = false;
+    } else if (passwordField) {
+      passwordField.style.display = 'block';
+      if (passwordInput) {
+        passwordInput.required = true;
+        passwordInput.value = '';
+      }
+    }
+    
+    if (modal) {
+      const bsModal = new bootstrap.Modal(modal);
+      bsModal.show();
+    }
   }
   
   // Connect to network
-  async function connectToNetwork(ssid) {
-    const password = prompt(t('wifi.enter_password', 'Enter password for') + ': ' + ssid + '\n' + t('wifi.password_optional', '(Leave empty for open networks)'));
-    if (password === null) return; // User cancelled
-    
+  async function connectToNetwork(ssid, security, password) {
     try {
       const resp = await apiRequest('/api/v1/wifi/connect', {
         method: 'POST',
-        body: { ssid: ssid, password: password || '' }
+        body: { 
+          ssid: ssid, 
+          password: password || '',
+          security: security || 'Open'
+        }
       });
       
       const data = await resp.json();
       
-      if (resp.ok) {
+      if (resp.ok && data.success) {
         showAlert('success', t('wifi.connecting', 'Connecting to') + ': ' + ssid);
+        const modal = bootstrap.Modal.getInstance(document.getElementById('connectModal'));
+        if (modal) modal.hide();
         setTimeout(() => {
           loadConnectionStatus();
-          loadNetworks();
+          scanNetworks();
         }, 2000);
       } else {
         const errorMsg = data.error || t('errors.connection_failed', 'Connection failed');
