@@ -50,7 +50,80 @@
     }
     
     opts.headers = headers;
-    return await fetch(url, opts);
+    
+    try {
+      const resp = await fetch(url, opts);
+      if (resp.status === 401 && !url.includes('/auth/login')) {
+        localStorage.removeItem('access_token');
+        window.location.href = '/login?error=session_expired';
+        return resp;
+      }
+      return resp;
+    } catch (e) {
+      console.error('API Request failed:', e);
+      throw e;
+    }
+  }
+  
+  // Update status cards
+  function updateStatusCards(data) {
+    const wifiStatusValue = document.getElementById('wifi-status-value');
+    const wifiStatusBar = document.getElementById('wifi-status-bar');
+    const wifiStatusIcon = document.getElementById('wifi-status-icon');
+    const connectionSsidValue = document.getElementById('connection-ssid-value');
+    const connectionSignalBar = document.getElementById('connection-signal-bar');
+    const networksCountValue = document.getElementById('networks-count-value');
+    const networksCountBar = document.getElementById('networks-count-bar');
+    
+    // WiFi Status Card
+    if (wifiStatusValue && wifiStatusBar && wifiStatusIcon) {
+      const isEnabled = data.enabled !== false;
+      const isBlocked = data.hard_blocked || data.soft_blocked;
+      
+      if (isBlocked) {
+        wifiStatusValue.textContent = t('wifi.blocked', 'Blocked');
+        wifiStatusBar.style.width = '0%';
+        wifiStatusBar.style.background = '#dc3545';
+        wifiStatusIcon.className = 'bi bi-wifi-off';
+      } else if (!isEnabled) {
+        wifiStatusValue.textContent = t('wifi.disabled', 'Disabled');
+        wifiStatusBar.style.width = '0%';
+        wifiStatusBar.style.background = '#ffc107';
+        wifiStatusIcon.className = 'bi bi-wifi-off';
+      } else {
+        wifiStatusValue.textContent = t('wifi.enabled', 'Enabled');
+        wifiStatusBar.style.width = '100%';
+        wifiStatusBar.style.background = 'linear-gradient(90deg, var(--hb-primary), var(--hb-primary-dark))';
+        wifiStatusIcon.className = 'bi bi-wifi';
+      }
+    }
+    
+    // Connection Status Card
+    if (connectionSsidValue && connectionSignalBar) {
+      const isConnected = data.connected || data.current_connection;
+      if (isConnected) {
+        const ssid = data.current_connection || data.ssid || t('wifi.connected', 'Connected');
+        connectionSsidValue.textContent = ssid.length > 20 ? ssid.substring(0, 20) + '...' : ssid;
+        const signal = data.connection_info?.signal || data.signal || 0;
+        const signalPercent = Math.min(100, Math.max(0, (parseInt(signal) + 100) * 2));
+        connectionSignalBar.style.width = signalPercent + '%';
+        connectionSignalBar.style.background = signalPercent > 70 ? '#28a745' : (signalPercent > 40 ? '#ffc107' : '#dc3545');
+      } else {
+        connectionSsidValue.textContent = t('wifi.not_connected', 'Not Connected');
+        connectionSignalBar.style.width = '0%';
+        connectionSignalBar.style.background = '#dc3545';
+      }
+    }
+    
+    // Networks Count Card
+    const networksTable = document.getElementById('networksTable');
+    if (networksCountValue && networksCountBar && networksTable) {
+      const count = networksTable.querySelectorAll('tr').length;
+      networksCountValue.textContent = count;
+      const countPercent = Math.min(100, (count / 20) * 100); // Asumiendo máximo 20 redes
+      networksCountBar.style.width = countPercent + '%';
+      networksCountBar.style.background = count > 0 ? 'linear-gradient(90deg, var(--hb-primary), var(--hb-primary-dark))' : '#6c757d';
+    }
   }
   
   // Load current connection status
@@ -58,6 +131,7 @@
     try {
       const resp = await apiRequest('/api/wifi/status');
       const data = await resp.ok ? await resp.json() : null;
+      const statusData = data?.status || data || {};
       
       const statusEl = document.getElementById('connection-status');
       const ssidEl = document.getElementById('connection-ssid');
@@ -65,48 +139,40 @@
       const securityEl = document.getElementById('connection-security');
       const channelEl = document.getElementById('connection-channel');
       const ipEl = document.getElementById('connection-ip');
+      const macEl = document.getElementById('connection-mac');
+      const speedEl = document.getElementById('connection-speed');
       
-      if (data && data.connected && data.current_connection) {
-        statusEl.innerHTML = '<span class="badge bg-success">' + t('wifi.connected', 'Connected') + '</span>';
-        ssidEl.textContent = data.current_connection || data.ssid || '--';
-        signalEl.textContent = '--';
-        securityEl.textContent = '--';
-        channelEl.textContent = '--';
-        ipEl.textContent = '--';
-        
-        // Update health indicators
-        updateHealthIndicator('wifi-connected-dot', 'wifi-connected-text', true);
+      // Update status cards
+      updateStatusCards(statusData);
+      
+      if (statusData.connected && statusData.current_connection) {
+        if (statusEl) statusEl.innerHTML = '<span class="badge bg-success">' + t('wifi.connected', 'Connected') + '</span>';
+        if (ssidEl) ssidEl.textContent = statusData.current_connection || statusData.ssid || '--';
+        if (signalEl) signalEl.textContent = (statusData.connection_info?.signal || statusData.signal || '--') + ' dBm';
+        if (securityEl) securityEl.textContent = statusData.connection_info?.security || statusData.security || '--';
+        if (channelEl) channelEl.textContent = statusData.connection_info?.channel || statusData.channel || '--';
+        if (ipEl) ipEl.textContent = statusData.connection_info?.ip || statusData.ip || '--';
+        if (macEl) macEl.textContent = statusData.connection_info?.mac || statusData.mac || '--';
+        if (speedEl) speedEl.textContent = statusData.connection_info?.speed || statusData.speed || '--';
       } else {
-        statusEl.innerHTML = '<span class="badge bg-danger">' + t('wifi.not_connected', 'Not Connected') + '</span>';
-        ssidEl.textContent = t('wifi.no_connection', 'No connection');
-        signalEl.textContent = '--';
-        securityEl.textContent = '--';
-        channelEl.textContent = '--';
-        ipEl.textContent = '--';
-        
-        // Update health indicators
-        updateHealthIndicator('wifi-connected-dot', 'wifi-connected-text', false);
+        if (statusEl) statusEl.innerHTML = '<span class="badge bg-danger">' + t('wifi.not_connected', 'Not Connected') + '</span>';
+        if (ssidEl) ssidEl.textContent = t('wifi.no_connection', 'No connection');
+        if (signalEl) signalEl.textContent = '--';
+        if (securityEl) securityEl.textContent = '--';
+        if (channelEl) channelEl.textContent = '--';
+        if (ipEl) ipEl.textContent = '--';
+        if (macEl) macEl.textContent = '--';
+        if (speedEl) speedEl.textContent = '--';
       }
       
-      // Update WiFi enabled status
-      if (data && data.enabled !== undefined) {
-        updateHealthIndicator('wifi-enabled-dot', 'wifi-enabled-text', data.enabled);
-        updateToggleButton(data.enabled);
+      // Update toggle button
+      if (statusData.enabled !== undefined) {
+        updateToggleButton(statusData.enabled && !statusData.hard_blocked && !statusData.soft_blocked);
       }
     } catch (e) {
       console.error('Error loading connection status:', e);
-      document.getElementById('connection-status').innerHTML = '<span class="badge bg-danger">' + t('errors.load_error', 'Error loading') + '</span>';
-    }
-  }
-  
-  // Update health indicator
-  function updateHealthIndicator(dotId, textId, isActive) {
-    const dot = document.getElementById(dotId);
-    const text = document.getElementById(textId);
-    
-    if (dot && text) {
-      dot.className = 'health-dot ' + (isActive ? 'health-dot-success' : 'health-dot-danger');
-      text.textContent = isActive ? t('common.active', 'Active') : t('common.inactive', 'Inactive');
+      const statusEl = document.getElementById('connection-status');
+      if (statusEl) statusEl.innerHTML = '<span class="badge bg-danger">' + t('errors.load_error', 'Error loading') + '</span>';
     }
   }
   
@@ -114,116 +180,17 @@
   function updateToggleButton(isEnabled) {
     const btn = document.getElementById('toggle-wifi-btn');
     const text = document.getElementById('toggle-wifi-text');
+    const icon = document.getElementById('toggle-wifi-icon');
     
-    if (btn && text) {
+    if (btn && text && icon) {
       if (isEnabled) {
-        btn.className = 'btn btn-danger';
+        btn.className = 'btn btn-danger btn-lg w-100';
         text.textContent = t('wifi.disable_wifi', 'Disable WiFi');
+        icon.className = 'bi bi-wifi-off';
       } else {
-        btn.className = 'btn btn-primary';
+        btn.className = 'btn btn-primary btn-lg w-100';
         text.textContent = t('wifi.enable_wifi', 'Enable WiFi');
-      }
-    }
-  }
-  
-  // Load available networks
-  async function loadNetworks() {
-    const loadingEl = document.getElementById('networks-loading');
-    const emptyEl = document.getElementById('networks-empty');
-    const tableEl = document.getElementById('networks-table-container');
-    const tbody = document.getElementById('networksTable');
-    
-    if (loadingEl) loadingEl.style.display = 'block';
-    if (emptyEl) emptyEl.style.display = 'none';
-    if (tableEl) tableEl.style.display = 'none';
-    if (tbody) tbody.innerHTML = '';
-    
-    try {
-      const resp = await apiRequest('/api/v1/wifi/networks');
-      if (resp.ok) {
-        const networks = await resp.json();
-        
-        if (loadingEl) loadingEl.style.display = 'none';
-        
-        if (!networks || networks.length === 0) {
-          if (emptyEl) emptyEl.style.display = 'block';
-        } else {
-          if (tableEl) tableEl.style.display = 'block';
-          if (tbody) {
-            networks.forEach(function(network) {
-              const tr = document.createElement('tr');
-              const security = network.security || 'Open';
-              const securityColor = getSecurityColor(security);
-              tr.innerHTML = 
-                '<td><strong>' + (network.ssid || 'Unknown') + '</strong></td>' +
-                '<td><span class="badge bg-' + securityColor + '">' + security + '</span></td>' +
-                '<td>' + (network.signal || '--') + ' dBm</td>' +
-                '<td>' + (network.channel || '--') + '</td>' +
-                '<td><button class="btn btn-sm btn-outline-primary" onclick="connectToNetwork(\'' + (network.ssid || '').replace(/'/g, "\\'") + '\')"><i class="bi bi-wifi"></i> ' + t('wifi.connect', 'Connect') + '</button></td>';
-              tbody.appendChild(tr);
-            });
-          }
-        }
-      } else {
-        if (loadingEl) loadingEl.style.display = 'none';
-        if (emptyEl) emptyEl.style.display = 'block';
-      }
-    } catch (e) {
-      console.error('Error loading networks:', e);
-      if (loadingEl) loadingEl.style.display = 'none';
-      if (emptyEl) emptyEl.style.display = 'block';
-    }
-  }
-  
-  // Get security color
-  function getSecurityColor(security) {
-    const s = String(security || '').toLowerCase();
-    if (s === 'wpa3') return 'success';
-    if (s === 'wpa2') return 'primary';
-    if (s === 'wep') return 'warning';
-    if (s === 'open') return 'danger';
-    return 'secondary';
-  }
-  
-  // Toggle WiFi
-  async function toggleWiFi() {
-    const btn = document.getElementById('toggle-wifi-btn');
-    const text = document.getElementById('toggle-wifi-text');
-    
-    if (btn) {
-      btn.disabled = true;
-      const originalHtml = btn.innerHTML;
-      btn.innerHTML = '<span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> ' + t('wifi.processing', 'Processing...');
-      
-      try {
-        const resp = await apiRequest('/api/v1/wifi/toggle', { method: 'POST' });
-        const data = await resp.json();
-        
-        if (resp.ok && data.success) {
-          showAlert('success', t('wifi.wifi_toggled', 'WiFi status changed successfully'));
-          // Esperar un momento para que el sistema actualice el estado
-          setTimeout(async () => {
-            await loadConnectionStatus();
-            // Si se activó WiFi, escanear redes automáticamente
-            const status = await checkWiFiStatus();
-            if (status.enabled && !status.blocked) {
-              setTimeout(() => {
-                scanNetworks();
-              }, 2000);
-            }
-          }, 2000);
-        } else {
-          const errorMsg = data.error || t('errors.operation_failed', 'Operation failed');
-          showAlert('danger', errorMsg);
-        }
-      } catch (e) {
-        console.error('Error toggling WiFi:', e);
-        showAlert('danger', t('errors.network_error', 'Network error'));
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = originalHtml;
-        }
+        icon.className = 'bi bi-wifi';
       }
     }
   }
@@ -247,6 +214,46 @@
     return { enabled: false, blocked: false, connected: false };
   }
   
+  // Toggle WiFi
+  async function toggleWiFi() {
+    const btn = document.getElementById('toggle-wifi-btn');
+    
+    if (btn) {
+      btn.disabled = true;
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '<span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> ' + t('wifi.processing', 'Processing...');
+      
+      try {
+        const resp = await apiRequest('/api/v1/wifi/toggle', { method: 'POST' });
+        const data = await resp.json();
+        
+        if (resp.ok && data.success) {
+          showAlert('success', t('wifi.wifi_toggled', 'WiFi status changed successfully'));
+          setTimeout(async () => {
+            await loadConnectionStatus();
+            const status = await checkWiFiStatus();
+            if (status.enabled && !status.blocked) {
+              setTimeout(() => {
+                scanNetworks();
+              }, 2000);
+            }
+          }, 2000);
+        } else {
+          const errorMsg = data.error || t('errors.operation_failed', 'Operation failed');
+          showAlert('danger', errorMsg);
+        }
+      } catch (e) {
+        console.error('Error toggling WiFi:', e);
+        showAlert('danger', t('errors.network_error', 'Network error'));
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+        }
+      }
+    }
+  }
+  
   // Scan networks
   async function scanNetworks() {
     const loadingEl = document.getElementById('networks-loading');
@@ -261,9 +268,9 @@
     if (!wifiStatus.enabled || wifiStatus.blocked) {
       if (emptyEl) {
         emptyEl.innerHTML = 
-          '<div class="text-center py-4">' +
-          '<i class="bi bi-wifi-off" style="font-size: 3rem; opacity: 0.5;"></i>' +
-          '<p class="mt-2">' + t('wifi.wifi_disabled', 'WiFi is disabled') + '</p>' +
+          '<div class="text-center py-5">' +
+          '<i class="bi bi-wifi-off" style="font-size: 4rem; opacity: 0.5;"></i>' +
+          '<p class="mt-3">' + t('wifi.wifi_disabled', 'WiFi is disabled') + '</p>' +
           '<p class="text-muted small">' + t('wifi.enable_to_scan', 'Please enable WiFi to scan for networks') + '</p>' +
           '<button class="btn btn-primary mt-3" onclick="toggleWiFi()">' +
           '<i class="bi bi-power me-2"></i>' + t('wifi.enable_wifi', 'Enable WiFi') +
@@ -318,14 +325,16 @@
                 const security = network.security || 'Open';
                 const securityColor = getSecurityColor(security);
                 const signalStrength = network.signal || 0;
-                const signalPercent = Math.min(100, Math.max(0, (signalStrength + 100) * 2)); // Convertir dBm a porcentaje aproximado
+                const signalPercent = Math.min(100, Math.max(0, (signalStrength + 100) * 2));
                 const signalClass = signalPercent > 70 ? 'text-success' : (signalPercent > 40 ? 'text-warning' : 'text-danger');
+                const frequency = network.frequency || network.channel ? getFrequencyFromChannel(network.channel) : '--';
                 
                 tr.innerHTML = 
                   '<td><strong>' + (network.ssid || t('wifi.hidden_network', 'Hidden Network')) + '</strong></td>' +
                   '<td><span class="badge bg-' + securityColor + '">' + security + '</span></td>' +
                   '<td><span class="' + signalClass + '"><i class="bi bi-signal"></i> ' + signalStrength + ' dBm</span></td>' +
                   '<td>' + (network.channel || '--') + '</td>' +
+                  '<td>' + frequency + '</td>' +
                   '<td><button class="btn btn-sm btn-outline-primary connect-network-btn" data-ssid="' + (network.ssid || '').replace(/"/g, '&quot;') + '" data-security="' + (security || 'Open').replace(/"/g, '&quot;') + '"><i class="bi bi-wifi"></i> ' + t('wifi.connect', 'Connect') + '</button></td>';
                 tbody.appendChild(tr);
               });
@@ -338,14 +347,17 @@
                   showConnectModal(ssid, security);
                 });
               });
+              
+              // Actualizar contador de redes
+              updateStatusCards({});
             }
             showAlert('success', t('wifi.found_networks', 'Found {count} networks').replace('{count}', data.networks.length));
           } else {
             if (emptyEl) {
               emptyEl.innerHTML = 
-                '<div class="text-center py-4">' +
-                '<i class="bi bi-wifi-off" style="font-size: 3rem; opacity: 0.5;"></i>' +
-                '<p class="mt-2">' + t('wifi.no_networks', 'No networks found') + '</p>' +
+                '<div class="text-center py-5">' +
+                '<i class="bi bi-wifi-off" style="font-size: 4rem; opacity: 0.5;"></i>' +
+                '<p class="mt-3">' + t('wifi.no_networks', 'No networks found') + '</p>' +
                 '<p class="text-muted small">' + t('wifi.no_networks_desc', 'No WiFi networks were found in your area. Make sure WiFi is enabled and try again.') + '</p>' +
                 '<button class="btn btn-primary mt-3" onclick="scanNetworks()">' +
                 '<i class="bi bi-search me-2"></i>' + t('wifi.scan_networks', 'Scan Networks') +
@@ -360,9 +372,9 @@
           if (loadingEl) loadingEl.style.display = 'none';
           if (emptyEl) {
             emptyEl.innerHTML = 
-              '<div class="text-center py-4">' +
-              '<i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>' +
-              '<p class="mt-2">' + t('errors.scan_failed', 'Scan failed') + '</p>' +
+              '<div class="text-center py-5">' +
+              '<i class="bi bi-exclamation-triangle text-warning" style="font-size: 4rem;"></i>' +
+              '<p class="mt-3">' + t('errors.scan_failed', 'Scan failed') + '</p>' +
               '<p class="text-muted small">' + (errorData.error || t('errors.unknown_error', 'Unknown error')) + '</p>' +
               '<button class="btn btn-primary mt-3" onclick="scanNetworks()">' +
               '<i class="bi bi-arrow-clockwise me-2"></i>' + t('common.retry', 'Retry') +
@@ -378,9 +390,9 @@
         if (loadingEl) loadingEl.style.display = 'none';
         if (emptyEl) {
           emptyEl.innerHTML = 
-            '<div class="text-center py-4">' +
-            '<i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>' +
-            '<p class="mt-2">' + t('errors.scan_error', 'Scan error') + '</p>' +
+            '<div class="text-center py-5">' +
+            '<i class="bi bi-exclamation-triangle text-danger" style="font-size: 4rem;"></i>' +
+            '<p class="mt-3">' + t('errors.scan_error', 'Scan error') + '</p>' +
             '<p class="text-muted small">' + error.message + '</p>' +
             '<button class="btn btn-primary mt-3" onclick="scanNetworks()">' +
             '<i class="bi bi-arrow-clockwise me-2"></i>' + t('common.retry', 'Retry') +
@@ -404,6 +416,28 @@
         }
       }
     }
+  }
+  
+  // Get frequency from channel
+  function getFrequencyFromChannel(channel) {
+    if (!channel) return '--';
+    const ch = parseInt(channel);
+    if (ch >= 1 && ch <= 13) {
+      return (2407 + (ch * 5)) + ' MHz';
+    } else if (ch >= 36 && ch <= 165) {
+      return (5000 + (ch * 5)) + ' MHz';
+    }
+    return '--';
+  }
+  
+  // Get security color
+  function getSecurityColor(security) {
+    const s = String(security || '').toLowerCase();
+    if (s === 'wpa3') return 'success';
+    if (s === 'wpa2') return 'primary';
+    if (s === 'wep') return 'warning';
+    if (s === 'open') return 'danger';
+    return 'secondary';
   }
   
   // Show connect modal
@@ -445,8 +479,7 @@
         method: 'POST',
         body: { 
           ssid: ssid, 
-          password: password || '',
-          security: security || 'Open'
+          password: password || ''
         }
       });
       
@@ -470,9 +503,81 @@
     }
   }
   
+  // Save WiFi region
+  async function saveRegion(region) {
+    try {
+      const resp = await apiRequest('/api/v1/wifi/config', {
+        method: 'POST',
+        body: { region: region }
+      });
+      
+      const data = await resp.json();
+      
+      if (resp.ok && data.success) {
+        showAlert('success', t('wifi.region_saved', 'Region saved successfully'));
+        return true;
+      } else {
+        const errorMsg = data.error || t('errors.operation_failed', 'Operation failed');
+        showAlert('danger', errorMsg);
+        return false;
+      }
+    } catch (e) {
+      console.error('Error saving region:', e);
+      showAlert('danger', t('errors.network_error', 'Network error'));
+      return false;
+    }
+  }
+  
+  // Load WiFi region
+  async function loadRegion() {
+    try {
+      // Intentar obtener la región desde localStorage o configuración
+      const savedRegion = localStorage.getItem('wifi_region') || 'US';
+      const regionSelect = document.getElementById('wifi-region');
+      if (regionSelect) {
+        regionSelect.value = savedRegion;
+      }
+    } catch (e) {
+      console.error('Error loading region:', e);
+    }
+  }
+  
+  // Toggle auto-connect
+  function toggleAutoConnect() {
+    const btn = document.getElementById('auto-connect-btn');
+    const icon = document.getElementById('auto-connect-icon');
+    const text = document.getElementById('auto-connect-text');
+    
+    if (btn && icon && text) {
+      const isEnabled = btn.classList.contains('active');
+      if (isEnabled) {
+        btn.classList.remove('active');
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-outline-light');
+        icon.className = 'bi bi-link-45deg';
+        text.textContent = t('wifi.auto_connect', 'Auto Connect');
+        localStorage.setItem('wifi_auto_connect', 'false');
+      } else {
+        btn.classList.add('active');
+        btn.classList.remove('btn-outline-light');
+        btn.classList.add('btn-primary');
+        icon.className = 'bi bi-link-45deg';
+        text.textContent = t('wifi.auto_connect_enabled', 'Auto Connect Enabled');
+        localStorage.setItem('wifi_auto_connect', 'true');
+      }
+    }
+  }
+  
   // Refresh handlers
   document.addEventListener('DOMContentLoaded', function() {
     loadConnectionStatus();
+    loadRegion();
+    
+    // Cargar estado de auto-connect
+    const autoConnectEnabled = localStorage.getItem('wifi_auto_connect') === 'true';
+    if (autoConnectEnabled) {
+      toggleAutoConnect();
+    }
     
     // Mostrar mensaje inicial para escanear redes
     const emptyEl = document.getElementById('networks-empty');
@@ -490,6 +595,36 @@
     const refreshNetworks = document.getElementById('refresh-networks');
     if (refreshNetworks) {
       refreshNetworks.addEventListener('click', scanNetworks);
+    }
+    
+    // Region form
+    const regionForm = document.getElementById('regionForm');
+    if (regionForm) {
+      regionForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const regionSelect = document.getElementById('wifi-region');
+        if (regionSelect) {
+          const region = regionSelect.value;
+          const submitBtn = regionForm.querySelector('button[type="submit"]');
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            const originalHtml = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> ' + t('common.saving', 'Saving...');
+            
+            try {
+              const success = await saveRegion(region);
+              if (success) {
+                localStorage.setItem('wifi_region', region);
+              }
+            } finally {
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHtml;
+              }
+            }
+          }
+        }
+      });
     }
     
     // Toggle password visibility
@@ -543,4 +678,5 @@
   window.toggleWiFi = toggleWiFi;
   window.scanNetworks = scanNetworks;
   window.connectToNetwork = connectToNetwork;
+  window.toggleAutoConnect = toggleAutoConnect;
 })();
