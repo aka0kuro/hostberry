@@ -83,8 +83,8 @@
 
         const status = isActive ? 'success' : 'danger';
         const statusText = isActive 
-            ? ((window.HostBerry && window.HostBerry.t) ? window.HostBerry.t('common.active', 'Active') : 'Active')
-            : ((window.HostBerry && window.HostBerry.t) ? window.HostBerry.t('common.inactive', 'Inactive') : 'Inactive');
+            ? t('common.active', 'Active')
+            : t('common.inactive', 'Inactive');
 
         dot.className = 'health-dot health-dot-' + status;
         text.textContent = statusText;
