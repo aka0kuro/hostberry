@@ -151,6 +151,15 @@ install_files() {
     
     # Crear directorios
     mkdir -p "$INSTALL_DIR"
+    
+    # LIMPIEZA DE LEGACY (PYTHON)
+    # Eliminar archivos antiguos de la versión Python para evitar conflictos
+    if [ -d "$INSTALL_DIR" ]; then
+        print_info "Limpiando archivos antiguos de Python en $INSTALL_DIR..."
+        rm -rf "$INSTALL_DIR/venv" "$INSTALL_DIR/api" "$INSTALL_DIR/core" "$INSTALL_DIR/models" "$INSTALL_DIR/system"
+        rm -f "$INSTALL_DIR/main.py" "$INSTALL_DIR/requirements.txt" "$INSTALL_DIR/setup.sh"
+    fi
+
     mkdir -p "$LOG_DIR"
     mkdir -p "$DATA_DIR"
     mkdir -p "${INSTALL_DIR}/lua/scripts"
