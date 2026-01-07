@@ -233,10 +233,20 @@
     document.querySelectorAll('[data-action="logout"]').forEach(function(btn){
       btn.addEventListener('click', performLogout);
     });
+    
+    document.querySelectorAll('[data-action="restart"]').forEach(function(btn){
+      btn.addEventListener('click', performRestart);
+    });
+    
+    document.querySelectorAll('[data-action="shutdown"]').forEach(function(btn){
+      btn.addEventListener('click', performShutdown);
+    });
   });
 
   // Compat: many views use showAlert() directly
   if(!window.showAlert){ window.showAlert = showAlert; }
   HostBerry.performLogout = performLogout;
+  HostBerry.performRestart = performRestart;
+  HostBerry.performShutdown = performShutdown;
   window.HostBerry = HostBerry;
 })();
