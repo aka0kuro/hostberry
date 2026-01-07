@@ -68,6 +68,13 @@
                 </div>
                 <div class="dashboard-card-body">
                     <div class="d-grid gap-3">
+                        <div class="wifi-interface-section">
+                            <label class="form-label">{{ call .t "wifi.interface" "WiFi Interface" }}</label>
+                            <select class="form-select" id="wifi-interface" name="interface">
+                                <option value="">{{ call .t "wifi.auto_detect" "Auto-detect" }}</option>
+                            </select>
+                            <small class="form-text text-muted">{{ call .t "wifi.interface_help" "Select the WiFi interface to use for scanning" }}</small>
+                        </div>
                         <div class="wifi-toggle-section">
                             <label class="form-label">{{ call .t "wifi.power" "WiFi Power" }}</label>
                             <button class="btn btn-lg w-100" id="toggle-wifi-btn" onclick="toggleWiFi()">
