@@ -251,6 +251,10 @@ body.light-theme { background: #f6f7f9; color: #212529; }
 }
 
 /* Dropdown del usuario en el footer - aparece hacia arriba */
+.user-dropdown-sidebar {
+    position: relative;
+}
+
 .user-dropdown-sidebar .sidebar-dropdown {
     position: absolute !important;
     bottom: 100% !important;
@@ -259,11 +263,13 @@ body.light-theme { background: #f6f7f9; color: #212529; }
     top: auto !important;
     margin-bottom: 0.5rem !important;
     margin-top: 0 !important;
+    min-width: 200px !important;
+    background: rgba(33, 37, 41, 0.98) !important;
+    backdrop-filter: blur(10px) !important;
     border-radius: 8px 8px 0 0 !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-left: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    padding: 0.5rem 0 !important;
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3) !important;
     display: none !important;
     opacity: 0;
     visibility: hidden;
