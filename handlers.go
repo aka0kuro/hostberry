@@ -769,6 +769,12 @@ func hostapdPageHandler(c *fiber.Ctx) error {
 	})
 }
 
+func aboutPageHandler(c *fiber.Ctx) error {
+	return renderTemplate(c, "about", fiber.Map{
+		"Title": T(c, "navigation.about", "About"),
+	})
+}
+
 func profilePageHandler(c *fiber.Ctx) error {
 	user := c.Locals("user").(*User)
 	// Actividad real: últimos logs
