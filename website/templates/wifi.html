@@ -125,13 +125,17 @@
                     </button>
                 </div>
                 <div class="dashboard-card-body">
-                    <div id="networks-loading" class="text-center py-4">
+                    <div id="networks-loading" class="text-center py-4" style="display: none;">
                         <div class="spinning"><i class="bi bi-arrow-clockwise"></i></div>
                         <p class="mt-2">{{ call .t "common.loading" "Loading..." }}</p>
                     </div>
                     <div id="networks-empty" class="text-center py-4" style="display: none;">
                         <i class="bi bi-wifi-off" style="font-size: 3rem; opacity: 0.5;"></i>
                         <p class="mt-2">{{ call .t "wifi.no_networks" "No networks found" }}</p>
+                        <button class="btn btn-primary mt-3" onclick="scanNetworks()">
+                            <i class="bi bi-search me-2"></i>
+                            {{ call .t "wifi.scan_networks" "Scan Networks" }}
+                        </button>
                     </div>
                     <div class="table-responsive" id="networks-table-container" style="display: none;">
                         <table class="table table-hover">
@@ -152,6 +156,63 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- WiFi Connect Modal -->
+    <div class="modal fade" id="connectModal" tabindex="-1" aria-labelledby="connectModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="connectModalLabel">
+                <i class="bi bi-wifi me-2"></i>
+                {{ call .t "wifi.connect_to_network" "Connect to Network" }}
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="wifiConnectForm">
+              <input type="hidden" name="csrf_token" value="">
+              <div class="mb-3">
+                <label for="connectSSID" class="form-label">{{ call .t "wifi.network_ssid" "Network Name (SSID)" }}</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-network-chart"></i></span>
+                  <input type="text" class="form-control" id="connectSSID" name="ssid" readonly>
+                  <input type="hidden" id="connectSSIDHidden" name="ssid_hidden">
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="connectSecurity" class="form-label">{{ call .t "wifi.security_type" "Security Type" }}</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                  <input type="text" class="form-control" id="connectSecurity" name="security" readonly>
+                  <input type="hidden" id="connectSecurityHidden" name="security_hidden">
+                </div>
+              </div>
+              <div class="mb-4" id="passwordField">
+                <label for="connectPassword" class="form-label">{{ call .t "auth.password" "Password" }}</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-key"></i></span>
+                  <input type="password" class="form-control" id="connectPassword" name="password" placeholder="{{ call .t "auth.password_placeholder" "Password" }}" autocomplete="current-password" required>
+                  <button class="btn btn-outline-secondary" type="button" id="togglePwd" aria-label="Toggle password visibility">
+                    <i class="bi bi-eye" id="togglePwdIcon"></i>
+                  </button>
+                </div>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="saveCredentials" name="save_credentials" checked>
+                    <label class="form-check-label" for="saveCredentials">
+                        <i class="bi bi-save me-1"></i>{{ call .t "wifi.save_password" "Save password for automatic reconnection" }}
+                    </label>
+                </div>
+              </div>
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary" id="connectSubmitBtn">
+                  <i class="bi bi-wifi me-2"></i>{{ call .t "wifi.connect_now" "Connect Now" }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
 </div>
 
