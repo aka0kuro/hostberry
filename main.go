@@ -510,11 +510,83 @@ func securityMiddleware(c *fiber.Ctx) error {
 }
 
 func getSystemStats() fiber.Map {
-	// Obtener estadísticas del sistema (fallback sin Lua)
-	return fiber.Map{
-		"cpu_usage":    0.0,
+	stats := fiber.Map{
+		"cpu_usage":     0.0,
 		"memory_usage": 0.0,
 		"disk_usage":   0.0,
 		"uptime":       0,
+		"cpu_cores":    1,
+		"hostname":     "unknown",
+		"kernel_version": "unknown",
+		"architecture": "unknown",
+		"os_version":   "Linux",
 	}
+	
+	// Intentar obtener datos reales del sistema
+	// CPU usage
+	if cpuOut, err := executeCommand("top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}'"); err == nil {
+		if cpu, err := strconv.ParseFloat(strings.TrimSpace(cpuOut), 64); err == nil {
+			stats["cpu_usage"] = cpu
+		}
+	}
+	
+	// Memory usage
+	if memOut, err := executeCommand("free | grep Mem | awk '{printf \"%.2f\", $3/$2 * 100.0}'"); err == nil {
+		if mem, err := strconv.ParseFloat(strings.TrimSpace(memOut), 64); err == nil {
+			stats["memory_usage"] = mem
+		}
+	}
+	
+	// Disk usage
+	if diskOut, err := executeCommand("df -h / | awk 'NR==2{print $5}' | sed 's/%//'"); err == nil {
+		if disk, err := strconv.ParseFloat(strings.TrimSpace(diskOut), 64); err == nil {
+			stats["disk_usage"] = disk
+		}
+	}
+	
+	// Uptime
+	if uptimeOut, err := executeCommand("cat /proc/uptime | awk '{print int($1)}'"); err == nil {
+		if uptime, err := strconv.Atoi(strings.TrimSpace(uptimeOut)); err == nil {
+			stats["uptime"] = uptime
+		}
+	}
+	
+	// CPU cores
+	if coresOut, err := executeCommand("nproc"); err == nil {
+		if cores, err := strconv.Atoi(strings.TrimSpace(coresOut)); err == nil && cores > 0 {
+			stats["cpu_cores"] = cores
+		}
+	}
+	
+	// Hostname
+	if hostname, err := executeCommand("hostname"); err == nil && hostname != "" {
+		stats["hostname"] = hostname
+	}
+	
+	// Kernel version
+	if kernel, err := executeCommand("uname -r"); err == nil && kernel != "" {
+		stats["kernel_version"] = kernel
+	}
+	
+	// Architecture
+	if arch, err := executeCommand("uname -m"); err == nil && arch != "" {
+		stats["architecture"] = arch
+	}
+	
+	// OS version
+	if osRelease, err := os.ReadFile("/etc/os-release"); err == nil {
+		lines := strings.Split(string(osRelease), "\n")
+		for _, line := range lines {
+			if strings.HasPrefix(line, "PRETTY_NAME=") {
+				osVersion := strings.TrimPrefix(line, "PRETTY_NAME=")
+				osVersion = strings.Trim(osVersion, "\"")
+				if osVersion != "" {
+					stats["os_version"] = osVersion
+				}
+				break
+			}
+		}
+	}
+	
+	return stats
 }
