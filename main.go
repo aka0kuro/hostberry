@@ -17,8 +17,8 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/compress"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"gopkg.in/yaml.v3"
 )
@@ -56,10 +56,10 @@ type DatabaseConfig struct {
 }
 
 type SecurityConfig struct {
-	JWTSecret     string `yaml:"jwt_secret"`
-	TokenExpiry   int    `yaml:"token_expiry"` // minutos
-	BcryptCost    int    `yaml:"bcrypt_cost"`
-	RateLimitRPS  int    `yaml:"rate_limit_rps"`
+	JWTSecret    string `yaml:"jwt_secret"`
+	TokenExpiry  int    `yaml:"token_expiry"` // minutos
+	BcryptCost   int    `yaml:"bcrypt_cost"`
+	RateLimitRPS int    `yaml:"rate_limit_rps"`
 }
 
 type LuaConfig struct {
@@ -109,9 +109,9 @@ func main() {
 	// Iniciar servidor
 	addr := fmt.Sprintf("%s:%d", appConfig.Server.Host, appConfig.Server.Port)
 	log.Printf("🚀 HostBerry iniciando en %s", addr)
-	log.Printf("📋 Configuración: Debug=%v, Timeout=%ds/%ds", 
-		appConfig.Server.Debug, 
-		appConfig.Server.ReadTimeout, 
+	log.Printf("📋 Configuración: Debug=%v, Timeout=%ds/%ds",
+		appConfig.Server.Debug,
+		appConfig.Server.ReadTimeout,
 		appConfig.Server.WriteTimeout)
 
 	// Manejo graceful de shutdown
@@ -174,7 +174,7 @@ func createApp() *fiber.App {
 	if engine == nil {
 		log.Fatal("❌ Error crítico: No se pudo crear el engine de templates")
 	}
-	
+
 	log.Printf("✅ Engine de templates creado, asignando a Fiber app...")
 
 	app := fiber.New(fiber.Config{
@@ -183,7 +183,7 @@ func createApp() *fiber.App {
 		WriteTimeout: time.Duration(appConfig.Server.WriteTimeout) * time.Second,
 		ErrorHandler: errorHandler,
 	})
-	
+
 	// Verificar que el engine se asignó correctamente
 	if app.Config().Views == nil {
 		log.Fatal("❌ Error crítico: Views no se asignó correctamente a la app")
@@ -201,19 +201,19 @@ func createApp() *fiber.App {
 		Next: func(c *fiber.Ctx) bool {
 			path := c.Path()
 			// Omitir logs de archivos estáticos comunes
-			return strings.HasPrefix(path, "/static/") && 
-			       (strings.HasSuffix(path, ".css") || 
-			        strings.HasSuffix(path, ".js") || 
-			        strings.HasSuffix(path, ".png") || 
-			        strings.HasSuffix(path, ".jpg") || 
-			        strings.HasSuffix(path, ".jpeg") || 
-			        strings.HasSuffix(path, ".gif") || 
-			        strings.HasSuffix(path, ".ico") ||
-			        strings.HasSuffix(path, ".svg") ||
-			        strings.HasSuffix(path, ".woff") ||
-			        strings.HasSuffix(path, ".woff2") ||
-			        strings.HasSuffix(path, ".ttf") ||
-			        strings.HasSuffix(path, ".eot"))
+			return strings.HasPrefix(path, "/static/") &&
+				(strings.HasSuffix(path, ".css") ||
+					strings.HasSuffix(path, ".js") ||
+					strings.HasSuffix(path, ".png") ||
+					strings.HasSuffix(path, ".jpg") ||
+					strings.HasSuffix(path, ".jpeg") ||
+					strings.HasSuffix(path, ".gif") ||
+					strings.HasSuffix(path, ".ico") ||
+					strings.HasSuffix(path, ".svg") ||
+					strings.HasSuffix(path, ".woff") ||
+					strings.HasSuffix(path, ".woff2") ||
+					strings.HasSuffix(path, ".ttf") ||
+					strings.HasSuffix(path, ".eot"))
 		},
 	}))
 	app.Use(compress.New())
@@ -272,12 +272,12 @@ func setupRoutes(app *fiber.App) {
 				return c.Status(404).SendString("Not found")
 			}
 			defer file.Close()
-			
+
 			stat, err := file.Stat()
 			if err != nil {
 				return c.Status(500).SendString("Error reading file")
 			}
-			
+
 			c.Type(filepath.Ext(path))
 			return c.SendStream(file, int(stat.Size()))
 		})
@@ -290,7 +290,7 @@ func setupRoutes(app *fiber.App) {
 		web.Get("/login", loginHandler)
 		web.Get("/first-login", firstLoginPageHandler)
 		web.Get("/", indexHandler)
-		
+
 		// Páginas protegidas (requieren token por cookie o query ?token=)
 		protected := web.Group("/", requireAuth)
 		protected.Get("/dashboard", dashboardHandler)
@@ -433,7 +433,7 @@ func indexHandler(c *fiber.Ctx) error {
 	if token == "" {
 		token = c.Query("token")
 	}
-	
+
 	// Si hay token, validarlo
 	if token != "" {
 		claims, err := ValidateToken(token)
@@ -446,7 +446,7 @@ func indexHandler(c *fiber.Ctx) error {
 			}
 		}
 	}
-	
+
 	// No hay token válido o usuario no válido, redirigir a login
 	return c.Redirect("/login")
 }
@@ -465,7 +465,7 @@ func loginHandler(c *fiber.Ctx) error {
 
 func settingsHandler(c *fiber.Ctx) error {
 	configs, _ := GetAllConfigs()
-	
+
 	// Asegurar valores por defecto si no existen
 	if _, exists := configs["max_login_attempts"]; !exists || configs["max_login_attempts"] == "" {
 		configs["max_login_attempts"] = "3"
@@ -479,9 +479,9 @@ func settingsHandler(c *fiber.Ctx) error {
 	if _, exists := configs["cache_size"]; !exists || configs["cache_size"] == "" {
 		configs["cache_size"] = "75"
 	}
-	
+
 	configsJSON, _ := json.Marshal(configs)
-	
+
 	return renderTemplate(c, "settings", fiber.Map{
 		"Title":         T(c, "navigation.settings", "Settings"),
 		"settings":      configs,
@@ -553,7 +553,7 @@ func wifiScanHandler(c *fiber.Ctx) error {
 		if result != nil {
 			if networks, ok := result["networks"]; ok {
 				return c.JSON(fiber.Map{
-					"success": true,
+					"success":  true,
 					"networks": networks,
 				})
 			}
@@ -570,7 +570,7 @@ func wifiScanHandler(c *fiber.Ctx) error {
 // wifiScanFallback escanea WiFi usando comandos del sistema directamente
 func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 	var networks []fiber.Map
-	
+
 	// Si no se especifica interfaz, detectar automáticamente
 	if interfaceName == "" {
 		interfaceName = detectWiFiInterface()
@@ -583,8 +583,8 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 	if !strings.Contains(wifiState, "enabled") && !strings.Contains(wifiState, "on") {
 		log.Printf("⚠️  WiFi no está habilitado")
 		return c.JSON(fiber.Map{
-			"success": false,
-			"error":   "WiFi no está habilitado. Por favor, habilita WiFi primero.",
+			"success":  false,
+			"error":    "WiFi no está habilitado. Por favor, habilita WiFi primero.",
 			"networks": []fiber.Map{},
 		})
 	}
@@ -593,7 +593,7 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 	cmd := exec.Command("sh", "-c", "nmcli -t -f SSID,SIGNAL,SECURITY,CHAN dev wifi list 2>&1")
 	out, err := cmd.CombinedOutput()
 	output := strings.TrimSpace(string(out))
-	
+
 	if err == nil && len(output) > 0 && !strings.Contains(output, "Error") && !strings.Contains(output, "permission") {
 		log.Printf("📡 Escaneando con nmcli...")
 		lines := strings.Split(output, "\n")
@@ -631,7 +631,7 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 		if len(networks) > 0 {
 			log.Printf("✅ Encontradas %d redes con nmcli", len(networks))
 			return c.JSON(fiber.Map{
-				"success": true,
+				"success":  true,
 				"networks": networks,
 			})
 		}
@@ -680,7 +680,7 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 						if f, err := strconv.Atoi(parts[i+1]); err == nil {
 							// Convertir frecuencia a canal
 							if f >= 2412 && f <= 2484 {
-								channel := (f - 2412) / 5 + 1
+								channel := (f-2412)/5 + 1
 								currentNetwork["channel"] = strconv.Itoa(channel)
 							} else if f >= 5000 && f <= 5825 {
 								channel := (f - 5000) / 5
@@ -703,7 +703,7 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 		if len(networks) > 0 {
 			log.Printf("✅ Encontradas %d redes con iw", len(networks))
 			return c.JSON(fiber.Map{
-				"success": true,
+				"success":  true,
 				"networks": networks,
 			})
 		}
@@ -712,8 +712,8 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 	// Si no hay redes encontradas, retornar array vacío con mensaje
 	log.Printf("⚠️  No se encontraron redes WiFi")
 	return c.JSON(fiber.Map{
-		"success": true,
-		"error":   "No se encontraron redes WiFi. Verifica que WiFi esté habilitado y que haya redes disponibles en el área.",
+		"success":  true,
+		"error":    "No se encontraron redes WiFi. Verifica que WiFi esté habilitado y que haya redes disponibles en el área.",
 		"networks": []fiber.Map{},
 	})
 }
@@ -730,17 +730,17 @@ func securityMiddleware(c *fiber.Ctx) error {
 
 func getSystemStats() fiber.Map {
 	stats := fiber.Map{
-		"cpu_usage":     0.0,
-		"memory_usage": 0.0,
-		"disk_usage":   0.0,
-		"uptime":       0,
-		"cpu_cores":    1,
-		"hostname":     "unknown",
+		"cpu_usage":      0.0,
+		"memory_usage":   0.0,
+		"disk_usage":     0.0,
+		"uptime":         0,
+		"cpu_cores":      1,
+		"hostname":       "unknown",
 		"kernel_version": "unknown",
-		"architecture": "unknown",
-		"os_version":   "Linux",
+		"architecture":   "unknown",
+		"os_version":     "Linux",
 	}
-	
+
 	// Intentar obtener datos reales del sistema
 	// CPU usage - usar /proc/stat (más confiable)
 	cpuOut, cpuErr := executeCommand("grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$3+$4+$5)} END {print usage}'")
@@ -756,7 +756,7 @@ func getSystemStats() fiber.Map {
 	} else {
 		log.Printf("⚠️  Error ejecutando comando CPU: %v", cpuErr)
 	}
-	
+
 	// Fallback alternativo para CPU usando top
 	if stats["cpu_usage"] == 0.0 {
 		cpuOut2, cpuErr2 := executeCommand("top -bn1 | grep 'Cpu(s)' | awk -F'id,' '{split($1,a,\"%\"); for(i in a){if(a[i] ~ /^[0-9]/){print 100-a[i];break}}}'")
@@ -768,7 +768,7 @@ func getSystemStats() fiber.Map {
 			}
 		}
 	}
-	
+
 	// Memory usage
 	memOut, memErr := executeCommand("free | grep Mem | awk '{printf \"%.2f\", $3/$2 * 100.0}'")
 	if memErr == nil && strings.TrimSpace(memOut) != "" {
@@ -783,7 +783,7 @@ func getSystemStats() fiber.Map {
 	} else {
 		log.Printf("⚠️  Error ejecutando comando Memory: %v", memErr)
 	}
-	
+
 	// Disk usage - usar método más simple
 	diskOut, diskErr := executeCommand("df / | tail -1 | awk '{print $5}' | sed 's/%//'")
 	if diskErr == nil && strings.TrimSpace(diskOut) != "" {
@@ -796,36 +796,36 @@ func getSystemStats() fiber.Map {
 	} else {
 		log.Printf("⚠️  Error ejecutando comando Disk: %v", diskErr)
 	}
-	
+
 	// Uptime
 	if uptimeOut, err := executeCommand("cat /proc/uptime | awk '{print int($1)}'"); err == nil {
 		if uptime, err := strconv.Atoi(strings.TrimSpace(uptimeOut)); err == nil {
 			stats["uptime"] = uptime
 		}
 	}
-	
+
 	// CPU cores
 	if coresOut, err := executeCommand("nproc"); err == nil {
 		if cores, err := strconv.Atoi(strings.TrimSpace(coresOut)); err == nil && cores > 0 {
 			stats["cpu_cores"] = cores
 		}
 	}
-	
+
 	// Hostname
 	if hostname, err := executeCommand("hostname"); err == nil && hostname != "" {
 		stats["hostname"] = hostname
 	}
-	
+
 	// Kernel version
 	if kernel, err := executeCommand("uname -r"); err == nil && kernel != "" {
 		stats["kernel_version"] = kernel
 	}
-	
+
 	// Architecture
 	if arch, err := executeCommand("uname -m"); err == nil && arch != "" {
 		stats["architecture"] = arch
 	}
-	
+
 	// OS version
 	if osRelease, err := os.ReadFile("/etc/os-release"); err == nil {
 		lines := strings.Split(string(osRelease), "\n")
@@ -840,6 +840,6 @@ func getSystemStats() fiber.Map {
 			}
 		}
 	}
-	
+
 	return stats
 }
