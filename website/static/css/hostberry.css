@@ -65,7 +65,8 @@ body.light-theme { background: #f6f7f9; color: #212529; }
 .navbar-nav {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    width: 100%;
 }
 
 .glass-navbar::before {
@@ -124,8 +125,8 @@ body.light-theme { background: #f6f7f9; color: #212529; }
 .navbar-toggler:focus { box-shadow: none; }
 .navbar-toggler:hover { background: rgba(255, 255, 255, 0.1); }
 .navbar-toggler-icon { width: 1.5em; height: 1.5em; }
-.navbar-collapse { flex: 1 1 auto; display:flex; justify-content:flex-start; }
-.navbar-nav { display:flex; gap:.5rem; list-style:none; padding:0; margin:0; flex-wrap: nowrap; justify-content: flex-start; align-items: center; }
+.navbar-collapse { flex: 1 1 auto; display:flex; justify-content:flex-start; width: 100%; }
+.navbar-nav { display:flex; gap:.5rem; list-style:none; padding:0; margin:0; flex-wrap: nowrap; justify-content: flex-start; align-items: center; width: 100%; }
 .nav-item { margin: 0; display: flex; align-items: center; }
 .nav-link { color:#fff; text-decoration:none; padding:.5rem 1rem; border-radius:.25rem; display:inline-flex; align-items:center; gap:.35rem; white-space: nowrap; transition: all 0.3s ease; line-height: 1; }
 .nav-link i {
