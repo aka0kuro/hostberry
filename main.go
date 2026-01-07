@@ -541,14 +541,17 @@ func getSystemStats() fiber.Map {
 	// Intentar obtener datos reales del sistema
 	// CPU usage - usar /proc/stat (más confiable)
 	if cpuOut, err := executeCommand("grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$3+$4+$5)} END {print usage}'"); err == nil && strings.TrimSpace(cpuOut) != "" {
-		if cpu, err := strconv.ParseFloat(strings.TrimSpace(cpuOut), 64); err == nil && cpu >= 0 && cpu <= 100 {
+		// Normalizar: reemplazar coma por punto para locales que usan coma
+		cpuOut = strings.ReplaceAll(strings.TrimSpace(cpuOut), ",", ".")
+		if cpu, err := strconv.ParseFloat(cpuOut, 64); err == nil && cpu >= 0 && cpu <= 100 {
 			stats["cpu_usage"] = cpu
 		}
 	}
 	// Fallback alternativo para CPU usando top
 	if stats["cpu_usage"] == 0.0 {
 		if cpuOut, err := executeCommand("top -bn1 | grep 'Cpu(s)' | awk -F'id,' '{split($1,a,\"%\"); for(i in a){if(a[i] ~ /^[0-9]/){print 100-a[i];break}}}'"); err == nil && strings.TrimSpace(cpuOut) != "" {
-			if cpu, err := strconv.ParseFloat(strings.TrimSpace(cpuOut), 64); err == nil && cpu >= 0 && cpu <= 100 {
+			cpuOut = strings.ReplaceAll(strings.TrimSpace(cpuOut), ",", ".")
+			if cpu, err := strconv.ParseFloat(cpuOut, 64); err == nil && cpu >= 0 && cpu <= 100 {
 				stats["cpu_usage"] = cpu
 			}
 		}
@@ -556,7 +559,9 @@ func getSystemStats() fiber.Map {
 	
 	// Memory usage
 	if memOut, err := executeCommand("free | grep Mem | awk '{printf \"%.2f\", $3/$2 * 100.0}'"); err == nil && strings.TrimSpace(memOut) != "" {
-		if mem, err := strconv.ParseFloat(strings.TrimSpace(memOut), 64); err == nil && mem >= 0 && mem <= 100 {
+		// Normalizar: reemplazar coma por punto
+		memOut = strings.ReplaceAll(strings.TrimSpace(memOut), ",", ".")
+		if mem, err := strconv.ParseFloat(memOut, 64); err == nil && mem >= 0 && mem <= 100 {
 			stats["memory_usage"] = mem
 		}
 	}
