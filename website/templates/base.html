@@ -136,7 +136,7 @@
     {{ if .settings }}
     <script>
       // Settings globales provenientes del backend (DB): language/theme/timezone
-      window.HostBerryServerSettings = {{ .settings_json }};
+      window.HostBerryServerSettings = {{ call .json .settings }};
     </script>
     {{ end }}
 
