@@ -634,7 +634,26 @@
   document.addEventListener('DOMContentLoaded', function() {
     loadConnectionStatus();
     loadRegion();
-    loadWiFiInterfaces();
+    
+    // Cargar interfaces WiFi y restaurar selección guardada
+    loadWiFiInterfaces().then(function() {
+      // Asegurar que la interfaz guardada se seleccione después de cargar
+      const interfaceSelect = document.getElementById('wifi-interface');
+      const savedInterface = localStorage.getItem('wifi_interface');
+      if (interfaceSelect && savedInterface) {
+        // Esperar un momento para que las opciones se agreguen completamente
+        setTimeout(function() {
+          const option = interfaceSelect.querySelector('option[value="' + savedInterface + '"]');
+          if (option) {
+            interfaceSelect.value = savedInterface;
+            console.log('Interfaz WiFi restaurada:', savedInterface);
+          } else {
+            console.log('Interfaz WiFi guardada no encontrada en opciones, usando auto-detect');
+            localStorage.removeItem('wifi_interface');
+          }
+        }, 200);
+      }
+    });
     
     // Cargar estado de auto-connect
     const autoConnectEnabled = localStorage.getItem('wifi_auto_connect') === 'true';
