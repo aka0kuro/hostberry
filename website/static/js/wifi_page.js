@@ -52,18 +52,7 @@
     }catch(_e){ HostBerry.showAlert('danger', HostBerry.t('errors.network_error')); }
   }
   function connectToNetwork(ssid){ alert(HostBerry.t('wifi.connecting_to_network','Conectando a red')+': '+ssid); }
-  const wifiConfigForm = document.getElementById('wifiConfigForm');
-  if(wifiConfigForm){
-    wifiConfigForm.addEventListener('submit', async function(e){
-      e.preventDefault(); const fd = new FormData(this);
-      const data = { ssid: fd.get('ssid'), password: fd.get('password'), security: fd.get('security'), channel: parseInt(fd.get('channel')), bandwidth: parseInt(fd.get('bandwidth')) };
-      try{ const resp = await fetch('/api/v1/wifi/config', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }, body: JSON.stringify(data) });
-        if(resp.ok){ HostBerry.showAlert('success', HostBerry.t('messages.changes_saved')); }
-        else { HostBerry.showAlert('danger', HostBerry.t('errors.configuration_error')); }
-      }catch(_e){ HostBerry.showAlert('danger', HostBerry.t('errors.network_error')); }
-    });
-  }
-  document.addEventListener('DOMContentLoaded', function(){ loadNetworks(); loadClients(); setInterval(function(){ loadNetworks(); loadClients(); }, 30000); });
+  document.addEventListener('DOMContentLoaded', function(){ loadNetworks(); setInterval(function(){ loadNetworks(); }, 30000); });
   window.toggleWiFi = toggleWiFi; window.scanNetworks = scanNetworks; window.connectToNetwork = connectToNetwork;
 })();
 
