@@ -338,8 +338,10 @@
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 20000);
         
+        const requestBody = selectedInterface ? { interface: selectedInterface } : {};
         const resp = await apiRequest('/api/v1/wifi/scan', { 
           method: 'POST',
+          body: requestBody,
           signal: controller.signal
         });
         
