@@ -567,36 +567,60 @@
 
     const enableWifiBtnTop = document.getElementById('enableWifiBtnTop');
     const enableWifiBtnInline = document.getElementById('enableWifiBtnInline');
-    function enableWifi(btn){
+    
+    async function enableWifi(btn){
+      if(!btn) return;
+      
       const original = btn.innerHTML; 
       btn.disabled = true; 
       btn.innerHTML = '<span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> ' + t('wifi.enabling', 'Enabling...');
-      apiRequest('/api/v1/wifi/toggle', { method:'POST' })
-        .then(async function(r){ 
-          if (r.ok) {
-            const j = await r.json();
-            if(j.success){ 
-              showAlert('success', t('wifi.wifi_enabled_success', 'WiFi enabled successfully!")); 
-              await loadStatusAndScan(); 
-            } else { 
-              showAlert('danger', j.error || t('errors.enable_error', 'Error enabling WiFi.')); 
-              btn.disabled=false; 
-              btn.innerHTML=original; 
-            }
-          } else {
-            showAlert('danger', t('errors.server_error', 'Server error enabling WiFi interface.')); 
-            btn.disabled=false; 
-            btn.innerHTML=original;
-          }
-        })
-        .catch(function(){ 
-          showAlert('danger', t('errors.server_error', 'Server error enabling WiFi interface.')); 
-          btn.disabled=false; 
-          btn.innerHTML=original; 
+      
+      try {
+        const resp = await apiRequest('/api/v1/wifi/toggle', { 
+          method: 'POST',
+          body: {}
         });
+        
+        if (resp.ok) {
+          const data = await resp.json();
+          if(data.success){ 
+            showAlert('success', t('wifi.wifi_enabled_success', 'WiFi enabled successfully!'));
+            addActivity('connect', t('wifi.wifi_enabled_success', 'WiFi enabled successfully!'));
+            // Esperar un momento para que el sistema actualice el estado
+            setTimeout(async function() {
+              await loadStatusAndScan();
+            }, 2000);
+          } else { 
+            showAlert('danger', data.error || t('errors.enable_error', 'Error enabling WiFi.')); 
+            btn.disabled = false; 
+            btn.innerHTML = original; 
+          }
+        } else {
+          const errorData = await resp.json().catch(() => ({}));
+          showAlert('danger', errorData.error || t('errors.server_error', 'Server error enabling WiFi interface.')); 
+          btn.disabled = false; 
+          btn.innerHTML = original;
+        }
+      } catch(error) {
+        console.error('Error enabling WiFi:', error);
+        showAlert('danger', t('errors.server_error', 'Server error enabling WiFi interface.')); 
+        btn.disabled = false; 
+        btn.innerHTML = original; 
+      }
     }
-    if(enableWifiBtnTop){ enableWifiBtnTop.addEventListener('click', function(){ enableWifi(enableWifiBtnTop); }); }
-    if(enableWifiBtnInline){ enableWifiBtnInline.addEventListener('click', function(){ enableWifi(enableWifiBtnInline); }); }
+    
+    if(enableWifiBtnTop){ 
+      enableWifiBtnTop.addEventListener('click', function(e){ 
+        e.preventDefault();
+        enableWifi(enableWifiBtnTop); 
+      }); 
+    }
+    if(enableWifiBtnInline){ 
+      enableWifiBtnInline.addEventListener('click', function(e){ 
+        e.preventDefault();
+        enableWifi(enableWifiBtnInline); 
+      }); 
+    }
 
     loadSavedNetworks();
     attemptAutoConnect();
