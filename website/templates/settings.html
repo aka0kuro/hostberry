@@ -333,7 +333,7 @@
                             <label for="cache_size" class="form-label text-white">{{ call .t "settings.cache_size" "Cache Size" }}</label>
                             {{ $cache_size := index .settings "cache_size" }}
                             <input type="number" class="form-control bg-dark text-white border-secondary text-center" id="cache_size" name="cache_size" value="{{ if $cache_size }}{{ $cache_size }}{{ else }}75{{ end }}" min="10" max="200">
-                            <small class="text-white-50">{{ call .t "settings.mb" "MB" }} ({{ call .t "settings.raspberry_pi_3_optimized" "Optimized for Raspberry Pi 3" }})</small>
+                            <small class="text-white-50">{{ call .t "settings.mb" "MB" }} (Raspberry Pi 3 optimized)</small>
                         </div>
                         
                         <div class="mb-3">
