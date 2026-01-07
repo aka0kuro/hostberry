@@ -215,6 +215,11 @@ body.light-theme { background: #f6f7f9; color: #212529; }
     border-radius: 0.5rem;
     transition: all 0.3s ease;
     cursor: pointer;
+    user-select: none;
+}
+
+.user-profile-link:focus {
+    outline: none;
 }
 
 .user-profile-link:hover {
