@@ -1,58 +1,302 @@
-// JS extraído desde templates/wifi.html
+// WiFi Page JavaScript
 (function(){
-  async function loadNetworks(){
-    try{
-      const resp = await fetch('/api/v1/wifi/networks', { headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
-      if(resp.ok){
-        const networks = await resp.json();
-        const tbody = document.getElementById('networksTable'); if(!tbody) return; tbody.innerHTML='';
-        networks.forEach(function(network){
-          const tr = document.createElement('tr');
-          tr.innerHTML = '<td>'+network.ssid+'</td>'+
-            '<td><span class="badge bg-'+getSecurityColor(network.security)+'">'+network.security+'</span></td>'+
-            '<td>'+network.signal+' dBm</td>'+
-            '<td>'+network.channel+'</td>'+
-            '<td><button class="btn btn-sm btn-outline-primary" onclick="connectToNetwork(\''+network.ssid+'\')"><i class="bi bi-wifi"></i></button></td>';
-          tbody.appendChild(tr);
-        });
+  const HostBerry = window.HostBerry || {};
+  
+  // Translation helper
+  function t(key, defaultValue) {
+    if (HostBerry.t) {
+      return HostBerry.t(key, defaultValue);
+    }
+    // Fallback: try to get from i18n-json
+    try {
+      const i18nScript = document.getElementById('i18n-json');
+      if (i18nScript) {
+        const translations = JSON.parse(i18nScript.textContent);
+        const keys = key.split('.');
+        let value = translations;
+        for (const k of keys) {
+          value = value && value[k];
+        }
+        if (typeof value === 'string') return value;
       }
-    }catch(e){ console.error('Error loading networks:', e); }
+    } catch (e) {}
+    return defaultValue || key;
   }
-  function getSecurityColor(security){
-    const s = String(security||'').toLowerCase();
-    if(s==='wpa3') return 'success'; if(s==='wpa2') return 'primary'; if(s==='wep') return 'warning'; if(s==='open') return 'danger'; return 'secondary';
-  }
-  async function toggleWiFi(){
-    try{ 
-      const resp = await fetch('/api/v1/wifi/toggle', { method:'POST', headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
-      const data = await resp.json();
-      if(resp.ok && data.success){ 
-        const showAlert = (window.HostBerry && window.HostBerry.showAlert) || function(type, msg) { alert(msg); };
-        const t = (window.HostBerry && window.HostBerry.t) || function(key, def) { return def || key; };
-        showAlert('success', t('messages.operation_successful', 'Operación exitosa')); 
-        setTimeout(()=>window.location.reload(), 1000); 
-      }
-      else { 
-        const showAlert = (window.HostBerry && window.HostBerry.showAlert) || function(type, msg) { alert(msg); };
-        const t = (window.HostBerry && window.HostBerry.t) || function(key, def) { return def || key; };
-        const errorMsg = data.error || t('errors.operation_failed', 'Operación fallida');
-        showAlert('danger', errorMsg); 
-      }
-    }catch(e){ 
-      const showAlert = (window.HostBerry && window.HostBerry.showAlert) || function(type, msg) { alert(msg); };
-      const t = (window.HostBerry && window.HostBerry.t) || function(key, def) { return def || key; };
-      showAlert('danger', t('errors.network_error', 'Error de red')); 
-      console.error('Error en toggleWiFi:', e);
+  
+  // Alert helper
+  function showAlert(type, message) {
+    if (HostBerry.showAlert) {
+      HostBerry.showAlert(type, message);
+    } else {
+      alert(message);
     }
   }
-  async function scanNetworks(){
-    try{ const resp = await fetch('/api/v1/wifi/scan', { method:'POST', headers:{ 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
-      if(resp.ok){ HostBerry.showAlert('info', HostBerry.t('wifi.scanning_networks')); setTimeout(loadNetworks, 5000); }
-      else { HostBerry.showAlert('danger', HostBerry.t('errors.operation_failed')); }
-    }catch(_e){ HostBerry.showAlert('danger', HostBerry.t('errors.network_error')); }
+  
+  // API Request helper
+  async function apiRequest(url, options) {
+    const opts = Object.assign({ method: 'GET', headers: {} }, options || {});
+    const headers = new Headers(opts.headers);
+    
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      headers.set('Authorization', 'Bearer ' + token);
+    }
+    
+    if (opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)) {
+      if (!headers.has('Content-Type')) {
+        headers.set('Content-Type', 'application/json');
+      }
+      opts.body = JSON.stringify(opts.body);
+    }
+    
+    opts.headers = headers;
+    return await fetch(url, opts);
   }
-  function connectToNetwork(ssid){ alert(HostBerry.t('wifi.connecting_to_network','Conectando a red')+': '+ssid); }
-  document.addEventListener('DOMContentLoaded', function(){ loadNetworks(); setInterval(function(){ loadNetworks(); }, 30000); });
-  window.toggleWiFi = toggleWiFi; window.scanNetworks = scanNetworks; window.connectToNetwork = connectToNetwork;
+  
+  // Load current connection status
+  async function loadConnectionStatus() {
+    try {
+      const resp = await apiRequest('/api/wifi/status');
+      const data = await resp.ok ? await resp.json() : null;
+      
+      const statusEl = document.getElementById('connection-status');
+      const ssidEl = document.getElementById('connection-ssid');
+      const signalEl = document.getElementById('connection-signal');
+      const securityEl = document.getElementById('connection-security');
+      const channelEl = document.getElementById('connection-channel');
+      const ipEl = document.getElementById('connection-ip');
+      
+      if (data && data.connected && data.current_connection) {
+        statusEl.innerHTML = '<span class="badge bg-success">' + t('wifi.connected', 'Connected') + '</span>';
+        ssidEl.textContent = data.current_connection || data.ssid || '--';
+        signalEl.textContent = '--';
+        securityEl.textContent = '--';
+        channelEl.textContent = '--';
+        ipEl.textContent = '--';
+        
+        // Update health indicators
+        updateHealthIndicator('wifi-connected-dot', 'wifi-connected-text', true);
+      } else {
+        statusEl.innerHTML = '<span class="badge bg-danger">' + t('wifi.not_connected', 'Not Connected') + '</span>';
+        ssidEl.textContent = t('wifi.no_connection', 'No connection');
+        signalEl.textContent = '--';
+        securityEl.textContent = '--';
+        channelEl.textContent = '--';
+        ipEl.textContent = '--';
+        
+        // Update health indicators
+        updateHealthIndicator('wifi-connected-dot', 'wifi-connected-text', false);
+      }
+      
+      // Update WiFi enabled status
+      if (data && data.enabled !== undefined) {
+        updateHealthIndicator('wifi-enabled-dot', 'wifi-enabled-text', data.enabled);
+        updateToggleButton(data.enabled);
+      }
+    } catch (e) {
+      console.error('Error loading connection status:', e);
+      document.getElementById('connection-status').innerHTML = '<span class="badge bg-danger">' + t('errors.load_error', 'Error loading') + '</span>';
+    }
+  }
+  
+  // Update health indicator
+  function updateHealthIndicator(dotId, textId, isActive) {
+    const dot = document.getElementById(dotId);
+    const text = document.getElementById(textId);
+    
+    if (dot && text) {
+      dot.className = 'health-dot ' + (isActive ? 'health-dot-success' : 'health-dot-danger');
+      text.textContent = isActive ? t('common.active', 'Active') : t('common.inactive', 'Inactive');
+    }
+  }
+  
+  // Update toggle button
+  function updateToggleButton(isEnabled) {
+    const btn = document.getElementById('toggle-wifi-btn');
+    const text = document.getElementById('toggle-wifi-text');
+    
+    if (btn && text) {
+      if (isEnabled) {
+        btn.className = 'btn btn-danger';
+        text.textContent = t('wifi.disable_wifi', 'Disable WiFi');
+      } else {
+        btn.className = 'btn btn-primary';
+        text.textContent = t('wifi.enable_wifi', 'Enable WiFi');
+      }
+    }
+  }
+  
+  // Load available networks
+  async function loadNetworks() {
+    const loadingEl = document.getElementById('networks-loading');
+    const emptyEl = document.getElementById('networks-empty');
+    const tableEl = document.getElementById('networks-table-container');
+    const tbody = document.getElementById('networksTable');
+    
+    if (loadingEl) loadingEl.style.display = 'block';
+    if (emptyEl) emptyEl.style.display = 'none';
+    if (tableEl) tableEl.style.display = 'none';
+    if (tbody) tbody.innerHTML = '';
+    
+    try {
+      const resp = await apiRequest('/api/v1/wifi/networks');
+      if (resp.ok) {
+        const networks = await resp.json();
+        
+        if (loadingEl) loadingEl.style.display = 'none';
+        
+        if (!networks || networks.length === 0) {
+          if (emptyEl) emptyEl.style.display = 'block';
+        } else {
+          if (tableEl) tableEl.style.display = 'block';
+          if (tbody) {
+            networks.forEach(function(network) {
+              const tr = document.createElement('tr');
+              const security = network.security || 'Open';
+              const securityColor = getSecurityColor(security);
+              tr.innerHTML = 
+                '<td><strong>' + (network.ssid || 'Unknown') + '</strong></td>' +
+                '<td><span class="badge bg-' + securityColor + '">' + security + '</span></td>' +
+                '<td>' + (network.signal || '--') + ' dBm</td>' +
+                '<td>' + (network.channel || '--') + '</td>' +
+                '<td><button class="btn btn-sm btn-outline-primary" onclick="connectToNetwork(\'' + (network.ssid || '').replace(/'/g, "\\'") + '\')"><i class="bi bi-wifi"></i> ' + t('wifi.connect', 'Connect') + '</button></td>';
+              tbody.appendChild(tr);
+            });
+          }
+        }
+      } else {
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (emptyEl) emptyEl.style.display = 'block';
+      }
+    } catch (e) {
+      console.error('Error loading networks:', e);
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'block';
+    }
+  }
+  
+  // Get security color
+  function getSecurityColor(security) {
+    const s = String(security || '').toLowerCase();
+    if (s === 'wpa3') return 'success';
+    if (s === 'wpa2') return 'primary';
+    if (s === 'wep') return 'warning';
+    if (s === 'open') return 'danger';
+    return 'secondary';
+  }
+  
+  // Toggle WiFi
+  async function toggleWiFi() {
+    try {
+      const resp = await apiRequest('/api/v1/wifi/toggle', { method: 'POST' });
+      const data = await resp.json();
+      
+      if (resp.ok && data.success) {
+        showAlert('success', t('messages.operation_successful', 'Operation successful'));
+        setTimeout(() => {
+          loadConnectionStatus();
+          loadNetworks();
+        }, 1000);
+      } else {
+        const errorMsg = data.error || t('errors.operation_failed', 'Operation failed');
+        showAlert('danger', errorMsg);
+      }
+    } catch (e) {
+      console.error('Error toggling WiFi:', e);
+      showAlert('danger', t('errors.network_error', 'Network error'));
+    }
+  }
+  
+  // Scan networks
+  async function scanNetworks() {
+    const btn = document.getElementById('scan-networks-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> ' + t('wifi.scanning', 'Scanning...');
+    }
+    
+    try {
+      const resp = await apiRequest('/api/v1/wifi/scan', { method: 'POST' });
+      if (resp.ok) {
+        showAlert('info', t('wifi.scanning_networks', 'Scanning networks...'));
+        setTimeout(() => {
+          loadNetworks();
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-search"></i> ' + t('wifi.scan_networks', 'Scan Networks');
+          }
+        }, 3000);
+      } else {
+        showAlert('danger', t('errors.operation_failed', 'Operation failed'));
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-search"></i> ' + t('wifi.scan_networks', 'Scan Networks');
+        }
+      }
+    } catch (e) {
+      console.error('Error scanning networks:', e);
+      showAlert('danger', t('errors.network_error', 'Network error'));
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-search"></i> ' + t('wifi.scan_networks', 'Scan Networks');
+      }
+    }
+  }
+  
+  // Connect to network
+  async function connectToNetwork(ssid) {
+    const password = prompt(t('wifi.enter_password', 'Enter password for') + ': ' + ssid + '\n' + t('wifi.password_optional', '(Leave empty for open networks)'));
+    if (password === null) return; // User cancelled
+    
+    try {
+      const resp = await apiRequest('/api/v1/wifi/connect', {
+        method: 'POST',
+        body: { ssid: ssid, password: password || '' }
+      });
+      
+      const data = await resp.json();
+      
+      if (resp.ok) {
+        showAlert('success', t('wifi.connecting', 'Connecting to') + ': ' + ssid);
+        setTimeout(() => {
+          loadConnectionStatus();
+          loadNetworks();
+        }, 2000);
+      } else {
+        const errorMsg = data.error || t('errors.connection_failed', 'Connection failed');
+        showAlert('danger', errorMsg);
+      }
+    } catch (e) {
+      console.error('Error connecting to network:', e);
+      showAlert('danger', t('errors.network_error', 'Network error'));
+    }
+  }
+  
+  // Refresh handlers
+  document.addEventListener('DOMContentLoaded', function() {
+    loadConnectionStatus();
+    loadNetworks();
+    
+    // Refresh connection status every 30 seconds
+    setInterval(loadConnectionStatus, 30000);
+    
+    // Refresh networks every 60 seconds
+    setInterval(loadNetworks, 60000);
+    
+    // Manual refresh buttons
+    const refreshConnection = document.getElementById('refresh-connection');
+    if (refreshConnection) {
+      refreshConnection.addEventListener('click', loadConnectionStatus);
+    }
+    
+    const refreshNetworks = document.getElementById('refresh-networks');
+    if (refreshNetworks) {
+      refreshNetworks.addEventListener('click', loadNetworks);
+    }
+  });
+  
+  // Export functions to window
+  window.toggleWiFi = toggleWiFi;
+  window.scanNetworks = scanNetworks;
+  window.connectToNetwork = connectToNetwork;
 })();
-
