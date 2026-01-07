@@ -540,37 +540,58 @@ func getSystemStats() fiber.Map {
 	
 	// Intentar obtener datos reales del sistema
 	// CPU usage - usar /proc/stat (más confiable)
-	if cpuOut, err := executeCommand("grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$3+$4+$5)} END {print usage}'"); err == nil && strings.TrimSpace(cpuOut) != "" {
+	cpuOut, cpuErr := executeCommand("grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$3+$4+$5)} END {print usage}'")
+	if cpuErr == nil && strings.TrimSpace(cpuOut) != "" {
 		// Normalizar: reemplazar coma por punto para locales que usan coma
 		cpuOut = strings.ReplaceAll(strings.TrimSpace(cpuOut), ",", ".")
 		if cpu, err := strconv.ParseFloat(cpuOut, 64); err == nil && cpu >= 0 && cpu <= 100 {
 			stats["cpu_usage"] = cpu
+			log.Printf("✅ CPU usage obtenido: %.2f%%", cpu)
+		} else {
+			log.Printf("⚠️  Error parseando CPU: %v, output: %s", err, cpuOut)
 		}
+	} else {
+		log.Printf("⚠️  Error ejecutando comando CPU: %v", cpuErr)
 	}
+	
 	// Fallback alternativo para CPU usando top
 	if stats["cpu_usage"] == 0.0 {
-		if cpuOut, err := executeCommand("top -bn1 | grep 'Cpu(s)' | awk -F'id,' '{split($1,a,\"%\"); for(i in a){if(a[i] ~ /^[0-9]/){print 100-a[i];break}}}'"); err == nil && strings.TrimSpace(cpuOut) != "" {
-			cpuOut = strings.ReplaceAll(strings.TrimSpace(cpuOut), ",", ".")
-			if cpu, err := strconv.ParseFloat(cpuOut, 64); err == nil && cpu >= 0 && cpu <= 100 {
+		cpuOut2, cpuErr2 := executeCommand("top -bn1 | grep 'Cpu(s)' | awk -F'id,' '{split($1,a,\"%\"); for(i in a){if(a[i] ~ /^[0-9]/){print 100-a[i];break}}}'")
+		if cpuErr2 == nil && strings.TrimSpace(cpuOut2) != "" {
+			cpuOut2 = strings.ReplaceAll(strings.TrimSpace(cpuOut2), ",", ".")
+			if cpu, err := strconv.ParseFloat(cpuOut2, 64); err == nil && cpu >= 0 && cpu <= 100 {
 				stats["cpu_usage"] = cpu
+				log.Printf("✅ CPU usage obtenido (fallback): %.2f%%", cpu)
 			}
 		}
 	}
 	
 	// Memory usage
-	if memOut, err := executeCommand("free | grep Mem | awk '{printf \"%.2f\", $3/$2 * 100.0}'"); err == nil && strings.TrimSpace(memOut) != "" {
+	memOut, memErr := executeCommand("free | grep Mem | awk '{printf \"%.2f\", $3/$2 * 100.0}'")
+	if memErr == nil && strings.TrimSpace(memOut) != "" {
 		// Normalizar: reemplazar coma por punto
 		memOut = strings.ReplaceAll(strings.TrimSpace(memOut), ",", ".")
 		if mem, err := strconv.ParseFloat(memOut, 64); err == nil && mem >= 0 && mem <= 100 {
 			stats["memory_usage"] = mem
+			log.Printf("✅ Memory usage obtenido: %.2f%%", mem)
+		} else {
+			log.Printf("⚠️  Error parseando Memory: %v, output: %s", err, memOut)
 		}
+	} else {
+		log.Printf("⚠️  Error ejecutando comando Memory: %v", memErr)
 	}
 	
 	// Disk usage - usar método más simple
-	if diskOut, err := executeCommand("df / | tail -1 | awk '{print $5}' | sed 's/%//'"); err == nil && strings.TrimSpace(diskOut) != "" {
+	diskOut, diskErr := executeCommand("df / | tail -1 | awk '{print $5}' | sed 's/%//'")
+	if diskErr == nil && strings.TrimSpace(diskOut) != "" {
 		if disk, err := strconv.ParseFloat(strings.TrimSpace(diskOut), 64); err == nil && disk >= 0 && disk <= 100 {
 			stats["disk_usage"] = disk
+			log.Printf("✅ Disk usage obtenido: %.2f%%", disk)
+		} else {
+			log.Printf("⚠️  Error parseando Disk: %v, output: %s", err, diskOut)
 		}
+	} else {
+		log.Printf("⚠️  Error ejecutando comando Disk: %v", diskErr)
 	}
 	
 	// Uptime
