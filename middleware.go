@@ -51,6 +51,11 @@ func requireAuth(c *fiber.Ctx) error {
 			return c.Next()
 		}
 	}
+	
+	// Debug: log temporal para ver qué path está recibiendo (solo para /api/v1/auth/login)
+	if strings.Contains(path, "/api/v1/auth/login") {
+		log.Printf("DEBUG requireAuth: path='%s', normalized='%s', method=%s", path, normalizedPath, c.Method())
+	}
 
 	var token string
 
