@@ -117,8 +117,8 @@ end
 
 -- Método 3: Fallback a iwlist si aún no hay redes
 if #result.networks == 0 then
-    log("INFO", "Intentando con iwlist")
-    local iwlist_cmd = "sudo iwlist wlan0 scan 2>&1 | grep -E 'ESSID|Quality|Encryption|Channel' | head -40"
+    log("INFO", "Intentando con iwlist en interfaz " .. interface)
+    local iwlist_cmd = "sudo iwlist " .. interface .. " scan 2>&1 | grep -E 'ESSID|Quality|Encryption|Channel' | head -40"
     local iwlist_output, iwlist_err = exec(iwlist_cmd)
     
     if not iwlist_err and iwlist_output and iwlist_output ~= "" then
