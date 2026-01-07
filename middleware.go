@@ -11,6 +11,13 @@ import (
 
 // requireAuth middleware que requiere autenticación
 func requireAuth(c *fiber.Ctx) error {
+	path := c.Path()
+	
+	// Debug: log para todas las rutas /api/v1/auth/login
+	if strings.Contains(path, "auth/login") {
+		log.Printf("DEBUG requireAuth ENTRADA: path='%s', method=%s, originalURL='%s'", path, c.Method(), c.OriginalURL())
+	}
+	
 	// Permitir preflight CORS sin autenticación
 	if c.Method() == fiber.MethodOptions {
 		return c.Next()
@@ -25,7 +32,6 @@ func requireAuth(c *fiber.Ctx) error {
 		"/health/live",
 	}
 
-	path := c.Path()
 	// Normalizar path para tolerar slash final
 	normalizedPath := strings.TrimRight(path, "/")
 	if normalizedPath == "" {
@@ -40,6 +46,9 @@ func requireAuth(c *fiber.Ctx) error {
 		// Comparación exacta (caso más común)
 		if path == publicPath || normalizedPath == normalizedPublicPath {
 			// Esta ruta es pública, permitir sin autenticación
+			if strings.Contains(path, "auth/login") {
+				log.Printf("DEBUG requireAuth: Ruta pública detectada (exacta), permitiendo acceso")
+			}
 			return c.Next()
 		}
 		
@@ -48,13 +57,16 @@ func requireAuth(c *fiber.Ctx) error {
 		if (publicPath != "/" && strings.HasPrefix(path, publicPath+"/")) ||
 			(normalizedPublicPath != "/" && strings.HasPrefix(normalizedPath, normalizedPublicPath+"/")) {
 			// Esta ruta es pública, permitir sin autenticación
+			if strings.Contains(path, "auth/login") {
+				log.Printf("DEBUG requireAuth: Ruta pública detectada (prefijo), permitiendo acceso")
+			}
 			return c.Next()
 		}
 	}
 	
-	// Debug: log temporal para ver qué path está recibiendo (solo para /api/v1/auth/login)
-	if strings.Contains(path, "/api/v1/auth/login") {
-		log.Printf("DEBUG requireAuth: path='%s', normalized='%s', method=%s", path, normalizedPath, c.Method())
+	// Debug: log si llegamos aquí y es una ruta de login
+	if strings.Contains(path, "auth/login") {
+		log.Printf("DEBUG requireAuth: Ruta NO detectada como pública, path='%s', normalized='%s'", path, normalizedPath)
 	}
 
 	var token string
