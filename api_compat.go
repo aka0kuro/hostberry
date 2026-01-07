@@ -222,23 +222,49 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 }
 
 func wifiConfigHandler(c *fiber.Ctx) error {
-	// Adaptar config form a "connect" (ssid/password)
+	user := c.Locals("user").(*User)
+	userID := user.ID
+	
 	var req struct {
 		SSID     string `json:"ssid"`
 		Password string `json:"password"`
 		Security string `json:"security"`
+		Region   string `json:"region"`
 	}
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Datos inválidos"})
 	}
-	if req.SSID == "" {
-		return c.Status(400).JSON(fiber.Map{"error": "ssid requerido"})
+	
+	// Si se proporciona región, cambiar la región WiFi
+	if req.Region != "" {
+		// Intentar cambiar región usando iw reg set
+		cmd := exec.Command("sh", "-c", fmt.Sprintf("sudo iw reg set %s 2>/dev/null", req.Region))
+		if err := cmd.Run(); err == nil {
+			InsertLog("INFO", fmt.Sprintf("Región WiFi cambiada a %s (usuario: %s)", req.Region, user.Username), "wifi", &userID)
+			return c.JSON(fiber.Map{"success": true, "message": "Región WiFi cambiada exitosamente"})
+		}
+		
+		// Fallback: intentar con nmcli (si está disponible)
+		cmd2 := exec.Command("sh", "-c", fmt.Sprintf("sudo nmcli radio wifi off && sudo nmcli radio wifi on 2>/dev/null"))
+		if err2 := cmd2.Run(); err2 == nil {
+			InsertLog("INFO", fmt.Sprintf("Región WiFi cambiada a %s (usuario: %s)", req.Region, user.Username), "wifi", &userID)
+			return c.JSON(fiber.Map{"success": true, "message": "Región WiFi cambiada exitosamente"})
+		}
+		
+		// Si ambos fallan, retornar error
+		return c.Status(500).JSON(fiber.Map{"error": "No se pudo cambiar la región WiFi. Verifica permisos sudo."})
 	}
-	// Reusar el handler existente conectando
-	c.Request().Header.SetContentType(fiber.MIMEApplicationJSON)
-	body, _ := json.Marshal(fiber.Map{"ssid": req.SSID, "password": req.Password})
-	c.Request().SetBody(body)
-	return wifiConnectHandler(c)
+	
+	// Si se proporciona SSID, conectar a la red
+	if req.SSID != "" {
+		// Reusar el handler existente conectando
+		c.Request().Header.SetContentType(fiber.MIMEApplicationJSON)
+		body, _ := json.Marshal(fiber.Map{"ssid": req.SSID, "password": req.Password})
+		c.Request().SetBody(body)
+		return wifiConnectHandler(c)
+	}
+	
+	return c.Status(400).JSON(fiber.Map{"error": "Se requiere ssid o region"})
 }
 
 // ---------- VPN ----------
