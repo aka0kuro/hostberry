@@ -73,8 +73,8 @@ end
 
 -- Método 2: Si nmcli no encontró redes, intentar con iw
 if #result.networks == 0 then
-    log("INFO", "Intentando con iw")
-    local iw_cmd = "sudo iw dev wlan0 scan 2>&1 | grep -E 'SSID|signal|freq' | head -30"
+    log("INFO", "Intentando con iw en interfaz " .. interface)
+    local iw_cmd = "sudo iw dev " .. interface .. " scan 2>&1 | grep -E 'SSID|signal|freq' | head -30"
     local iw_output, iw_err = exec(iw_cmd)
     
     if not iw_err and iw_output and iw_output ~= "" then
