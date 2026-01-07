@@ -463,6 +463,21 @@ func loginHandler(c *fiber.Ctx) error {
 
 func settingsHandler(c *fiber.Ctx) error {
 	configs, _ := GetAllConfigs()
+	
+	// Asegurar valores por defecto si no existen
+	if _, exists := configs["max_login_attempts"]; !exists || configs["max_login_attempts"] == "" {
+		configs["max_login_attempts"] = "3"
+	}
+	if _, exists := configs["session_timeout"]; !exists || configs["session_timeout"] == "" {
+		configs["session_timeout"] = "60"
+	}
+	if _, exists := configs["cache_enabled"]; !exists || configs["cache_enabled"] == "" {
+		configs["cache_enabled"] = "true"
+	}
+	if _, exists := configs["cache_size"]; !exists || configs["cache_size"] == "" {
+		configs["cache_size"] = "75"
+	}
+	
 	configsJSON, _ := json.Marshal(configs)
 	
 	return renderTemplate(c, "settings", fiber.Map{
