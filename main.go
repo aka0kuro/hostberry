@@ -305,7 +305,6 @@ func setupRoutes(app *fiber.App) {
 		protected.Get("/system", systemPageHandler)
 		protected.Get("/monitoring", monitoringPageHandler)
 		protected.Get("/update", updatePageHandler)
-		protected.Get("/about", aboutPageHandler)
 	}
 
 	// API v1
