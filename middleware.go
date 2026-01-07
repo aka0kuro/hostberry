@@ -133,11 +133,17 @@ func loggingMiddleware(c *fiber.Ctx) error {
 	// Log después de procesar
 	duration := time.Since(start)
 
+	// Omitir logs de archivos estáticos en el middleware personalizado también
+	path := c.Path()
+	if strings.HasPrefix(path, "/static/") {
+		return err
+	}
+
 	// Capturar valores del contexto ANTES de la goroutine
 	// (el contexto no es seguro para usar en goroutines)
 	method := c.Method()
-	path := c.Path()
 	ip := c.IP()
+	status := c.Response().StatusCode()
 
 	userID := c.Locals("user_id")
 	var userIDPtr *int
@@ -146,11 +152,29 @@ func loggingMiddleware(c *fiber.Ctx) error {
 		userIDPtr = &id
 	}
 
+	// Formato más legible para logs en BD
+	statusEmoji := "✅"
+	if status >= 400 && status < 500 {
+		statusEmoji = "⚠️"
+	} else if status >= 500 {
+		statusEmoji = "❌"
+	}
+
+	// Formatear duración de forma más legible
+	durationStr := duration.String()
+	if duration < time.Millisecond {
+		durationStr = fmt.Sprintf("%.0fµs", float64(duration.Nanoseconds())/1000)
+	} else if duration < time.Second {
+		durationStr = fmt.Sprintf("%.2fms", float64(duration.Nanoseconds())/1000000)
+	} else {
+		durationStr = fmt.Sprintf("%.2fs", duration.Seconds())
+	}
+
 	// Insertar log en BD (async, no bloquea)
 	go func() {
 		InsertLog(
 			"INFO",
-			method+" "+path+" - "+ip+" - "+duration.String(),
+			fmt.Sprintf("%s %s %s | %s | %s | %s", statusEmoji, method, path, ip, durationStr, fmt.Sprintf("HTTP %d", status)),
 			"http",
 			userIDPtr,
 		)
