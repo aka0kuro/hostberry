@@ -307,20 +307,20 @@
         </div>
 
         <!-- Configuración de Rendimiento -->
-        <div class="col-lg-6 col-md-12 settings-card">
+        <div class="col-lg-6 col-md-12 settings-card performance-settings-card">
             <div class="card h-100 glass-card border-0">
                 <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-center align-items-center">
                     <h5 class="card-title mb-0 fw-bold text-center d-flex align-items-center justify-content-center">
                         <i class="bi bi-speedometer2 me-2"></i>{{ call .t "settings.performance" "Performance" }}
                     </h5>
                 </div>
-                <div class="card-body px-4 pb-4">
-                    <form id="performanceConfigForm">
+                <div class="card-body px-4 pb-4 d-flex flex-column">
+                    <form id="performanceConfigForm" class="d-flex flex-column flex-grow-1">
                         <div class="mb-3">
                             <label class="form-label text-white">{{ call .t "settings.cache" "Cache" }}</label>
                             <div class="form-check form-switch">
                                 {{ $cache := index .settings "cache_enabled" }}
-                                <input class="form-check-input" type="checkbox" id="cache_enabled" name="cache_enabled" {{ if eq $cache "true" }}checked{{ end }}>
+                                <input class="form-check-input" type="checkbox" id="cache_enabled" name="cache_enabled" {{ if or (eq $cache "true") (not $cache) }}checked{{ end }}>
                                 <label class="form-check-label text-white" for="cache_enabled">
                                     {{ call .t "settings.enable_cache" "Enable cache" }}
                                 </label>
@@ -330,8 +330,8 @@
                         <div class="mb-3">
                             <label for="cache_size" class="form-label text-white">{{ call .t "settings.cache_size" "Cache Size" }}</label>
                             {{ $cache_size := index .settings "cache_size" }}
-                            <input type="number" class="form-control bg-dark text-white border-secondary" id="cache_size" name="cache_size" value="{{ if $cache_size }}{{ $cache_size }}{{ else }}50{{ end }}" min="10" max="500">
-                            <small class="text-white-50">{{ call .t "settings.mb" "MB" }}</small>
+                            <input type="number" class="form-control bg-dark text-white border-secondary text-center" id="cache_size" name="cache_size" value="{{ if $cache_size }}{{ $cache_size }}{{ else }}75{{ end }}" min="10" max="200">
+                            <small class="text-white-50">{{ call .t "settings.mb" "MB" }} ({{ call .t "settings.raspberry_pi_3_optimized" "Optimized for Raspberry Pi 3" }})</small>
                         </div>
                         
                         <div class="mb-3">
@@ -344,14 +344,14 @@
                                 </label>
                             </div>
                         </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle me-2"></i>
-                                {{ call .t "common.save" "Save" }}
-                            </button>
-                        </div>
                     </form>
+
+                    <div class="d-grid performance-save-wrapper">
+                        <button type="submit" class="btn btn-primary" form="performanceConfigForm">
+                            <i class="bi bi-check-circle me-2"></i>
+                            {{ call .t "common.save" "Save" }}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
