@@ -453,14 +453,28 @@ func systemStatsHandler(c *fiber.Ctx) error {
 		// Ejecutar script Lua para obtener estadísticas
 		result, err := luaEngine.Execute("system_stats.lua", nil)
 		if err != nil {
-			return c.Status(500).JSON(fiber.Map{
-				"error": err.Error(),
-			})
+			log.Printf("⚠️  Error ejecutando script Lua, usando fallback: %v", err)
+			// Fallback a Go puro si Lua falla
+			stats := getSystemStats()
+			return c.JSON(stats)
+		}
+		// Verificar que el resultado tenga datos válidos
+		if result != nil {
+			// Si todos los valores son 0, usar fallback
+			cpu, _ := result["cpu_usage"].(float64)
+			mem, _ := result["memory_usage"].(float64)
+			disk, _ := result["disk_usage"].(float64)
+			if cpu == 0.0 && mem == 0.0 && disk == 0.0 {
+				log.Printf("⚠️  Script Lua devolvió valores en 0, usando fallback")
+				stats := getSystemStats()
+				return c.JSON(stats)
+			}
 		}
 		return c.JSON(result)
 	}
 
 	// Fallback a Go puro si Lua no está disponible
+	log.Printf("ℹ️  Motor Lua no disponible, usando fallback")
 	stats := getSystemStats()
 	return c.JSON(stats)
 }
