@@ -331,7 +331,12 @@ func setupRoutes(app *fiber.App) {
 		wireguard := api.Group("/wireguard", requireAuth)
 		{
 			wireguard.Get("/status", wireguardStatusHandler)
+			wireguard.Get("/interfaces", wireguardInterfacesHandler)
+			wireguard.Get("/peers", wireguardPeersHandler)
+			wireguard.Get("/config", wireguardGetConfigHandler)
 			wireguard.Post("/config", wireguardConfigHandler)
+			wireguard.Post("/toggle", wireguardToggleHandler)
+			wireguard.Post("/restart", wireguardRestartHandler)
 		}
 
 		// AdBlock
