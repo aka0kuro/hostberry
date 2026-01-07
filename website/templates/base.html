@@ -1,4 +1,3 @@
-{{ define "base.html" }}
 <!DOCTYPE html>
 <html lang="{{ .language }}">
 <head>
@@ -33,10 +32,19 @@
         }
     </style>
     
-    {{ block "extra_css" . }}{{ end }}
+    <!-- Cargamos CSS de todas las páginas para simplificar -->
+    <link href="/static/css/custom.css" rel="stylesheet">
+    <link href="/static/css/login.css" rel="stylesheet">
+    <link href="/static/css/first_login.css" rel="stylesheet">
+    <link href="/static/css/wifi_scan.css" rel="stylesheet">
+    <link href="/static/css/about.css" rel="stylesheet">
+
+    <!-- JS base (defer): asegura que el DOM (incl. i18n-json) esté parseado antes de ejecutar -->
+    <script defer src="/static/js/common.js"></script>
+    <script defer src="/static/js/theme.js"></script>
 </head>
 <body>
-    {{ block "navbar" . }}
+    {{ if ne .page "login" }}
     <nav class="navbar navbar-expand-lg navbar-dark glass-navbar sticky-top mb-4">
         <div class="container-fluid px-4">
             <button class="navbar-toggler border-0 me-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -126,7 +134,7 @@
     <button id="theme-toggle" class="theme-toggle" type="button" title="{{ call .t "common.change_theme" "Change theme" }}" aria-label="{{ call .t "common.change_theme" "Change theme" }}" onclick="toggleTheme()"></button>
 
     <div class="container-fluid mt-4">
-        {{ block "content" . }}{{ end }}
+        {{embed}}
     </div>
 
     {{ if .translations }}
@@ -140,8 +148,7 @@
     </script>
     {{ end }}
 
-    <script src="/static/js/common.js"></script>
-    <script src="/static/js/theme.js"></script>
+    <!-- common.js/theme.js ahora cargan en <head> con defer -->
     
     <!-- Auto-refresh global cada 60 segundos -->
     <script>
@@ -200,7 +207,5 @@
     })();
     </script>
     
-    {{ block "extra_js" . }}{{ end }}
 </body>
 </html>
-{{ end }}
