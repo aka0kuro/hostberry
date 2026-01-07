@@ -253,6 +253,8 @@
     const wifiStatusTextEl = document.getElementById('wifiStatusText');
     const wifiStatusTextCardEl = document.getElementById('wifiStatusTextCard');
     const alertEl = document.getElementById('wifiStatusAlert');
+    const enableWifiBtnTopContainer = document.getElementById('enableWifiBtnTopContainer');
+    const enableWifiBtnInline = document.getElementById('enableWifiBtnInline');
 
     function setText(el, txt){ if(el) el.textContent = txt; }
     function swapAlert(kind, text){ 
@@ -265,6 +267,15 @@
         const inline = alertEl.querySelector('#wifiStatusTextInline'); 
         if(inline) inline.textContent = text; 
       } 
+    }
+
+    // Mostrar/ocultar botones de habilitar WiFi
+    if(!isEnabled || isBlocked){
+      if(enableWifiBtnTopContainer) enableWifiBtnTopContainer.style.display = 'block';
+      if(enableWifiBtnInline) enableWifiBtnInline.classList.remove('d-none');
+    } else {
+      if(enableWifiBtnTopContainer) enableWifiBtnTopContainer.style.display = 'none';
+      if(enableWifiBtnInline) enableWifiBtnInline.classList.add('d-none');
     }
 
     let text = t('wifi.enabled', 'Enabled'), cls = 'text-info';
