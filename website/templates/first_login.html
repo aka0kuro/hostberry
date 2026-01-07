@@ -47,9 +47,22 @@
             {{ if eq .language "es" }}ES{{ else }}EN{{ end }}
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
-            <li><a class="dropdown-item" href="/first-login?lang=es">🇪🇸 Español</a></li>
-            <li><a class="dropdown-item" href="/first-login?lang=en">🇺🇸 English</a></li>
+            <li><a class="dropdown-item" href="/first-login?lang=es" onclick="setLanguageCookie('es')">🇪🇸 Español</a></li>
+            <li><a class="dropdown-item" href="/first-login?lang=en" onclick="setLanguageCookie('en')">🇺🇸 English</a></li>
         </ul>
+    </div>
+    
+    <script>
+    // Función para guardar el idioma en cookie
+    function setLanguageCookie(lang) {
+        // Guardar en cookie con expiración de 1 año
+        const expires = new Date();
+        expires.setFullYear(expires.getFullYear() + 1);
+        document.cookie = `lang=${lang}; path=/; expires=${expires.toUTCString()}; SameSite=Lax`;
+        // También guardar en localStorage como respaldo
+        localStorage.setItem('language', lang);
+    }
+    </script>
     </div>
     
     <!-- Botón flotante de cambio de tema -->
