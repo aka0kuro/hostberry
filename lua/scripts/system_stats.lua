@@ -3,12 +3,17 @@
 
 local result = {}
 
+-- Función auxiliar para normalizar números (reemplazar coma por punto)
+local function normalize_number(str)
+    if not str then return nil end
+    return str:gsub(",", ".")
+end
+
 -- Obtener uso de CPU usando /proc/stat (más confiable y no depende de locale)
 local cpu_cmd = "grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$3+$4+$5)} END {print usage}'"
 local cpu_output, cpu_err = exec(cpu_cmd)
-if cpu_output and cpu_output ~= "" and (cpu_err == nil or cpu_err == "") then
-    -- Reemplazar coma por punto para locales que usan coma como decimal
-    cpu_output = cpu_output:gsub(",", ".")
+if cpu_output and cpu_output ~= "" and not cpu_err then
+    cpu_output = normalize_number(cpu_output)
     local cpu_val = tonumber(cpu_output)
     if cpu_val and cpu_val >= 0 and cpu_val <= 100 then
         result.cpu_usage = cpu_val
@@ -19,8 +24,8 @@ else
     -- Fallback: usar top
     local cpu_cmd2 = "top -bn1 | grep 'Cpu(s)' | awk -F'id,' '{split($1,a,\"%\"); for(i in a){if(a[i] ~ /^[0-9]/){print 100-a[i];break}}}'"
     local cpu_output2, cpu_err2 = exec(cpu_cmd2)
-    if cpu_output2 and cpu_output2 ~= "" and (cpu_err2 == nil or cpu_err2 == "") then
-        cpu_output2 = cpu_output2:gsub(",", ".")
+    if cpu_output2 and cpu_output2 ~= "" and not cpu_err2 then
+        cpu_output2 = normalize_number(cpu_output2)
         local cpu_val2 = tonumber(cpu_output2)
         if cpu_val2 and cpu_val2 >= 0 and cpu_val2 <= 100 then
             result.cpu_usage = cpu_val2
@@ -35,9 +40,8 @@ end
 -- Obtener uso de memoria usando free (método simple)
 local mem_cmd = "free | grep Mem | awk '{printf \"%.2f\", $3/$2 * 100.0}'"
 local mem_output, mem_err = exec(mem_cmd)
-if mem_output and mem_output ~= "" and (mem_err == nil or mem_err == "") then
-    -- Reemplazar coma por punto para locales que usan coma como decimal
-    mem_output = mem_output:gsub(",", ".")
+if mem_output and mem_output ~= "" and not mem_err then
+    mem_output = normalize_number(mem_output)
     local mem_val = tonumber(mem_output)
     if mem_val and mem_val >= 0 and mem_val <= 100 then
         result.memory_usage = mem_val
@@ -51,7 +55,7 @@ end
 -- Obtener uso de disco usando df (método simple)
 local disk_cmd = "df / | tail -1 | awk '{print $5}' | sed 's/%//'"
 local disk_output, disk_err = exec(disk_cmd)
-if disk_output and disk_output ~= "" and (disk_err == nil or disk_err == "") then
+if disk_output and disk_output ~= "" and not disk_err then
     local disk_val = tonumber(disk_output)
     if disk_val and disk_val >= 0 and disk_val <= 100 then
         result.disk_usage = disk_val
