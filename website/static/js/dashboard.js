@@ -51,39 +51,76 @@
 
     async function fetchDashboardData() {
         try {
-            const resp = await (window.HostBerry && window.HostBerry.apiRequest ? window.HostBerry.apiRequest('/api/v1/system/stats') : fetch('/api/v1/system/stats'));
-            if (!resp.ok) throw new Error('Stats request failed');
+            const apiRequestFn = window.HostBerry && window.HostBerry.apiRequest 
+                ? window.HostBerry.apiRequest 
+                : async function(url) {
+                    const token = localStorage.getItem('access_token');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) {
+                        headers['Authorization'] = 'Bearer ' + token;
+                    }
+                    return fetch(url, { headers: headers });
+                };
+            
+            const resp = await apiRequestFn('/api/v1/system/stats');
+            
+            if (!resp.ok) {
+                console.error('Stats request failed:', resp.status, resp.statusText);
+                throw new Error('Stats request failed: ' + resp.status);
+            }
+            
             const payload = await resp.json();
-            const stats = payload.data || payload;
+            console.log('Dashboard stats response:', payload);
+            
+            // Manejar diferentes formatos de respuesta
+            let stats = payload;
+            if (payload.data) {
+                stats = payload.data;
+            } else if (payload.stats) {
+                stats = payload.stats;
+            }
 
-            // CPU
-            const cpuUsage = stats.cpu_usage || 0;
+            // CPU - intentar diferentes nombres de campo
+            const cpuUsage = stats.cpu_usage || stats.cpu_percent || stats.cpu || 0;
             setText('stat-cpu', cpuUsage.toFixed(1) + '%');
             setProgress('stat-cpu-bar', cpuUsage);
             updateHealth('cpu', cpuUsage, { warning: 70, critical: 90 });
 
-            // Memory
-            const memUsage = stats.memory_usage || 0;
+            // Memory - intentar diferentes nombres de campo
+            const memUsage = stats.memory_usage || stats.memory_percent || stats.memory || 0;
             setText('stat-memory', memUsage.toFixed(1) + '%');
             setProgress('stat-memory-bar', memUsage);
             updateHealth('memory', memUsage, { warning: 75, critical: 90 });
 
-            // Disk
-            const diskUsage = stats.disk_usage || 0;
+            // Disk - intentar diferentes nombres de campo
+            const diskUsage = stats.disk_usage || stats.disk_percent || stats.disk || 0;
             setText('stat-disk', diskUsage.toFixed(1) + '%');
             setProgress('stat-disk-bar', diskUsage);
             updateHealth('disk', diskUsage, { warning: 80, critical: 95 });
 
-            // System Info
-            setText('info-hostname', stats.hostname || '--');
-            setText('info-os', stats.os_version || '--');
-            setText('info-kernel', stats.kernel_version || '--');
-            setText('info-arch', stats.architecture || '--');
-            setText('info-uptime', formatUptime(stats.uptime || 0));
-            setText('info-cores', stats.cpu_cores || '--');
+            // Network status
+            const networkStatus = stats.network_status || 'Online';
+            setText('stat-network', networkStatus);
+            const networkBadge = document.getElementById('stat-network-badge');
+            if (networkBadge) {
+                networkBadge.textContent = networkStatus;
+                networkBadge.className = 'badge bg-success';
+            }
+
+            // System Info - intentar diferentes nombres de campo
+            setText('info-hostname', stats.hostname || stats.host_name || '--');
+            setText('info-os', stats.os_version || stats.os || '--');
+            setText('info-kernel', stats.kernel_version || stats.kernel || '--');
+            setText('info-arch', stats.architecture || stats.arch || '--');
+            setText('info-uptime', formatUptime(stats.uptime || stats.uptime_seconds || 0));
+            setText('info-cores', stats.cpu_cores || stats.cores || stats.cpu_count || '--');
 
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
+            // Mostrar mensaje de error al usuario
+            if (window.HostBerry && window.HostBerry.showAlert) {
+                window.HostBerry.showAlert('warning', 'Unable to load dashboard data. Please refresh the page.');
+            }
         }
     }
 
