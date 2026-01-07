@@ -116,13 +116,14 @@
             setProgress('stat-disk-bar', diskUsage);
             updateHealth('disk', diskUsage, { warning: 80, critical: 95 });
 
-            // Network status
-            const networkStatus = stats.network_status || 'Online';
-            setText('stat-network', networkStatus);
-            const networkBadge = document.getElementById('stat-network-badge');
-            if (networkBadge) {
-                networkBadge.textContent = networkStatus;
-                networkBadge.className = 'badge bg-success';
+            // Uptime
+            const uptimeSeconds = info.uptime_seconds || stats.uptime || stats.uptime_seconds || 0;
+            const uptimeFormatted = formatUptime(uptimeSeconds);
+            setText('stat-uptime', uptimeFormatted);
+            const uptimeBadge = document.getElementById('stat-uptime-badge');
+            if (uptimeBadge) {
+                uptimeBadge.textContent = 'Running';
+                uptimeBadge.className = 'badge bg-success';
             }
 
             // System Info - combinar datos de stats e info
