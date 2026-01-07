@@ -29,7 +29,7 @@
                 </h5>
             </div>
                 <div class="card-body px-4 pb-4">
-                <form id="profileForm">
+                <form id="profileForm" action="/api/v1/auth/profile" method="POST">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                                 <label for="username" class="form-label text-white">{{ call .t "auth.username" "Username" }}</label>
@@ -86,7 +86,7 @@
                 </h5>
             </div>
                 <div class="card-body px-4 pb-4">
-                <form id="passwordForm">
+                <form id="passwordForm" action="/api/v1/auth/change-password" method="POST">
                     <div class="mb-3">
                             <label for="current_password" class="form-label text-white">{{ call .t "auth.current_password" "Current Password" }}</label>
                             <input type="password" class="form-control bg-dark text-white border-secondary text-center" id="current_password" name="current_password" required>
@@ -190,7 +190,7 @@
                 </h5>
             </div>
                 <div class="card-body px-4 pb-4">
-                <form id="notificationForm">
+                <form id="notificationForm" action="/api/v1/auth/preferences" method="POST">
                     <div class="mb-3">
                             <label class="form-label text-white">{{ call .t "profile.email_notifications" "Email Notifications" }}</label>
                             <div class="form-check form-switch">
@@ -241,7 +241,7 @@
                 </h5>
             </div>
                 <div class="card-body px-4 pb-4">
-                <form id="privacyForm">
+                <form id="privacyForm" action="/api/v1/auth/preferences" method="POST">
                     <div class="mb-3">
                             <label class="form-label text-white">{{ call .t "profile.show_activity" "Show Activity" }}</label>
                             <div class="form-check form-switch">
