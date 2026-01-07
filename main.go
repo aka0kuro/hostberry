@@ -291,6 +291,7 @@ func setupRoutes(app *fiber.App) {
 			auth.Post("/logout", requireAuth, logoutAPIHandler)
 			auth.Get("/me", requireAuth, meHandler)
 			auth.Post("/change-password", requireAuth, changePasswordAPIHandler)
+			auth.Post("/first-login/change", firstLoginChangeAPIHandler)
 			auth.Post("/profile", requireAuth, updateProfileAPIHandler)
 			auth.Post("/preferences", requireAuth, updatePreferencesAPIHandler)
 		}
