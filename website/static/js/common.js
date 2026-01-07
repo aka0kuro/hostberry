@@ -70,10 +70,19 @@
   document.addEventListener('click', function(e){
     const toggle = e.target.closest('.dropdown-toggle');
     const inDropdown = e.target.closest('.dropdown');
+    const isDropdownItem = e.target.closest('.dropdown-item');
+    
+    // Si se hace clic en un item del dropdown, no cerrar el dropdown
+    if(isDropdownItem && !isDropdownItem.hasAttribute('data-action')){
+      return;
+    }
+    
     document.querySelectorAll('.dropdown').forEach(function(d){
       if(!inDropdown || d !== inDropdown) d.classList.remove('show');
     });
     if(toggle){
+      e.preventDefault();
+      e.stopPropagation();
       const dd = toggle.closest('.dropdown');
       if(dd) dd.classList.toggle('show');
     }
