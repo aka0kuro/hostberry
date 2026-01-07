@@ -293,12 +293,37 @@
     gap: 1rem;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
+    color: var(--hb-text-light);
 }
 
 .stat-card:hover {
     background: rgba(255, 255, 255, 0.08);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Ajustes para tema claro */
+body.light-theme .stat-card {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #212529;
+}
+
+body.light-theme .dashboard-card {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #212529;
+}
+
+body.light-theme .action-btn {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #212529;
+}
+
+body.light-theme .action-btn:hover {
+    background: rgba(255, 255, 255, 0.95);
+    color: #212529;
 }
 
 .stat-icon {
