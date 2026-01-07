@@ -43,7 +43,7 @@
     
     <!-- Selector de idioma -->
     <div class="dropdown lang-dropdown">
-        <button class="btn lang-toggle dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <button class="btn lang-toggle dropdown-toggle" type="button" onclick="event.preventDefault(); event.stopPropagation(); this.closest('.dropdown').classList.toggle('show');" aria-expanded="false">
             {{ if eq .language "es" }}ES{{ else }}EN{{ end }}
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
