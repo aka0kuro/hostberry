@@ -1,0 +1,704 @@
+<div class="dashboard-page">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="header-title-section">
+                <h1 class="dashboard-title">
+                    <i class="bi bi-speedometer2 me-2"></i>
+                    {{ call .t "dashboard.title" "Control Panel" }}
+                </h1>
+                <p class="dashboard-subtitle">{{ call .t "dashboard.welcome" "Welcome to HostBerry" }}</p>
+            </div>
+            <div class="header-time">
+                <i class="bi bi-clock me-1"></i>
+                <span id="dashboard-time">--:--:--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="row quick-stats-row mb-4">
+        <div class="col-12 col-md-6 col-lg-3 mb-3">
+            <div class="stat-card cpu-stat">
+                <div class="stat-icon">
+                    <i class="bi bi-cpu"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">{{ call .t "dashboard.cpu" "CPU" }}</div>
+                    <div class="stat-value" id="stat-cpu">--%</div>
+                    <div class="stat-progress">
+                        <div class="stat-progress-bar" id="stat-cpu-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3 mb-3">
+            <div class="stat-card memory-stat">
+                <div class="stat-icon">
+                    <i class="bi bi-memory"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">{{ call .t "dashboard.memory" "Memory" }}</div>
+                    <div class="stat-value" id="stat-memory">--%</div>
+                    <div class="stat-progress">
+                        <div class="stat-progress-bar" id="stat-memory-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3 mb-3">
+            <div class="stat-card disk-stat">
+                <div class="stat-icon">
+                    <i class="bi bi-hdd"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">{{ call .t "dashboard.storage" "Storage" }}</div>
+                    <div class="stat-value" id="stat-disk">--%</div>
+                    <div class="stat-progress">
+                        <div class="stat-progress-bar" id="stat-disk-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3 mb-3">
+            <div class="stat-card network-stat">
+                <div class="stat-icon">
+                    <i class="bi bi-wifi"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">{{ call .t "dashboard.network" "Network" }}</div>
+                    <div class="stat-value" id="stat-network">--</div>
+                    <div class="stat-status">
+                        <span class="badge bg-success" id="stat-network-badge">Online</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="row dashboard-grid">
+        <!-- System Information -->
+        <div class="col-12 col-lg-6 mb-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-info-circle me-2"></i>
+                        {{ call .t "dashboard.system_info" "System Information" }}
+                    </h5>
+                    <button class="btn btn-sm btn-outline-light" id="refresh-system-info">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="info-grid" id="system-info-grid">
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "dashboard.hostname" "Hostname" }}</span>
+                            <span class="info-value" id="info-hostname">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "dashboard.os_version" "OS Version" }}</span>
+                            <span class="info-value" id="info-os">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "dashboard.kernel_version" "Kernel" }}</span>
+                            <span class="info-value" id="info-kernel">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "dashboard.architecture" "Architecture" }}</span>
+                            <span class="info-value" id="info-arch">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "dashboard.uptime" "Uptime" }}</span>
+                            <span class="info-value" id="info-uptime">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "dashboard.cpu_cores" "CPU Cores" }}</span>
+                            <span class="info-value" id="info-cores">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-12 col-lg-6 mb-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-lightning me-2"></i>
+                        {{ call .t "dashboard.quick_actions" "Quick Actions" }}
+                    </h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="actions-grid">
+                        <a href="/network" class="action-btn">
+                            <i class="bi bi-ethernet"></i>
+                            <span>{{ call .t "navigation.network" "Network" }}</span>
+                        </a>
+                        <a href="/wifi" class="action-btn">
+                            <i class="bi bi-wifi"></i>
+                            <span>{{ call .t "navigation.wifi" "WiFi" }}</span>
+                        </a>
+                        <a href="/vpn" class="action-btn">
+                            <i class="bi bi-shield-lock"></i>
+                            <span>{{ call .t "navigation.vpn" "VPN" }}</span>
+                        </a>
+                        <a href="/settings" class="action-btn">
+                            <i class="bi bi-gear"></i>
+                            <span>{{ call .t "navigation.settings" "Settings" }}</span>
+                        </a>
+                        <a href="/monitoring" class="action-btn">
+                            <i class="bi bi-activity"></i>
+                            <span>{{ call .t "navigation.monitoring" "Monitoring" }}</span>
+                        </a>
+                        <a href="/system" class="action-btn">
+                            <i class="bi bi-server"></i>
+                            <span>{{ call .t "navigation.system" "System" }}</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-12 col-lg-8 mb-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-clock-history me-2"></i>
+                        {{ call .t "dashboard.recent_activity" "Recent Activity" }}
+                    </h5>
+                    <button class="btn btn-sm btn-outline-light" id="refresh-activity">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="activity-list" id="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="bi bi-arrow-clockwise spinning"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-text">{{ call .t "common.loading" "Loading..." }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Health -->
+        <div class="col-12 col-lg-4 mb-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-heart-pulse me-2"></i>
+                        {{ call .t "dashboard.system_health" "System Health" }}
+                    </h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="health-status" id="health-status">
+                        <div class="health-item">
+                            <div class="health-label">{{ call .t "dashboard.cpu" "CPU" }}</div>
+                            <div class="health-indicator">
+                                <span class="health-dot" id="health-cpu"></span>
+                                <span class="health-text" id="health-cpu-text">--</span>
+                            </div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-label">{{ call .t "dashboard.memory" "Memory" }}</div>
+                            <div class="health-indicator">
+                                <span class="health-dot" id="health-memory"></span>
+                                <span class="health-text" id="health-memory-text">--</span>
+                            </div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-label">{{ call .t "dashboard.storage" "Storage" }}</div>
+                            <div class="health-indicator">
+                                <span class="health-dot" id="health-disk"></span>
+                                <span class="health-text" id="health-disk-text">--</span>
+                            </div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-label">{{ call .t "dashboard.network" "Network" }}</div>
+                            <div class="health-indicator">
+                                <span class="health-dot health-dot-success"></span>
+                                <span class="health-text">{{ call .t "dashboard.healthy" "Healthy" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard-page {
+    padding: 0;
+}
+
+.dashboard-header {
+    margin-bottom: 2rem;
+    padding: 1.5rem 0;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.dashboard-title {
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--hb-text-light);
+    display: flex;
+    align-items: center;
+}
+
+.dashboard-subtitle {
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0.5rem 0 0 0;
+    font-size: 1rem;
+}
+
+.header-time {
+    display: flex;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+}
+
+.quick-stats-row {
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.stat-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    opacity: 0.8;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--hb-text-light);
+    margin-bottom: 0.5rem;
+}
+
+.stat-progress {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.stat-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--hb-primary), var(--hb-primary-dark));
+    transition: width 0.3s ease;
+}
+
+.stat-status {
+    margin-top: 0.5rem;
+}
+
+.dashboard-grid {
+    gap: 1.5rem;
+}
+
+.dashboard-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dashboard-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--hb-text-light);
+    display: flex;
+    align-items: center;
+}
+
+.dashboard-card-body {
+    padding: 1.5rem;
+    flex: 1;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.info-label {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.info-value {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--hb-text-light);
+}
+
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+}
+
+.action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.5rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--hb-text-light);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    color: var(--hb-text-light);
+}
+
+.action-btn i {
+    font-size: 1.75rem;
+}
+
+.action-btn span {
+    font-size: 0.875rem;
+}
+
+.activity-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    font-size: 1.25rem;
+    opacity: 0.7;
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-text {
+    color: var(--hb-text-light);
+    font-size: 0.875rem;
+}
+
+.activity-time {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.health-status {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.health-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.health-item:last-child {
+    border-bottom: none;
+}
+
+.health-label {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.health-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.health-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--hb-text-muted);
+}
+
+.health-dot-success {
+    background: #28a745;
+}
+
+.health-dot-warning {
+    background: #ffc107;
+}
+
+.health-dot-danger {
+    background: #dc3545;
+}
+
+.health-text {
+    font-size: 0.875rem;
+    color: var(--hb-text-light);
+}
+
+.spinning {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .dashboard-title {
+        font-size: 1.5rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+}
+</style>
+
+<script>
+(function() {
+    const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+    };
+
+    const setProgress = (id, percent) => {
+        const bar = document.getElementById(id);
+        if (bar && Number.isFinite(percent)) {
+            const clamped = Math.min(100, Math.max(0, percent));
+            bar.style.width = `${clamped}%`;
+        }
+    };
+
+    const formatUptime = (seconds) => {
+        if (!Number.isFinite(seconds) || seconds < 0) return '--';
+        const days = Math.floor(seconds / 86400);
+        const hours = Math.floor((seconds % 86400) / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        if (days > 0) return `${days}d ${hours}h`;
+        if (hours > 0) return `${hours}h ${minutes}m`;
+        return `${minutes}m`;
+    };
+
+    const updateTime = () => {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString();
+        setText('dashboard-time', timeStr);
+    };
+
+    const updateHealth = (type, value, thresholds) => {
+        const dot = document.getElementById(`health-${type}`);
+        const text = document.getElementById(`health-${type}-text`);
+        if (!dot || !text) return;
+
+        let status = 'healthy';
+        let statusText = HostBerry.t?.('dashboard.healthy', 'Healthy') || 'Healthy';
+        
+        if (value >= thresholds.critical) {
+            status = 'danger';
+            statusText = HostBerry.t?.('dashboard.critical', 'Critical') || 'Critical';
+        } else if (value >= thresholds.warning) {
+            status = 'warning';
+            statusText = HostBerry.t?.('dashboard.warning', 'Warning') || 'Warning';
+        }
+
+        dot.className = `health-dot health-dot-${status}`;
+        text.textContent = statusText;
+    };
+
+    async function fetchDashboardData() {
+        try {
+            const resp = await HostBerry.apiRequest('/api/v1/system/stats');
+            if (!resp.ok) throw new Error('Stats request failed');
+            const payload = await resp.json();
+            const stats = payload.data || payload;
+
+            // CPU
+            const cpuUsage = stats.cpu_usage || 0;
+            setText('stat-cpu', `${cpuUsage.toFixed(1)}%`);
+            setProgress('stat-cpu-bar', cpuUsage);
+            updateHealth('cpu', cpuUsage, { warning: 70, critical: 90 });
+
+            // Memory
+            const memUsage = stats.memory_usage || 0;
+            setText('stat-memory', `${memUsage.toFixed(1)}%`);
+            setProgress('stat-memory-bar', memUsage);
+            updateHealth('memory', memUsage, { warning: 75, critical: 90 });
+
+            // Disk
+            const diskUsage = stats.disk_usage || 0;
+            setText('stat-disk', `${diskUsage.toFixed(1)}%`);
+            setProgress('stat-disk-bar', diskUsage);
+            updateHealth('disk', diskUsage, { warning: 80, critical: 95 });
+
+            // System Info
+            setText('info-hostname', stats.hostname || '--');
+            setText('info-os', stats.os_version || '--');
+            setText('info-kernel', stats.kernel_version || '--');
+            setText('info-arch', stats.architecture || '--');
+            setText('info-uptime', formatUptime(stats.uptime || 0));
+            setText('info-cores', stats.cpu_cores || '--');
+
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+        }
+    }
+
+    async function loadActivity() {
+        const container = document.getElementById('activity-list');
+        if (!container) return;
+        
+        try {
+            const resp = await HostBerry.apiRequest('/api/v1/system/activity?limit=10');
+            if (!resp.ok) throw new Error('Activity request failed');
+            const payload = await resp.json();
+            const activities = payload.activities || payload.data || [];
+
+            if (!activities.length) {
+                container.innerHTML = `
+                    <div class="activity-item">
+                        <div class="activity-content">
+                            <div class="activity-text">${HostBerry.t?.('dashboard.no_activity', 'No recent activity') || 'No recent activity'}</div>
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            activities.forEach(activity => {
+                const item = document.createElement('div');
+                item.className = 'activity-item';
+                const icon = activity.type === 'error' ? 'bi-exclamation-triangle' : 
+                           activity.type === 'warning' ? 'bi-exclamation-circle' : 'bi-check-circle';
+                const time = activity.timestamp ? new Date(activity.timestamp).toLocaleString() : '';
+                item.innerHTML = `
+                    <div class="activity-icon">
+                        <i class="bi ${icon}"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-text">${activity.message || activity.description || ''}</div>
+                        ${time ? `<div class="activity-time">${time}</div>` : ''}
+                    </div>`;
+                container.appendChild(item);
+            });
+        } catch (error) {
+            console.error('Error loading activity:', error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        fetchDashboardData();
+        loadActivity();
+        
+        document.getElementById('refresh-system-info')?.addEventListener('click', fetchDashboardData);
+        document.getElementById('refresh-activity')?.addEventListener('click', loadActivity);
+        
+        setInterval(fetchDashboardData, 30000);
+        setInterval(loadActivity, 60000);
+    });
+})();
+</script>
