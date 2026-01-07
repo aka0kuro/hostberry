@@ -853,11 +853,55 @@ func systemLogsHandler(c *fiber.Ctx) error {
 
 // Funciones auxiliares
 func getSystemInfo() fiber.Map {
-	return fiber.Map{
+	info := fiber.Map{
 		"hostname":      "unknown",
 		"os_version":    "Linux",
-		"kernel":        "unknown",
+		"kernel_version": "unknown",
 		"architecture":  "unknown",
 		"processor":     "unknown",
+		"uptime_seconds": 0,
 	}
+	
+	// Intentar obtener datos reales del sistema
+	if hostname, err := executeCommand("hostname"); err == nil && hostname != "" {
+		info["hostname"] = hostname
+	}
+	
+	if kernel, err := executeCommand("uname -r"); err == nil && kernel != "" {
+		info["kernel_version"] = kernel
+	}
+	
+	if arch, err := executeCommand("uname -m"); err == nil && arch != "" {
+		info["architecture"] = arch
+	}
+	
+	// Obtener procesador
+	processorCmd := "cat /proc/cpuinfo | grep -m1 'model name\\|Processor\\|Hardware' | cut -d ':' -f 2 | sed 's/^[[:space:]]*//'"
+	if processor, err := executeCommand(processorCmd); err == nil && processor != "" {
+		info["processor"] = processor
+	}
+	
+	// Obtener OS version
+	if osRelease, err := os.ReadFile("/etc/os-release"); err == nil {
+		lines := strings.Split(string(osRelease), "\n")
+		for _, line := range lines {
+			if strings.HasPrefix(line, "PRETTY_NAME=") {
+				osVersion := strings.TrimPrefix(line, "PRETTY_NAME=")
+				osVersion = strings.Trim(osVersion, "\"")
+				if osVersion != "" {
+					info["os_version"] = osVersion
+				}
+				break
+			}
+		}
+	}
+	
+	// Obtener uptime
+	if uptimeOut, err := executeCommand("cat /proc/uptime | awk '{print int($1)}'"); err == nil {
+		if uptime, err := strconv.Atoi(strings.TrimSpace(uptimeOut)); err == nil {
+			info["uptime_seconds"] = uptime
+		}
+	}
+	
+	return info
 }
