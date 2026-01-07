@@ -3,57 +3,46 @@
 
 local result = {}
 
--- Obtener uso de CPU usando /proc/stat (más confiable)
-local cpu_cmd = "grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$3+$4+$5)} END {print usage}'"
-local cpu_output = exec(cpu_cmd)
-if cpu_output and cpu_output ~= "" then
+-- Obtener uso de CPU usando top (método más simple)
+local cpu_cmd = "top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}'"
+local cpu_output, cpu_err = exec(cpu_cmd)
+if cpu_output and cpu_output ~= "" and not cpu_err then
     local cpu_val = tonumber(cpu_output)
-    if cpu_val then
+    if cpu_val and cpu_val > 0 and cpu_val <= 100 then
         result.cpu_usage = cpu_val
     else
-        -- Fallback: usar top
-        local cpu_cmd2 = "top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | sed 's/%us,//'"
-        local cpu_output2 = exec(cpu_cmd2)
-        if cpu_output2 then
-            result.cpu_usage = tonumber(cpu_output2) or 0.0
-        else
-            result.cpu_usage = 0.0
-        end
+        result.cpu_usage = 0.0
     end
 else
     result.cpu_usage = 0.0
 end
 
--- Obtener uso de memoria usando /proc/meminfo (más confiable)
-local mem_cmd = "awk '/MemTotal:/{total=$2} /MemAvailable:/{avail=$2} END {printf \"%.2f\", (total-avail)/total*100}' /proc/meminfo"
-local mem_output = exec(mem_cmd)
-if mem_output and mem_output ~= "" then
-    result.memory_usage = tonumber(mem_output) or 0.0
-else
-    -- Fallback: usar free
-    local mem_cmd2 = "free | grep Mem | awk '{printf \"%.2f\", $3/$2 * 100.0}'"
-    local mem_output2 = exec(mem_cmd2)
-    if mem_output2 then
-        result.memory_usage = tonumber(mem_output2) or 0.0
+-- Obtener uso de memoria usando free (método simple)
+local mem_cmd = "free | grep Mem | awk '{printf \"%.2f\", $3/$2 * 100.0}'"
+local mem_output, mem_err = exec(mem_cmd)
+if mem_output and mem_output ~= "" and not mem_err then
+    local mem_val = tonumber(mem_output)
+    if mem_val and mem_val >= 0 and mem_val <= 100 then
+        result.memory_usage = mem_val
     else
         result.memory_usage = 0.0
     end
+else
+    result.memory_usage = 0.0
 end
 
--- Obtener uso de disco usando df (método directo)
+-- Obtener uso de disco usando df (método simple)
 local disk_cmd = "df / | tail -1 | awk '{print $5}' | sed 's/%//'"
-local disk_output = exec(disk_cmd)
-if disk_output and disk_output ~= "" then
-    result.disk_usage = tonumber(disk_output) or 0.0
-else
-    -- Fallback alternativo
-    local disk_cmd2 = "df -h / | awk 'NR==2{print $5}' | sed 's/%//'"
-    local disk_output2 = exec(disk_cmd2)
-    if disk_output2 then
-        result.disk_usage = tonumber(disk_output2) or 0.0
+local disk_output, disk_err = exec(disk_cmd)
+if disk_output and disk_output ~= "" and not disk_err then
+    local disk_val = tonumber(disk_output)
+    if disk_val and disk_val >= 0 and disk_val <= 100 then
+        result.disk_usage = disk_val
     else
         result.disk_usage = 0.0
     end
+else
+    result.disk_usage = 0.0
 end
 
 -- Obtener uptime
