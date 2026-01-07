@@ -16,6 +16,49 @@ import (
 	"github.com/gofiber/template/html/v2"
 )
 
+// registerTemplateFuncs agrega las funciones personalizadas al motor de templates
+func registerTemplateFuncs(engine *html.Engine) {
+	if engine == nil {
+		return
+	}
+
+	engine.AddFunc("t", func(key string, defaultValue ...string) string {
+		// Esta función se sobrescribirá en cada request con el contexto correcto
+		if len(defaultValue) > 0 {
+			return defaultValue[0]
+		}
+		return key
+	})
+	
+	engine.AddFunc("json", func(v interface{}) template.HTML {
+		b, err := json.Marshal(v)
+		if err != nil {
+			return template.HTML("{}")
+		}
+		return template.HTML(b)
+	})
+	
+	engine.AddFunc("eq", func(a, b interface{}) bool {
+		return a == b
+	})
+	
+	engine.AddFunc("ne", func(a, b interface{}) bool {
+		return a != b
+	})
+	
+	engine.AddFunc("contains", func(s, substr string) bool {
+		return strings.Contains(s, substr)
+	})
+
+	engine.AddFunc("Seq", func(start, end int) []int {
+		var seq []int
+		for i := start; i <= end; i++ {
+			seq = append(seq, i)
+		}
+		return seq
+	})
+}
+
 // createTemplateEngine crea el motor de templates con funciones personalizadas
 func createTemplateEngine() *html.Engine {
 	var engine *html.Engine
@@ -95,6 +138,9 @@ func createTemplateEngine() *html.Engine {
 							continue
 						}
 						
+						// IMPORTANTE: Registrar funciones ANTES de Load()
+						registerTemplateFuncs(engine)
+						
 						// Forzar carga para verificar errores de sintaxis
 						if err := engine.Load(); err != nil {
 							log.Printf("❌ Error cargando templates desde %s: %v", path, err)
@@ -155,6 +201,9 @@ func createTemplateEngine() *html.Engine {
 					} else {
 						engine = html.NewFileSystem(http.FS(tmplFS), ".html")
 						if engine != nil {
+							// Registrar funciones ANTES de Load()
+							registerTemplateFuncs(engine)
+							
 							// Forzar carga para verificar errores de sintaxis
 							if err := engine.Load(); err != nil {
 								log.Printf("❌ Error cargando templates embebidos: %v", err)
@@ -165,7 +214,6 @@ func createTemplateEngine() *html.Engine {
 								engine.Reload(false)
 								log.Printf("✅ Templates embebidos cargados (MÁS RÁPIDO): %d archivos .html", htmlFiles)
 								log.Printf("   Templates encontrados: %v", templateNames)
-								// Continuar para añadir funciones personalizadas
 							}
 						} else {
 							log.Printf("⚠️  Error: engine es nil después de NewFileSystem con embebidos")
@@ -196,6 +244,7 @@ func createTemplateEngine() *html.Engine {
 					if tmplFS2, err2 := fs.Sub(templatesFS, "website/templates"); err2 == nil {
 						engine = html.NewFileSystem(http.FS(tmplFS2), ".html")
 						if engine != nil {
+							registerTemplateFuncs(engine)
 							log.Printf("✅ Motor de templates configurado usando sub-FS directo")
 						}
 					}
@@ -211,6 +260,7 @@ func createTemplateEngine() *html.Engine {
 		if stat, err := os.Stat(forcePath); err == nil && stat.IsDir() {
 			engine = html.New(forcePath, ".html")
 			if engine != nil {
+				registerTemplateFuncs(engine)
 				if err := engine.Load(); err != nil {
 					log.Printf("❌ Error cargando templates forzados desde %s: %v", forcePath, err)
 					engine = nil
@@ -226,47 +276,10 @@ func createTemplateEngine() *html.Engine {
 		}
 	}
 	
-	// Verificar que engine no es nil antes de agregar funciones
+	// Verificar que engine no es nil
 	if engine == nil {
 		log.Fatal("❌ Error crítico: engine es nil después de todos los intentos de carga")
 	}
-	
-	// Agregar funciones personalizadas a los templates
-	engine.AddFunc("t", func(key string, defaultValue ...string) string {
-		// Esta función se sobrescribirá en cada request con el contexto correcto
-		if len(defaultValue) > 0 {
-			return defaultValue[0]
-		}
-		return key
-	})
-	
-	engine.AddFunc("json", func(v interface{}) template.HTML {
-		b, err := json.Marshal(v)
-		if err != nil {
-			return template.HTML("{}")
-		}
-		return template.HTML(b)
-	})
-	
-	engine.AddFunc("eq", func(a, b interface{}) bool {
-		return a == b
-	})
-	
-	engine.AddFunc("ne", func(a, b interface{}) bool {
-		return a != b
-	})
-	
-	engine.AddFunc("contains", func(s, substr string) bool {
-		return strings.Contains(s, substr)
-	})
-
-	engine.AddFunc("Seq", func(start, end int) []int {
-		var seq []int
-		for i := start; i <= end; i++ {
-			seq = append(seq, i)
-		}
-		return seq
-	})
 	
 	return engine
 }
