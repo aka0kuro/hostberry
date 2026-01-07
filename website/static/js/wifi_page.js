@@ -315,6 +315,11 @@
     const selectedInterface = interfaceSelect ? interfaceSelect.value : '';
     if (selectedInterface) {
       localStorage.setItem('wifi_interface', selectedInterface);
+      console.log('Interfaz WiFi guardada:', selectedInterface);
+    } else {
+      // Si es auto-detect (vacío), limpiar localStorage
+      localStorage.removeItem('wifi_interface');
+      console.log('Usando auto-detección de interfaz WiFi');
     }
     
     // Verificar estado del WiFi primero
