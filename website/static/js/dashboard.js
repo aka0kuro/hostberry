@@ -29,20 +29,47 @@
         setText('dashboard-time', timeStr);
     };
 
+    // Función de traducción local
+    const t = (key, defaultValue) => {
+        if (window.HostBerry && window.HostBerry.t) {
+            return window.HostBerry.t(key, defaultValue);
+        }
+        // Fallback: intentar cargar traducciones directamente
+        try {
+            const el = document.getElementById('i18n-json');
+            if (el) {
+                const translations = JSON.parse(el.textContent || el.innerText || '{}');
+                const parts = String(key).split('.');
+                let cur = translations;
+                for (const part of parts) {
+                    if (cur && Object.prototype.hasOwnProperty.call(cur, part)) {
+                        cur = cur[part];
+                    } else {
+                        return defaultValue || key;
+                    }
+                }
+                return typeof cur === 'string' ? cur : (defaultValue || key);
+            }
+        } catch (e) {
+            // Ignorar errores
+        }
+        return defaultValue || key;
+    };
+
     const updateHealth = (type, value, thresholds) => {
         const dot = document.getElementById('health-' + type);
         const text = document.getElementById('health-' + type + '-text');
         if (!dot || !text) return;
 
         let status = 'success';
-        let statusText = (window.HostBerry && window.HostBerry.t) ? window.HostBerry.t('dashboard.healthy', 'Healthy') : 'Healthy';
+        let statusText = t('dashboard.healthy', 'Healthy');
         
         if (value >= thresholds.critical) {
             status = 'danger';
-            statusText = (window.HostBerry && window.HostBerry.t) ? window.HostBerry.t('dashboard.critical', 'Critical') : 'Critical';
+            statusText = t('dashboard.critical', 'Critical');
         } else if (value >= thresholds.warning) {
             status = 'warning';
-            statusText = (window.HostBerry && window.HostBerry.t) ? window.HostBerry.t('dashboard.warning', 'Warning') : 'Warning';
+            statusText = t('dashboard.warning', 'Warning');
         }
 
         dot.className = 'health-dot health-dot-' + status;
