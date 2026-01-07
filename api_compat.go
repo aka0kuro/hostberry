@@ -237,22 +237,45 @@ func wifiConfigHandler(c *fiber.Ctx) error {
 	
 	// Si se proporciona región, cambiar la región WiFi
 	if req.Region != "" {
+		// Validar código de región (2 letras mayúsculas)
+		if len(req.Region) != 2 {
+			return c.Status(400).JSON(fiber.Map{"error": "Código de región inválido. Debe ser de 2 letras (ej: US, ES, GB)"})
+		}
+		
 		// Intentar cambiar región usando iw reg set
-		cmd := exec.Command("sh", "-c", fmt.Sprintf("sudo iw reg set %s 2>/dev/null", req.Region))
-		if err := cmd.Run(); err == nil {
-			InsertLog("INFO", fmt.Sprintf("Región WiFi cambiada a %s (usuario: %s)", req.Region, user.Username), "wifi", &userID)
-			return c.JSON(fiber.Map{"success": true, "message": "Región WiFi cambiada exitosamente"})
+		// Primero verificar si iw está disponible
+		iwCheck := exec.Command("sh", "-c", "command -v iw 2>/dev/null")
+		if iwCheck.Run() == nil {
+			// Usar iw reg set
+			cmd := exec.Command("sh", "-c", fmt.Sprintf("sudo iw reg set %s 2>&1", req.Region))
+			out, err := cmd.CombinedOutput()
+			if err == nil {
+				InsertLog("INFO", fmt.Sprintf("Región WiFi cambiada a %s usando iw (usuario: %s)", req.Region, user.Username), "wifi", &userID)
+				return c.JSON(fiber.Map{"success": true, "message": "Región WiFi cambiada exitosamente"})
+			}
+			// Si falla, intentar con crda (regulatory database)
+			cmd2 := exec.Command("sh", "-c", fmt.Sprintf("echo '%s' | sudo tee /etc/default/crda >/dev/null 2>&1 || echo '%s' | sudo tee /etc/conf.d/wireless-regdom >/dev/null 2>&1", req.Region, req.Region))
+			if cmd2.Run() == nil {
+				InsertLog("INFO", fmt.Sprintf("Región WiFi configurada a %s en crda (usuario: %s)", req.Region, user.Username), "wifi", &userID)
+				return c.JSON(fiber.Map{"success": true, "message": "Región WiFi configurada exitosamente (requiere reinicio de WiFi)"})
+			}
 		}
 		
 		// Fallback: intentar con nmcli (si está disponible)
-		cmd2 := exec.Command("sh", "-c", fmt.Sprintf("sudo nmcli radio wifi off && sudo nmcli radio wifi on 2>/dev/null"))
-		if err2 := cmd2.Run(); err2 == nil {
-			InsertLog("INFO", fmt.Sprintf("Región WiFi cambiada a %s (usuario: %s)", req.Region, user.Username), "wifi", &userID)
-			return c.JSON(fiber.Map{"success": true, "message": "Región WiFi cambiada exitosamente"})
+		nmcliCheck := exec.Command("sh", "-c", "command -v nmcli 2>/dev/null")
+		if nmcliCheck.Run() == nil {
+			// nmcli no tiene comando directo para cambiar región, pero podemos intentar reiniciar WiFi
+			cmd3 := exec.Command("sh", "-c", "sudo nmcli radio wifi off && sleep 1 && sudo nmcli radio wifi on 2>&1")
+			if cmd3.Run() == nil {
+				InsertLog("INFO", fmt.Sprintf("WiFi reiniciado para aplicar región %s (usuario: %s)", req.Region, user.Username), "wifi", &userID)
+				return c.JSON(fiber.Map{"success": true, "message": "WiFi reiniciado. Nota: La región puede requerir configuración manual del sistema."})
+			}
 		}
 		
-		// Si ambos fallan, retornar error
-		return c.Status(500).JSON(fiber.Map{"error": "No se pudo cambiar la región WiFi. Verifica permisos sudo."})
+		// Si todos los métodos fallan, retornar error con instrucciones
+		return c.Status(500).JSON(fiber.Map{
+			"error": "No se pudo cambiar la región WiFi automáticamente. Verifica que 'iw' esté instalado y que tengas permisos sudo configurados. Puedes configurarlo manualmente ejecutando: sudo iw reg set " + req.Region,
+		})
 	}
 	
 	// Si se proporciona SSID, conectar a la red
