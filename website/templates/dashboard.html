@@ -2,13 +2,11 @@
     <!-- Dashboard Header -->
     <div class="dashboard-header">
         <div class="header-content">
-            <div class="header-title-section">
-                <h1 class="dashboard-title">
-                    <i class="bi bi-speedometer2 me-2"></i>
-                    {{ call .t "dashboard.title" "Control Panel" }}
-                </h1>
-                <p class="dashboard-subtitle">{{ call .t "dashboard.welcome" "Welcome to HostBerry" }}</p>
-            </div>
+            <h1 class="dashboard-title">
+                <i class="bi bi-speedometer2 me-2"></i>
+                {{ call .t "dashboard.title" "Control Panel" }}
+            </h1>
+            <p class="dashboard-subtitle">{{ call .t "dashboard.welcome" "Welcome to HostBerry" }}</p>
             <div class="header-time">
                 <i class="bi bi-clock me-1"></i>
                 <span id="dashboard-time">--:--:--</span>
