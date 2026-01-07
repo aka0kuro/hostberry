@@ -85,6 +85,12 @@ install_dependencies() {
     # Instalar dependencias básicas
     DEPS="wget curl git build-essential"
     
+    # Verificar que git está instalado (necesario para descargar el proyecto)
+    if ! command -v git &> /dev/null; then
+        print_info "Git no está instalado, instalando..."
+        apt-get install -y git
+    fi
+    
     # Verificar si Go está instalado
     if ! command -v go &> /dev/null; then
         print_info "Go no está instalado, instalando..."
