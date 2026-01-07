@@ -366,13 +366,20 @@ func wireguardPageHandler(c *fiber.Ctx) error {
 
 func adblockPageHandler(c *fiber.Ctx) error {
 	return renderTemplate(c, "adblock", fiber.Map{
-		"Title": T(c, "adblock.overview", "AdBlock Overview"),
+		"Title":          T(c, "adblock.overview", "AdBlock Overview"),
+		"adblock_stats":  fiber.Map{},
+		"adblock_status": fiber.Map{},
+		"adblock_config": fiber.Map{},
 	})
 }
 
 func hostapdPageHandler(c *fiber.Ctx) error {
 	return renderTemplate(c, "hostapd", fiber.Map{
-		"Title": T(c, "hostapd.overview", "Hotspot Overview"),
+		"Title":          T(c, "hostapd.overview", "Hotspot Overview"),
+		"hostapd_stats":  fiber.Map{},
+		"hostapd_status": fiber.Map{},
+		"hostapd_config": fiber.Map{},
+		"last_update":    time.Now().Unix(),
 	})
 }
 
