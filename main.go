@@ -190,7 +190,31 @@ func createApp() *fiber.App {
 	log.Println("✅ Engine de templates asignado correctamente a Fiber app")
 
 	// Middlewares globales
-	app.Use(logger.New())
+	// Configurar logger con formato más legible
+	app.Use(logger.New(logger.Config{
+		Format:     "${time} | ${status} | ${latency} | ${ip} | ${method} | ${path}\n",
+		TimeFormat: "15:04:05",
+		TimeZone:   "Local",
+		Output:     os.Stdout,
+		// Filtrar archivos estáticos para reducir ruido
+		Next: func(c *fiber.Ctx) bool {
+			path := c.Path()
+			// Omitir logs de archivos estáticos comunes
+			return strings.HasPrefix(path, "/static/") && 
+			       (strings.HasSuffix(path, ".css") || 
+			        strings.HasSuffix(path, ".js") || 
+			        strings.HasSuffix(path, ".png") || 
+			        strings.HasSuffix(path, ".jpg") || 
+			        strings.HasSuffix(path, ".jpeg") || 
+			        strings.HasSuffix(path, ".gif") || 
+			        strings.HasSuffix(path, ".ico") ||
+			        strings.HasSuffix(path, ".svg") ||
+			        strings.HasSuffix(path, ".woff") ||
+			        strings.HasSuffix(path, ".woff2") ||
+			        strings.HasSuffix(path, ".ttf") ||
+			        strings.HasSuffix(path, ".eot"))
+		},
+	}))
 	app.Use(compress.New())
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     "*",
