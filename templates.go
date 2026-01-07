@@ -241,6 +241,14 @@ func createTemplateEngine() *html.Engine {
 	engine.AddFunc("contains", func(s, substr string) bool {
 		return strings.Contains(s, substr)
 	})
+
+	engine.AddFunc("Seq", func(start, end int) []int {
+		var seq []int
+		for i := start; i <= end; i++ {
+			seq = append(seq, i)
+		}
+		return seq
+	})
 	
 	return engine
 }
