@@ -260,6 +260,17 @@ body.light-theme { background: #f6f7f9; color: #212529; }
         background: rgba(0, 0, 0, 0.5);
         z-index: -1;
     }
+    
+    /* En móvil, los submenús se muestran dentro del sidebar */
+    .sidebar-dropdown {
+        position: static !important;
+        left: auto !important;
+        top: auto !important;
+        margin-left: 1rem;
+        margin-top: 0.5rem;
+        border-left: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0;
+    }
 }
 
 /* Sidebar oscuro en tema oscuro para móviles */
