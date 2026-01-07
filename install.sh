@@ -14,6 +14,7 @@ NC='\033[0m' # No Color
 
 # Variables de configuración
 INSTALL_DIR="/opt/hostberry"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVICE_NAME="hostberry"
 USER_NAME="hostberry"
 GROUP_NAME="hostberry"
