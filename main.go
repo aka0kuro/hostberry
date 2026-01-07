@@ -375,8 +375,13 @@ func loginHandler(c *fiber.Ctx) error {
 }
 
 func settingsHandler(c *fiber.Ctx) error {
+	configs, _ := GetAllConfigs()
+	configsJSON, _ := json.Marshal(configs)
+	
 	return renderTemplate(c, "settings", fiber.Map{
-		"Title": T(c, "navigation.settings", "Settings"),
+		"Title":         T(c, "navigation.settings", "Settings"),
+		"settings":      configs,
+		"settings_json": string(configsJSON),
 	})
 }
 
