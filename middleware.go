@@ -12,12 +12,12 @@ import (
 // requireAuth middleware que requiere autenticación
 func requireAuth(c *fiber.Ctx) error {
 	path := c.Path()
-	
+
 	// Debug: log para todas las rutas /api/v1/auth/login
 	if strings.Contains(path, "auth/login") {
 		log.Printf("DEBUG requireAuth ENTRADA: path='%s', method=%s, originalURL='%s'", path, c.Method(), c.OriginalURL())
 	}
-	
+
 	// Permitir preflight CORS sin autenticación
 	if c.Method() == fiber.MethodOptions {
 		return c.Next()
@@ -37,12 +37,12 @@ func requireAuth(c *fiber.Ctx) error {
 	if normalizedPath == "" {
 		normalizedPath = "/"
 	}
-	
+
 	// Verificar si la ruta es pública (comparación exacta primero, luego con prefijo)
 	for _, publicPath := range publicPaths {
 		// Normalizar también el publicPath
 		normalizedPublicPath := strings.TrimRight(publicPath, "/")
-		
+
 		// Comparación exacta (caso más común)
 		if path == publicPath || normalizedPath == normalizedPublicPath {
 			// Esta ruta es pública, permitir sin autenticación
@@ -51,7 +51,7 @@ func requireAuth(c *fiber.Ctx) error {
 			}
 			return c.Next()
 		}
-		
+
 		// Comparación con prefijo (para rutas como /api/v1/translations/:lang)
 		// Nota: usar strings.HasPrefix con "/" para evitar coincidencias parciales
 		if (publicPath != "/" && strings.HasPrefix(path, publicPath+"/")) ||
@@ -63,7 +63,7 @@ func requireAuth(c *fiber.Ctx) error {
 			return c.Next()
 		}
 	}
-	
+
 	// Debug: log si llegamos aquí y es una ruta de login
 	if strings.Contains(path, "auth/login") {
 		log.Printf("DEBUG requireAuth: Ruta NO detectada como pública, path='%s', normalized='%s'", path, normalizedPath)
