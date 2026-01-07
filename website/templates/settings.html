@@ -837,6 +837,75 @@
   // Actualizar cada 30 segundos
   setInterval(loadSystemInfo, 30000);
 
+  // Variable global para almacenar datos de interfaces
+  let networkInterfacesData = {};
+
+  // Función para calcular el rango DHCP basado en IP y máscara
+  function calculateDHCPRange(ip, netmask) {
+    if (!ip || ip === 'N/A' || ip === '') return null;
+    
+    // Parsear IP
+    const ipParts = ip.split('.');
+    if (ipParts.length !== 4) return null;
+    
+    // Si no hay máscara, asumir /24 (255.255.255.0)
+    let networkBase = ipParts.slice(0, 3).join('.');
+    
+    // Calcular gateway (normalmente .1)
+    const gateway = networkBase + '.1';
+    
+    // Calcular rango DHCP (normalmente .100 a .200)
+    const rangeStart = networkBase + '.100';
+    const rangeEnd = networkBase + '.200';
+    
+    return {
+      gateway: gateway,
+      rangeStart: rangeStart,
+      rangeEnd: rangeEnd
+    };
+  }
+
+  // Función para rellenar campos DHCP cuando se selecciona una interfaz
+  function fillDHCPFields(interfaceName) {
+    const iface = networkInterfacesData[interfaceName];
+    if (!iface) {
+      console.warn('Interface data not found:', interfaceName);
+      return;
+    }
+    
+    const ip = iface.ip || '';
+    const gateway = iface.gateway || '';
+    
+    // Calcular rango DHCP
+    const dhcpData = calculateDHCPRange(ip, iface.netmask);
+    
+    if (dhcpData) {
+      // Rellenar gateway (usar el de la interfaz si existe, sino el calculado)
+      const gatewayField = document.getElementById('dhcp_gateway');
+      if (gatewayField && (!gatewayField.value || gatewayField.value === '')) {
+        gatewayField.value = (gateway && gateway !== 'N/A') ? gateway : dhcpData.gateway;
+      }
+      
+      // Rellenar rango start
+      const rangeStartField = document.getElementById('dhcp_range_start');
+      if (rangeStartField && (!rangeStartField.value || rangeStartField.value === '')) {
+        rangeStartField.value = dhcpData.rangeStart;
+      }
+      
+      // Rellenar rango end
+      const rangeEndField = document.getElementById('dhcp_range_end');
+      if (rangeEndField && (!rangeEndField.value || rangeEndField.value === '')) {
+        rangeEndField.value = dhcpData.rangeEnd;
+      }
+    } else if (gateway && gateway !== 'N/A') {
+      // Si no se puede calcular pero hay gateway, usar ese
+      const gatewayField = document.getElementById('dhcp_gateway');
+      if (gatewayField && (!gatewayField.value || gatewayField.value === '')) {
+        gatewayField.value = gateway;
+      }
+    }
+  }
+
   // Cargar interfaces de red para el desplegable DHCP
   async function loadNetworkInterfaces() {
     const select = document.getElementById('dhcp_interface');
@@ -869,6 +938,9 @@
         console.log('Network interfaces response:', result);
         const interfaces = result.interfaces || [];
         
+        // Limpiar datos anteriores
+        networkInterfacesData = {};
+        
         // Limpiar opciones existentes
         select.innerHTML = '';
         
@@ -880,19 +952,40 @@
           emptyOption.textContent = t('settings.select_interface', 'Select interface...');
           select.appendChild(emptyOption);
           
-          // Agregar cada interfaz como opción
+          // Agregar cada interfaz como opción y guardar datos
           interfaces.forEach(iface => {
             if (!iface || !iface.name) {
               console.warn('Invalid interface:', iface);
               return;
             }
+            
+            // Guardar datos de la interfaz
+            networkInterfacesData[iface.name] = {
+              name: iface.name,
+              ip: iface.ip || '',
+              mac: iface.mac || '',
+              state: iface.state || '',
+              gateway: iface.gateway || '',
+              netmask: iface.netmask || ''
+            };
+            
             const option = document.createElement('option');
             option.value = iface.name;
             const displayText = iface.ip && iface.ip !== 'N/A' && iface.ip !== '' 
               ? iface.name + ' (' + iface.ip + ')' 
               : iface.name;
             option.textContent = displayText;
+            option.setAttribute('data-ip', iface.ip || '');
+            option.setAttribute('data-gateway', iface.gateway || '');
             select.appendChild(option);
+          });
+          
+          // Agregar event listener para cuando se seleccione una interfaz
+          select.addEventListener('change', function(e) {
+            const selectedInterface = e.target.value;
+            if (selectedInterface && selectedInterface !== '') {
+              fillDHCPFields(selectedInterface);
+            }
           });
         } else {
           console.warn('No interfaces found');
