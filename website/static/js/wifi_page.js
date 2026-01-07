@@ -614,6 +614,7 @@
   document.addEventListener('DOMContentLoaded', function() {
     loadConnectionStatus();
     loadRegion();
+    loadWiFiInterfaces();
     
     // Cargar estado de auto-connect
     const autoConnectEnabled = localStorage.getItem('wifi_auto_connect') === 'true';
