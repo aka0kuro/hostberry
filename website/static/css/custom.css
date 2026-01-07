@@ -408,8 +408,16 @@ hr {
 
 /* === CONTENIDO PRINCIPAL === */
 .main-content {
-    background-color: #f8f9fa;
+    background: transparent;
     min-height: 100vh;
+}
+
+body.dark-theme .main-content {
+    background: transparent;
+}
+
+body.light-theme .main-content {
+    background: transparent;
 }
 
 /* === FOOTER === */
