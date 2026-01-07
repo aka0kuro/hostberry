@@ -346,44 +346,75 @@
 
   async function fetchSystemStats(){
     try{
-      const resp = await HostBerry.apiRequest('/api/v1/system/stats');
-      if(!resp.ok) throw new Error('Stats request failed');
-      const payload = await resp.json();
-      const stats = payload.data || payload;
+      // Obtener stats e info en paralelo
+      const [statsResp, infoResp] = await Promise.all([
+        HostBerry.apiRequest('/api/v1/system/stats'),
+        HostBerry.apiRequest('/api/v1/system/info')
+      ]);
+      
+      if(!statsResp.ok) {
+        console.error('Stats request failed:', statsResp.status, statsResp.statusText);
+        throw new Error('Stats request failed: ' + statsResp.status);
+      }
+      
+      if(!infoResp.ok) {
+        console.error('Info request failed:', infoResp.status, infoResp.statusText);
+      }
+      
+      const statsPayload = await statsResp.json();
+      const infoPayload = infoResp.ok ? await infoResp.json() : {};
+      
+      console.log('System stats response:', statsPayload);
+      console.log('System info response:', infoPayload);
+      
+      // Manejar diferentes formatos de respuesta
+      let stats = statsPayload;
+      if (statsPayload.data) {
+        stats = statsPayload.data;
+      } else if (statsPayload.stats) {
+        stats = statsPayload.stats;
+      }
+      
+      let info = infoPayload;
+      if (infoPayload.data) {
+        info = infoPayload.data;
+      } else if (infoPayload.info) {
+        info = infoPayload.info;
+      }
       
       // CPU
-      const cpuUsage = stats.cpu_usage || 0;
-      setText('system-cpu-percent', `${cpuUsage.toFixed(1)}%`);
+      const cpuUsage = stats.cpu_usage || stats.cpu_percent || stats.cpu || 0;
+      setText('system-cpu-percent', cpuUsage.toFixed(1) + '%');
       setProgress('system-cpu-progress', cpuUsage);
       setStatusBadge('system-cpu-status', calculateHealthStatus(cpuUsage, {warning: 70, critical: 90}));
       
       // Memory
-      const memUsage = stats.memory_usage || 0;
-      setText('system-memory-percent', `${memUsage.toFixed(1)}%`);
+      const memUsage = stats.memory_usage || stats.memory_percent || stats.memory || 0;
+      setText('system-memory-percent', memUsage.toFixed(1) + '%');
       setProgress('system-memory-progress', memUsage);
       setStatusBadge('system-memory-status', calculateHealthStatus(memUsage, {warning: 75, critical: 90}));
       
       // Disk
-      const diskUsage = stats.disk_usage || 0;
-      setText('system-disk-percent', `${diskUsage.toFixed(1)}%`);
+      const diskUsage = stats.disk_usage || stats.disk_percent || stats.disk || 0;
+      setText('system-disk-percent', diskUsage.toFixed(1) + '%');
       setProgress('system-disk-progress', diskUsage);
       setStatusBadge('system-disk-status', calculateHealthStatus(diskUsage, {warning: 80, critical: 95}));
       
       // Temperature
       const temp = stats.cpu_temperature || 0;
-      setText('system-temperature', temp > 0 ? `${temp.toFixed(1)}°C` : '--°C');
+      setText('system-temperature', temp > 0 ? temp.toFixed(1) + '°C' : '--°C');
       if(temp > 0){
         setProgress('system-temp-progress', (temp / 100) * 100);
         setStatusBadge('system-temp-status', calculateHealthStatus(temp, {warning: 60, critical: 80}));
       }
       
-      // System Info
-      setText('info-hostname', stats.hostname || '--');
-      setText('info-os-version', stats.os_version || '--');
-      setText('info-kernel', stats.kernel_version || '--');
-      setText('info-architecture', stats.architecture || '--');
-      setText('info-uptime', formatUptime(stats.uptime || 0));
-      setText('info-cpu-cores', stats.cpu_cores || '--');
+      // System Info - combinar datos de stats e info
+      setText('info-hostname', info.hostname || stats.hostname || '--');
+      setText('info-os-version', info.os_version || stats.os_version || '--');
+      setText('info-kernel', info.kernel_version || stats.kernel_version || stats.kernel || '--');
+      setText('info-architecture', info.architecture || stats.architecture || stats.arch || '--');
+      setText('info-uptime', formatUptime(info.uptime_seconds || stats.uptime || stats.uptime_seconds || 0));
+      setText('info-cpu-cores', stats.cpu_cores || stats.cores || stats.cpu_count || info.cpu_cores || '--');
       
       const now = new Date();
       const timeStr = (window.HostBerry && typeof window.HostBerry.formatTime === 'function')
