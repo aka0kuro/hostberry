@@ -141,6 +141,111 @@ func changePasswordAPIHandler(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Contraseña actualizada"})
 }
 
+func firstLoginChangeAPIHandler(c *fiber.Ctx) error {
+	// Obtener token del header Authorization o de la cookie
+	tokenString := c.Get("Authorization")
+	if tokenString != "" {
+		// Remover "Bearer " si está presente
+		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+	} else {
+		// Intentar obtener de la cookie
+		tokenString = c.Cookies("access_token")
+	}
+
+	if tokenString == "" {
+		return c.Status(401).JSON(fiber.Map{
+			"error": "Token requerido",
+		})
+	}
+
+	// Validar token
+	claims, err := ValidateToken(tokenString)
+	if err != nil {
+		return c.Status(401).JSON(fiber.Map{
+			"error": "Token inválido",
+		})
+	}
+
+	// Obtener usuario
+	var user User
+	if err := db.Where("id = ? AND is_active = ?", claims.UserID, true).First(&user).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{
+			"error": "Usuario no encontrado",
+		})
+	}
+
+	// Verificar que es el primer login (LoginCount == 1)
+	if user.LoginCount != 1 {
+		return c.Status(403).JSON(fiber.Map{
+			"error": "Este endpoint solo está disponible en el primer login",
+		})
+	}
+
+	// Parsear request
+	var req struct {
+		NewUsername string `json:"new_username"`
+		NewPassword string `json:"new_password"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Datos inválidos",
+		})
+	}
+
+	// Validar nuevo username
+	if req.NewUsername != "" {
+		if err := ValidateUsername(req.NewUsername); err != nil {
+			return err
+		}
+		// Verificar que el nuevo username no esté en uso (si es diferente al actual)
+		if req.NewUsername != user.Username {
+			var existingUser User
+			if err := db.Where("username = ?", req.NewUsername).First(&existingUser).Error; err == nil {
+				return c.Status(400).JSON(fiber.Map{
+					"error": "El nombre de usuario ya está en uso",
+				})
+			}
+			user.Username = req.NewUsername
+		}
+	}
+
+	// Validar nueva contraseña
+	if req.NewPassword == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "La nueva contraseña es requerida",
+		})
+	}
+	if err := ValidatePassword(req.NewPassword); err != nil {
+		return err
+	}
+
+	// Hashear nueva contraseña
+	hashed, err := HashPassword(req.NewPassword)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Error hasheando contraseña",
+		})
+	}
+	user.Password = hashed
+
+	// Incrementar LoginCount para que no pueda volver a usar este endpoint
+	user.LoginCount++
+
+	// Guardar cambios
+	if err := db.Save(&user).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Error guardando credenciales",
+		})
+	}
+
+	userID := user.ID
+	InsertLog("INFO", "Usuario cambió credenciales en primer login: "+user.Username, "auth", &userID)
+	
+	return c.JSON(fiber.Map{
+		"message": "Credenciales actualizadas. Por favor, inicia sesión nuevamente.",
+	})
+}
+
 func updateProfileAPIHandler(c *fiber.Ctx) error {
 	user := c.Locals("user").(*User)
 
