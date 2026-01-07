@@ -42,19 +42,21 @@
                         <div class="mb-3">
                             <label for="language" class="form-label text-white">{{ call .t "settings.language" "Language" }}</label>
                             <select class="form-select form-select-custom bg-white text-dark border-secondary" id="language" name="language" style="width: 100%; background-color: #ffffff !important;">
-                                {{/* set current_lang  = (settings.language if settings else (language if language else 'es')) or 'es'  */}}
-                                <option value="es" {{ 'selected' if current_lang == 'es' else '' }}>🇪🇸 Español</option>
-                                <option value="en" {{ 'selected' if current_lang == 'en' else '' }}>🇺🇸 English</option>
+                                {{ $current_lang := index .settings "language" }}
+                                {{ if eq $current_lang "" }}{{ $current_lang = .language }}{{ end }}
+                                <option value="es" {{ if eq $current_lang "es" }}selected{{ end }}>🇪🇸 Español</option>
+                                <option value="en" {{ if eq $current_lang "en" }}selected{{ end }}>🇺🇸 English</option>
                             </select>
                         </div>
                         
                         <div class="mb-3">
                             <label for="theme" class="form-label text-white">{{ call .t "settings.theme" "Theme" }}</label>
                             <select class="form-select form-select-custom bg-white text-dark border-secondary" id="theme" name="theme" style="width: 100%; background-color: #ffffff !important;">
-                                {{/* set current_theme  = (settings.theme if settings else 'dark') or 'dark'  */}}
-                                <option value="light" {{ 'selected' if current_theme == 'light' else '' }}>{{ call .t "settings.theme_light" "Light" }}</option>
-                                <option value="dark" {{ 'selected' if current_theme == 'dark' else '' }}>{{ call .t "settings.theme_dark" "Dark" }}</option>
-                                <option value="auto" {{ 'selected' if current_theme == 'auto' else '' }}>{{ call .t "settings.theme_auto" "Auto" }}</option>
+                                {{ $current_theme := index .settings "theme" }}
+                                {{ if eq $current_theme "" }}{{ $current_theme = "dark" }}{{ end }}
+                                <option value="light" {{ if eq $current_theme "light" }}selected{{ end }}>{{ call .t "settings.theme_light" "Light" }}</option>
+                                <option value="dark" {{ if eq $current_theme "dark" }}selected{{ end }}>{{ call .t "settings.theme_dark" "Dark" }}</option>
+                                <option value="auto" {{ if eq $current_theme "auto" }}selected{{ end }}>{{ call .t "settings.theme_auto" "Auto" }}</option>
                             </select>
                         </div>
                         
@@ -67,7 +69,8 @@
                                        placeholder="{{ call .t "settings.search_timezone" "Search timezone..." }}"
                                        autocomplete="off"
                                        style="background-color: #ffffff !important;">
-                                <input type="hidden" id="timezone" name="timezone" value="{{ (settings.timezone if settings else 'UTC') or 'UTC' }}">
+                                {{ $tz := index .settings "timezone" }}
+                                <input type="hidden" id="timezone" name="timezone" value="{{ if $tz }}{{ $tz }}{{ else }}UTC{{ end }}">
                                 <div class="timezone-dropdown bg-dark border border-secondary rounded mt-1 position-absolute w-100" 
                                      id="timezone_dropdown" 
                                      style="display: none; max-height: 300px; overflow-y: auto; z-index: 1000;">
@@ -102,7 +105,8 @@
                         <div class="mb-3">
                             <label class="form-label text-white">{{ call .t "settings.dhcp_server" "DHCP Server" }}</label>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="dhcp_enabled" name="dhcp_enabled" {{ 'checked' if (network_config.dhcp_enabled if network_config else False) else '' }}>
+                                {{ $dhcp := index .settings "dhcp_enabled" }}
+                                <input class="form-check-input" type="checkbox" id="dhcp_enabled" name="dhcp_enabled" {{ if eq $dhcp "true" }}checked{{ end }}>
                                 <label class="form-check-label text-white" for="dhcp_enabled">
                                     {{ call .t "settings.enable_dhcp" "Enable DHCP server" }}
                                 </label>
@@ -118,22 +122,23 @@
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label for="dhcp_range_start" class="form-label text-white">{{ call .t "settings.dhcp_range_start" "Range Start" }}</label>
-                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_range_start" name="dhcp_range_start" value="{{ network_config.dhcp_range_start if network_config else '' }}" placeholder="192.168.1.100">
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_range_start" name="dhcp_range_start" value="{{ index .settings "dhcp_range_start" }}" placeholder="192.168.1.100">
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label for="dhcp_range_end" class="form-label text-white">{{ call .t "settings.dhcp_range_end" "Range End" }}</label>
-                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_range_end" name="dhcp_range_end" value="{{ network_config.dhcp_range_end if network_config else '' }}" placeholder="192.168.1.200">
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_range_end" name="dhcp_range_end" value="{{ index .settings "dhcp_range_end" }}" placeholder="192.168.1.200">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="dhcp_gateway" class="form-label text-white">{{ call .t "settings.dhcp_gateway" "Gateway (router)" }}</label>
-                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_gateway" name="dhcp_gateway" value="{{ network_config.dhcp_gateway if network_config else '' }}" placeholder="192.168.1.1">
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_gateway" name="dhcp_gateway" value="{{ index .settings "dhcp_gateway" }}" placeholder="192.168.1.1">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="dhcp_lease_time" class="form-label text-white">{{ call .t "settings.dhcp_lease_time" "Lease Time" }}</label>
-                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_lease_time" name="dhcp_lease_time" value="{{ network_config.dhcp_lease_time if network_config else '12h' }}" placeholder="12h">
+                                {{ $lease := index .settings "dhcp_lease_time" }}
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="dhcp_lease_time" name="dhcp_lease_time" value="{{ if $lease }}{{ $lease }}{{ else }}12h{{ end }}" placeholder="12h">
                                 <small class="text-white-50">{{ call .t "settings.dhcp_lease_hint" "Example: 12h, 30m, 1d" }}</small>
                             </div>
                         </div>
@@ -149,7 +154,7 @@
                             </div>
                         </div>
                         <!-- Campo oculto para mantener compatibilidad con el backend -->
-                        <input type="hidden" id="dns_server" name="dns_server">
+                        <input type="hidden" id="dns_server" name="dns_server" value="{{ index .settings "dns_server" }}">
                         
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">
@@ -174,12 +179,14 @@
                     <form id="securityConfigForm" class="d-flex flex-column flex-grow-1">
                         <div class="mb-3">
                             <label for="max_login_attempts" class="form-label text-white">{{ call .t "settings.max_login_attempts" "Max Login Attempts" }}</label>
-                            <input type="number" class="form-control bg-dark text-white border-secondary text-center" id="max_login_attempts" name="max_login_attempts" value="{{ security_config.max_login_attempts if security_config else 3 }}" min="1" max="10">
+                            {{ $max_attempts := index .settings "max_login_attempts" }}
+                            <input type="number" class="form-control bg-dark text-white border-secondary text-center" id="max_login_attempts" name="max_login_attempts" value="{{ if $max_attempts }}{{ $max_attempts }}{{ else }}3{{ end }}" min="1" max="10">
                         </div>
                         
                         <div class="mb-3">
                             <label for="session_timeout" class="form-label text-white">{{ call .t "settings.session_timeout" "Session Timeout" }}</label>
-                            <input type="number" class="form-control bg-dark text-white border-secondary text-center" id="session_timeout" name="session_timeout" value="{{ security_config.session_timeout if security_config else 30 }}" min="5" max="1440">
+                            {{ $timeout := index .settings "session_timeout" }}
+                            <input type="number" class="form-control bg-dark text-white border-secondary text-center" id="session_timeout" name="session_timeout" value="{{ if $timeout }}{{ $timeout }}{{ else }}30{{ end }}" min="5" max="1440">
                             <small class="text-white-50">{{ call .t "settings.minutes" "minutes" }}</small>
                         </div>
                     </form>
@@ -207,7 +214,8 @@
                         <div class="mb-3">
                             <label class="form-label text-white">{{ call .t "settings.cache" "Cache" }}</label>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="cache_enabled" name="cache_enabled" {{ 'checked' if (performance_config.cache_enabled if performance_config else True) else '' }}>
+                                {{ $cache := index .settings "cache_enabled" }}
+                                <input class="form-check-input" type="checkbox" id="cache_enabled" name="cache_enabled" {{ if eq $cache "true" }}checked{{ end }}>
                                 <label class="form-check-label text-white" for="cache_enabled">
                                     {{ call .t "settings.enable_cache" "Enable cache" }}
                                 </label>
@@ -216,14 +224,16 @@
                         
                         <div class="mb-3">
                             <label for="cache_size" class="form-label text-white">{{ call .t "settings.cache_size" "Cache Size" }}</label>
-                            <input type="number" class="form-control bg-dark text-white border-secondary" id="cache_size" name="cache_size" value="{{ performance_config.cache_size if performance_config else 50 }}" min="10" max="500">
+                            {{ $cache_size := index .settings "cache_size" }}
+                            <input type="number" class="form-control bg-dark text-white border-secondary" id="cache_size" name="cache_size" value="{{ if $cache_size }}{{ $cache_size }}{{ else }}50{{ end }}" min="10" max="500">
                             <small class="text-white-50">{{ call .t "settings.mb" "MB" }}</small>
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label text-white">{{ call .t "settings.compression" "Compression" }}</label>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="compression_enabled" name="compression_enabled" {{ 'checked' if (performance_config.compression_enabled if performance_config else True) else '' }}>
+                                {{ $compression := index .settings "compression_enabled" }}
+                                <input class="form-check-input" type="checkbox" id="compression_enabled" name="compression_enabled" {{ if eq $compression "true" }}checked{{ end }}>
                                 <label class="form-check-label text-white" for="compression_enabled">
                                     {{ call .t "settings.enable_compression" "Enable compression" }}
                                 </label>
@@ -255,7 +265,8 @@
                             <label class="form-label text-white d-flex align-items-center justify-content-between">
                                 <span>{{ call .t "settings.email_notifications" "Email Notifications" }}</span>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {{ 'checked' if (notification_config.email_notifications if notification_config else False) else '' }}>
+                                {{ $email_notif := index .settings "email_notifications" }}
+                                <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {{ if eq $email_notif "true" }}checked{{ end }}>
                                     <label class="form-check-label text-white" for="email_notifications"></label>
                                 </div>
                                 </label>
@@ -263,7 +274,7 @@
                         
                         <div class="mb-3">
                             <label for="email_address" class="form-label text-white">{{ call .t "settings.email_address" "Email Address" }}</label>
-                            <input type="email" class="form-control bg-dark text-white border-secondary" id="email_address" name="email_address" value="{{ notification_config.email_address if notification_config else '' }}">
+                            <input type="email" class="form-control bg-dark text-white border-secondary" id="email_address" name="email_address" value="{{ index .settings "email_address" }}">
                         </div>
 
                         <hr class="border-secondary">
@@ -271,34 +282,36 @@
                         <div class="row">
                             <div class="col-md-8 mb-3">
                                 <label for="smtp_host" class="form-label text-white">{{ call .t "settings.smtp_host" "SMTP Host" }}</label>
-                                <input type="text" class="form-control bg-dark text-white border-secondary" id="smtp_host" name="smtp_host" value="{{ notification_config.smtp_host if notification_config else '' }}" placeholder="smtp.gmail.com">
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="smtp_host" name="smtp_host" value="{{ index .settings "smtp_host" }}" placeholder="smtp.gmail.com">
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label for="smtp_port" class="form-label text-white">{{ call .t "settings.smtp_port" "SMTP Port" }}</label>
-                                <input type="number" class="form-control bg-dark text-white border-secondary" id="smtp_port" name="smtp_port" value="{{ notification_config.smtp_port if notification_config else 587 }}" min="1" max="65535">
+                                {{ $port := index .settings "smtp_port" }}
+                                <input type="number" class="form-control bg-dark text-white border-secondary" id="smtp_port" name="smtp_port" value="{{ if $port }}{{ $port }}{{ else }}587{{ end }}" min="1" max="65535">
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="smtp_user" class="form-label text-white">{{ call .t "settings.smtp_user" "SMTP User" }}</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" id="smtp_user" name="smtp_user" value="{{ notification_config.smtp_user if notification_config else '' }}">
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="smtp_user" name="smtp_user" value="{{ index .settings "smtp_user" }}">
                         </div>
 
                         <div class="mb-3">
                             <label for="smtp_password" class="form-label text-white">{{ call .t "settings.smtp_password" "SMTP Password" }}</label>
-                            <input type="password" class="form-control bg-dark text-white border-secondary" id="smtp_password" name="smtp_password" value="{{ notification_config.smtp_password if notification_config else '' }}" autocomplete="new-password">
+                            <input type="password" class="form-control bg-dark text-white border-secondary" id="smtp_password" name="smtp_password" value="{{ index .settings "smtp_password" }}" autocomplete="new-password">
                             <small class="text-white-50">{{ call .t "settings.smtp_password_hint" "If you use Gmail, use an App Password" }}</small>
                         </div>
 
                         <div class="mb-3">
                             <label for="smtp_from" class="form-label text-white">{{ call .t "settings.smtp_from" "From Email" }}</label>
-                            <input type="email" class="form-control bg-dark text-white border-secondary" id="smtp_from" name="smtp_from" value="{{ notification_config.smtp_from if notification_config else '' }}" placeholder="hostberry@tu-dominio.com">
+                            <input type="email" class="form-control bg-dark text-white border-secondary" id="smtp_from" name="smtp_from" value="{{ index .settings "smtp_from" }}" placeholder="hostberry@tu-dominio.com">
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label text-white">{{ call .t "settings.smtp_tls" "Use TLS (STARTTLS)" }}</label>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="smtp_tls" name="smtp_tls" {{ 'checked' if (notification_config.smtp_tls if notification_config else True) else '' }}>
+                                {{ $tls := index .settings "smtp_tls" }}
+                                <input class="form-check-input" type="checkbox" id="smtp_tls" name="smtp_tls" {{ if eq $tls "true" }}checked{{ end }}>
                                 <label class="form-check-label text-white" for="smtp_tls">
                                     {{ call .t "settings.enable_smtp_tls" "Enable TLS" }}
                                 </label>
@@ -308,7 +321,8 @@
                         <div class="mb-3">
                             <label class="form-label text-white">{{ call .t "settings.system_alerts" "System Alerts" }}</label>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="system_alerts" name="system_alerts" {{ 'checked' if (notification_config.system_alerts if notification_config else True) else '' }}>
+                                {{ $alerts := index .settings "system_alerts" }}
+                                <input class="form-check-input" type="checkbox" id="system_alerts" name="system_alerts" {{ if eq $alerts "true" }}checked{{ end }}>
                                 <label class="form-check-label text-white" for="system_alerts">
                                     {{ call .t "settings.enable_system_alerts" "Enable system alerts" }}
                                 </label>
