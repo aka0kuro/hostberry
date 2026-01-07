@@ -296,6 +296,9 @@ func renderTemplate(c *fiber.Ctx, name string, data fiber.Map) error {
 	if data == nil {
 		data = fiber.Map{}
 	}
+
+	// Identificador de página para layout/base.html (evita navbar en login, etc.)
+	data["page"] = name
 	
 	// Agregar funciones i18n al contexto
 	data["language"] = language
@@ -334,40 +337,35 @@ func renderTemplate(c *fiber.Ctx, name string, data fiber.Map) error {
 	// Log para depuración
 	log.Printf("📂 Intentando renderizar template: %s", templateName)
 
-	// Primero intentar sin extensión (comportamiento estándar de Fiber con .html)
-	if err := c.Render(templateName, data); err != nil {
-		log.Printf("   ❌ Error (sin extensión): %v", err)
-		
-		// Intentar con extensión .html
-		templateNameWithExt := templateName + ".html"
-		var renderErr error
-		if renderErr = c.Render(templateNameWithExt, data); renderErr == nil {
-			log.Printf("   ✅ Éxito con extensión: %s", templateNameWithExt)
-			return nil
-		}
-		log.Printf("   ❌ Error (con extensión): %v", renderErr)
-		
-		// SI FALLA AMBOS, intentar con la ruta completa relativa al motor
-		// A veces Fiber necesita la ruta relativa si el motor está configurado de cierta forma
-		templatePath := "website/templates/" + templateName
-		if errPath := c.Render(templatePath, data); errPath == nil {
-			log.Printf("   ✅ Éxito con ruta completa: %s", templatePath)
-			return nil
-		}
-		
-		// Log detallado del error final
-		log.Printf("   ❌ Todos los intentos fallaron para: %s", name)
-		
-		// Verificar motor de templates
-		if views := c.App().Config().Views; views != nil {
-			log.Printf("   ℹ️ Motor de templates está presente")
-		} else {
-			log.Printf("   ⚠️ Motor de templates NO está configurado")
-		}
-		
-		return err
+	// Render con layout base (evita colisiones globales de {{define "content"}})
+	// Nota: layout se refiere al template "base" (archivo base.html)
+	if err := c.Render(templateName, data, "base"); err == nil {
+		return nil
 	}
-	return nil
+
+	// FallBacks (por compatibilidad)
+	if err := c.Render(templateName+".html", data, "base"); err == nil {
+		return nil
+	}
+	if err := c.Render(templateName, data, "base.html"); err == nil {
+		return nil
+	}
+	if err := c.Render(templateName+".html", data, "base.html"); err == nil {
+		return nil
+	}
+
+	// Último recurso: sin layout (para diagnosticar)
+	if err := c.Render(templateName, data); err == nil {
+		return nil
+	}
+
+	log.Printf("   ❌ Todos los intentos fallaron para: %s", name)
+	if views := c.App().Config().Views; views != nil {
+		log.Printf("   ℹ️ Motor de templates está presente")
+	} else {
+		log.Printf("   ⚠️ Motor de templates NO está configurado")
+	}
+	return fiber.NewError(500, "Error renderizando template")
 }
 
 // copyStaticFiles copia archivos estáticos al directorio de Go
