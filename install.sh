@@ -168,9 +168,26 @@ install_dependencies() {
 
 # Descargar proyecto de GitHub si es necesario
 download_project() {
-    # En modo update, siempre descargar desde GitHub
+    # En modo update, verificar primero si tenemos código local con todos los archivos
     if [ "$MODE" = "update" ]; then
-        print_info "Modo actualización: descargando desde GitHub..."
+        # Verificar si estamos en un repositorio git válido con todos los archivos necesarios
+        local has_all_files=true
+        for item in "website" "lua" "locales" "main.go" "go.mod"; do
+            if [ ! -e "${SCRIPT_DIR}/${item}" ]; then
+                has_all_files=false
+                break
+            fi
+        done
+        
+        # Si tenemos todos los archivos localmente, usar el directorio actual (preferir código local)
+        if [ "$has_all_files" = true ]; then
+            print_info "Modo actualización: usando código local en ${SCRIPT_DIR}"
+            print_warning "⚠️  Si quieres actualizar desde GitHub, ejecuta desde un directorio vacío o sin el repo completo"
+            return 0
+        fi
+        
+        # Si no tenemos código local, descargar desde GitHub
+        print_info "Modo actualización: descargando desde GitHub (no se encontró código local)..."
         
         # Limpiar directorio temporal si existe
         if [ -d "$TEMP_CLONE_DIR" ]; then
