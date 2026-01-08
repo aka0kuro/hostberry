@@ -583,6 +583,7 @@ EOF
     RFKILL_PATH=""
     IFCONFIG_PATH=""
     IW_PATH=""
+    IWCONFIG_PATH=""
     
     # Buscar nmcli
     if command -v nmcli &> /dev/null; then
@@ -616,6 +617,15 @@ EOF
         IW_PATH="/sbin/iw"
     fi
     
+    # Buscar iwconfig (para gestión WiFi)
+    if command -v iwconfig &> /dev/null; then
+        IWCONFIG_PATH=$(command -v iwconfig)
+    elif [ -f "/usr/sbin/iwconfig" ]; then
+        IWCONFIG_PATH="/usr/sbin/iwconfig"
+    elif [ -f "/sbin/iwconfig" ]; then
+        IWCONFIG_PATH="/sbin/iwconfig"
+    fi
+    
     # Configurar sudoers
     cat > "/etc/sudoers.d/hostberry" <<EOF
 # Permisos para HostBerry
@@ -644,6 +654,11 @@ EOF
     if [ -n "$IW_PATH" ]; then
         echo "$USER_NAME ALL=(ALL) NOPASSWD: $IW_PATH" >> "/etc/sudoers.d/hostberry"
         print_info "Permisos agregados para iw: $IW_PATH"
+    fi
+    
+    if [ -n "$IWCONFIG_PATH" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $IWCONFIG_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para iwconfig: $IWCONFIG_PATH"
     fi
     
     # Validar configuración de sudoers
