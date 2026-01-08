@@ -855,9 +855,12 @@ EOF
         SHUTDOWN_PATH="/sbin/shutdown"
     fi
     
-    # Configurar sudoers
+    # Configurar sudoers con configuración para evitar logs en sistemas read-only
     cat > "/etc/sudoers.d/hostberry" <<EOF
 # Permisos para HostBerry
+# Deshabilitar logging de sudo para evitar errores en sistemas read-only
+Defaults!ALL !logfile
+Defaults!ALL !syslog
 $USER_NAME ALL=(ALL) NOPASSWD: $SAFE_DIR/set-timezone
 EOF
     
