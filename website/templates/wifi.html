@@ -210,6 +210,15 @@
     box-sizing: border-box;
 }
 
+/* Evitar que los estados (loading/empty) se “estrechen” */
+#networks-loading,
+#networks-empty,
+#networks-table-container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
 @media (min-width: 992px) {
     .wifi-page .row {
         width: 100%;
@@ -811,27 +820,22 @@ body.light-theme .wifi-interface-select-icon {
     /* En escritorio, forzar que la tarjeta ocupe todo el ancho */
     @media (min-width: 992px) {
         .networks-cards-container {
-            display: flex !important;
-            flex-direction: column !important;
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 0.75rem;
+
             width: 100% !important;
             max-width: 100% !important;
-            box-sizing: border-box !important;
             padding: 0 !important;
             margin: 0 !important;
-        }
-        .network-card {
-            width: 100% !important;
-            max-width: 100% !important;
-            flex-basis: 100% !important;
-            flex-shrink: 0 !important;
-            flex-grow: 0 !important;
-            min-width: 0 !important;
             box-sizing: border-box !important;
         }
-        .network-card-content {
-            min-width: 0 !important;
-            flex: 1 1 auto !important;
+
+        .network-card {
+            width: auto !important;
             max-width: 100% !important;
+            box-sizing: border-box !important;
+            padding: 0.75rem 1rem !important;
         }
         .network-card-actions {
             flex-shrink: 0 !important;
@@ -1003,7 +1007,7 @@ body.light-theme .wifi-interface-select-icon {
             min-width: 0 !important;
             flex: 1 1 auto !important;
             max-width: 100% !important;
-            gap: 1rem !important;
+            gap: 0.75rem !important;
         }
         
         .network-card-actions {
@@ -1012,16 +1016,16 @@ body.light-theme .wifi-interface-select-icon {
         }
         
         .network-card-icon {
-            font-size: 1.5rem !important;
+            font-size: 1.25rem !important;
         }
         
         .network-card-ssid {
-            font-size: 1rem !important;
+            font-size: 0.95rem !important;
         }
         
         .network-card-details {
-            font-size: 0.8rem !important;
-            gap: 1rem !important;
+            font-size: 0.78rem !important;
+            gap: 0.75rem !important;
         }
     }
 
