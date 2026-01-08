@@ -576,8 +576,16 @@
           if (loadingEl) loadingEl.style.display = 'none';
           
           if (data.success && data.networks && data.networks.length > 0) {
-            if (tableEl) tableEl.style.display = 'block';
-            if (tbody) {
+            // Ocultar tabla y mostrar interfaz de conexión
+            if (tableEl) tableEl.style.display = 'none';
+            
+            const connectContainer = document.getElementById('networks-connect-container');
+            const connectGrid = document.getElementById('networks-connect-grid');
+            
+            if (connectContainer && connectGrid) {
+              connectContainer.style.display = 'block';
+              connectGrid.innerHTML = '';
+              
               // Ordenar por señal (mayor a menor)
               data.networks.sort((a, b) => {
                 const signalA = parseInt(a.signal) || 0;
@@ -586,36 +594,99 @@
               });
               
               data.networks.forEach(function(network) {
-                const tr = document.createElement('tr');
                 const security = network.security || 'Open';
                 const securityColor = getSecurityColor(security);
                 const signalStrength = network.signal || 0;
                 const signalPercent = Math.min(100, Math.max(0, (signalStrength + 100) * 2));
                 const signalClass = signalPercent > 70 ? 'text-success' : (signalPercent > 40 ? 'text-warning' : 'text-danger');
-                const frequency = network.frequency || network.channel ? getFrequencyFromChannel(network.channel) : '--';
+                const signalIcon = signalPercent > 70 ? 'bi-wifi' : (signalPercent > 40 ? 'bi-wifi-2' : 'bi-wifi-1');
+                const frequency = network.frequency || (network.channel ? getFrequencyFromChannel(network.channel) : '--');
+                const ssid = network.ssid || t('wifi.hidden_network', 'Hidden Network');
                 
-                tr.innerHTML = 
-                  '<td><strong>' + (network.ssid || t('wifi.hidden_network', 'Hidden Network')) + '</strong></td>' +
-                  '<td><span class="badge bg-' + securityColor + '">' + security + '</span></td>' +
-                  '<td><span class="' + signalClass + '"><i class="bi bi-signal"></i> ' + signalStrength + ' dBm</span></td>' +
-                  '<td>' + (network.channel || '--') + '</td>' +
-                  '<td>' + frequency + '</td>' +
-                  '<td><button class="btn btn-sm btn-outline-primary connect-network-btn" data-ssid="' + (network.ssid || '').replace(/"/g, '&quot;') + '" data-security="' + (security || 'Open').replace(/"/g, '&quot;') + '"><i class="bi bi-wifi"></i> ' + t('wifi.connect', 'Connect') + '</button></td>';
-                tbody.appendChild(tr);
-              });
-              
-              // Agregar event listeners a los botones de conexión
-              tbody.querySelectorAll('.connect-network-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                  const ssid = btn.getAttribute('data-ssid');
-                  const security = btn.getAttribute('data-security');
+                const card = document.createElement('div');
+                card.className = 'network-connect-card';
+                card.setAttribute('data-ssid', ssid.replace(/"/g, '&quot;'));
+                card.setAttribute('data-security', security.replace(/"/g, '&quot;'));
+                
+                card.innerHTML = 
+                  '<div class="network-connect-header">' +
+                    '<h6 class="network-connect-ssid">' + ssid + '</h6>' +
+                    '<span class="badge bg-' + securityColor + ' network-connect-security">' + security + '</span>' +
+                  '</div>' +
+                  '<div class="network-connect-info">' +
+                    '<span class="network-connect-signal ' + signalClass + '">' +
+                      '<i class="bi ' + signalIcon + '"></i> ' + signalStrength + ' dBm' +
+                    '</span>' +
+                    '<span>' + (network.channel ? 'Ch ' + network.channel : '--') + '</span>' +
+                  '</div>' +
+                  '<button class="btn btn-primary network-connect-action">' +
+                    '<i class="bi bi-wifi me-2"></i>' + t('wifi.connect', 'Connect') +
+                  '</button>';
+                
+                // Agregar event listener al card completo y al botón
+                const connectHandler = function(e) {
+                  e.stopPropagation();
+                  const ssid = card.getAttribute('data-ssid');
+                  const security = card.getAttribute('data-security');
                   showConnectModal(ssid, security);
-                });
+                };
+                
+                card.addEventListener('click', connectHandler);
+                const btn = card.querySelector('.network-connect-action');
+                if (btn) {
+                  btn.addEventListener('click', connectHandler);
+                }
+                
+                connectGrid.appendChild(card);
               });
               
-              // Actualizar contador de redes
-              updateStatusCards({});
+              // Hacer scroll hacia la sección de conexión
+              setTimeout(() => {
+                connectContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 100);
+            } else {
+              // Fallback a tabla si no existe el contenedor de conexión
+              if (tableEl) tableEl.style.display = 'block';
+              if (tbody) {
+                // Ordenar por señal (mayor a menor)
+                data.networks.sort((a, b) => {
+                  const signalA = parseInt(a.signal) || 0;
+                  const signalB = parseInt(b.signal) || 0;
+                  return signalB - signalA;
+                });
+                
+                data.networks.forEach(function(network) {
+                  const tr = document.createElement('tr');
+                  const security = network.security || 'Open';
+                  const securityColor = getSecurityColor(security);
+                  const signalStrength = network.signal || 0;
+                  const signalPercent = Math.min(100, Math.max(0, (signalStrength + 100) * 2));
+                  const signalClass = signalPercent > 70 ? 'text-success' : (signalPercent > 40 ? 'text-warning' : 'text-danger');
+                  const frequency = network.frequency || network.channel ? getFrequencyFromChannel(network.channel) : '--';
+                  
+                  tr.innerHTML = 
+                    '<td><strong>' + (network.ssid || t('wifi.hidden_network', 'Hidden Network')) + '</strong></td>' +
+                    '<td><span class="badge bg-' + securityColor + '">' + security + '</span></td>' +
+                    '<td><span class="' + signalClass + '"><i class="bi bi-signal"></i> ' + signalStrength + ' dBm</span></td>' +
+                    '<td>' + (network.channel || '--') + '</td>' +
+                    '<td>' + frequency + '</td>' +
+                    '<td><button class="btn btn-sm btn-outline-primary connect-network-btn" data-ssid="' + (network.ssid || '').replace(/"/g, '&quot;') + '" data-security="' + (security || 'Open').replace(/"/g, '&quot;') + '"><i class="bi bi-wifi"></i> ' + t('wifi.connect', 'Connect') + '</button></td>';
+                  tbody.appendChild(tr);
+                });
+                
+                // Agregar event listeners a los botones de conexión
+                tbody.querySelectorAll('.connect-network-btn').forEach(function(btn) {
+                  btn.addEventListener('click', function() {
+                    const ssid = btn.getAttribute('data-ssid');
+                    const security = btn.getAttribute('data-security');
+                    showConnectModal(ssid, security);
+                  });
+                });
+              }
             }
+            
+            // Actualizar contador de redes
+            updateStatusCards({});
             showAlert('success', t('wifi.found_networks', 'Found {count} networks').replace('{count}', data.networks.length));
           } else {
             if (emptyEl) {
