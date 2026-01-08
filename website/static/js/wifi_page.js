@@ -621,22 +621,86 @@
                     '</span>' +
                     '<span>' + (network.channel ? 'Ch ' + network.channel : '--') + '</span>' +
                   '</div>' +
-                  '<button class="btn btn-primary network-connect-action">' +
+                  '<button class="btn btn-primary network-connect-action" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + security.replace(/"/g, '&quot;') + '">' +
                     '<i class="bi bi-wifi me-2"></i>' + t('wifi.connect', 'Connect') +
-                  '</button>';
+                  '</button>' +
+                  '<div class="network-connect-form" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + security.replace(/"/g, '&quot;') + '">' +
+                    '<div class="network-connect-form-group">' +
+                      '<label class="network-connect-form-label">' + t('wifi.network_ssid', 'Network Name (SSID)') + '</label>' +
+                      '<input type="text" class="network-connect-form-input" value="' + ssid.replace(/"/g, '&quot;') + '" readonly>' +
+                    '</div>' +
+                    '<div class="network-connect-form-group">' +
+                      '<label class="network-connect-form-label">' + t('wifi.security_type', 'Security Type') + '</label>' +
+                      '<input type="text" class="network-connect-form-input" value="' + security.replace(/"/g, '&quot;') + '" readonly>' +
+                    '</div>' +
+                    (security !== 'Open' ? 
+                      '<div class="network-connect-form-group">' +
+                        '<label class="network-connect-form-label">' + t('auth.password', 'Password') + '</label>' +
+                        '<div style="position: relative;">' +
+                          '<input type="password" class="network-connect-form-input network-connect-password" placeholder="' + t('auth.password_placeholder', 'Password') + '" autocomplete="current-password">' +
+                          '<button type="button" class="btn btn-sm btn-outline-secondary" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%);" onclick="togglePasswordVisibility(this)">' +
+                            '<i class="bi bi-eye"></i>' +
+                          '</button>' +
+                        '</div>' +
+                      '</div>' : '') +
+                    '<div class="network-connect-form-actions">' +
+                      '<button type="button" class="btn btn-secondary network-connect-cancel">' + t('common.cancel', 'Cancel') + '</button>' +
+                      '<button type="button" class="btn btn-primary network-connect-submit">' +
+                        '<i class="bi bi-wifi me-2"></i>' + t('wifi.connect_now', 'Connect Now') +
+                      '</button>' +
+                    '</div>' +
+                  '</div>';
                 
-                // Agregar event listener al card completo y al botón
-                const connectHandler = function(e) {
-                  e.stopPropagation();
-                  const ssid = card.getAttribute('data-ssid');
-                  const security = card.getAttribute('data-security');
-                  showConnectModal(ssid, security);
-                };
+                // Agregar event listener al botón Connect
+                const connectBtn = card.querySelector('.network-connect-action');
+                if (connectBtn) {
+                  connectBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const form = card.querySelector('.network-connect-form');
+                    if (form) {
+                      form.classList.add('show');
+                      // Hacer scroll hacia la tarjeta
+                      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      // Enfocar el campo de contraseña si existe
+                      const passwordInput = form.querySelector('.network-connect-password');
+                      if (passwordInput) {
+                        setTimeout(() => passwordInput.focus(), 300);
+                      }
+                    }
+                  });
+                }
                 
-                card.addEventListener('click', connectHandler);
-                const btn = card.querySelector('.network-connect-action');
-                if (btn) {
-                  btn.addEventListener('click', connectHandler);
+                // Botón cancelar
+                const cancelBtn = card.querySelector('.network-connect-cancel');
+                if (cancelBtn) {
+                  cancelBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const form = card.querySelector('.network-connect-form');
+                    if (form) {
+                      form.classList.remove('show');
+                    }
+                  });
+                }
+                
+                // Botón conectar
+                const submitBtn = card.querySelector('.network-connect-submit');
+                if (submitBtn) {
+                  submitBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const form = card.querySelector('.network-connect-form');
+                    const ssid = form.getAttribute('data-ssid');
+                    const security = form.getAttribute('data-security');
+                    const passwordInput = form.querySelector('.network-connect-password');
+                    const password = passwordInput ? passwordInput.value : '';
+                    
+                    if (security !== 'Open' && !password) {
+                      showAlert('danger', t('wifi.password_required', 'Please enter the network password.'));
+                      if (passwordInput) passwordInput.focus();
+                      return;
+                    }
+                    
+                    connectToNetwork(ssid, security, password, card);
+                  });
                 }
                 
                 connectGrid.appendChild(card);
