@@ -190,6 +190,30 @@
     }
   }
   
+  // Update connect buttons in network cards
+  function updateConnectButtons(currentSSID) {
+    const connectGrid = document.getElementById('networks-connect-grid');
+    if (!connectGrid || !currentSSID) return;
+    
+    const cards = connectGrid.querySelectorAll('.network-connect-card');
+    cards.forEach(function(card) {
+      const cardSSID = card.getAttribute('data-ssid');
+      const connectBtn = card.querySelector('.network-connect-action');
+      
+      if (connectBtn && cardSSID === currentSSID) {
+        // Esta es la red conectada
+        connectBtn.className = 'btn btn-success network-connect-action';
+        connectBtn.disabled = true;
+        connectBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>' + t('wifi.connected', 'Connected');
+      } else if (connectBtn && connectBtn.disabled) {
+        // Ya no está conectada, restaurar botón
+        connectBtn.className = 'btn btn-primary network-connect-action';
+        connectBtn.disabled = false;
+        connectBtn.innerHTML = '<i class="bi bi-wifi me-2"></i>' + t('wifi.connect', 'Connect');
+      }
+    });
+  }
+  
   // Update toggle button
   function updateToggleButton(statusData) {
     const btn = document.getElementById('toggle-wifi-btn');
