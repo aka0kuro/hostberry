@@ -220,10 +220,30 @@
         // Si no está conectado, restaurar todos los botones
         updateConnectButtons(null);
       }
+      
+      console.log('✅ Estado de conexión cargado correctamente');
     } catch (e) {
-      console.error('Error loading connection status:', e);
+      console.error('❌ Error loading connection status:', e);
+      console.error('Stack trace:', e.stack);
       const statusEl = document.getElementById('connection-status');
       if (statusEl) statusEl.innerHTML = '<span class="badge bg-danger">' + t('errors.load_error', 'Error loading') + '</span>';
+      
+      // Mostrar error en los campos
+      const ssidEl = document.getElementById('connection-ssid');
+      const signalEl = document.getElementById('connection-signal');
+      const securityEl = document.getElementById('connection-security');
+      const channelEl = document.getElementById('connection-channel');
+      const ipEl = document.getElementById('connection-ip');
+      const macEl = document.getElementById('connection-mac');
+      const speedEl = document.getElementById('connection-speed');
+      
+      if (ssidEl) ssidEl.textContent = 'Error';
+      if (signalEl) signalEl.textContent = '--';
+      if (securityEl) securityEl.textContent = '--';
+      if (channelEl) channelEl.textContent = '--';
+      if (ipEl) ipEl.textContent = '--';
+      if (macEl) macEl.textContent = '--';
+      if (speedEl) speedEl.textContent = '--';
     }
   }
   
