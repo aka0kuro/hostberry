@@ -551,6 +551,7 @@
     if (loadingEl) loadingEl.style.display = 'block';
     if (emptyEl) emptyEl.style.display = 'none';
     if (tableEl) tableEl.style.display = 'none';
+    if (connectContainer) connectContainer.style.display = 'none';
     if (tbody) tbody.innerHTML = '';
     
     if (scanBtn) {
