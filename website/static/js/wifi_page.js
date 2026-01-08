@@ -953,6 +953,12 @@
             form.classList.remove('show');
           }
           
+          // Ocultar formulario inline si existe
+          const formRow = cardElement ? cardElement.closest('.connect-form-row') : null;
+          if (formRow) {
+            formRow.remove();
+          }
+          
           // Actualizar botones inmediatamente
           updateConnectButtons(ssid);
           
