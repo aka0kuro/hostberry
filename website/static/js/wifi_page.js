@@ -149,12 +149,25 @@
       if (statusData.connected && statusData.current_connection) {
         if (statusEl) statusEl.innerHTML = '<span class="badge bg-success">' + t('wifi.connected', 'Connected') + '</span>';
         if (ssidEl) ssidEl.textContent = statusData.current_connection || statusData.ssid || '--';
-        if (signalEl) signalEl.textContent = (statusData.connection_info?.signal || statusData.signal || '--') + ' dBm';
-        if (securityEl) securityEl.textContent = statusData.connection_info?.security || statusData.security || '--';
-        if (channelEl) channelEl.textContent = statusData.connection_info?.channel || statusData.channel || '--';
-        if (ipEl) ipEl.textContent = statusData.connection_info?.ip || statusData.ip || '--';
-        if (macEl) macEl.textContent = statusData.connection_info?.mac || statusData.mac || '--';
-        if (speedEl) speedEl.textContent = statusData.connection_info?.speed || statusData.speed || '--';
+        
+        // Obtener información de conexión
+        const connInfo = statusData.connection_info || {};
+        const signal = connInfo.signal || statusData.signal;
+        const security = connInfo.security || statusData.security;
+        const channel = connInfo.channel || statusData.channel;
+        const ip = connInfo.ip || statusData.ip;
+        const mac = connInfo.mac || statusData.mac;
+        const speed = connInfo.speed || statusData.speed;
+        
+        if (signalEl) signalEl.textContent = signal ? (signal + ' dBm') : '--';
+        if (securityEl) securityEl.textContent = security || '--';
+        if (channelEl) channelEl.textContent = channel || '--';
+        if (ipEl) ipEl.textContent = ip || '--';
+        if (macEl) macEl.textContent = mac || '--';
+        if (speedEl) speedEl.textContent = speed || '--';
+        
+        // Actualizar botones de conexión en las tarjetas
+        updateConnectButtons(statusData.current_connection);
       } else {
         if (statusEl) statusEl.innerHTML = '<span class="badge bg-danger">' + t('wifi.not_connected', 'Not Connected') + '</span>';
         if (ssidEl) ssidEl.textContent = t('wifi.no_connection', 'No connection');
