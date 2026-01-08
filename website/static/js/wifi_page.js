@@ -10,16 +10,23 @@
     // Fallback: try to get from i18n-json
     try {
       const i18nScript = document.getElementById('i18n-json');
-      if (i18nScript) {
-        const translations = JSON.parse(i18nScript.textContent);
-        const keys = key.split('.');
-        let value = translations;
-        for (const k of keys) {
-          value = value && value[k];
+      if (i18nScript && i18nScript.textContent) {
+        const content = i18nScript.textContent.trim();
+        if (content && content !== '') {
+          const translations = JSON.parse(content);
+          if (translations && typeof translations === 'object') {
+            const keys = key.split('.');
+            let value = translations;
+            for (const k of keys) {
+              value = value && value[k];
+            }
+            if (typeof value === 'string') return value;
+          }
         }
-        if (typeof value === 'string') return value;
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Error parsing translations:', e);
+    }
     return defaultValue || key;
   }
   
