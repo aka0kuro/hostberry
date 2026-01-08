@@ -720,13 +720,17 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 				}
 			}
 		}
-	} else if enabled {
-		// Si WiFi está habilitado pero no conectado, intentar obtener información básica de la interfaz
+	}
+	
+	// Si WiFi está habilitado pero no conectado, intentar obtener información básica de la interfaz
+	if !connected && enabled {
 		ifaceCmd := execCommand("nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
 		if ifaceOut, err := ifaceCmd.Output(); err == nil {
 			iface := strings.TrimSpace(string(ifaceOut))
 			if iface != "" {
-				connectionInfo = fiber.Map{}
+				if connectionInfo == nil {
+					connectionInfo = fiber.Map{}
+				}
 				// Obtener MAC aunque no esté conectado
 				macCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/address 2>/dev/null", iface))
 				macOut, _ := macCmd.Output()
