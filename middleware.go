@@ -68,19 +68,29 @@ func requireAuth(c *fiber.Ctx) error {
 	if strings.HasPrefix(path, "/api/") {
 		authHeader := c.Get("Authorization")
 		if authHeader == "" {
-			return c.Status(401).JSON(fiber.Map{
-				"error": "No autorizado - token requerido",
-			})
+			// Fallback: permitir también cookie o query token para clientes que no usan Authorization
+			// (p.ej. navegadores donde la sesión se maneja por cookie o links con ?token=)
+			token = c.Cookies("access_token")
+			if token == "" {
+				token = c.Query("token")
+			}
+			if token == "" {
+				return c.Status(401).JSON(fiber.Map{
+					"error": "No autorizado - token requerido",
+				})
+			}
+			// Ya tenemos token válido para validar más abajo
+		} else {
+			// Extraer token (formato: "Bearer <token>")
+			parts := strings.Split(authHeader, " ")
+			if len(parts) != 2 || parts[0] != "Bearer" {
+				return c.Status(401).JSON(fiber.Map{
+					"error": "Formato de token inválido",
+				})
+			}
+			token = parts[1]
 		}
 
-		// Extraer token (formato: "Bearer <token>")
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			return c.Status(401).JSON(fiber.Map{
-				"error": "Formato de token inválido",
-			})
-		}
-		token = parts[1]
 	} else {
 		// Para rutas web, intentar obtener token de cookie o query parameter
 		token = c.Cookies("access_token")
