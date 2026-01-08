@@ -296,13 +296,13 @@ func wifiUnblockHandler(c *fiber.Ctx) error {
 		}
 	}
 
-	// Método 2: Intentar con nmcli (siempre con sudo)
+	// Método 2: Intentar con nmcli
 	if !success {
 		nmcliCheck := exec.Command("sh", "-c", "command -v nmcli 2>/dev/null")
 		if nmcliCheck.Run() == nil {
-			// Intentar con sudo
-			nmcliCmd := "sudo nmcli radio wifi on"
-			nmcliOut, nmcliErr := exec.Command("sh", "-c", nmcliCmd+" 2>&1").CombinedOutput()
+			// Intentar habilitar
+			nmcliCmd := "nmcli radio wifi on"
+			nmcliOut, nmcliErr := execCommand(nmcliCmd + " 2>&1").CombinedOutput()
 			if nmcliErr == nil {
 				success = true
 				method = "nmcli (con sudo)"
