@@ -741,7 +741,12 @@
           
           if (data.success && data.networks && data.networks.length > 0) {
             // Mostrar tarjetas con las redes
-            if (tableEl) tableEl.style.display = 'block';
+            if (tableEl) {
+              tableEl.style.display = 'block';
+              // Asegurar que el contenedor mantenga su ancho completo
+              tableEl.style.width = '100%';
+              tableEl.style.maxWidth = '100%';
+            }
             if (tbody) {
               // Obtener red conectada actual para comparar
               let currentSSID = null;
