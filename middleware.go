@@ -17,6 +17,17 @@ func requireAuth(c *fiber.Ctx) error {
 	}
 
 	path := c.Path()
+
+	// IMPORTANTÍSIMO: los assets estáticos nunca deben requerir auth.
+	// Si /static/* se redirige a /login, el navegador recibe HTML en vez de CSS/JS
+	// y aparecen errores de MIME (nosniff) y errores de sintaxis JS.
+	if strings.HasPrefix(path, "/static/") {
+		return c.Next()
+	}
+	// También permitir páginas públicas incluso si este middleware se aplica globalmente.
+	if path == "/login" || path == "/first-login" || path == "/" {
+		return c.Next()
+	}
 	
 	// Rutas públicas que NO requieren autenticación
 	// Verificar primero las rutas públicas antes de cualquier otra lógica
