@@ -823,6 +823,7 @@
   
   // Export functions to window
   window.toggleWiFi = toggleWiFi;
+  window.unblockWiFi = unblockWiFi;
   window.scanNetworks = scanNetworks;
   window.connectToNetwork = connectToNetwork;
   window.toggleAutoConnect = toggleAutoConnect;
