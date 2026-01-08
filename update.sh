@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # HostBerry - Script de Actualización Rápida
+# Este script es un wrapper que llama a install.sh --update
 # Verifica actualizaciones en GitHub y crea backup antes de actualizar
 
 set -e
