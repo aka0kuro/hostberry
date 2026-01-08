@@ -148,21 +148,30 @@
       
       if (!resp.ok) {
         console.error('Error en respuesta API:', resp.status, resp.statusText);
-        const errorText = await resp.text();
-        console.error('Error response:', errorText);
-        throw new Error('Error al cargar estado: ' + resp.status);
+        let errorText = '';
+        try {
+          errorText = await resp.text();
+          console.error('Error response:', errorText);
+        } catch (e) {
+          console.error('No se pudo leer el texto de error:', e);
+        }
+        throw new Error('Error al cargar estado: HTTP ' + resp.status);
       }
       
       let data;
       try {
         const text = await resp.text();
         if (!text || text.trim() === '') {
-          throw new Error('Empty response from server');
+          console.warn('Respuesta vacía del servidor');
+          data = {};
+        } else {
+          data = JSON.parse(text);
         }
-        data = JSON.parse(text);
       } catch (parseError) {
         console.error('Error parsing JSON response:', parseError);
-        throw new Error('Invalid JSON response from server: ' + parseError.message);
+        console.error('Response was not valid JSON');
+        // Continuar con objeto vacío en lugar de lanzar error
+        data = {};
       }
       
       console.log('Datos recibidos del API:', data);
@@ -170,7 +179,7 @@
       console.log('Estado procesado:', statusData);
       
       // Debug: mostrar todos los datos disponibles
-      if (Object.keys(statusData).length === 0) {
+      if (Object.keys(statusData).length === 0 && Object.keys(data).length > 0) {
         console.warn('⚠️ statusData está vacío, datos completos:', data);
       }
       
