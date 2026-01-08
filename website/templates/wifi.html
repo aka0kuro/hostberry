@@ -971,7 +971,7 @@ body.light-theme .wifi-interface-select-icon {
         border-top: none;
     }
 
-    /* Desktop (>= 992px) - tarjetas a todo ancho, una por fila */
+    /* Desktop (>= 992px) - grid compacto (tarjetas más pequeñas) */
     @media (min-width: 992px) {
         #networks-table-container {
             width: 100% !important;
@@ -982,8 +982,8 @@ body.light-theme .wifi-interface-select-icon {
         }
         
         .networks-cards-container {
-            display: flex !important;
-            flex-direction: column !important;
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 0.75rem;
             width: 100% !important;
             max-width: 100% !important;
@@ -993,14 +993,11 @@ body.light-theme .wifi-interface-select-icon {
         }
 
         .network-card {
-            width: 100% !important;
+            width: auto !important;
             max-width: 100% !important;
-            flex-basis: 100% !important;
-            flex-shrink: 0 !important;
-            flex-grow: 0 !important;
             box-sizing: border-box !important;
             min-width: 0 !important;
-            padding: 1rem 1.25rem !important;
+            padding: 0.75rem 1rem !important;
         }
         
         .network-card-content {
