@@ -1121,6 +1121,9 @@
               updateConnectButtons(ssid);
             }, 500);
           }, 2000);
+          
+          // Detener cualquier escaneo automático ya que estamos conectados
+          // (el escaneo se reanudará si nos desconectamos)
         } else {
           const errorMsg = data.error || t('errors.connection_failed', 'Connection failed');
           showAlert('danger', errorMsg);
