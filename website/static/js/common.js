@@ -163,7 +163,17 @@
     
     // Auth token
     if(!headers.has('Authorization')){
-      const token = localStorage.getItem('access_token');
+      let token = localStorage.getItem('access_token');
+      // Fallback: si no hay token en localStorage, intentar leerlo de la URL (?token=)
+      // Esto permite que funcione incluso si el navegador no guarda cookies.
+      if(!token){
+        try{
+          const u = new URL(window.location.href);
+          token = u.searchParams.get('token') || '';
+        }catch(_e){
+          token = '';
+        }
+      }
       if(token) headers.set('Authorization', 'Bearer ' + token);
     }
     
