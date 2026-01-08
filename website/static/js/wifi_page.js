@@ -162,7 +162,6 @@
         data = JSON.parse(text);
       } catch (parseError) {
         console.error('Error parsing JSON response:', parseError);
-        console.error('Response text:', await resp.text());
         throw new Error('Invalid JSON response from server: ' + parseError.message);
       }
       
