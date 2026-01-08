@@ -38,66 +38,15 @@ check_root() {
 }
 
 main() {
-    echo ""
-    echo -e "${BLUE}========================================${NC}"
-    echo -e "${BLUE}  Desinstalador de HostBerry${NC}"
-    echo -e "${BLUE}========================================${NC}"
-    echo ""
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     
-    check_root
-    
-    # Detener y deshabilitar servicio
-    if systemctl is-active --quiet "${SERVICE_NAME}" 2>/dev/null; then
-        print_info "Deteniendo servicio..."
-        systemctl stop "${SERVICE_NAME}"
-        systemctl disable "${SERVICE_NAME}"
-        print_success "Servicio detenido"
-    fi
-    
-    # Eliminar servicio systemd
-    if [ -f "$SERVICE_FILE" ]; then
-        print_info "Eliminando servicio systemd..."
-        rm -f "$SERVICE_FILE"
-        systemctl daemon-reload
-        print_success "Servicio eliminado"
-    fi
-    
-    # Preguntar si eliminar datos
-    echo ""
-    read -p "¿Deseas eliminar los datos y archivos de configuración? (s/N): " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Ss]$ ]]; then
-        # Eliminar directorio de instalación
-        if [ -d "$INSTALL_DIR" ]; then
-            print_info "Eliminando archivos de instalación..."
-            rm -rf "$INSTALL_DIR"
-            print_success "Archivos eliminados"
-        fi
-        
-        # Eliminar logs
-        if [ -d "/var/log/hostberry" ]; then
-            print_info "Eliminando logs..."
-            rm -rf "/var/log/hostberry"
-            print_success "Logs eliminados"
-        fi
-        
-        # Eliminar usuario (opcional)
-        read -p "¿Deseas eliminar el usuario ${USER_NAME}? (s/N): " -n 1 -r
-        echo ""
-        if [[ $REPLY =~ ^[Ss]$ ]]; then
-            if id "$USER_NAME" &>/dev/null; then
-                print_info "Eliminando usuario ${USER_NAME}..."
-                userdel "$USER_NAME" 2>/dev/null || true
-                print_success "Usuario eliminado"
-            fi
-        fi
+    # Ejecutar el instalador en modo desinstalación
+    if [ -f "${SCRIPT_DIR}/install.sh" ]; then
+        exec "${SCRIPT_DIR}/install.sh" --uninstall
     else
-        print_info "Archivos conservados en $INSTALL_DIR"
+        print_error "install.sh no encontrado en ${SCRIPT_DIR}"
+        exit 1
     fi
-    
-    echo ""
-    print_success "HostBerry desinstalado correctamente"
-    echo ""
 }
 
 main
