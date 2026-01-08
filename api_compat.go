@@ -150,8 +150,8 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 	}
 
 	// Fallback: Intentar métodos directos
-	// Método 1: Intentar con nmcli (siempre con sudo)
-	out, err := exec.Command("sh", "-c", "sudo nmcli -t -f WIFI g 2>/dev/null").CombinedOutput()
+	// Método 1: Intentar con nmcli
+	out, err := execCommand("nmcli -t -f WIFI g 2>/dev/null").CombinedOutput()
 	state := strings.TrimSpace(string(out))
 	if err == nil && state != "" {
 		var cmd string
