@@ -38,6 +38,7 @@ func createDefaultAdmin() {
 }
 
 // executeCommand ejecuta un comando del sistema de forma segura
+// Usa execCommand internamente para manejar sudo automáticamente
 func executeCommand(cmd string) (string, error) {
 	// Lista blanca de comandos permitidos
 	allowedCommands := []string{
@@ -49,13 +50,23 @@ func executeCommand(cmd string) (string, error) {
 		"rfkill", "ifconfig", "iwconfig",
 	}
 	
-	// Validar comando
+	// Validar comando (extraer el comando base, ignorando sudo si está presente)
 	parts := strings.Fields(cmd)
 	if len(parts) == 0 {
 		return "", nil
 	}
 	
-	command := parts[0]
+	// Si el primer argumento es "sudo", usar el segundo como comando
+	commandIndex := 0
+	if len(parts) > 1 && parts[0] == "sudo" {
+		commandIndex = 1
+	}
+	
+	if commandIndex >= len(parts) {
+		return "", exec.ErrNotFound
+	}
+	
+	command := parts[commandIndex]
 	allowed := false
 	for _, allowedCmd := range allowedCommands {
 		if command == allowedCmd {
@@ -68,8 +79,10 @@ func executeCommand(cmd string) (string, error) {
 		return "", exec.ErrNotFound // Devolver error para que Lua/handlers lo reporten
 	}
 	
-	// Ejecutar comando
-	out, err := exec.Command("sh", "-c", cmd).CombinedOutput()
+	// Usar execCommand para manejar sudo automáticamente
+	// execCommand remueve "sudo" si está presente y lo agrega si es necesario
+	cmdObj := execCommand(cmd)
+	out, err := cmdObj.CombinedOutput()
 	if err != nil {
 		return "", err
 	}
