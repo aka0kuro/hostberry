@@ -1066,6 +1066,7 @@
     "system_alerts": "System Alerts",
     "enable_system_alerts": "Enable system alerts",
     "saving": "Saving...",
+    "retry": "Retry",
     "saved": "Settings saved successfully",
     "timezone_updated": "Timezone updated. Changes will take effect on next page reload.",
     "author": "Author",
