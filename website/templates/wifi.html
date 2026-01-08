@@ -848,7 +848,22 @@ body.light-theme .wifi-interface-select-icon {
         border-top: none;
     }
 
-    @media (max-width: 768px) {
+    /* Desktop - tarjetas a todo ancho */
+    @media (min-width: 992px) {
+        .network-card {
+            width: 100%;
+            max-width: 100%;
+        }
+    }
+
+    /* Tablet - tarjetas más pequeñas (2 columnas si hay espacio) */
+    @media (min-width: 768px) and (max-width: 991px) {
+        .networks-cards-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
         .network-card {
             flex-direction: column;
             align-items: flex-start;
@@ -874,7 +889,47 @@ body.light-theme .wifi-interface-select-icon {
         }
 
         .network-card-actions .btn {
-            flex: 1;
+            width: 100%;
+        }
+    }
+
+    /* Móvil - tarjetas a tamaño móvil (1 columna, ancho completo) */
+    @media (max-width: 767px) {
+        .networks-cards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .network-card {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 1.25rem;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .network-card-content {
+            width: 100%;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .network-card-details {
+            width: 100%;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .network-card-actions {
+            width: 100%;
+            justify-content: flex-end;
+        }
+
+        .network-card-actions .btn {
+            width: 100%;
         }
     }
 
