@@ -190,6 +190,35 @@
     }
 }
 
+/* Asegurar que las filas y columnas ocupen todo el ancho en desktop */
+.wifi-page .row {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.wifi-page .col-12 {
+    width: 100%;
+    max-width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+    flex: 0 0 100%;
+}
+
+@media (min-width: 992px) {
+    .wifi-page .row {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .wifi-page .col-12 {
+        width: 100%;
+        max-width: 100%;
+        flex: 0 0 100%;
+    }
+}
+
 .dashboard-header {
     margin-bottom: 2rem;
     padding: 1.5rem 0;
