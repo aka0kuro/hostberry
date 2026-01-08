@@ -624,15 +624,15 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 		}
 	}
 	
-	// Si nmcli no está disponible y rfkill no muestra bloqueo, verificar con iwconfig (con sudo)
+	// Si nmcli no está disponible y rfkill no muestra bloqueo, verificar con iwconfig
 	if !enabled && !hardBlocked && !softBlocked {
-		iwOut, _ := exec.Command("sh", "-c", "sudo iwconfig 2>/dev/null | grep -i 'wlan' | head -1").CombinedOutput()
+		iwOut, _ := execCommand("iwconfig 2>/dev/null | grep -i 'wlan' | head -1").CombinedOutput()
 		if len(iwOut) > 0 {
 			// Si hay una interfaz WiFi, verificar si está activa
-			iwStatus, _ := exec.Command("sh", "-c", "sudo iwconfig 2>/dev/null | grep -i 'wlan' | head -1 | grep -i 'unassociated'").CombinedOutput()
+			iwStatus, _ := execCommand("iwconfig 2>/dev/null | grep -i 'wlan' | head -1 | grep -i 'unassociated'").CombinedOutput()
 			if len(iwStatus) == 0 {
 				// No está "unassociated", verificar también con nmcli
-				wifiCheck3 := exec.Command("sh", "-c", "sudo nmcli -t -f WIFI g 2>/dev/null")
+				wifiCheck3 := execCommand("nmcli -t -f WIFI g 2>/dev/null")
 				wifiOut3, err3 := wifiCheck3.Output()
 				if err3 == nil {
 					wifiState3 := strings.ToLower(strings.TrimSpace(string(wifiOut3)))
