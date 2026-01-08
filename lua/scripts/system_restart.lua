@@ -12,8 +12,32 @@ end
 log("INFO", "Reinicio del sistema solicitado por: " .. user)
 
 -- Ejecutar comando de reinicio
-local restart_cmd = "sudo shutdown -r +1"
+-- Intentar con systemctl primero (más moderno), luego con shutdown
+local restart_cmd = "sudo systemctl reboot"
 local output, err = exec(restart_cmd)
+
+-- Si systemctl falla, intentar con shutdown
+if err then
+    log("WARN", "systemctl reboot falló, intentando con shutdown: " .. tostring(err))
+    -- Buscar shutdown en rutas comunes
+    local shutdown_paths = {"/usr/sbin/shutdown", "/sbin/shutdown", "shutdown"}
+    local found = false
+    for _, path in ipairs(shutdown_paths) do
+        local test_cmd = "command -v " .. path .. " 2>/dev/null"
+        local test_out, test_err = exec(test_cmd)
+        if not test_err and test_out and test_out ~= "" then
+            restart_cmd = "sudo " .. path .. " -r +1"
+            output, err = exec(restart_cmd)
+            found = true
+            break
+        end
+    end
+    if not found then
+        -- Último recurso: intentar con reboot directo
+        restart_cmd = "sudo reboot"
+        output, err = exec(restart_cmd)
+    end
+end
 
 if err then
     result.success = false
