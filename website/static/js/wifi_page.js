@@ -595,6 +595,21 @@
                 return signalB - signalA;
               });
               
+              // Obtener red conectada actual para comparar
+              let currentSSID = null;
+              try {
+                const statusResp = await apiRequest('/api/wifi/status');
+                if (statusResp.ok) {
+                  const statusData = await statusResp.json();
+                  const status = statusData.status || statusData;
+                  if (status.connected && status.current_connection) {
+                    currentSSID = status.current_connection;
+                  }
+                }
+              } catch (e) {
+                console.error('Error getting current connection:', e);
+              }
+              
               data.networks.forEach(function(network) {
                 const security = network.security || 'Open';
                 const securityColor = getSecurityColor(security);
@@ -604,11 +619,24 @@
                 const signalIcon = signalPercent > 70 ? 'bi-wifi' : (signalPercent > 40 ? 'bi-wifi-2' : 'bi-wifi-1');
                 const frequency = network.frequency || (network.channel ? getFrequencyFromChannel(network.channel) : '--');
                 const ssid = network.ssid || t('wifi.hidden_network', 'Hidden Network');
+                const isConnected = currentSSID && currentSSID === ssid;
                 
                 const card = document.createElement('div');
                 card.className = 'network-connect-card';
                 card.setAttribute('data-ssid', ssid.replace(/"/g, '&quot;'));
                 card.setAttribute('data-security', security.replace(/"/g, '&quot;'));
+                
+                // Botón de conexión - mostrar "Connected" si está conectado
+                let connectButtonHtml = '';
+                if (isConnected) {
+                  connectButtonHtml = '<button class="btn btn-success network-connect-action" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + security.replace(/"/g, '&quot;') + '" disabled>' +
+                    '<i class="bi bi-check-circle me-2"></i>' + t('wifi.connected', 'Connected') +
+                  '</button>';
+                } else {
+                  connectButtonHtml = '<button class="btn btn-primary network-connect-action" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + security.replace(/"/g, '&quot;') + '">' +
+                    '<i class="bi bi-wifi me-2"></i>' + t('wifi.connect', 'Connect') +
+                  '</button>';
+                }
                 
                 card.innerHTML = 
                   '<div class="network-connect-header">' +
@@ -621,9 +649,7 @@
                     '</span>' +
                     '<span>' + (network.channel ? 'Ch ' + network.channel : '--') + '</span>' +
                   '</div>' +
-                  '<button class="btn btn-primary network-connect-action" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + security.replace(/"/g, '&quot;') + '">' +
-                    '<i class="bi bi-wifi me-2"></i>' + t('wifi.connect', 'Connect') +
-                  '</button>' +
+                  connectButtonHtml +
                   '<div class="network-connect-form" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + security.replace(/"/g, '&quot;') + '">' +
                     '<div class="network-connect-form-group">' +
                       '<label class="network-connect-form-label">' + t('wifi.network_ssid', 'Network Name (SSID)') + '</label>' +
