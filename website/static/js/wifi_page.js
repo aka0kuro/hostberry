@@ -65,6 +65,12 @@
     }
   }
   
+  // Expose apiRequest to HostBerry namespace for compatibility
+  if (!window.HostBerry) {
+    window.HostBerry = {};
+  }
+  window.HostBerry.apiRequest = apiRequest;
+  
   // Update status cards
   function updateStatusCards(data) {
     const wifiStatusValue = document.getElementById('wifi-status-value');
