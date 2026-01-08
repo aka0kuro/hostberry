@@ -600,8 +600,8 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 		}
 	}
 	
-	// Método 2: Verificar con rfkill para obtener información de bloqueo (con sudo)
-	rfkillOut, _ := exec.Command("sh", "-c", "sudo rfkill list wifi 2>/dev/null").CombinedOutput()
+	// Método 2: Verificar con rfkill para obtener información de bloqueo
+	rfkillOut, _ := execCommand("rfkill list wifi 2>/dev/null").CombinedOutput()
 	rfkillStr := strings.ToLower(string(rfkillOut))
 	if strings.Contains(rfkillStr, "hard blocked: yes") {
 		hardBlocked = true
