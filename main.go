@@ -702,7 +702,7 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 	// Verificar que WiFi esté habilitado
 	wifiCheck := execCommand("nmcli -t -f WIFI g 2>/dev/null")
 	wifiOut, _ := wifiCheck.Output()
-	wifiState := strings.ToLower(strings.TrimSpace(filterSudoErrors(string(wifiOut))))
+	wifiState := strings.ToLower(strings.TrimSpace(filterSudoErrors(wifiOut)))
 	if !strings.Contains(wifiState, "enabled") && !strings.Contains(wifiState, "on") {
 		log.Printf("⚠️  WiFi no está habilitado")
 		return c.JSON(fiber.Map{
