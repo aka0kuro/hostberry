@@ -168,7 +168,28 @@ install_dependencies() {
 
 # Descargar proyecto de GitHub si es necesario
 download_project() {
-    # Verificar si estamos en un repositorio git válido con todos los archivos necesarios
+    # En modo update, siempre descargar desde GitHub
+    if [ "$MODE" = "update" ]; then
+        print_info "Modo actualización: descargando desde GitHub..."
+        
+        # Limpiar directorio temporal si existe
+        if [ -d "$TEMP_CLONE_DIR" ]; then
+            rm -rf "$TEMP_CLONE_DIR"
+        fi
+        
+        # Clonar repositorio
+        if git clone "$GITHUB_REPO" "$TEMP_CLONE_DIR" 2>/dev/null; then
+            print_success "Proyecto descargado desde GitHub"
+            SCRIPT_DIR="$TEMP_CLONE_DIR"
+            return 0
+        else
+            print_error "Error al descargar el proyecto desde GitHub"
+            print_info "Verifica tu conexión a internet y que el repositorio sea accesible"
+            exit 1
+        fi
+    fi
+    
+    # En modo install, verificar si estamos en un repositorio git válido con todos los archivos necesarios
     local has_all_files=true
     for item in "website" "lua" "locales" "main.go" "go.mod"; do
         if [ ! -e "${SCRIPT_DIR}/${item}" ]; then
