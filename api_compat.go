@@ -473,8 +473,8 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 	var hardBlocked bool = false
 	var softBlocked bool = false
 	
-	// Método 1: Verificar con nmcli (más confiable)
-	wifiCheck := exec.Command("sh", "-c", "nmcli -t -f WIFI g 2>/dev/null")
+	// Método 1: Verificar con nmcli (más confiable, con sudo)
+	wifiCheck := exec.Command("sh", "-c", "sudo nmcli -t -f WIFI g 2>/dev/null")
 	wifiOut, err := wifiCheck.Output()
 	if err == nil {
 		wifiState := strings.ToLower(strings.TrimSpace(string(wifiOut)))
@@ -485,8 +485,8 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 		}
 	}
 	
-	// Método 2: Verificar con rfkill para obtener información de bloqueo
-	rfkillOut, _ := exec.Command("sh", "-c", "rfkill list wifi 2>/dev/null").CombinedOutput()
+	// Método 2: Verificar con rfkill para obtener información de bloqueo (con sudo)
+	rfkillOut, _ := exec.Command("sh", "-c", "sudo rfkill list wifi 2>/dev/null").CombinedOutput()
 	rfkillStr := strings.ToLower(string(rfkillOut))
 	if strings.Contains(rfkillStr, "hard blocked: yes") {
 		hardBlocked = true
@@ -497,12 +497,12 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 		enabled = false
 	}
 	
-	// Si nmcli no está disponible y rfkill no muestra bloqueo, verificar con iwconfig
+	// Si nmcli no está disponible y rfkill no muestra bloqueo, verificar con iwconfig (con sudo)
 	if !enabled && !hardBlocked && !softBlocked {
-		iwOut, _ := exec.Command("sh", "-c", "iwconfig 2>/dev/null | grep -i 'wlan' | head -1").CombinedOutput()
+		iwOut, _ := exec.Command("sh", "-c", "sudo iwconfig 2>/dev/null | grep -i 'wlan' | head -1").CombinedOutput()
 		if len(iwOut) > 0 {
 			// Si hay una interfaz WiFi, verificar si está activa
-			iwStatus, _ := exec.Command("sh", "-c", "iwconfig 2>/dev/null | grep -i 'wlan' | head -1 | grep -i 'unassociated'").CombinedOutput()
+			iwStatus, _ := exec.Command("sh", "-c", "sudo iwconfig 2>/dev/null | grep -i 'wlan' | head -1 | grep -i 'unassociated'").CombinedOutput()
 			if len(iwStatus) == 0 {
 				// No está "unassociated", podría estar habilitado
 				enabled = true
@@ -510,14 +510,14 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 		}
 	}
 	
-	// Obtener SSID actual si está conectado
-	ssidOut, _ := exec.Command("sh", "-c", "nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
+	// Obtener SSID actual si está conectado (con sudo)
+	ssidOut, _ := exec.Command("sh", "-c", "sudo nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
 	ssid := strings.TrimSpace(string(ssidOut))
 	connected := ssid != ""
 	
-	// Si no hay SSID con nmcli, intentar con iwconfig
+	// Si no hay SSID con nmcli, intentar con iwconfig (con sudo)
 	if !connected {
-		iwOut, _ := exec.Command("sh", "-c", "iwconfig 2>/dev/null | grep -i 'essid' | grep -v 'off/any' | head -1").CombinedOutput()
+		iwOut, _ := exec.Command("sh", "-c", "sudo iwconfig 2>/dev/null | grep -i 'essid' | grep -v 'off/any' | head -1").CombinedOutput()
 		iwStr := string(iwOut)
 		if strings.Contains(iwStr, "ESSID:") {
 			// Extraer SSID
