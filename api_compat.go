@@ -282,7 +282,7 @@ func wifiUnblockHandler(c *fiber.Ctx) error {
 	}
 
 	// Si rfkill funcionó, también intentar habilitar con nmcli
-	if success && method == "rfkill (sin sudo)" || method == "rfkill (con sudo)" {
+	if success && (method == "rfkill (sin sudo)" || method == "rfkill (con sudo)") {
 		nmcliCheck := exec.Command("sh", "-c", "command -v nmcli 2>/dev/null")
 		if nmcliCheck.Run() == nil {
 			// Intentar habilitar sin sudo
