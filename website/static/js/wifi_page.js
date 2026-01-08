@@ -512,33 +512,22 @@
     // Verificar estado del WiFi primero (con múltiples intentos)
     let wifiStatus = await checkWiFiStatus();
     let statusAttempts = 0;
-    const maxStatusAttempts = 3;
+    const maxStatusAttempts = 5; // Aumentar intentos
     
     // Si WiFi no está habilitado, intentar verificar varias veces (puede estar activándose)
     while ((!wifiStatus.enabled || wifiStatus.blocked) && statusAttempts < maxStatusAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await loadConnectionStatus(); // Actualizar estado
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Esperar más entre intentos
+      await loadConnectionStatus(); // Actualizar estado en UI
       wifiStatus = await checkWiFiStatus();
       statusAttempts++;
     }
     
+    // Si después de todos los intentos aún no está habilitado, mostrar mensaje pero intentar escanear de todos modos
     if (!wifiStatus.enabled || wifiStatus.blocked) {
-      if (emptyEl) {
-        emptyEl.innerHTML = 
-          '<div class="text-center py-5">' +
-          '<i class="bi bi-wifi-off" style="font-size: 4rem; opacity: 0.5;"></i>' +
-          '<p class="mt-3">' + t('wifi.wifi_disabled', 'WiFi is disabled') + '</p>' +
-          '<p class="text-muted small">' + t('wifi.enable_to_scan', 'Please enable WiFi to scan for networks') + '</p>' +
-          '<button class="btn btn-primary mt-3" onclick="toggleWiFi()">' +
-          '<i class="bi bi-power me-2"></i>' + t('wifi.enable_wifi', 'Enable WiFi') +
-          '</button>' +
-          '</div>';
-        emptyEl.style.display = 'block';
-      }
-      if (loadingEl) loadingEl.style.display = 'none';
-      if (tableEl) tableEl.style.display = 'none';
-      showAlert('warning', t('wifi.wifi_disabled', 'WiFi is disabled. Please enable it first.'));
-      return;
+      // Intentar escanear de todos modos (puede que el estado no se haya actualizado pero WiFi esté activo)
+      console.log("WiFi puede estar activándose, intentando escanear de todos modos...");
+      // Mostrar advertencia pero continuar con el escaneo
+      showAlert('warning', t('wifi.wifi_may_be_enabling', 'WiFi may still be enabling, attempting to scan anyway...'));
     }
     
     if (loadingEl) loadingEl.style.display = 'block';
