@@ -662,7 +662,7 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 	
 	// Obtener SSID actual si está conectado
 	ssidOut, _ := execCommand("nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
-	ssid := strings.TrimSpace(string(ssidOut))
+	ssid := strings.TrimSpace(filterSudoErrors(ssidOut))
 	connected := ssid != ""
 	
 	// Si no hay SSID con nmcli, intentar con iwconfig
