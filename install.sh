@@ -213,34 +213,103 @@ clean_previous_installation() {
             if systemctl is-active --quiet "${SERVICE_NAME}" 2>/dev/null; then
                 print_info "Deteniendo servicio ${SERVICE_NAME}..."
                 systemctl stop "${SERVICE_NAME}" 2>/dev/null || true
+                # Esperar un momento para que el servicio se detenga completamente
+                sleep 2
             fi
             
             # Crear directorio temporal para guardar datos importantes
             TEMP_BACKUP_DIR="/tmp/hostberry-update-backup-$$"
             mkdir -p "$TEMP_BACKUP_DIR"
             
-            # Hacer backup de la base de datos y configuración
+            # Hacer backup de la base de datos ANTES de eliminar nada
             if [ -d "$DATA_DIR" ]; then
                 print_info "Guardando backup de base de datos..."
-                cp -r "$DATA_DIR" "$TEMP_BACKUP_DIR/data" 2>/dev/null || true
+                # Copiar todo el contenido del directorio data
+                if cp -r "$DATA_DIR" "$TEMP_BACKUP_DIR/data" 2>/dev/null; then
+                    print_success "Backup de base de datos guardado en $TEMP_BACKUP_DIR/data"
+                    # Verificar que el archivo de BD existe en el backup
+                    if [ -f "$TEMP_BACKUP_DIR/data/hostberry.db" ]; then
+                        DB_SIZE=$(du -h "$TEMP_BACKUP_DIR/data/hostberry.db" | cut -f1)
+                        print_info "Base de datos respaldada: $DB_SIZE"
+                    fi
+                else
+                    print_error "ERROR: No se pudo hacer backup de la base de datos"
+                    print_error "Abortando actualización para proteger los datos"
+                    rm -rf "$TEMP_BACKUP_DIR"
+                    exit 1
+                fi
+            else
+                print_warning "Directorio de datos no encontrado: $DATA_DIR"
             fi
             
+            # Hacer backup de la configuración
             if [ -f "$CONFIG_FILE" ]; then
                 print_info "Guardando backup de configuración..."
-                cp "$CONFIG_FILE" "$TEMP_BACKUP_DIR/config.yaml" 2>/dev/null || true
+                if cp "$CONFIG_FILE" "$TEMP_BACKUP_DIR/config.yaml" 2>/dev/null; then
+                    print_success "Configuración respaldada"
+                else
+                    print_warning "No se pudo hacer backup de la configuración"
+                fi
             fi
             
-            # Eliminar directorio de instalación (excepto data que ya está respaldado)
+            # Mover el directorio data fuera temporalmente para preservarlo
+            TEMP_DATA_DIR="/tmp/hostberry-data-temp-$$"
+            if [ -d "$DATA_DIR" ]; then
+                print_info "Moviendo directorio de datos temporalmente..."
+                if mv "$DATA_DIR" "$TEMP_DATA_DIR" 2>/dev/null; then
+                    print_success "Directorio de datos movido temporalmente"
+                else
+                    print_error "ERROR: No se pudo mover el directorio de datos"
+                    print_error "Abortando actualización para proteger los datos"
+                    rm -rf "$TEMP_BACKUP_DIR"
+                    exit 1
+                fi
+            fi
+            
+            # Eliminar directorio de instalación (data ya está fuera)
             print_info "Eliminando archivos antiguos (preservando datos)..."
             rm -rf "$INSTALL_DIR"
             
-            # Restaurar datos y configuración
-            if [ -d "$TEMP_BACKUP_DIR/data" ]; then
-                print_info "Restaurando base de datos..."
+            # Restaurar directorio de datos
+            if [ -d "$TEMP_DATA_DIR" ]; then
+                print_info "Restaurando directorio de datos..."
+                mkdir -p "$(dirname "$DATA_DIR")"
+                if mv "$TEMP_DATA_DIR" "$DATA_DIR" 2>/dev/null; then
+                    print_success "Directorio de datos restaurado"
+                    # Verificar que la BD existe
+                    if [ -f "$DATA_DIR/hostberry.db" ]; then
+                        DB_SIZE=$(du -h "$DATA_DIR/hostberry.db" | cut -f1)
+                        print_success "Base de datos preservada: $DB_SIZE"
+                    fi
+                else
+                    print_error "ERROR: No se pudo restaurar el directorio de datos"
+                    print_error "Intentando restaurar desde backup..."
+                    # Intentar restaurar desde backup como fallback
+                    if [ -d "$TEMP_BACKUP_DIR/data" ]; then
+                        mkdir -p "$DATA_DIR"
+                        if cp -r "$TEMP_BACKUP_DIR/data/"* "$DATA_DIR/" 2>/dev/null; then
+                            print_success "Base de datos restaurada desde backup"
+                        else
+                            print_error "ERROR CRÍTICO: No se pudo restaurar la base de datos"
+                            print_error "El backup está en: $TEMP_BACKUP_DIR"
+                            exit 1
+                        fi
+                    fi
+                fi
+            elif [ -d "$TEMP_BACKUP_DIR/data" ]; then
+                # Si no se pudo mover, restaurar desde backup
+                print_info "Restaurando base de datos desde backup..."
                 mkdir -p "$DATA_DIR"
-                cp -r "$TEMP_BACKUP_DIR/data/"* "$DATA_DIR/" 2>/dev/null || true
+                if cp -r "$TEMP_BACKUP_DIR/data/"* "$DATA_DIR/" 2>/dev/null; then
+                    print_success "Base de datos restaurada desde backup"
+                else
+                    print_error "ERROR CRÍTICO: No se pudo restaurar la base de datos"
+                    print_error "El backup está en: $TEMP_BACKUP_DIR"
+                    exit 1
+                fi
             fi
             
+            # Restaurar configuración
             if [ -f "$TEMP_BACKUP_DIR/config.yaml" ]; then
                 print_info "Restaurando configuración..."
                 mkdir -p "$(dirname "$CONFIG_FILE")"
