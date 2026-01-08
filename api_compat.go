@@ -185,13 +185,13 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 		}
 	}
 
-	// Método 3: Intentar con iwconfig (solo para interfaces específicas)
-	iwOut, iwErr := exec.Command("sh", "-c", "iwconfig 2>/dev/null | grep -i 'wlan' | head -1 | awk '{print $1}'").CombinedOutput()
+	// Método 3: Intentar con iwconfig (siempre con sudo)
+	iwOut, iwErr := exec.Command("sh", "-c", "sudo iwconfig 2>/dev/null | grep -i 'wlan' | head -1 | awk '{print $1}'").CombinedOutput()
 	if iwErr == nil {
 		iface := strings.TrimSpace(string(iwOut))
 		if iface != "" {
 			// Obtener estado actual
-			statusOut, _ := exec.Command("sh", "-c", fmt.Sprintf("iwconfig %s 2>/dev/null | grep -i 'unassociated'", iface)).CombinedOutput()
+			statusOut, _ := exec.Command("sh", "-c", fmt.Sprintf("sudo iwconfig %s 2>/dev/null | grep -i 'unassociated'", iface)).CombinedOutput()
 			isDown := strings.Contains(strings.ToLower(string(statusOut)), "unassociated")
 			
 			var iwCmd string
@@ -203,7 +203,7 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 			
 			_, iwToggleErr := exec.Command("sh", "-c", iwCmd+" 2>/dev/null").CombinedOutput()
 			if iwToggleErr == nil {
-				InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando ifconfig (usuario: %s)", user.Username), "wifi", &userID)
+				InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando ifconfig con sudo (usuario: %s)", user.Username), "wifi", &userID)
 				return c.JSON(fiber.Map{"success": true, "message": "WiFi toggle exitoso"})
 			}
 		}
