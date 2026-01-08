@@ -813,7 +813,7 @@
                 tbody.appendChild(card);
               });
               
-              // Agregar event listeners a los botones de conexión (solo los que no están conectados)
+              // Agregar event listeners a los botones de conexión
               tbody.querySelectorAll('.connect-network-btn:not([disabled])').forEach(function(btn) {
                 btn.addEventListener('click', function(e) {
                   e.stopPropagation();
@@ -823,6 +823,15 @@
                   if (card) {
                     showConnectInline(ssid, security, card);
                   }
+                });
+              });
+              
+              // Agregar event listeners a los botones de desconexión
+              tbody.querySelectorAll('.disconnect-network-btn:not([disabled])').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                  e.stopPropagation();
+                  const ssid = btn.getAttribute('data-ssid');
+                  disconnectFromNetwork(ssid);
                 });
               });
             }
