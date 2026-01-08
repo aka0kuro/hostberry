@@ -320,6 +320,7 @@
           await loadConnectionStatus();
           status = await checkWiFiStatus();
           
+          // Intentar escanear siempre después de activar WiFi
           if (status.enabled && !status.blocked) {
             // WiFi está habilitado, escanear automáticamente
             showAlert('info', t('wifi.scanning_networks', 'Scanning for networks...'));
@@ -327,16 +328,15 @@
               scanNetworks();
             }, 2000);
           } else {
-            // Aún no está habilitado después de todos los intentos
-            showAlert('warning', t('wifi.wifi_enabling', 'WiFi is being enabled, please wait a moment and try scanning again'));
-            // Intentar escanear de todos modos después de un tiempo
+            // Aún no se detecta como habilitado, pero intentar escanear de todos modos
+            // (puede que el sistema aún esté aplicando los cambios)
+            showAlert('info', t('wifi.scanning_networks', 'Scanning for networks...'));
             setTimeout(async () => {
+              // Actualizar estado una vez más
               await loadConnectionStatus();
-              const finalStatus = await checkWiFiStatus();
-              if (finalStatus.enabled && !finalStatus.blocked) {
-                scanNetworks();
-              }
-            }, 5000);
+              // Intentar escanear (la función scanNetworks verificará el estado)
+              scanNetworks();
+            }, 3000);
           }
         } else {
           // Si success es false o no está definido, mostrar error
