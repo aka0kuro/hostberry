@@ -570,8 +570,6 @@
     const emptyEl = document.getElementById('networks-empty');
     const tableEl = document.getElementById('networks-table-container');
     const tbody = document.getElementById('networksTable');
-    const connectContainer = document.getElementById('networks-connect-container');
-    const scanBtn = document.getElementById('scan-networks-btn');
     const interfaceSelect = document.getElementById('wifi-interface');
     
     // Obtener interfaz seleccionada
