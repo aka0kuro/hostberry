@@ -177,20 +177,44 @@
   }
   
   // Update toggle button
-  function updateToggleButton(isEnabled) {
+  function updateToggleButton(statusData) {
     const btn = document.getElementById('toggle-wifi-btn');
     const text = document.getElementById('toggle-wifi-text');
     const icon = document.getElementById('toggle-wifi-icon');
+    const unblockBtn = document.getElementById('unblock-wifi-btn');
     
-    if (btn && text && icon) {
-      if (isEnabled) {
-        btn.className = 'btn btn-danger btn-lg w-100';
-        text.textContent = t('wifi.disable_wifi', 'Disable WiFi');
-        icon.className = 'bi bi-wifi-off';
-      } else {
-        btn.className = 'btn btn-primary btn-lg w-100';
-        text.textContent = t('wifi.enable_wifi', 'Enable WiFi');
-        icon.className = 'bi bi-wifi';
+    const isEnabled = statusData.enabled !== false;
+    const isBlocked = statusData.hard_blocked || statusData.soft_blocked;
+    
+    if (isBlocked) {
+      // Mostrar botón de desbloqueo y ocultar toggle
+      if (unblockBtn) {
+        unblockBtn.style.display = 'block';
+        if (statusData.hard_blocked) {
+          unblockBtn.className = 'btn btn-secondary btn-lg w-100';
+          unblockBtn.disabled = true;
+          unblockBtn.title = t('wifi.hard_blocked', 'Hard blocked: Check physical WiFi switch');
+        } else {
+          unblockBtn.className = 'btn btn-warning btn-lg w-100';
+          unblockBtn.disabled = false;
+          unblockBtn.title = '';
+        }
+      }
+      if (btn) btn.style.display = 'none';
+    } else {
+      // Mostrar botón de toggle y ocultar desbloqueo
+      if (unblockBtn) unblockBtn.style.display = 'none';
+      if (btn) {
+        btn.style.display = 'block';
+        if (isEnabled) {
+          btn.className = 'btn btn-danger btn-lg w-100';
+          text.textContent = t('wifi.disable_wifi', 'Disable WiFi');
+          icon.className = 'bi bi-wifi-off';
+        } else {
+          btn.className = 'btn btn-primary btn-lg w-100';
+          text.textContent = t('wifi.enable_wifi', 'Enable WiFi');
+          icon.className = 'bi bi-wifi';
+        }
       }
     }
   }
