@@ -544,8 +544,8 @@ func systemRestartHandler(c *fiber.Ctx) error {
 
 // detectWiFiInterface detecta automáticamente la interfaz WiFi
 func detectWiFiInterface() string {
-	// Intentar con nmcli primero
-	cmd := exec.Command("sh", "-c", "nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
+	// Intentar con nmcli primero (con sudo)
+	cmd := exec.Command("sh", "-c", "sudo nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
 	out, err := cmd.Output()
 	if err == nil {
 		iface := strings.TrimSpace(string(out))
@@ -572,8 +572,8 @@ func detectWiFiInterface() string {
 func wifiInterfacesHandler(c *fiber.Ctx) error {
 	var interfaces []fiber.Map
 
-	// Método 1: nmcli
-	cmd := exec.Command("sh", "-c", "nmcli -t -f DEVICE,TYPE,STATE dev status 2>/dev/null | grep wifi")
+	// Método 1: nmcli (con sudo)
+	cmd := exec.Command("sh", "-c", "sudo nmcli -t -f DEVICE,TYPE,STATE dev status 2>/dev/null | grep wifi")
 	out, err := cmd.Output()
 	if err == nil {
 		lines := strings.Split(strings.TrimSpace(string(out)), "\n")
