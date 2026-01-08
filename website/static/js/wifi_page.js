@@ -985,8 +985,63 @@
     }
   }
   
-  // Refresh handlers
-  document.addEventListener('DOMContentLoaded', function() {
+    // Auto-connect to last network
+    async function autoConnectToLastNetwork() {
+      try {
+        // Obtener última red conectada desde localStorage
+        const lastSSID = localStorage.getItem('wifi_last_connected_ssid');
+        const lastPassword = localStorage.getItem('wifi_last_connected_password');
+        
+        if (!lastSSID) {
+          return; // No hay última red guardada
+        }
+        
+        // Verificar estado actual de WiFi
+        const statusResp = await apiRequest('/api/wifi/status');
+        if (!statusResp.ok) return;
+        
+        const statusData = await statusResp.json();
+        const status = statusData.status || statusData;
+        
+        // Si ya está conectado a esta red, no hacer nada
+        if (status.connected && status.current_connection === lastSSID) {
+          return;
+        }
+        
+        // Si WiFi está deshabilitado o bloqueado, no intentar conectar
+        if (!status.enabled || status.hard_blocked || status.soft_blocked) {
+          return;
+        }
+        
+        // Esperar un momento para que WiFi esté listo
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Intentar conectar automáticamente
+        const resp = await apiRequest('/api/v1/wifi/connect', {
+          method: 'POST',
+          body: { 
+            ssid: lastSSID, 
+            password: lastPassword || ''
+          }
+        });
+        
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.success) {
+            console.log('Auto-conectado a:', lastSSID);
+            // Actualizar estado después de un momento
+            setTimeout(() => {
+              loadConnectionStatus();
+            }, 3000);
+          }
+        }
+      } catch (e) {
+        console.error('Error en auto-conexión:', e);
+      }
+    }
+    
+    // Refresh handlers
+    document.addEventListener('DOMContentLoaded', function() {
     loadConnectionStatus();
     loadRegion();
     
@@ -1011,9 +1066,12 @@
     });
     
     // Cargar estado de auto-connect
-    const autoConnectEnabled = localStorage.getItem('wifi_auto_connect') === 'true';
+    const autoConnectEnabled = localStorage.getItem('wifi_auto_connect') !== 'false'; // Por defecto true
     if (autoConnectEnabled) {
-      toggleAutoConnect();
+      // Intentar auto-conectar después de un momento
+      setTimeout(() => {
+        autoConnectToLastNetwork();
+      }, 3000);
     }
     
     // Mostrar mensaje inicial para escanear redes
@@ -1027,11 +1085,6 @@
     const refreshConnection = document.getElementById('refresh-connection');
     if (refreshConnection) {
       refreshConnection.addEventListener('click', loadConnectionStatus);
-    }
-    
-    const refreshNetworks = document.getElementById('refresh-networks');
-    if (refreshNetworks) {
-      refreshNetworks.addEventListener('click', scanNetworks);
     }
     
     // Region form
