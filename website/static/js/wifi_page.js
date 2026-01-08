@@ -1147,11 +1147,10 @@
     // Refresh connection status every 30 seconds
     setInterval(loadConnectionStatus, 30000);
     
-    // Manual refresh buttons
-    const refreshConnection = document.getElementById('refresh-connection');
-    if (refreshConnection) {
-      refreshConnection.addEventListener('click', loadConnectionStatus);
-    }
+    // Auto-scan networks on page load
+    setTimeout(() => {
+      scanNetworks();
+    }, 2000);
     
     // Region form
     const regionForm = document.getElementById('regionForm');
