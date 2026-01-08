@@ -167,7 +167,7 @@
       
       // Update toggle button
       if (statusData.enabled !== undefined) {
-        updateToggleButton(statusData.enabled && !statusData.hard_blocked && !statusData.soft_blocked);
+        updateToggleButton(statusData);
       }
     } catch (e) {
       console.error('Error loading connection status:', e);
