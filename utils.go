@@ -150,6 +150,22 @@ func executeCommand(cmd string) (string, error) {
 	return strings.TrimSpace(outputStr), nil
 }
 
+// filterSudoErrors filtra mensajes de error de sudo relacionados con read-only file system
+func filterSudoErrors(output []byte) string {
+	lines := strings.Split(string(output), "\n")
+	var cleanLines []string
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line != "" && 
+		   !strings.Contains(line, "sudo: unable to open log file") &&
+		   !strings.Contains(line, "Read-only file system") &&
+		   !strings.Contains(line, "sudo: unable to stat") {
+			cleanLines = append(cleanLines, line)
+		}
+	}
+	return strings.Join(cleanLines, "\n")
+}
+
 // canUseSudo verifica si el proceso puede usar sudo o si ya es root
 var sudoAvailable *bool // Cache del resultado
 
