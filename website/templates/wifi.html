@@ -180,7 +180,9 @@
 .main-content .container-fluid {
     padding-left: 1.5rem;
     padding-right: 1.5rem;
+    width: 100%;
     max-width: 100%;
+    box-sizing: border-box;
 }
 
 @media (min-width: 1200px) {
@@ -196,26 +198,44 @@
     max-width: 100%;
     margin-left: 0;
     margin-right: 0;
+    box-sizing: border-box;
 }
 
 .wifi-page .col-12 {
     width: 100%;
     max-width: 100%;
-    padding-left: 0;
-    padding-right: 0;
+    padding-left: 15px;
+    padding-right: 15px;
     flex: 0 0 100%;
+    box-sizing: border-box;
 }
 
 @media (min-width: 992px) {
     .wifi-page .row {
         width: 100%;
         max-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
     }
     
     .wifi-page .col-12 {
         width: 100%;
         max-width: 100%;
+        padding-left: 15px;
+        padding-right: 15px;
         flex: 0 0 100%;
+    }
+    
+    .dashboard-card {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .dashboard-card-body {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 }
 
