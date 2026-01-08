@@ -494,10 +494,22 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 	if strings.Contains(rfkillStr, "hard blocked: yes") {
 		hardBlocked = true
 		enabled = false
-	}
-	if strings.Contains(rfkillStr, "soft blocked: yes") {
+	} else if strings.Contains(rfkillStr, "soft blocked: yes") {
 		softBlocked = true
 		enabled = false
+	} else if strings.Contains(rfkillStr, "soft blocked: no") && strings.Contains(rfkillStr, "hard blocked: no") {
+		// Si no está bloqueado, verificar si está habilitado con nmcli
+		if !enabled {
+			// Re-verificar con nmcli si no se había detectado antes
+			wifiCheck2 := exec.Command("sh", "-c", "sudo nmcli -t -f WIFI g 2>/dev/null")
+			wifiOut2, err2 := wifiCheck2.Output()
+			if err2 == nil {
+				wifiState2 := strings.ToLower(strings.TrimSpace(string(wifiOut2)))
+				if strings.Contains(wifiState2, "enabled") || strings.Contains(wifiState2, "on") {
+					enabled = true
+				}
+			}
+		}
 	}
 	
 	// Si nmcli no está disponible y rfkill no muestra bloqueo, verificar con iwconfig (con sudo)
