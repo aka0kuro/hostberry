@@ -101,21 +101,10 @@
                             {{ call .t "wifi.scan_networks" "Scan Networks" }}
                         </button>
                     </div>
-                    <div class="table-responsive" id="networks-table-container" style="display: none;">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>{{ call .t "wifi.network_ssid" "SSID" }}</th>
-                                    <th>{{ call .t "wifi.network_security" "Security" }}</th>
-                                    <th>{{ call .t "wifi.network_signal" "Signal" }}</th>
-                                    <th>{{ call .t "wifi.network_channel" "Channel" }}</th>
-                                    <th>{{ call .t "common.actions" "Actions" }}</th>
-                                </tr>
-                            </thead>
-                            <tbody id="networksTable">
-                                <!-- Networks will be loaded here -->
-                            </tbody>
-                        </table>
+                    <div id="networks-table-container" style="display: none;">
+                        <div class="networks-cards-container" id="networksTable">
+                            <!-- Networks will be loaded here as cards -->
+                        </div>
                     </div>
                 </div>
             </div>
