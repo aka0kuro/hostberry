@@ -980,7 +980,7 @@ body.light-theme .wifi-interface-select-icon {
         .networks-cards-container {
             display: flex !important;
             flex-direction: column !important;
-            gap: 1rem;
+            gap: 0.75rem;
             width: 100% !important;
             max-width: 100% !important;
             box-sizing: border-box !important;
@@ -996,15 +996,32 @@ body.light-theme .wifi-interface-select-icon {
             flex-grow: 0 !important;
             box-sizing: border-box !important;
             min-width: 0 !important;
+            padding: 1rem 1.25rem !important;
         }
         
         .network-card-content {
             min-width: 0 !important;
             flex: 1 1 auto !important;
+            max-width: 100% !important;
+            gap: 1rem !important;
         }
         
         .network-card-actions {
             flex-shrink: 0 !important;
+            min-width: auto !important;
+        }
+        
+        .network-card-icon {
+            font-size: 1.5rem !important;
+        }
+        
+        .network-card-ssid {
+            font-size: 1rem !important;
+        }
+        
+        .network-card-details {
+            font-size: 0.8rem !important;
+            gap: 1rem !important;
         }
     }
 
