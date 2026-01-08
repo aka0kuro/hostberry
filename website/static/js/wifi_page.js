@@ -141,13 +141,20 @@
       
       if (!resp.ok) {
         console.error('Error en respuesta API:', resp.status, resp.statusText);
+        const errorText = await resp.text();
+        console.error('Error response:', errorText);
         throw new Error('Error al cargar estado: ' + resp.status);
       }
       
       const data = await resp.json();
-      console.log('Datos recibidos:', data);
+      console.log('Datos recibidos del API:', data);
       const statusData = data?.status || data || {};
       console.log('Estado procesado:', statusData);
+      
+      // Debug: mostrar todos los datos disponibles
+      if (Object.keys(statusData).length === 0) {
+        console.warn('⚠️ statusData está vacío, datos completos:', data);
+      }
       
       const statusEl = document.getElementById('connection-status');
       const ssidEl = document.getElementById('connection-ssid');
