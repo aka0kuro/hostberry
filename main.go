@@ -249,39 +249,40 @@ func setupRoutes(app *fiber.App) {
 	app.Get("/health/ready", readinessCheckHandler)
 	app.Get("/health/live", livenessCheckHandler)
 
-	// Archivos estáticos embebidos
-	staticSubFS, err := fs.Sub(staticFS, "website/static")
-	if err != nil {
-		log.Printf("⚠️  Error preparando archivos estáticos embebidos: %v", err)
-		// Fallback a sistema de archivos si existe
-		if _, err := os.Stat("./website/static"); err == nil {
-			app.Static("/static", "./website/static", fiber.Static{
-				Compress:  true,
-				ByteRange: true,
-			})
-			log.Println("✅ Archivos estáticos cargados desde sistema de archivos")
-		} else {
-			log.Printf("⚠️  No se encontraron archivos estáticos ni embebidos ni en filesystem")
-		}
-	} else {
-		// Usar handler personalizado para archivos embebidos
-		app.Get("/static/*", func(c *fiber.Ctx) error {
-			path := c.Params("*")
-			file, err := staticSubFS.Open(path)
-			if err != nil {
-				return c.Status(404).SendString("Not found")
-			}
-			defer file.Close()
-
-			stat, err := file.Stat()
-			if err != nil {
-				return c.Status(500).SendString("Error reading file")
-			}
-
-			c.Type(filepath.Ext(path))
-			return c.SendStream(file, int(stat.Size()))
+	// Archivos estáticos: preferir filesystem (para poder actualizar JS/CSS sin recompilar),
+	// fallback a embebidos si no existe ./website/static.
+	if _, err := os.Stat("./website/static"); err == nil {
+		app.Static("/static", "./website/static", fiber.Static{
+			Compress:  true,
+			ByteRange: true,
 		})
-		log.Println("✅ Archivos estáticos cargados desde archivos embebidos")
+		log.Println("✅ Archivos estáticos cargados desde sistema de archivos")
+	} else {
+		// Fallback: estáticos embebidos
+		staticSubFS, err := fs.Sub(staticFS, "website/static")
+		if err != nil {
+			log.Printf("⚠️  Error preparando archivos estáticos embebidos: %v", err)
+			log.Printf("⚠️  No se encontraron archivos estáticos ni en filesystem ni embebidos")
+		} else {
+			// Usar handler personalizado para archivos embebidos
+			app.Get("/static/*", func(c *fiber.Ctx) error {
+				path := c.Params("*")
+				file, err := staticSubFS.Open(path)
+				if err != nil {
+					return c.Status(404).SendString("Not found")
+				}
+				defer file.Close()
+
+				stat, err := file.Stat()
+				if err != nil {
+					return c.Status(500).SendString("Error reading file")
+				}
+
+				c.Type(filepath.Ext(path))
+				return c.SendStream(file, int(stat.Size()))
+			})
+			log.Println("✅ Archivos estáticos cargados desde archivos embebidos")
+		}
 	}
 
 	// Rutas web
