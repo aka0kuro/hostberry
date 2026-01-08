@@ -207,9 +207,10 @@
       updateStatusCards(statusData);
       
         // Mostrar datos incluso si no está conectado (pero WiFi está habilitado)
-      if (statusData.connected && statusData.current_connection) {
+      if (statusData.connected || (statusData.ssid && statusData.ssid !== 'off/any')) {
+        const currentSSID = statusData.current_connection || statusData.ssid;
         if (statusEl) statusEl.innerHTML = '<span class="badge bg-success">' + t('wifi.connected', 'Connected') + '</span>';
-        if (ssidEl) ssidEl.textContent = statusData.current_connection || statusData.ssid || '--';
+        if (ssidEl) ssidEl.textContent = currentSSID || '--';
         
         // Obtener información de conexión
         const connInfo = statusData.connection_info || {};
@@ -220,7 +221,7 @@
         const mac = connInfo.mac || statusData.mac;
         const speed = connInfo.speed || statusData.speed;
         
-        if (signalEl) signalEl.textContent = signal ? (signal + ' dBm') : '--';
+        if (signalEl) signalEl.textContent = signal ? (signal + (isNaN(signal) ? '' : ' dBm')) : '--';
         if (securityEl) securityEl.textContent = security || '--';
         if (channelEl) channelEl.textContent = channel || '--';
         if (ipEl) ipEl.textContent = ip || '--';
@@ -228,7 +229,7 @@
         if (speedEl) speedEl.textContent = speed || '--';
         
         // Actualizar botones de conexión en las tarjetas
-        updateConnectButtons(statusData.current_connection);
+        updateConnectButtons(currentSSID);
       } else {
         // No conectado
         if (statusEl) statusEl.innerHTML = '<span class="badge bg-danger">' + t('wifi.not_connected', 'Not Connected') + '</span>';
