@@ -1006,9 +1006,16 @@ cleanup_temp() {
 
 # Función principal
 main() {
+    local mode_label="INSTALACIÓN"
+    if [ "$MODE" = "update" ]; then
+        mode_label="ACTUALIZACIÓN"
+    elif [ "$MODE" = "uninstall" ]; then
+        mode_label="DESINSTALACIÓN"
+    fi
+
     echo ""
     echo -e "${BLUE}========================================${NC}"
-    echo -e "${BLUE}  Instalador de HostBerry${NC}"
+    echo -e "${BLUE}  HostBerry - ${mode_label}${NC}"
     echo -e "${BLUE}========================================${NC}"
     echo ""
     
