@@ -288,21 +288,26 @@
       btn.innerHTML = '<span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> ' + t('wifi.unblocking', 'Unblocking...');
       
       try {
-        // Intentar desbloquear usando el endpoint de toggle (que maneja rfkill unblock)
-        const resp = await apiRequest('/api/v1/wifi/toggle', { method: 'POST' });
+        // Usar el endpoint específico para desbloquear
+        const resp = await apiRequest('/api/v1/wifi/unblock', { method: 'POST' });
         const data = await resp.json();
         
         if (resp.ok && data.success) {
           showAlert('success', t('wifi.wifi_unblocked', 'WiFi unblocked successfully'));
+          // Esperar un poco más para que el sistema aplique los cambios
           setTimeout(async () => {
             await loadConnectionStatus();
-            const status = await checkWiFiStatus();
-            if (status.enabled && !status.blocked) {
-              setTimeout(() => {
-                scanNetworks();
-              }, 2000);
-            }
-          }, 2000);
+            // Verificar el estado después de un momento adicional
+            setTimeout(async () => {
+              await loadConnectionStatus();
+              const status = await checkWiFiStatus();
+              if (status.enabled && !status.blocked) {
+                setTimeout(() => {
+                  scanNetworks();
+                }, 1000);
+              }
+            }, 1000);
+          }, 1500);
         } else {
           const errorMsg = data.error || t('errors.operation_failed', 'Operation failed');
           showAlert('danger', errorMsg);
