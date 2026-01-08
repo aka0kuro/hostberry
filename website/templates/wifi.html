@@ -710,8 +710,8 @@ body.light-theme .wifi-interface-select-icon {
     }
 
     .networks-cards-container {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: 1fr;
         gap: 1rem;
         width: 100%;
     }
@@ -728,6 +728,7 @@ body.light-theme .wifi-interface-select-icon {
         justify-content: space-between;
         gap: 1.5rem;
         width: 100%;
+        max-width: 100%;
         cursor: pointer;
     }
 
@@ -874,6 +875,30 @@ body.light-theme .wifi-interface-select-icon {
 
         .network-card-actions .btn {
             flex: 1;
+        }
+    }
+
+    /* Tablet: dos columnas más compactas */
+    @media (min-width: 768px) and (max-width: 1199px) {
+        .networks-cards-container {
+            grid-template-columns: repeat(2, minmax(320px, 1fr));
+        }
+    }
+
+    /* Desktop: tarjetas de ancho completo (una por fila) */
+    @media (min-width: 1200px) {
+        .networks-cards-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Móvil: una columna al 100% */
+    @media (max-width: 767px) {
+        .networks-cards-container {
+            grid-template-columns: 1fr;
+        }
+        .network-card {
+            width: 100%;
         }
     }
 
