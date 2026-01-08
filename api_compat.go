@@ -388,10 +388,64 @@ func translationsHandler(c *fiber.Ctx) error {
 // ---------- Legacy /api/wifi/* ----------
 
 func wifiLegacyStatusHandler(c *fiber.Ctx) error {
-	// best-effort: usamos nmcli para SSID actual
-	out, _ := exec.Command("sh", "-c", "nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
-	ssid := strings.TrimSpace(string(out))
-	return c.JSON(fiber.Map{"enabled": true, "connected": ssid != "", "current_connection": ssid, "ssid": ssid})
+	// Verificar estado real del WiFi
+	var enabled bool = false
+	var hardBlocked bool = false
+	var softBlocked bool = false
+	
+	// Método 1: Verificar con nmcli
+	wifiCheck := exec.Command("sh", "-c", "nmcli -t -f WIFI g 2>/dev/null")
+	wifiOut, _ := wifiCheck.Output()
+	wifiState := strings.ToLower(strings.TrimSpace(string(wifiOut)))
+	if strings.Contains(wifiState, "enabled") || strings.Contains(wifiState, "on") {
+		enabled = true
+	}
+	
+	// Método 2: Si nmcli no funciona, verificar con rfkill
+	if !enabled {
+		rfkillOut, _ := exec.Command("sh", "-c", "rfkill list wifi 2>/dev/null").CombinedOutput()
+		rfkillStr := strings.ToLower(string(rfkillOut))
+		if strings.Contains(rfkillStr, "hard blocked: yes") {
+			hardBlocked = true
+		}
+		if strings.Contains(rfkillStr, "soft blocked: yes") {
+			softBlocked = true
+		}
+		// Si no está bloqueado, asumir que está habilitado
+		if !hardBlocked && !softBlocked {
+			enabled = true
+		}
+	}
+	
+	// Obtener SSID actual si está conectado
+	ssidOut, _ := exec.Command("sh", "-c", "nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
+	ssid := strings.TrimSpace(string(ssidOut))
+	connected := ssid != ""
+	
+	// Si no hay SSID con nmcli, intentar con iwconfig
+	if !connected {
+		iwOut, _ := exec.Command("sh", "-c", "iwconfig 2>/dev/null | grep -i 'essid' | grep -v 'off/any' | head -1").CombinedOutput()
+		iwStr := string(iwOut)
+		if strings.Contains(iwStr, "ESSID:") {
+			// Extraer SSID
+			parts := strings.Split(iwStr, "ESSID:")
+			if len(parts) > 1 {
+				ssid = strings.TrimSpace(strings.Trim(parts[1], "\""))
+				if ssid != "" && ssid != "off/any" {
+					connected = true
+				}
+			}
+		}
+	}
+	
+	return c.JSON(fiber.Map{
+		"enabled":          enabled,
+		"connected":        connected,
+		"current_connection": ssid,
+		"ssid":             ssid,
+		"hard_blocked":     hardBlocked,
+		"soft_blocked":     softBlocked,
+	})
 }
 
 func wifiLegacyStoredNetworksHandler(c *fiber.Ctx) error {
