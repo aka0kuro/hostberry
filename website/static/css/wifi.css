@@ -80,6 +80,30 @@
     margin-right: 0 !important;
 }
 
+/* El dashboard define `.network-card` global (min-height grande, pseudo-elementos). Anular para WiFi. */
+.wifi-page .network-card {
+    min-height: auto !important;
+    height: auto !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+.wifi-page .network-card::before,
+.wifi-page .network-card::after {
+    content: none !important;
+}
+
+/* Forzar que toda la página WiFi use ancho completo sin centrarse */
+.wifi-page,
+.wifi-page .row,
+.wifi-page .col-12,
+.wifi-page .dashboard-card {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
 /* Forzar que el contenedor de 'Scanning...' no se estreche ni se centre por estilos globales como .text-center o .py-5 */
 #networks-loading,
 #networks-empty {
