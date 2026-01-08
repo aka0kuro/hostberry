@@ -157,13 +157,13 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 		var cmd string
 		var wasEnabled bool
 		if strings.Contains(strings.ToLower(state), "enabled") || strings.Contains(strings.ToLower(state), "on") {
-			cmd = "sudo nmcli radio wifi off"
+			cmd = "nmcli radio wifi off"
 			wasEnabled = true
 		} else {
-			cmd = "sudo nmcli radio wifi on"
+			cmd = "nmcli radio wifi on"
 			wasEnabled = false
 		}
-		_, err2 := exec.Command("sh", "-c", cmd+" 2>/dev/null").CombinedOutput()
+		_, err2 := execCommand(cmd + " 2>/dev/null").CombinedOutput()
 		if err2 == nil {
 			// Si se activó WiFi, también activar la interfaz específica
 			if !wasEnabled {
