@@ -357,6 +357,66 @@ func wifiUnblockHandler(c *fiber.Ctx) error {
 	return c.Status(500).JSON(fiber.Map{"error": errorDetails})
 }
 
+func wifiSoftwareSwitchHandler(c *fiber.Ctx) error {
+	user := c.Locals("user").(*User)
+	userID := user.ID
+
+	// Verificar si rfkill está disponible
+	rfkillCheck := exec.Command("sh", "-c", "command -v rfkill 2>/dev/null")
+	if rfkillCheck.Run() != nil {
+		errorMsg := "rfkill no está disponible en el sistema"
+		InsertLog("ERROR", fmt.Sprintf("Error en software switch (usuario: %s): %s", user.Username, errorMsg), "wifi", &userID)
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": errorMsg})
+	}
+
+	// Obtener estado actual del switch de software
+	statusOut, _ := exec.Command("sh", "-c", "sudo rfkill list wifi 2>/dev/null | grep -i 'soft blocked'").CombinedOutput()
+	statusStr := strings.ToLower(string(statusOut))
+	isBlocked := strings.Contains(statusStr, "yes")
+
+	var cmd string
+	var action string
+	if isBlocked {
+		// Desbloquear switch de software
+		cmd = "sudo rfkill unblock wifi"
+		action = "desbloqueado"
+	} else {
+		// Bloquear switch de software
+		cmd = "sudo rfkill block wifi"
+		action = "bloqueado"
+	}
+
+	output, err := exec.Command("sh", "-c", cmd+" 2>&1").CombinedOutput()
+	if err != nil {
+		errorMsg := fmt.Sprintf("Error ejecutando rfkill: %s", string(output))
+		InsertLog("ERROR", fmt.Sprintf("Error en software switch (usuario: %s): %s", user.Username, errorMsg), "wifi", &userID)
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": errorMsg})
+	}
+
+	// Esperar un momento para que el cambio se aplique
+	time.Sleep(1 * time.Second)
+
+	// Verificar el nuevo estado
+	newStatusOut, _ := exec.Command("sh", "-c", "sudo rfkill list wifi 2>/dev/null | grep -i 'soft blocked'").CombinedOutput()
+	newStatusStr := strings.ToLower(string(newStatusOut))
+	newIsBlocked := strings.Contains(newStatusStr, "yes")
+
+	// Verificar que el cambio se aplicó correctamente
+	if isBlocked == newIsBlocked {
+		errorMsg := "El switch de software no cambió de estado"
+		InsertLog("WARN", fmt.Sprintf("Switch de software no cambió (usuario: %s): %s", user.Username, errorMsg), "wifi", &userID)
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": errorMsg})
+	}
+
+	message := fmt.Sprintf("Switch de software %s exitosamente", action)
+	InsertLog("INFO", fmt.Sprintf("Switch de software %s (usuario: %s)", action, user.Username), "wifi", &userID)
+	return c.JSON(fiber.Map{
+		"success": true,
+		"message": message,
+		"blocked": newIsBlocked,
+	})
+}
+
 func wifiConfigHandler(c *fiber.Ctx) error {
 	user := c.Locals("user").(*User)
 	userID := user.ID
