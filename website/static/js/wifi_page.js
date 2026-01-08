@@ -768,12 +768,108 @@
           msg = t('errors.connection_error', 'Connection error with the server.');
         }
         showAlert('danger', msg);
-      } finally {
-        if (scanBtn) {
-          scanBtn.disabled = false;
-          scanBtn.innerHTML = originalHtml;
+      } catch (e) {
+        console.error('Error scanning networks:', e);
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (emptyEl) {
+          emptyEl.innerHTML = 
+            '<div class="text-center py-5">' +
+            '<i class="bi bi-exclamation-triangle text-danger" style="font-size: 4rem;"></i>' +
+            '<p class="mt-3">' + t('errors.scan_error', 'Scan error') + '</p>' +
+            '<p class="text-muted small">' + error.message + '</p>' +
+            '</div>';
+          emptyEl.style.display = 'block';
         }
+        if (tableEl) tableEl.style.display = 'none';
+        
+        let msg = error.message;
+        if (error.name === 'AbortError') {
+          msg = t('wifi.scan_timeout', 'Scan timed out. Please try again.');
+        } else if (msg.includes('Failed to fetch')) {
+          msg = t('errors.connection_error', 'Connection error with the server.');
+        }
+        showAlert('danger', msg);
       }
+    }
+  }
+  
+  // Show connect inline form in table row
+  function showConnectInline(ssid, security, rowElement) {
+    // Verificar si ya hay un formulario en esta fila
+    let formRow = rowElement.nextElementSibling;
+    if (formRow && formRow.classList.contains('connect-form-row')) {
+      formRow.remove();
+      return;
+    }
+    
+    // Crear nueva fila con formulario
+    const newRow = document.createElement('tr');
+    newRow.className = 'connect-form-row';
+    newRow.innerHTML = 
+      '<td colspan="6" style="padding: 1.5rem; background: rgba(255, 255, 255, 0.02);">' +
+        '<div class="network-connect-form show">' +
+          '<div class="network-connect-form-group">' +
+            '<label class="network-connect-form-label">' + t('wifi.network_ssid', 'Network Name (SSID)') + '</label>' +
+            '<input type="text" class="network-connect-form-input" value="' + ssid.replace(/"/g, '&quot;') + '" readonly>' +
+          '</div>' +
+          '<div class="network-connect-form-group">' +
+            '<label class="network-connect-form-label">' + t('wifi.security_type', 'Security Type') + '</label>' +
+            '<input type="text" class="network-connect-form-input" value="' + security.replace(/"/g, '&quot;') + '" readonly>' +
+          '</div>' +
+          (security !== 'Open' ? 
+            '<div class="network-connect-form-group">' +
+              '<label class="network-connect-form-label">' + t('auth.password', 'Password') + '</label>' +
+              '<div style="position: relative;">' +
+                '<input type="password" class="network-connect-form-input network-connect-password" placeholder="' + t('auth.password_placeholder', 'Password') + '" autocomplete="current-password">' +
+                '<button type="button" class="btn btn-sm btn-outline-secondary" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%);" onclick="togglePasswordVisibility(this)">' +
+                  '<i class="bi bi-eye"></i>' +
+                '</button>' +
+              '</div>' +
+            '</div>' : '') +
+          '<div class="network-connect-form-actions">' +
+            '<button type="button" class="btn btn-secondary network-connect-cancel">' + t('common.cancel', 'Cancel') + '</button>' +
+            '<button type="button" class="btn btn-primary network-connect-submit">' +
+              '<i class="bi bi-wifi me-2"></i>' + t('wifi.connect_now', 'Connect Now') +
+            '</button>' +
+          '</div>' +
+        '</div>' +
+      '</td>';
+    
+    // Insertar después de la fila actual
+    rowElement.parentNode.insertBefore(newRow, rowElement.nextSibling);
+    
+    // Hacer scroll hacia el formulario
+    setTimeout(() => {
+      newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const passwordInput = newRow.querySelector('.network-connect-password');
+      if (passwordInput) {
+        passwordInput.focus();
+      }
+    }, 100);
+    
+    // Botón cancelar
+    const cancelBtn = newRow.querySelector('.network-connect-cancel');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function() {
+        newRow.remove();
+      });
+    }
+    
+    // Botón conectar
+    const submitBtn = newRow.querySelector('.network-connect-submit');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', function() {
+        const passwordInput = newRow.querySelector('.network-connect-password');
+        const password = passwordInput ? passwordInput.value : '';
+        
+        if (security !== 'Open' && !password) {
+          showAlert('danger', t('wifi.password_required', 'Please enter the network password.'));
+          if (passwordInput) passwordInput.focus();
+          return;
+        }
+        
+        connectToNetwork(ssid, security, password, newRow);
+      });
     }
   }
   
