@@ -183,6 +183,14 @@
       if (statusData.enabled !== undefined) {
         updateToggleButton(statusData);
       }
+      
+      // Update connect buttons if connected
+      if (statusData.connected && statusData.current_connection) {
+        updateConnectButtons(statusData.current_connection);
+      } else {
+        // Si no está conectado, restaurar todos los botones
+        updateConnectButtons(null);
+      }
     } catch (e) {
       console.error('Error loading connection status:', e);
       const statusEl = document.getElementById('connection-status');
