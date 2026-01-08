@@ -490,13 +490,17 @@
           await loadConnectionStatus();
           status = await checkWiFiStatus();
           
-          // Intentar escanear siempre después de activar WiFi
-          if (status.enabled && !status.blocked) {
-            // WiFi está habilitado, escanear automáticamente
+          // Intentar escanear solo si no hay conexión activa
+          status = await checkWiFiStatus();
+          if (status.enabled && !status.blocked && !status.connected) {
+            // WiFi está habilitado y no hay conexión, escanear automáticamente
             showAlert('info', t('wifi.scanning_networks', 'Scanning for networks...'));
             setTimeout(() => {
               scanNetworks();
             }, 2000);
+          } else if (status.connected) {
+            // Ya hay conexión, no escanear
+            console.log('Ya hay conexión activa, omitiendo escaneo automático');
           } else {
             // Aún no se detecta como habilitado, pero intentar escanear de todos modos
             // (puede que el sistema aún esté aplicando los cambios)
@@ -504,8 +508,11 @@
             setTimeout(async () => {
               // Actualizar estado una vez más
               await loadConnectionStatus();
-              // Intentar escanear (la función scanNetworks verificará el estado)
-              scanNetworks();
+              status = await checkWiFiStatus();
+              // Solo escanear si no hay conexión
+              if (!status.connected) {
+                scanNetworks();
+              }
             }, 3000);
           }
         } else {
