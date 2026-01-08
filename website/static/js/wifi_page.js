@@ -482,8 +482,18 @@
       console.log('Usando auto-detección de interfaz WiFi');
     }
     
-    // Verificar estado del WiFi primero
-    const wifiStatus = await checkWiFiStatus();
+    // Verificar estado del WiFi primero (con múltiples intentos)
+    let wifiStatus = await checkWiFiStatus();
+    let statusAttempts = 0;
+    const maxStatusAttempts = 3;
+    
+    // Si WiFi no está habilitado, intentar verificar varias veces (puede estar activándose)
+    while ((!wifiStatus.enabled || wifiStatus.blocked) && statusAttempts < maxStatusAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await loadConnectionStatus(); // Actualizar estado
+      wifiStatus = await checkWiFiStatus();
+      statusAttempts++;
+    }
     
     if (!wifiStatus.enabled || wifiStatus.blocked) {
       if (emptyEl) {
