@@ -858,33 +858,65 @@
   };
   
   // Connect to network
-  async function connectToNetwork(ssid, security, password) {
-    try {
-      const resp = await apiRequest('/api/v1/wifi/connect', {
-        method: 'POST',
-        body: { 
-          ssid: ssid, 
-          password: password || ''
+  async function connectToNetwork(ssid, security, password, cardElement) {
+    const submitBtn = cardElement ? cardElement.querySelector('.network-connect-submit') : null;
+    const form = cardElement ? cardElement.querySelector('.network-connect-form') : null;
+    
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      const originalHtml = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> ' + t('wifi.connecting', 'Connecting...');
+      
+      try {
+        const resp = await apiRequest('/api/v1/wifi/connect', {
+          method: 'POST',
+          body: { 
+            ssid: ssid, 
+            password: password || ''
+          }
+        });
+        
+        if (!resp.ok) {
+          if (resp.status === 401) return;
+          let errorMsg = t('errors.connection_failed', 'Connection failed');
+          try {
+            const errorData = await resp.json();
+            errorMsg = errorData.error || errorMsg;
+          } catch (e) {
+            errorMsg = t('errors.connection_failed', 'Connection failed') + ' (HTTP ' + resp.status + ')';
+          }
+          showAlert('danger', errorMsg);
+          return;
         }
-      });
-      
-      const data = await resp.json();
-      
-      if (resp.ok && data.success) {
-        showAlert('success', t('wifi.connecting', 'Connecting to') + ': ' + ssid);
-        const modal = bootstrap.Modal.getInstance(document.getElementById('connectModal'));
-        if (modal) modal.hide();
-        setTimeout(() => {
-          loadConnectionStatus();
-          scanNetworks();
-        }, 2000);
-      } else {
-        const errorMsg = data.error || t('errors.connection_failed', 'Connection failed');
-        showAlert('danger', errorMsg);
+        
+        const data = await resp.json();
+        
+        if (data.success) {
+          showAlert('success', t('wifi.connecting', 'Connecting to') + ': ' + ssid);
+          
+          // Ocultar el formulario
+          if (form) {
+            form.classList.remove('show');
+          }
+          
+          setTimeout(() => {
+            loadConnectionStatus();
+            scanNetworks();
+          }, 2000);
+        } else {
+          const errorMsg = data.error || t('errors.connection_failed', 'Connection failed');
+          showAlert('danger', errorMsg);
+        }
+      } catch (e) {
+        console.error('Error connecting to network:', e);
+        if (e.message && e.message.includes('401')) return;
+        showAlert('danger', t('errors.network_error', 'Network error: ') + e.message);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalHtml;
+        }
       }
-    } catch (e) {
-      console.error('Error connecting to network:', e);
-      showAlert('danger', t('errors.network_error', 'Network error'));
     }
   }
   
