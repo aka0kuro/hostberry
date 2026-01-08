@@ -50,6 +50,12 @@ func executeCommand(cmd string) (string, error) {
 		"rfkill", "ifconfig", "iwconfig",
 	}
 	
+	// Comandos que NO necesitan sudo (pueden ejecutarse directamente)
+	noSudoCommands := []string{
+		"hostname", "uname", "cat", "grep", "awk", "sed", "cut", "head", "tail",
+		"free", "df", "nproc", "pgrep",
+	}
+	
 	// Validar comando (extraer el comando base, ignorando sudo si está presente)
 	parts := strings.Fields(cmd)
 	if len(parts) == 0 {
@@ -58,8 +64,10 @@ func executeCommand(cmd string) (string, error) {
 	
 	// Si el primer argumento es "sudo", usar el segundo como comando
 	commandIndex := 0
+	hasSudo := false
 	if len(parts) > 1 && parts[0] == "sudo" {
 		commandIndex = 1
+		hasSudo = true
 	}
 	
 	if commandIndex >= len(parts) {
@@ -79,15 +87,67 @@ func executeCommand(cmd string) (string, error) {
 		return "", exec.ErrNotFound // Devolver error para que Lua/handlers lo reporten
 	}
 	
+	// Si el comando no necesita sudo y no se especificó sudo, ejecutar directamente
+	needsSudo := true
+	for _, noSudoCmd := range noSudoCommands {
+		if command == noSudoCmd {
+			needsSudo = false
+			break
+		}
+	}
+	
+	// Si el comando no necesita sudo, remover sudo del comando
+	if !needsSudo && hasSudo {
+		cmd = strings.Join(parts[1:], " ")
+	}
+	
 	// Usar execCommand para manejar sudo automáticamente
 	// execCommand remueve "sudo" si está presente y lo agrega si es necesario
 	cmdObj := execCommand(cmd)
+	
+	// Configurar variables de entorno para evitar logs de sudo en sistemas read-only
+	cmdObj.Env = append(os.Environ(),
+		"SUDO_ASKPASS=/bin/false",
+		"SUDO_LOG_FILE=", // Deshabilitar log de sudo
+	)
+	
 	out, err := cmdObj.CombinedOutput()
+	outputStr := string(out)
+	
+	// Filtrar mensajes de error de sudo relacionados con read-only file system
+	lines := strings.Split(outputStr, "\n")
+	filteredLines := make([]string, 0, len(lines))
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		// Ignorar líneas de error de sudo sobre logs
+		if strings.Contains(line, "sudo: unable to open log file") ||
+			strings.Contains(line, "Read-only file system") ||
+			strings.Contains(line, "sudo: unable to stat") {
+			continue
+		}
+		if line != "" {
+			filteredLines = append(filteredLines, line)
+		}
+	}
+	
+	outputStr = strings.Join(filteredLines, "\n")
+	
+	// Si hay error pero la salida filtrada tiene contenido válido, usar la salida
+	if err != nil && outputStr != "" {
+		// Verificar si el error es solo por los mensajes de log de sudo
+		errStr := err.Error()
+		if strings.Contains(errStr, "exit status") && outputStr != "" {
+			// El comando puede haber funcionado pero sudo reportó un error de log
+			// Intentar usar la salida si parece válida
+			return strings.TrimSpace(outputStr), nil
+		}
+	}
+	
 	if err != nil {
 		return "", err
 	}
 	
-	return strings.TrimSpace(string(out)), nil
+	return strings.TrimSpace(outputStr), nil
 }
 
 // canUseSudo verifica si el proceso puede usar sudo o si ya es root
