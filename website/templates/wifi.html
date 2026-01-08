@@ -77,9 +77,13 @@
                         </div>
                         <div class="wifi-toggle-section">
                             <label class="form-label">{{ call .t "wifi.power" "WiFi Power" }}</label>
-                            <button class="btn btn-lg w-100" id="toggle-wifi-btn" onclick="toggleWiFi()">
+                            <button class="btn btn-lg w-100" id="toggle-wifi-btn" onclick="toggleWiFi()" style="display: none;">
                                 <i class="bi bi-wifi" id="toggle-wifi-icon"></i>
                                 <span id="toggle-wifi-text">{{ call .t "wifi.enable_wifi" "Enable WiFi" }}</span>
+                            </button>
+                            <button class="btn btn-warning btn-lg w-100" id="unblock-wifi-btn" onclick="unblockWiFi()" style="display: none;">
+                                <i class="bi bi-unlock me-2"></i>
+                                <span>{{ call .t "wifi.unblock_wifi" "Unblock WiFi" }}</span>
                             </button>
                         </div>
                         <div class="wifi-scan-section">
