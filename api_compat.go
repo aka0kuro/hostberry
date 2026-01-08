@@ -314,12 +314,12 @@ func wifiUnblockHandler(c *fiber.Ctx) error {
 		}
 	}
 
-	// Si rfkill funcionó, también intentar habilitar con nmcli (con sudo)
+	// Si rfkill funcionó, también intentar habilitar con nmcli
 	if success && method == "rfkill (con sudo)" {
 		nmcliCheck := exec.Command("sh", "-c", "command -v nmcli 2>/dev/null")
 		if nmcliCheck.Run() == nil {
-			// Intentar habilitar con sudo
-			exec.Command("sh", "-c", "sudo nmcli radio wifi on 2>/dev/null").Run()
+			// Intentar habilitar
+			execCommand("nmcli radio wifi on 2>/dev/null").Run()
 		}
 	}
 
