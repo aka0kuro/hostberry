@@ -644,6 +644,7 @@
     "enable_to_scan": "Please enable WiFi to scan for networks",
     "wifi_toggled": "WiFi status changed successfully",
     "wifi_unblocked": "WiFi unblocked successfully",
+    "wifi_enabling": "WiFi is being enabled, please wait a moment and try scanning again",
     "unblock_wifi": "Unblock WiFi",
     "unblocking": "Unblocking...",
     "hard_blocked": "Hard blocked: Check physical WiFi switch",
