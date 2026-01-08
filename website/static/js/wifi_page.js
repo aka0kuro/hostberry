@@ -894,6 +894,14 @@
         if (data.success) {
           showAlert('success', t('wifi.connecting', 'Connecting to') + ': ' + ssid);
           
+          // Guardar última red conectada para auto-reconexión
+          localStorage.setItem('wifi_last_connected_ssid', ssid);
+          if (password) {
+            localStorage.setItem('wifi_last_connected_password', password);
+          } else {
+            localStorage.removeItem('wifi_last_connected_password');
+          }
+          
           // Ocultar el formulario
           if (form) {
             form.classList.remove('show');
@@ -901,7 +909,7 @@
           
           setTimeout(() => {
             loadConnectionStatus();
-            scanNetworks();
+            // No escanear automáticamente después de conectar
           }, 2000);
         } else {
           const errorMsg = data.error || t('errors.connection_failed', 'Connection failed');
