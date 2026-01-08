@@ -916,12 +916,18 @@ body.light-theme .wifi-interface-select-icon {
 
     /* Desktop (>= 992px) - tarjetas a todo ancho, una por fila */
     @media (min-width: 992px) {
+        #networks-table-container {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        
         .networks-cards-container {
             display: flex !important;
             flex-direction: column !important;
             gap: 1rem;
             width: 100% !important;
             max-width: 100% !important;
+            box-sizing: border-box !important;
         }
 
         .network-card {
@@ -930,6 +936,7 @@ body.light-theme .wifi-interface-select-icon {
             flex-basis: 100% !important;
             flex-shrink: 0 !important;
             flex-grow: 0 !important;
+            box-sizing: border-box !important;
         }
     }
 
