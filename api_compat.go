@@ -609,18 +609,7 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 	// Método 2: Verificar con rfkill para obtener información de bloqueo
 	rfkillOut, _ := execCommand("rfkill list wifi 2>/dev/null").CombinedOutput()
 	// Filtrar mensajes de error de sudo
-	rfkillOutStr := string(rfkillOut)
-	lines := strings.Split(rfkillOutStr, "\n")
-	var cleanRfkillLines []string
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line != "" && 
-		   !strings.Contains(line, "sudo: unable to open log file") &&
-		   !strings.Contains(line, "Read-only file system") {
-			cleanRfkillLines = append(cleanRfkillLines, line)
-		}
-	}
-	rfkillStr := strings.ToLower(strings.Join(cleanRfkillLines, "\n"))
+	rfkillStr := strings.ToLower(filterSudoErrors(rfkillOut))
 	if strings.Contains(rfkillStr, "hard blocked: yes") {
 		hardBlocked = true
 		enabled = false
