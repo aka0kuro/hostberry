@@ -41,10 +41,16 @@
                         </div>
                         <div class="wifi-actions-grid">
                             <div class="wifi-action-item">
-                                <label class="form-label">{{ call .t "wifi.interface" "WiFi Interface" }}</label>
-                                <select class="form-select" id="wifi-interface" name="interface">
-                                    <option value="">{{ call .t "wifi.auto_detect" "Auto-detect" }}</option>
-                                </select>
+                                <label class="form-label wifi-interface-label">
+                                    <i class="bi bi-router me-2"></i>
+                                    {{ call .t "wifi.interface" "WiFi Interface" }}
+                                </label>
+                                <div class="wifi-interface-select-wrapper">
+                                    <select class="form-select wifi-interface-select" id="wifi-interface" name="interface">
+                                        <option value="">{{ call .t "wifi.auto_detect" "Auto-detect" }}</option>
+                                    </select>
+                                    <i class="bi bi-chevron-down wifi-interface-select-icon"></i>
+                                </div>
                             </div>
                             <div class="wifi-action-item">
                                 <label class="form-label">{{ call .t "wifi.actions" "Actions" }}</label>
