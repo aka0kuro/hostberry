@@ -704,10 +704,164 @@ body.light-theme .wifi-interface-select-icon {
     color: var(--hb-primary);
 }
 
-.wifi-interface-select:focus + .wifi-interface-select-icon {
-    color: var(--hb-primary);
-    transform: rotate(180deg);
-}
+    .wifi-interface-select:focus + .wifi-interface-select-icon {
+        color: var(--hb-primary);
+        transform: rotate(180deg);
+    }
+
+    .networks-cards-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+    }
+
+    .network-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        width: 100%;
+        cursor: pointer;
+    }
+
+    .network-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        border-color: var(--hb-primary);
+    }
+
+    body.light-theme .network-card {
+        background: rgba(255, 255, 255, 0.95) !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    body.light-theme .network-card:hover {
+        background: rgba(255, 255, 255, 1) !important;
+        border-color: var(--hb-primary) !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .network-card-content {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .network-card-icon {
+        font-size: 2rem;
+        opacity: 0.8;
+        flex-shrink: 0;
+    }
+
+    .network-card-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .network-card-ssid {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--hb-text-light);
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    body.light-theme .network-card-ssid {
+        color: #212529;
+    }
+
+    .network-card-details {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        font-size: 0.875rem;
+        color: var(--hb-text-muted);
+    }
+
+    body.light-theme .network-card-details {
+        color: rgba(0, 0, 0, 0.6);
+    }
+
+    .network-card-detail-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .network-card-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-shrink: 0;
+    }
+
+    .network-card-security-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+
+    .network-card-signal {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+
+    .connect-form-row {
+        background: rgba(255, 255, 255, 0.02) !important;
+    }
+
+    body.light-theme .connect-form-row {
+        background: rgba(0, 0, 0, 0.02) !important;
+    }
+
+    @media (max-width: 768px) {
+        .network-card {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 1.25rem;
+        }
+
+        .network-card-content {
+            width: 100%;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .network-card-details {
+            width: 100%;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .network-card-actions {
+            width: 100%;
+            justify-content: flex-end;
+        }
+
+        .network-card-actions .btn {
+            flex: 1;
+        }
+    }
 
 /* Responsive */
 @media (max-width: 991px) {
