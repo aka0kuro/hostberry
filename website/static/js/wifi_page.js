@@ -1139,10 +1139,11 @@
     
     // Refresh handlers
     function initWiFiPage() {
+      console.log('Inicializando página WiFi...');
       loadConnectionStatus();
       loadRegion();
     
-    // Cargar interfaces WiFi y restaurar selección guardada
+      // Cargar interfaces WiFi y restaurar selección guardada
     loadWiFiInterfaces().then(function() {
       // Asegurar que la interfaz guardada se seleccione después de cargar
       const interfaceSelect = document.getElementById('wifi-interface');
