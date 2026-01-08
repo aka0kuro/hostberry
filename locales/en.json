@@ -646,6 +646,7 @@
     "wifi_unblocked": "WiFi unblocked successfully",
     "wifi_enabling": "WiFi is being enabled, please wait a moment and try scanning again",
     "scanning_networks": "Scanning for networks...",
+    "wifi_may_be_enabling": "WiFi may still be enabling, attempting to scan anyway...",
     "unblock_wifi": "Unblock WiFi",
     "unblocking": "Unblocking...",
     "hard_blocked": "Hard blocked: Check physical WiFi switch",
