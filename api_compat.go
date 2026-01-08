@@ -513,17 +513,17 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 	} else if strings.Contains(rfkillStr, "soft blocked: yes") {
 		softBlocked = true
 		enabled = false
-	} else if strings.Contains(rfkillStr, "soft blocked: no") && strings.Contains(rfkillStr, "hard blocked: no") {
-		// Si no está bloqueado, verificar si está habilitado con nmcli
-		if !enabled {
-			// Re-verificar con nmcli si no se había detectado antes
-			wifiCheck2 := exec.Command("sh", "-c", "sudo nmcli -t -f WIFI g 2>/dev/null")
-			wifiOut2, err2 := wifiCheck2.Output()
-			if err2 == nil {
-				wifiState2 := strings.ToLower(strings.TrimSpace(string(wifiOut2)))
-				if strings.Contains(wifiState2, "enabled") || strings.Contains(wifiState2, "on") {
-					enabled = true
-				}
+	} else {
+		// Si no está bloqueado, verificar explícitamente si está habilitado
+		// Re-verificar con nmcli para asegurar el estado
+		wifiCheck2 := exec.Command("sh", "-c", "sudo nmcli -t -f WIFI g 2>/dev/null")
+		wifiOut2, err2 := wifiCheck2.Output()
+		if err2 == nil {
+			wifiState2 := strings.ToLower(strings.TrimSpace(string(wifiOut2)))
+			if strings.Contains(wifiState2, "enabled") || strings.Contains(wifiState2, "on") {
+				enabled = true
+			} else if strings.Contains(wifiState2, "disabled") || strings.Contains(wifiState2, "off") {
+				enabled = false
 			}
 		}
 	}
@@ -535,8 +535,18 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 			// Si hay una interfaz WiFi, verificar si está activa
 			iwStatus, _ := exec.Command("sh", "-c", "sudo iwconfig 2>/dev/null | grep -i 'wlan' | head -1 | grep -i 'unassociated'").CombinedOutput()
 			if len(iwStatus) == 0 {
-				// No está "unassociated", podría estar habilitado
-				enabled = true
+				// No está "unassociated", verificar también con nmcli
+				wifiCheck3 := exec.Command("sh", "-c", "sudo nmcli -t -f WIFI g 2>/dev/null")
+				wifiOut3, err3 := wifiCheck3.Output()
+				if err3 == nil {
+					wifiState3 := strings.ToLower(strings.TrimSpace(string(wifiOut3)))
+					if strings.Contains(wifiState3, "enabled") || strings.Contains(wifiState3, "on") {
+						enabled = true
+					}
+				} else {
+					// Si nmcli no funciona, asumir habilitado si no está unassociated
+					enabled = true
+				}
 			}
 		}
 	}
