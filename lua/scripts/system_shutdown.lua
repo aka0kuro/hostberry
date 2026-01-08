@@ -12,7 +12,8 @@ log("INFO", "Apagado del sistema solicitado por: " .. user)
 
 -- Ejecutar comando de apagado
 -- Intentar con systemctl primero (más moderno), luego con shutdown
-local shutdown_cmd = "sudo systemctl poweroff"
+-- NOTA: No incluir "sudo" - executeCommand lo agrega automáticamente si es necesario
+local shutdown_cmd = "systemctl poweroff"
 local output, err = exec(shutdown_cmd)
 
 -- Si systemctl falla, intentar con shutdown
@@ -25,7 +26,7 @@ if err then
         local test_cmd = "command -v " .. path .. " 2>/dev/null"
         local test_out, test_err = exec(test_cmd)
         if not test_err and test_out and test_out ~= "" then
-            shutdown_cmd = "sudo " .. path .. " -h +1"
+            shutdown_cmd = path .. " -h +1"
             output, err = exec(shutdown_cmd)
             found = true
             break
@@ -33,7 +34,7 @@ if err then
     end
     if not found then
         -- Último recurso: intentar con poweroff directo
-        shutdown_cmd = "sudo poweroff"
+        shutdown_cmd = "poweroff"
         output, err = exec(shutdown_cmd)
     end
 end
