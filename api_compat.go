@@ -582,6 +582,11 @@ func translationsHandler(c *fiber.Ctx) error {
 
 // ---------- Legacy /api/wifi/* ----------
 
+// wifiStatusHandler es el handler para /api/v1/wifi/status
+func wifiStatusHandler(c *fiber.Ctx) error {
+	return wifiLegacyStatusHandler(c)
+}
+
 func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 	// Verificar estado real del WiFi
 	var enabled bool = false
@@ -592,7 +597,19 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 	wifiCheck := execCommand("nmcli -t -f WIFI g 2>/dev/null")
 	wifiOut, err := wifiCheck.Output()
 	if err == nil {
-		wifiState := strings.ToLower(strings.TrimSpace(string(wifiOut)))
+		// Filtrar mensajes de error de sudo
+		wifiOutStr := string(wifiOut)
+		lines := strings.Split(wifiOutStr, "\n")
+		var cleanLines []string
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line != "" && 
+			   !strings.Contains(line, "sudo: unable to open log file") &&
+			   !strings.Contains(line, "Read-only file system") {
+				cleanLines = append(cleanLines, line)
+			}
+		}
+		wifiState := strings.ToLower(strings.Join(cleanLines, " "))
 		if strings.Contains(wifiState, "enabled") || strings.Contains(wifiState, "on") {
 			enabled = true
 		} else if strings.Contains(wifiState, "disabled") || strings.Contains(wifiState, "off") {
