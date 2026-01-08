@@ -223,65 +223,47 @@ func wifiUnblockHandler(c *fiber.Ctx) error {
 	method := ""
 	var lastError error
 
-	// Verificar si rfkill está disponible
+	// Verificar si rfkill está disponible (siempre con sudo)
 	rfkillCheck := exec.Command("sh", "-c", "command -v rfkill 2>/dev/null")
 	if rfkillCheck.Run() == nil {
 		// Verificar si hay WiFi bloqueado
-		rfkillOut, rfkillErr := exec.Command("sh", "-c", "rfkill list wifi 2>/dev/null | grep -i 'wifi' | head -1").CombinedOutput()
+		rfkillOut, rfkillErr := exec.Command("sh", "-c", "sudo rfkill list wifi 2>/dev/null | grep -i 'wifi' | head -1").CombinedOutput()
 		if rfkillErr == nil && strings.Contains(strings.ToLower(string(rfkillOut)), "wifi") {
-			// Método 1: Intentar sin sudo primero
-			rfkillCmdNoSudo := "rfkill unblock wifi"
-			_, rfkillUnblockErrNoSudo := exec.Command("sh", "-c", rfkillCmdNoSudo+" 2>&1").CombinedOutput()
-			if rfkillUnblockErrNoSudo == nil {
+			// Desbloquear con sudo
+			rfkillCmd := "sudo rfkill unblock wifi"
+			rfkillOutSudo, rfkillUnblockErr := exec.Command("sh", "-c", rfkillCmd+" 2>&1").CombinedOutput()
+			if rfkillUnblockErr == nil {
 				success = true
-				method = "rfkill (sin sudo)"
+				method = "rfkill (con sudo)"
 			} else {
-				// Método 2: Intentar con sudo
-				rfkillCmd := "sudo rfkill unblock wifi"
-				rfkillOutSudo, rfkillUnblockErr := exec.Command("sh", "-c", rfkillCmd+" 2>&1").CombinedOutput()
-				if rfkillUnblockErr == nil {
-					success = true
-					method = "rfkill (con sudo)"
-				} else {
-					lastError = fmt.Errorf("rfkill error: %s", string(rfkillOutSudo))
-				}
+				lastError = fmt.Errorf("rfkill error: %s", string(rfkillOutSudo))
 			}
 		}
 	}
 
-	// Método 3: Intentar con nmcli (siempre intentar habilitar después de desbloquear o si rfkill falló)
+	// Método 2: Intentar con nmcli (siempre con sudo)
 	if !success {
 		nmcliCheck := exec.Command("sh", "-c", "command -v nmcli 2>/dev/null")
 		if nmcliCheck.Run() == nil {
-			// Intentar sin sudo primero
-			nmcliCmdNoSudo := "nmcli radio wifi on"
-			nmcliOutNoSudo, nmcliErrNoSudo := exec.Command("sh", "-c", nmcliCmdNoSudo+" 2>&1").CombinedOutput()
-			if nmcliErrNoSudo == nil {
+			// Intentar con sudo
+			nmcliCmd := "sudo nmcli radio wifi on"
+			nmcliOut, nmcliErr := exec.Command("sh", "-c", nmcliCmd+" 2>&1").CombinedOutput()
+			if nmcliErr == nil {
 				success = true
-				method = "nmcli (sin sudo)"
+				method = "nmcli (con sudo)"
 			} else {
-				// Intentar con sudo
-				nmcliCmd := "sudo nmcli radio wifi on"
-				nmcliOut, nmcliErr := exec.Command("sh", "-c", nmcliCmd+" 2>&1").CombinedOutput()
-				if nmcliErr == nil {
-					success = true
-					method = "nmcli (con sudo)"
-				} else {
-					if lastError == nil {
-						lastError = fmt.Errorf("nmcli error: %s", string(nmcliOut))
-					}
+				if lastError == nil {
+					lastError = fmt.Errorf("nmcli error: %s", string(nmcliOut))
 				}
 			}
 		}
 	}
 
-	// Si rfkill funcionó, también intentar habilitar con nmcli
-	if success && (method == "rfkill (sin sudo)" || method == "rfkill (con sudo)") {
+	// Si rfkill funcionó, también intentar habilitar con nmcli (con sudo)
+	if success && method == "rfkill (con sudo)" {
 		nmcliCheck := exec.Command("sh", "-c", "command -v nmcli 2>/dev/null")
 		if nmcliCheck.Run() == nil {
-			// Intentar habilitar sin sudo
-			exec.Command("sh", "-c", "nmcli radio wifi on 2>/dev/null").Run()
-			// Si falla, intentar con sudo
+			// Intentar habilitar con sudo
 			exec.Command("sh", "-c", "sudo nmcli radio wifi on 2>/dev/null").Run()
 		}
 	}
