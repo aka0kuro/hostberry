@@ -226,8 +226,10 @@
       if (resp.ok) {
         const data = await resp.json();
         const statusData = data.status || data;
+        // Verificar explícitamente si enabled es true (no solo "no es false")
+        const enabled = statusData.enabled === true || (statusData.enabled !== false && !statusData.hard_blocked && !statusData.soft_blocked);
         return {
-          enabled: statusData.enabled !== false,
+          enabled: enabled,
           blocked: statusData.hard_blocked || statusData.soft_blocked,
           connected: statusData.connected || statusData.current_connection
         };
