@@ -256,20 +256,43 @@ clean_previous_installation() {
             # Mover el directorio data fuera temporalmente para preservarlo
             TEMP_DATA_DIR="/tmp/hostberry-data-temp-$$"
             if [ -d "$DATA_DIR" ]; then
-                print_info "Moviendo directorio de datos temporalmente..."
+                print_info "Moviendo directorio de datos temporalmente para preservarlo..."
+                # Verificar que el directorio data contiene la base de datos
+                if [ -f "$DATA_DIR/hostberry.db" ]; then
+                    DB_SIZE=$(du -h "$DATA_DIR/hostberry.db" | cut -f1)
+                    print_info "Base de datos encontrada: $DB_SIZE"
+                fi
+                
                 if mv "$DATA_DIR" "$TEMP_DATA_DIR" 2>/dev/null; then
-                    print_success "Directorio de datos movido temporalmente"
+                    print_success "Directorio de datos movido temporalmente a $TEMP_DATA_DIR"
+                    # Verificar que el archivo de BD está en el directorio temporal
+                    if [ -f "$TEMP_DATA_DIR/hostberry.db" ]; then
+                        print_success "Base de datos preservada en directorio temporal"
+                    else
+                        print_warning "Advertencia: No se encontró hostberry.db en el directorio temporal"
+                    fi
                 else
                     print_error "ERROR: No se pudo mover el directorio de datos"
                     print_error "Abortando actualización para proteger los datos"
                     rm -rf "$TEMP_BACKUP_DIR"
                     exit 1
                 fi
+            else
+                print_warning "Directorio de datos no existe: $DATA_DIR (primera instalación?)"
             fi
             
             # Eliminar directorio de instalación (data ya está fuera)
             print_info "Eliminando archivos antiguos (preservando datos)..."
+            # Asegurarse de que no eliminamos el directorio data si aún existe
+            if [ -d "$DATA_DIR" ]; then
+                print_warning "Advertencia: El directorio data aún existe, moviéndolo antes de eliminar..."
+                mv "$DATA_DIR" "$TEMP_DATA_DIR" 2>/dev/null || {
+                    print_error "ERROR: No se pudo mover el directorio de datos antes de eliminar"
+                    exit 1
+                }
+            fi
             rm -rf "$INSTALL_DIR"
+            print_success "Archivos antiguos eliminados"
             
             # Restaurar directorio de datos
             if [ -d "$TEMP_DATA_DIR" ]; then
@@ -280,7 +303,18 @@ clean_previous_installation() {
                     # Verificar que la BD existe
                     if [ -f "$DATA_DIR/hostberry.db" ]; then
                         DB_SIZE=$(du -h "$DATA_DIR/hostberry.db" | cut -f1)
-                        print_success "Base de datos preservada: $DB_SIZE"
+                        print_success "✅ Base de datos preservada exitosamente: $DB_SIZE"
+                    else
+                        print_warning "Advertencia: No se encontró hostberry.db después de restaurar"
+                        # Intentar restaurar desde backup
+                        if [ -d "$TEMP_BACKUP_DIR/data" ] && [ -f "$TEMP_BACKUP_DIR/data/hostberry.db" ]; then
+                            print_info "Intentando restaurar desde backup..."
+                            cp -r "$TEMP_BACKUP_DIR/data/"* "$DATA_DIR/" 2>/dev/null && {
+                                print_success "Base de datos restaurada desde backup"
+                            } || {
+                                print_error "ERROR: No se pudo restaurar desde backup"
+                            }
+                        fi
                     fi
                 else
                     print_error "ERROR: No se pudo restaurar el directorio de datos"
@@ -290,11 +324,20 @@ clean_previous_installation() {
                         mkdir -p "$DATA_DIR"
                         if cp -r "$TEMP_BACKUP_DIR/data/"* "$DATA_DIR/" 2>/dev/null; then
                             print_success "Base de datos restaurada desde backup"
+                            if [ -f "$DATA_DIR/hostberry.db" ]; then
+                                DB_SIZE=$(du -h "$DATA_DIR/hostberry.db" | cut -f1)
+                                print_success "Base de datos verificada: $DB_SIZE"
+                            fi
                         else
                             print_error "ERROR CRÍTICO: No se pudo restaurar la base de datos"
                             print_error "El backup está en: $TEMP_BACKUP_DIR"
+                            print_error "El directorio temporal está en: $TEMP_DATA_DIR"
                             exit 1
                         fi
+                    else
+                        print_error "ERROR CRÍTICO: No hay backup disponible"
+                        print_error "El directorio temporal está en: $TEMP_DATA_DIR"
+                        exit 1
                     fi
                 fi
             elif [ -d "$TEMP_BACKUP_DIR/data" ]; then
@@ -303,11 +346,18 @@ clean_previous_installation() {
                 mkdir -p "$DATA_DIR"
                 if cp -r "$TEMP_BACKUP_DIR/data/"* "$DATA_DIR/" 2>/dev/null; then
                     print_success "Base de datos restaurada desde backup"
+                    if [ -f "$DATA_DIR/hostberry.db" ]; then
+                        DB_SIZE=$(du -h "$DATA_DIR/hostberry.db" | cut -f1)
+                        print_success "Base de datos verificada: $DB_SIZE"
+                    fi
                 else
                     print_error "ERROR CRÍTICO: No se pudo restaurar la base de datos"
                     print_error "El backup está en: $TEMP_BACKUP_DIR"
                     exit 1
                 fi
+            else
+                print_warning "No se encontró directorio de datos ni backup para restaurar"
+                print_info "Se creará una nueva base de datos al iniciar el servicio"
             fi
             
             # Restaurar configuración
