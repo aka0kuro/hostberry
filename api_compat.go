@@ -612,7 +612,7 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 	} else {
 		// Si no está bloqueado, verificar explícitamente si está habilitado
 		// Re-verificar con nmcli para asegurar el estado
-		wifiCheck2 := exec.Command("sh", "-c", "sudo nmcli -t -f WIFI g 2>/dev/null")
+		wifiCheck2 := execCommand("nmcli -t -f WIFI g 2>/dev/null")
 		wifiOut2, err2 := wifiCheck2.Output()
 		if err2 == nil {
 			wifiState2 := strings.ToLower(strings.TrimSpace(string(wifiOut2)))
