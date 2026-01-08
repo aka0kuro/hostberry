@@ -10,133 +10,119 @@
         </div>
     </div>
 
-    <!-- WiFi Status Cards -->
-    <div class="row mb-4 g-3">
-        <div class="col-12 col-md-4 mb-3 mb-md-0">
-            <div class="stat-card wifi-status-card">
-                <div class="stat-icon">
-                    <i class="bi bi-wifi" id="wifi-status-icon"></i>
+    <!-- WiFi Status Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-wifi me-2"></i>
+                        {{ call .t "wifi.wifi_status" "WiFi Status" }}
+                    </h5>
+                    <button class="btn btn-sm btn-outline-light" id="refresh-wifi-status">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
                 </div>
-                <div class="stat-content">
-                    <div class="stat-label">{{ call .t "wifi.wifi_status" "WiFi Status" }}</div>
-                    <div class="stat-value" id="wifi-status-value">--</div>
-                    <div class="stat-progress">
-                        <div class="stat-progress-bar" id="wifi-status-bar" style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-md-4 mb-3 mb-md-0">
-            <div class="stat-card connection-status-card">
-                <div class="stat-icon">
-                    <i class="bi bi-network-chart"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-label">{{ call .t "wifi.current_connection" "Current Connection" }}</div>
-                    <div class="stat-value" id="connection-ssid-value">--</div>
-                    <div class="stat-progress">
-                        <div class="stat-progress-bar" id="connection-signal-bar" style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-md-4">
-            <div class="stat-card networks-count-card">
-                <div class="stat-icon">
-                    <i class="bi bi-list"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-label">{{ call .t "wifi.available_networks" "Available Networks" }}</div>
-                    <div class="stat-value" id="networks-count-value">0</div>
-                    <div class="stat-progress">
-                        <div class="stat-progress-bar" id="networks-count-bar" style="width: 0%"></div>
+                <div class="dashboard-card-body">
+                    <div class="wifi-status-controls">
+                        <div class="wifi-status-display mb-4">
+                            <div class="stat-card wifi-status-card">
+                                <div class="stat-icon">
+                                    <i class="bi bi-wifi" id="wifi-status-icon"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">{{ call .t "wifi.wifi_status" "WiFi Status" }}</div>
+                                    <div class="stat-value" id="wifi-status-value">--</div>
+                                    <div class="stat-progress">
+                                        <div class="stat-progress-bar" id="wifi-status-bar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="wifi-actions-grid">
+                            <div class="wifi-action-item">
+                                <label class="form-label">{{ call .t "wifi.interface" "WiFi Interface" }}</label>
+                                <select class="form-select" id="wifi-interface" name="interface">
+                                    <option value="">{{ call .t "wifi.auto_detect" "Auto-detect" }}</option>
+                                </select>
+                            </div>
+                            <div class="wifi-action-item">
+                                <label class="form-label">{{ call .t "wifi.actions" "Actions" }}</label>
+                                <div class="wifi-buttons-group">
+                                    <button class="btn btn-warning btn-lg" id="unblock-wifi-btn" onclick="unblockWiFi()" style="display: none;">
+                                        <i class="bi bi-unlock me-2"></i>
+                                        <span>{{ call .t "wifi.unblock_wifi" "Unblock WiFi" }}</span>
+                                    </button>
+                                    <button class="btn btn-primary btn-lg" id="toggle-wifi-btn" onclick="toggleWiFi()">
+                                        <i class="bi bi-wifi" id="toggle-wifi-icon"></i>
+                                        <span id="toggle-wifi-text">{{ call .t "wifi.enable_wifi" "Enable WiFi" }}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- WiFi Controls and Settings -->
-    <div class="row mb-4 g-3">
-        <div class="col-12 col-lg-6 mb-3 mb-lg-0">
+    <!-- Scan and Connect Networks -->
+    <div class="row mb-4">
+        <div class="col-12">
             <div class="dashboard-card">
                 <div class="dashboard-card-header">
                     <h5 class="dashboard-card-title">
-                        <i class="bi bi-gear me-2"></i>
-                        {{ call .t "wifi.controls" "WiFi Controls" }}
+                        <i class="bi bi-list me-2"></i>
+                        {{ call .t "wifi.available_networks" "Available Networks" }}
                     </h5>
-                </div>
-                <div class="dashboard-card-body">
-                    <div class="d-grid gap-3">
-                        <div class="wifi-interface-section">
-                            <label class="form-label">{{ call .t "wifi.interface" "WiFi Interface" }}</label>
-                            <select class="form-select" id="wifi-interface" name="interface">
-                                <option value="">{{ call .t "wifi.auto_detect" "Auto-detect" }}</option>
-                            </select>
-                            <small class="form-text text-muted">{{ call .t "wifi.interface_help" "Select the WiFi interface to use for scanning" }}</small>
-                        </div>
-                        <div class="wifi-toggle-section">
-                            <label class="form-label">{{ call .t "wifi.power" "WiFi Power" }}</label>
-                            <button class="btn btn-primary btn-lg w-100" id="toggle-wifi-btn" onclick="toggleWiFi()">
-                                <i class="bi bi-wifi" id="toggle-wifi-icon"></i>
-                                <span id="toggle-wifi-text">{{ call .t "wifi.enable_wifi" "Enable WiFi" }}</span>
-                            </button>
-                            <button class="btn btn-warning btn-lg w-100" id="unblock-wifi-btn" onclick="unblockWiFi()" style="display: none;">
-                                <i class="bi bi-unlock me-2"></i>
-                                <span>{{ call .t "wifi.unblock_wifi" "Unblock WiFi" }}</span>
-                            </button>
-                        </div>
-                        <div class="wifi-scan-section">
-                            <label class="form-label">{{ call .t "wifi.scan_networks" "Scan Networks" }}</label>
-                            <button class="btn btn-outline-primary btn-lg w-100" id="scan-networks-btn" onclick="scanNetworks()">
-                                <i class="bi bi-search"></i>
-                                {{ call .t "wifi.scan_networks" "Scan Networks" }}
-                            </button>
-                        </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-light me-2" id="refresh-networks">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                        <button class="btn btn-primary btn-sm" id="scan-networks-btn" onclick="scanNetworks()">
+                            <i class="bi bi-search me-2"></i>
+                            {{ call .t "wifi.scan_networks" "Scan Networks" }}
+                        </button>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="col-12 col-lg-6">
-            <div class="dashboard-card">
-                <div class="dashboard-card-header">
-                    <h5 class="dashboard-card-title">
-                        <i class="bi bi-globe me-2"></i>
-                        {{ call .t "wifi.region_settings" "Region Settings" }}
-                    </h5>
-                </div>
                 <div class="dashboard-card-body">
-                    <form id="regionForm">
-                        <div class="mb-3">
-                            <label for="wifi-region" class="form-label">{{ call .t "wifi.region" "WiFi Region" }}</label>
-                            <select class="form-select" id="wifi-region" name="region">
-                                <option value="US">{{ call .t "wifi.region_us" "United States (US)" }}</option>
-                                <option value="ES">{{ call .t "wifi.region_es" "Spain (ES)" }}</option>
-                                <option value="GB">{{ call .t "wifi.region_gb" "United Kingdom (GB)" }}</option>
-                                <option value="DE">{{ call .t "wifi.region_de" "Germany (DE)" }}</option>
-                                <option value="FR">{{ call .t "wifi.region_fr" "France (FR)" }}</option>
-                                <option value="IT">{{ call .t "wifi.region_it" "Italy (IT)" }}</option>
-                                <option value="JP">{{ call .t "wifi.region_jp" "Japan (JP)" }}</option>
-                                <option value="CN">{{ call .t "wifi.region_cn" "China (CN)" }}</option>
-                                <option value="AU">{{ call .t "wifi.region_au" "Australia (AU)" }}</option>
-                                <option value="BR">{{ call .t "wifi.region_br" "Brazil (BR)" }}</option>
-                                <option value="MX">{{ call .t "wifi.region_mx" "Mexico (MX)" }}</option>
-                                <option value="CA">{{ call .t "wifi.region_ca" "Canada (CA)" }}</option>
-                            </select>
-                            <small class="form-text text-muted">{{ call .t "wifi.region_help" "Select your country/region for WiFi compliance" }}</small>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-save me-2"></i>
-                            {{ call .t "wifi.save_region" "Save Region" }}
+                    <div id="networks-loading" class="text-center py-5" style="display: none;">
+                        <div class="spinning mb-3"><i class="bi bi-arrow-clockwise" style="font-size: 2rem;"></i></div>
+                        <p class="mt-2">{{ call .t "wifi.scanning" "Scanning..." }}</p>
+                        <small class="text-muted">{{ call .t "wifi.scan_time" "This may take 10-15 seconds" }}</small>
+                    </div>
+                    <div id="networks-empty" class="text-center py-5" style="display: none;">
+                        <i class="bi bi-wifi-off" style="font-size: 4rem; opacity: 0.5;"></i>
+                        <p class="mt-3">{{ call .t "wifi.no_networks" "No networks found" }}</p>
+                        <p class="text-muted small">{{ call .t "wifi.no_networks_desc" "No WiFi networks were found in your area. Make sure WiFi is enabled and try again." }}</p>
+                        <button class="btn btn-primary mt-3" onclick="scanNetworks()">
+                            <i class="bi bi-search me-2"></i>
+                            {{ call .t "wifi.scan_networks" "Scan Networks" }}
                         </button>
-                    </form>
+                    </div>
+                    <div class="table-responsive" id="networks-table-container" style="display: none;">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>{{ call .t "wifi.network_ssid" "SSID" }}</th>
+                                    <th>{{ call .t "wifi.network_security" "Security" }}</th>
+                                    <th>{{ call .t "wifi.network_signal" "Signal" }}</th>
+                                    <th>{{ call .t "wifi.network_channel" "Channel" }}</th>
+                                    <th>{{ call .t "common.actions" "Actions" }}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="networksTable">
+                                <!-- Networks will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Current Connection Details -->
-    <div class="row mb-4">
+    <div class="row">
         <div class="col-12">
             <div class="dashboard-card">
                 <div class="dashboard-card-header">
@@ -189,119 +175,63 @@
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Available Networks -->
-    <div class="row">
-        <div class="col-12">
-            <div class="dashboard-card">
-                <div class="dashboard-card-header">
-                    <h5 class="dashboard-card-title">
-                        <i class="bi bi-list me-2"></i>
-                        {{ call .t "wifi.available_networks" "Available Networks" }}
-                    </h5>
-                    <div>
-                        <button class="btn btn-sm btn-outline-light me-2" id="refresh-networks">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-light" id="auto-connect-btn" onclick="toggleAutoConnect()">
-                            <i class="bi bi-link-45deg" id="auto-connect-icon"></i>
-                            <span id="auto-connect-text">{{ call .t "wifi.auto_connect" "Auto Connect" }}</span>
-                        </button>
-                    </div>
-                </div>
-                <div class="dashboard-card-body">
-                    <div id="networks-loading" class="text-center py-5" style="display: none;">
-                        <div class="spinning mb-3"><i class="bi bi-arrow-clockwise" style="font-size: 2rem;"></i></div>
-                        <p class="mt-2">{{ call .t "wifi.scanning" "Scanning..." }}</p>
-                        <small class="text-muted">{{ call .t "wifi.scan_time" "This may take 10-15 seconds" }}</small>
-                    </div>
-                    <div id="networks-empty" class="text-center py-5" style="display: none;">
-                        <i class="bi bi-wifi-off" style="font-size: 4rem; opacity: 0.5;"></i>
-                        <p class="mt-3">{{ call .t "wifi.no_networks" "No networks found" }}</p>
-                        <p class="text-muted small">{{ call .t "wifi.no_networks_desc" "No WiFi networks were found in your area. Make sure WiFi is enabled and try again." }}</p>
-                        <button class="btn btn-primary mt-3" onclick="scanNetworks()">
-                            <i class="bi bi-search me-2"></i>
-                            {{ call .t "wifi.scan_networks" "Scan Networks" }}
-                        </button>
-                    </div>
-                    <div class="table-responsive" id="networks-table-container" style="display: none;">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>{{ call .t "wifi.network_ssid" "SSID" }}</th>
-                                    <th>{{ call .t "wifi.network_security" "Security" }}</th>
-                                    <th>{{ call .t "wifi.network_signal" "Signal" }}</th>
-                                    <th>{{ call .t "wifi.network_channel" "Channel" }}</th>
-                                    <th>{{ call .t "wifi.network_frequency" "Frequency" }}</th>
-                                    <th>{{ call .t "common.actions" "Actions" }}</th>
-                                </tr>
-                            </thead>
-                            <tbody id="networksTable">
-                                <!-- Networks will be loaded here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+<!-- WiFi Connect Modal -->
+<div class="modal fade" id="connectModal" tabindex="-1" aria-labelledby="connectModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="connectModalLabel">
+            <i class="bi bi-wifi me-2"></i>
+            {{ call .t "wifi.connect_to_network" "Connect to Network" }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="wifiConnectForm">
+          <input type="hidden" name="csrf_token" value="">
+          <div class="mb-3">
+            <label for="connectSSID" class="form-label">{{ call .t "wifi.network_ssid" "Network Name (SSID)" }}</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-network-chart"></i></span>
+              <input type="text" class="form-control" id="connectSSID" name="ssid" readonly>
+              <input type="hidden" id="connectSSIDHidden" name="ssid_hidden">
             </div>
-        </div>
-    </div>
-
-    <!-- WiFi Connect Modal -->
-    <div class="modal fade" id="connectModal" tabindex="-1" aria-labelledby="connectModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="connectModalLabel">
-                <i class="bi bi-wifi me-2"></i>
-                {{ call .t "wifi.connect_to_network" "Connect to Network" }}
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
-            <form id="wifiConnectForm">
-              <input type="hidden" name="csrf_token" value="">
-              <div class="mb-3">
-                <label for="connectSSID" class="form-label">{{ call .t "wifi.network_ssid" "Network Name (SSID)" }}</label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-network-chart"></i></span>
-                  <input type="text" class="form-control" id="connectSSID" name="ssid" readonly>
-                  <input type="hidden" id="connectSSIDHidden" name="ssid_hidden">
-                </div>
-              </div>
-              <div class="mb-3">
-                <label for="connectSecurity" class="form-label">{{ call .t "wifi.security_type" "Security Type" }}</label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                  <input type="text" class="form-control" id="connectSecurity" name="security" readonly>
-                  <input type="hidden" id="connectSecurityHidden" name="security_hidden">
-                </div>
-              </div>
-              <div class="mb-4" id="passwordField">
-                <label for="connectPassword" class="form-label">{{ call .t "auth.password" "Password" }}</label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-key"></i></span>
-                  <input type="password" class="form-control" id="connectPassword" name="password" placeholder="{{ call .t "auth.password_placeholder" "Password" }}" autocomplete="current-password" required>
-                  <button class="btn btn-outline-secondary" type="button" id="togglePwd" aria-label="Toggle password visibility">
-                    <i class="bi bi-eye" id="togglePwdIcon"></i>
-                  </button>
-                </div>
-                <div class="form-check mt-2">
-                    <input class="form-check-input" type="checkbox" id="saveCredentials" name="save_credentials" checked>
-                    <label class="form-check-label" for="saveCredentials">
-                        <i class="bi bi-save me-1"></i>{{ call .t "wifi.save_password" "Save password for automatic reconnection" }}
-                    </label>
-                </div>
-              </div>
-              <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary" id="connectSubmitBtn">
-                  <i class="bi bi-wifi me-2"></i>{{ call .t "wifi.connect_now" "Connect Now" }}
-                </button>
-              </div>
-            </form>
+          <div class="mb-3">
+            <label for="connectSecurity" class="form-label">{{ call .t "wifi.security_type" "Security Type" }}</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock"></i></span>
+              <input type="text" class="form-control" id="connectSecurity" name="security" readonly>
+              <input type="hidden" id="connectSecurityHidden" name="security_hidden">
+            </div>
           </div>
-        </div>
+          <div class="mb-4" id="passwordField">
+            <label for="connectPassword" class="form-label">{{ call .t "auth.password" "Password" }}</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-key"></i></span>
+              <input type="password" class="form-control" id="connectPassword" name="password" placeholder="{{ call .t "auth.password_placeholder" "Password" }}" autocomplete="current-password" required>
+              <button class="btn btn-outline-secondary" type="button" id="togglePwd" aria-label="Toggle password visibility">
+                <i class="bi bi-eye" id="togglePwdIcon"></i>
+              </button>
+            </div>
+            <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" id="saveCredentials" name="save_credentials" checked>
+                <label class="form-check-label" for="saveCredentials">
+                    <i class="bi bi-save me-1"></i>{{ call .t "wifi.save_password" "Save password for automatic reconnection" }}
+                </label>
+            </div>
+          </div>
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary" id="connectSubmitBtn">
+              <i class="bi bi-wifi me-2"></i>{{ call .t "wifi.connect_now" "Connect Now" }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
+  </div>
 </div>
 
 <style>
@@ -483,6 +413,34 @@ body.light-theme .dashboard-card-body {
     color: #212529;
 }
 
+.wifi-status-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.wifi-status-display {
+    width: 100%;
+}
+
+.wifi-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.wifi-action-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.wifi-buttons-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
 .info-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -534,16 +492,6 @@ body.light-theme .table thead th {
 
 body.light-theme .table-hover tbody tr:hover {
     background-color: rgba(0, 0, 0, 0.05);
-}
-
-body.light-theme .btn-outline-primary {
-    border-color: var(--hb-primary);
-    color: var(--hb-primary);
-}
-
-body.light-theme .btn-outline-primary:hover {
-    background-color: var(--hb-primary);
-    color: #fff;
 }
 
 body.light-theme .btn-outline-light {
@@ -600,11 +548,6 @@ body.light-theme .modal-title {
     color: var(--hb-primary);
 }
 
-.wifi-toggle-section,
-.wifi-scan-section {
-    margin-bottom: 0;
-}
-
 /* Responsive */
 @media (max-width: 991px) {
     .stat-card {
@@ -618,6 +561,10 @@ body.light-theme .modal-title {
     
     .stat-value {
         font-size: 1.5rem;
+    }
+    
+    .wifi-actions-grid {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -637,6 +584,14 @@ body.light-theme .modal-title {
     
     .stat-label {
         font-size: 0.8rem;
+    }
+    
+    .wifi-buttons-group {
+        flex-direction: column;
+    }
+    
+    .wifi-buttons-group .btn {
+        width: 100%;
     }
 }
 </style>
