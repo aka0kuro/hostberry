@@ -4,11 +4,11 @@
 local result = {}
 result.networks = {}
 
--- Obtener interfaz WiFi (del parámetro o detectar automáticamente)
+-- Obtener interfaz WiFi (del parámetro o detectar automáticamente, con sudo)
 local interface = params.interface or ""
 if interface == "" then
     -- Detectar automáticamente
-    local nmcli_iface = exec("nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
+    local nmcli_iface = exec("sudo nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
     if nmcli_iface and nmcli_iface ~= "" then
         interface = string.gsub(nmcli_iface, "%s+", "")
     else
@@ -24,8 +24,8 @@ end
 
 log("INFO", "Usando interfaz WiFi: " .. interface)
 
--- Verificar que WiFi esté habilitado primero
-local wifi_check = exec("nmcli -t -f WIFI g 2>/dev/null")
+-- Verificar que WiFi esté habilitado primero (con sudo)
+local wifi_check = exec("sudo nmcli -t -f WIFI g 2>/dev/null")
 local wifi_enabled = wifi_check and (string.find(string.lower(wifi_check), "enabled") or string.find(string.lower(wifi_check), "on"))
 
 if not wifi_enabled then
@@ -36,8 +36,8 @@ if not wifi_enabled then
     return result
 end
 
--- Método 1: Intentar usar nmcli primero (más moderno y confiable)
-local nmcli_cmd = "nmcli -t -f SSID,SIGNAL,SECURITY,CHAN dev wifi list 2>&1"
+-- Método 1: Intentar usar nmcli primero (más moderno y confiable, con sudo)
+local nmcli_cmd = "sudo nmcli -t -f SSID,SIGNAL,SECURITY,CHAN dev wifi list 2>&1"
 local nmcli_output, nmcli_err = exec(nmcli_cmd)
 
 if not nmcli_err and nmcli_output and nmcli_output ~= "" then
