@@ -1427,6 +1427,7 @@
   window.toggleSoftwareSwitch = toggleSoftwareSwitch;
   window.scanNetworks = scanNetworks;
   window.connectToNetwork = connectToNetwork;
+  window.disconnectFromNetwork = disconnectFromNetwork;
   window.toggleAutoConnect = toggleAutoConnect;
   window.loadConnectionStatus = loadConnectionStatus;
   
