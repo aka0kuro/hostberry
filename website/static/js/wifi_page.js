@@ -1301,11 +1301,20 @@
     }
   }
 
-  // Export functions to window
+  // Export functions to window immediately (before DOM ready)
   window.toggleWiFi = toggleWiFi;
   window.unblockWiFi = unblockWiFi;
   window.toggleSoftwareSwitch = toggleSoftwareSwitch;
   window.scanNetworks = scanNetworks;
   window.connectToNetwork = connectToNetwork;
   window.toggleAutoConnect = toggleAutoConnect;
+  window.loadConnectionStatus = loadConnectionStatus;
+  
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWiFiPage);
+  } else {
+    // DOM already loaded, initialize immediately
+    setTimeout(initWiFiPage, 100);
+  }
 })();
