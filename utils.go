@@ -133,7 +133,6 @@ func canUseSudo() bool {
 // execCommand ejecuta un comando, usando sudo solo si es necesario y está disponible
 func execCommand(cmd string) *exec.Cmd {
 	// Si el comando ya incluye sudo, removerlo y usar nuestra lógica
-	originalCmd := cmd
 	cmd = strings.TrimSpace(cmd)
 	cmd = strings.TrimPrefix(cmd, "sudo ")
 	
