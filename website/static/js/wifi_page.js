@@ -153,7 +153,19 @@
         throw new Error('Error al cargar estado: ' + resp.status);
       }
       
-      const data = await resp.json();
+      let data;
+      try {
+        const text = await resp.text();
+        if (!text || text.trim() === '') {
+          throw new Error('Empty response from server');
+        }
+        data = JSON.parse(text);
+      } catch (parseError) {
+        console.error('Error parsing JSON response:', parseError);
+        console.error('Response text:', await resp.text());
+        throw new Error('Invalid JSON response from server: ' + parseError.message);
+      }
+      
       console.log('Datos recibidos del API:', data);
       const statusData = data?.status || data || {};
       console.log('Estado procesado:', statusData);
