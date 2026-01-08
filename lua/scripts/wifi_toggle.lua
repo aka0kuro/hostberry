@@ -11,15 +11,35 @@ local nmcli_check = exec("sudo nmcli -t -f WIFI g 2>/dev/null")
 if nmcli_check and nmcli_check ~= "" then
     local state = string.lower(string.gsub(nmcli_check, "%s+", ""))
     local cmd
+    local was_enabled = false
     
     if string.find(state, "enabled") or string.find(state, "on") then
         cmd = "sudo nmcli radio wifi off"
+        was_enabled = true
     else
         cmd = "sudo nmcli radio wifi on"
+        was_enabled = false
     end
     
     local output, err = exec(cmd .. " 2>/dev/null")
     if not err then
+        -- Si se activó WiFi, esperar y verificar que realmente se activó
+        if not was_enabled then
+            -- Esperar 2 segundos
+            os.execute("sleep 2")
+            -- Verificar que se activó
+            local verify_check = exec("sudo nmcli -t -f WIFI g 2>/dev/null")
+            if verify_check then
+                local verify_state = string.lower(string.gsub(verify_check, "%s+", ""))
+                if string.find(verify_state, "enabled") or string.find(verify_state, "on") then
+                    result.success = true
+                    result.message = "WiFi activado exitosamente usando nmcli con sudo"
+                    result.method = "nmcli"
+                    log("INFO", "WiFi activado exitosamente usando nmcli con sudo")
+                    return result
+                end
+            end
+        end
         result.success = true
         result.message = "WiFi toggle exitoso usando nmcli con sudo"
         result.method = "nmcli"
