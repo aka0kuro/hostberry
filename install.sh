@@ -205,23 +205,72 @@ download_project() {
 # Limpiar instalación anterior
 clean_previous_installation() {
     if [ -d "$INSTALL_DIR" ]; then
-        print_info "Eliminando instalación anterior en $INSTALL_DIR..."
-        
-        # Detener servicio si está corriendo
-        if systemctl is-active --quiet "${SERVICE_NAME}" 2>/dev/null; then
-            print_info "Deteniendo servicio ${SERVICE_NAME}..."
-            systemctl stop "${SERVICE_NAME}" 2>/dev/null || true
+        if [ "$MODE" = "update" ]; then
+            # En modo actualización, preservar datos y configuración
+            print_info "Modo actualización: preservando datos y configuración..."
+            
+            # Detener servicio si está corriendo
+            if systemctl is-active --quiet "${SERVICE_NAME}" 2>/dev/null; then
+                print_info "Deteniendo servicio ${SERVICE_NAME}..."
+                systemctl stop "${SERVICE_NAME}" 2>/dev/null || true
+            fi
+            
+            # Crear directorio temporal para guardar datos importantes
+            TEMP_BACKUP_DIR="/tmp/hostberry-update-backup-$$"
+            mkdir -p "$TEMP_BACKUP_DIR"
+            
+            # Hacer backup de la base de datos y configuración
+            if [ -d "$DATA_DIR" ]; then
+                print_info "Guardando backup de base de datos..."
+                cp -r "$DATA_DIR" "$TEMP_BACKUP_DIR/data" 2>/dev/null || true
+            fi
+            
+            if [ -f "$CONFIG_FILE" ]; then
+                print_info "Guardando backup de configuración..."
+                cp "$CONFIG_FILE" "$TEMP_BACKUP_DIR/config.yaml" 2>/dev/null || true
+            fi
+            
+            # Eliminar directorio de instalación (excepto data que ya está respaldado)
+            print_info "Eliminando archivos antiguos (preservando datos)..."
+            rm -rf "$INSTALL_DIR"
+            
+            # Restaurar datos y configuración
+            if [ -d "$TEMP_BACKUP_DIR/data" ]; then
+                print_info "Restaurando base de datos..."
+                mkdir -p "$DATA_DIR"
+                cp -r "$TEMP_BACKUP_DIR/data/"* "$DATA_DIR/" 2>/dev/null || true
+            fi
+            
+            if [ -f "$TEMP_BACKUP_DIR/config.yaml" ]; then
+                print_info "Restaurando configuración..."
+                mkdir -p "$(dirname "$CONFIG_FILE")"
+                cp "$TEMP_BACKUP_DIR/config.yaml" "$CONFIG_FILE" 2>/dev/null || true
+            fi
+            
+            # Limpiar backup temporal
+            rm -rf "$TEMP_BACKUP_DIR"
+            
+            print_success "Archivos actualizados, datos preservados"
+        else
+            # En modo instalación, eliminar todo
+            print_info "Eliminando instalación anterior en $INSTALL_DIR..."
+            
+            # Detener servicio si está corriendo
+            if systemctl is-active --quiet "${SERVICE_NAME}" 2>/dev/null; then
+                print_info "Deteniendo servicio ${SERVICE_NAME}..."
+                systemctl stop "${SERVICE_NAME}" 2>/dev/null || true
+            fi
+            
+            # Deshabilitar servicio
+            if systemctl is-enabled --quiet "${SERVICE_NAME}" 2>/dev/null; then
+                print_info "Deshabilitando servicio ${SERVICE_NAME}..."
+                systemctl disable "${SERVICE_NAME}" 2>/dev/null || true
+            fi
+            
+            # Eliminar directorio de instalación
+            rm -rf "$INSTALL_DIR"
+            print_success "Instalación anterior eliminada"
         fi
-        
-        # Deshabilitar servicio
-        if systemctl is-enabled --quiet "${SERVICE_NAME}" 2>/dev/null; then
-            print_info "Deshabilitando servicio ${SERVICE_NAME}..."
-            systemctl disable "${SERVICE_NAME}" 2>/dev/null || true
-        fi
-        
-        # Eliminar directorio de instalación
-        rm -rf "$INSTALL_DIR"
-        print_success "Instalación anterior eliminada"
     else
         print_info "No hay instalación anterior que eliminar"
     fi
