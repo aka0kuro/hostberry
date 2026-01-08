@@ -668,7 +668,7 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 	// Si no hay SSID con nmcli, intentar con iwconfig
 	if !connected {
 		iwOut, _ := execCommand("iwconfig 2>/dev/null | grep -i 'essid' | grep -v 'off/any' | head -1").CombinedOutput()
-		iwStr := string(iwOut)
+		iwStr := filterSudoErrors(iwOut)
 		if strings.Contains(iwStr, "ESSID:") {
 			// Extraer SSID
 			parts := strings.Split(iwStr, "ESSID:")
