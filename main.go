@@ -361,6 +361,7 @@ func setupRoutes(app *fiber.App) {
 		// WiFi
 		wifi := api.Group("/wifi", requireAuth)
 		{
+			wifi.Get("/status", wifiStatusHandler)
 			wifi.Get("/scan", wifiScanHandler)
 			wifi.Post("/scan", wifiScanHandler)
 			wifi.Get("/interfaces", wifiInterfacesHandler)
