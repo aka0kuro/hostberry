@@ -842,59 +842,20 @@
     return 'secondary';
   }
   
-  // Show connect modal
-  function showConnectModal(ssid, security) {
-    const modal = document.getElementById('connectModal');
-    const ssidInput = document.getElementById('connectSSID');
-    const ssidHidden = document.getElementById('connectSSIDHidden');
-    const securityInput = document.getElementById('connectSecurity');
-    const securityHidden = document.getElementById('connectSecurityHidden');
-    const passwordField = document.getElementById('passwordField');
-    const passwordInput = document.getElementById('connectPassword');
-    
-    if (ssidInput) ssidInput.value = ssid;
-    if (ssidHidden) ssidHidden.value = ssid;
-    if (securityInput) securityInput.value = security;
-    if (securityHidden) securityHidden.value = security;
-    
-    if (security === 'Open' && passwordField) {
-      passwordField.style.display = 'none';
-      if (passwordInput) passwordInput.required = false;
-    } else if (passwordField) {
-      passwordField.style.display = 'block';
-      if (passwordInput) {
-        passwordInput.required = true;
-        passwordInput.value = '';
+  // Toggle password visibility
+  window.togglePasswordVisibility = function(btn) {
+    const icon = btn.querySelector('i');
+    const input = btn.parentElement.querySelector('input[type="password"], input[type="text"]');
+    if (input) {
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+      } else {
+        input.type = 'password';
+        icon.className = 'bi bi-eye';
       }
     }
-    
-    if (modal) {
-      const bsModal = new bootstrap.Modal(modal);
-      
-      // Función para hacer scroll suave hacia el modal
-      const scrollToModal = () => {
-        // Hacer scroll hacia el modal con un pequeño offset
-        const modalRect = modal.getBoundingClientRect();
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const targetY = scrollTop + modalRect.top - (window.innerHeight / 2) + (modalRect.height / 2);
-        
-        window.scrollTo({
-          top: targetY,
-          behavior: 'smooth'
-        });
-      };
-      
-      // Escuchar el evento 'shown.bs.modal' que se dispara cuando el modal está completamente visible
-      modal.addEventListener('shown.bs.modal', function onModalShown() {
-        // Hacer scroll después de un pequeño delay para asegurar que el modal está completamente renderizado
-        setTimeout(scrollToModal, 150);
-        // Remover el listener después de usarlo para evitar múltiples scrolls
-        modal.removeEventListener('shown.bs.modal', onModalShown);
-      }, { once: true });
-      
-      bsModal.show();
-    }
-  }
+  };
   
   // Connect to network
   async function connectToNetwork(ssid, security, password) {
