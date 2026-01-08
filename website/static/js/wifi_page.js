@@ -875,28 +875,6 @@
         }
         showAlert('danger', msg);
       }
-    } catch (e) {
-      console.error('Error scanning networks:', e);
-      if (loadingEl) loadingEl.style.display = 'none';
-      if (emptyEl) {
-        emptyEl.innerHTML = 
-          '<div class="text-center py-5">' +
-          '<i class="bi bi-exclamation-triangle text-danger" style="font-size: 4rem;"></i>' +
-          '<p class="mt-3">' + t('errors.scan_error', 'Scan error') + '</p>' +
-          '<p class="text-muted small">' + (e.message || 'Unknown error') + '</p>' +
-          '</div>';
-        emptyEl.style.display = 'block';
-      }
-      if (tableEl) tableEl.style.display = 'none';
-      
-      let msg = e.message || t('errors.operation_failed', 'Operation failed');
-      if (e.name === 'AbortError') {
-        msg = t('wifi.scan_timeout', 'Scan timed out. Please try again.');
-      } else if (msg.includes('Failed to fetch')) {
-        msg = t('errors.connection_error', 'Connection error with the server.');
-      }
-      showAlert('danger', msg);
-    }
   }
   
   // Show connect inline form in network card
