@@ -959,9 +959,68 @@
     }
   });
   
+  // Toggle Software Switch
+  async function toggleSoftwareSwitch() {
+    const btn = document.getElementById('toggle-software-switch-btn');
+    
+    if (btn) {
+      btn.disabled = true;
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '<span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> ' + t('wifi.processing', 'Processing...');
+      
+      try {
+        const resp = await apiRequest('/api/v1/wifi/software-switch', { method: 'POST' });
+        
+        if (!resp.ok) {
+          if (resp.status === 401) return;
+          let errorMsg = t('errors.operation_failed', 'Operation failed');
+          try {
+            const errorData = await resp.json();
+            errorMsg = errorData.error || errorMsg;
+          } catch (e) {
+            errorMsg = t('errors.operation_failed', 'Operation failed') + ' (HTTP ' + resp.status + ')';
+          }
+          showAlert('danger', errorMsg);
+          return;
+        }
+        
+        let data;
+        try {
+          data = await resp.json();
+        } catch (e) {
+          console.error('Error parsing response:', e);
+          showAlert('danger', t('errors.invalid_response', 'Invalid response from server'));
+          return;
+        }
+        
+        if (data.success === true) {
+          showAlert('success', data.message || t('wifi.software_switch_toggled', 'Software switch toggled successfully'));
+          
+          // Actualizar estado después de un momento
+          setTimeout(async () => {
+            await loadConnectionStatus();
+          }, 1500);
+        } else {
+          const errorMsg = data.error || data.message || t('errors.operation_failed', 'Operation failed');
+          showAlert('danger', errorMsg);
+        }
+      } catch (e) {
+        console.error('Error toggling software switch:', e);
+        if (e.message && e.message.includes('401')) return;
+        showAlert('danger', t('errors.network_error', 'Network error: ') + e.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+        }
+      }
+    }
+  }
+
   // Export functions to window
   window.toggleWiFi = toggleWiFi;
   window.unblockWiFi = unblockWiFi;
+  window.toggleSoftwareSwitch = toggleSoftwareSwitch;
   window.scanNetworks = scanNetworks;
   window.connectToNetwork = connectToNetwork;
   window.toggleAutoConnect = toggleAutoConnect;
