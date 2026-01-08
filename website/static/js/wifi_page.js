@@ -283,34 +283,58 @@
         // Verificar si la operación fue exitosa
         if (data.success === true) {
           showAlert('success', t('wifi.wifi_toggled', 'WiFi status changed successfully'));
-          // Esperar más tiempo para que el sistema aplique los cambios
-          setTimeout(async () => {
-            // Actualizar estado varias veces para asegurar que se refleje
-            await loadConnectionStatus();
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            await loadConnectionStatus();
-            
-            // Verificar estado con múltiples intentos
-            let status = await checkWiFiStatus();
-            let attempts = 0;
-            const maxAttempts = 5;
-            
-            while (!status.enabled && attempts < maxAttempts) {
+          
+          // Esperar un momento inicial para que el comando se ejecute
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          // Actualizar estado inmediatamente
+          await loadConnectionStatus();
+          
+          // Verificar estado con múltiples intentos (hasta 10 segundos)
+          let status = await checkWiFiStatus();
+          let attempts = 0;
+          const maxAttempts = 10;
+          
+          // Si WiFi estaba deshabilitado, esperar a que se habilite
+          const wasDisabled = !status.enabled || status.blocked;
+          
+          if (wasDisabled) {
+            // Esperar y verificar hasta que esté habilitado
+            while ((!status.enabled || status.blocked) && attempts < maxAttempts) {
               await new Promise(resolve => setTimeout(resolve, 1000));
-              await loadConnectionStatus();
+              await loadConnectionStatus(); // Actualizar UI
               status = await checkWiFiStatus();
               attempts++;
+              
+              // Mostrar progreso cada 2 intentos
+              if (attempts % 2 === 0) {
+                console.log(`Esperando activación de WiFi... (intento ${attempts}/${maxAttempts})`);
+              }
             }
-            
-            if (status.enabled && !status.blocked) {
-              // Esperar un poco más antes de escanear
-              setTimeout(() => {
+          }
+          
+          // Actualizar estado final
+          await loadConnectionStatus();
+          status = await checkWiFiStatus();
+          
+          if (status.enabled && !status.blocked) {
+            // WiFi está habilitado, escanear automáticamente
+            showAlert('info', t('wifi.scanning_networks', 'Scanning for networks...'));
+            setTimeout(() => {
+              scanNetworks();
+            }, 2000);
+          } else {
+            // Aún no está habilitado después de todos los intentos
+            showAlert('warning', t('wifi.wifi_enabling', 'WiFi is being enabled, please wait a moment and try scanning again'));
+            // Intentar escanear de todos modos después de un tiempo
+            setTimeout(async () => {
+              await loadConnectionStatus();
+              const finalStatus = await checkWiFiStatus();
+              if (finalStatus.enabled && !finalStatus.blocked) {
                 scanNetworks();
-              }, 2000);
-            } else {
-              showAlert('warning', t('wifi.wifi_enabling', 'WiFi is being enabled, please wait a moment and try scanning again'));
-            }
-          }, 3000);
+              }
+            }, 5000);
+          }
         } else {
           // Si success es false o no está definido, mostrar error
           const errorMsg = data.error || data.message || t('errors.operation_failed', 'Operation failed');
