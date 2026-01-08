@@ -278,6 +278,47 @@
     }
   }
   
+  // Unblock WiFi
+  async function unblockWiFi() {
+    const btn = document.getElementById('unblock-wifi-btn');
+    
+    if (btn) {
+      btn.disabled = true;
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '<span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> ' + t('wifi.unblocking', 'Unblocking...');
+      
+      try {
+        // Intentar desbloquear usando el endpoint de toggle (que maneja rfkill unblock)
+        const resp = await apiRequest('/api/v1/wifi/toggle', { method: 'POST' });
+        const data = await resp.json();
+        
+        if (resp.ok && data.success) {
+          showAlert('success', t('wifi.wifi_unblocked', 'WiFi unblocked successfully'));
+          setTimeout(async () => {
+            await loadConnectionStatus();
+            const status = await checkWiFiStatus();
+            if (status.enabled && !status.blocked) {
+              setTimeout(() => {
+                scanNetworks();
+              }, 2000);
+            }
+          }, 2000);
+        } else {
+          const errorMsg = data.error || t('errors.operation_failed', 'Operation failed');
+          showAlert('danger', errorMsg);
+        }
+      } catch (e) {
+        console.error('Error unblocking WiFi:', e);
+        showAlert('danger', t('errors.network_error', 'Network error'));
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+        }
+      }
+    }
+  }
+  
   // Load WiFi interfaces
   async function loadWiFiInterfaces() {
     try {
