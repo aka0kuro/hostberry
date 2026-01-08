@@ -786,9 +786,84 @@ func wifiLegacyScanHandler(c *fiber.Ctx) error {
 }
 
 func wifiLegacyDisconnectHandler(c *fiber.Ctx) error {
-	// best-effort
-	_, _ = exec.Command("sh", "-c", "nmcli networking off; nmcli networking on").CombinedOutput()
-	return c.JSON(fiber.Map{"success": true})
+	user := c.Locals("user").(*User)
+	userID := user.ID
+
+	// Obtener la conexión WiFi activa
+	activeConnCmd := execCommand("nmcli -t -f NAME,TYPE,DEVICE connection show --active | grep -i wifi")
+	activeConnOut, err := activeConnCmd.Output()
+	
+	var connectionName string
+	if err == nil && len(activeConnOut) > 0 {
+		// Extraer el nombre de la conexión (primera columna)
+		lines := strings.Split(strings.TrimSpace(string(activeConnOut)), "\n")
+		if len(lines) > 0 {
+			parts := strings.Split(lines[0], ":")
+			if len(parts) > 0 {
+				connectionName = strings.TrimSpace(parts[0])
+			}
+		}
+	}
+
+	// Si encontramos una conexión activa, desconectarla
+	if connectionName != "" {
+		// Método 1: Desconectar la conexión específica
+		disconnectCmd := execCommand(fmt.Sprintf("nmcli connection down '%s'", connectionName))
+		disconnectOut, disconnectErr := disconnectCmd.CombinedOutput()
+		
+		if disconnectErr == nil {
+			InsertLog("INFO", fmt.Sprintf("WiFi desconectado: %s (usuario: %s)", connectionName, user.Username), "wifi", &userID)
+			return c.JSON(fiber.Map{"success": true, "message": "Disconnected from " + connectionName})
+		}
+		
+		// Si falla, intentar desconectar el dispositivo WiFi directamente
+		log.Printf("Error desconectando conexión %s: %s, intentando desconectar dispositivo", connectionName, string(disconnectOut))
+	}
+
+	// Método 2: Desconectar el dispositivo WiFi directamente
+	// Obtener el dispositivo WiFi activo
+	wifiDeviceCmd := execCommand("nmcli -t -f DEVICE,TYPE device status | grep -i wifi | head -1 | cut -d: -f1")
+	wifiDeviceOut, err := wifiDeviceCmd.Output()
+	
+	if err == nil && len(wifiDeviceOut) > 0 {
+		deviceName := strings.TrimSpace(string(wifiDeviceOut))
+		if deviceName != "" {
+			deviceDisconnectCmd := execCommand(fmt.Sprintf("nmcli device disconnect '%s'", deviceName))
+			deviceDisconnectOut, deviceDisconnectErr := deviceDisconnectCmd.CombinedOutput()
+			
+			if deviceDisconnectErr == nil {
+				InsertLog("INFO", fmt.Sprintf("Dispositivo WiFi desconectado: %s (usuario: %s)", deviceName, user.Username), "wifi", &userID)
+				return c.JSON(fiber.Map{"success": true, "message": "Disconnected from WiFi device " + deviceName})
+			}
+			
+			log.Printf("Error desconectando dispositivo %s: %s", deviceName, string(deviceDisconnectOut))
+		}
+	}
+
+	// Método 3: Fallback - apagar y encender el networking (método anterior)
+	networkingOffCmd := execCommand("nmcli networking off")
+	networkingOffOut, networkingOffErr := networkingOffCmd.CombinedOutput()
+	
+	if networkingOffErr != nil {
+		errorMsg := fmt.Sprintf("Error desconectando WiFi: %s", strings.TrimSpace(string(networkingOffOut)))
+		InsertLog("ERROR", fmt.Sprintf("Error en desconexión WiFi (usuario: %s): %s", user.Username, errorMsg), "wifi", &userID)
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": errorMsg})
+	}
+
+	// Esperar un momento antes de reactivar
+	time.Sleep(1 * time.Second)
+	
+	networkingOnCmd := execCommand("nmcli networking on")
+	networkingOnOut, networkingOnErr := networkingOnCmd.CombinedOutput()
+	
+	if networkingOnErr != nil {
+		errorMsg := fmt.Sprintf("Error reactivando networking: %s", strings.TrimSpace(string(networkingOnOut)))
+		InsertLog("ERROR", fmt.Sprintf("Error reactivando networking (usuario: %s): %s", user.Username, errorMsg), "wifi", &userID)
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": errorMsg})
+	}
+
+	InsertLog("INFO", fmt.Sprintf("WiFi desconectado mediante fallback (usuario: %s)", user.Username), "wifi", &userID)
+	return c.JSON(fiber.Map{"success": true, "message": "Disconnected from WiFi"})
 }
 
 // ---------- helpers ----------
