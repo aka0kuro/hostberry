@@ -23,10 +23,24 @@ if nmcli_check and nmcli_check ~= "" then
     
     local output, err = exec(cmd .. " 2>/dev/null")
     if not err then
-        -- Si se activó WiFi, esperar y verificar que realmente se activó
+        -- Si se activó WiFi, también activar la interfaz específica
         if not was_enabled then
-            -- Esperar 2 segundos
-            os.execute("sleep 2")
+            -- Esperar 1 segundo
+            os.execute("sleep 1")
+            
+            -- Detectar y activar la interfaz WiFi específica
+            local iface_cmd = "sudo nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1"
+            local iface_out = exec(iface_cmd)
+            if iface_out and iface_out ~= "" then
+                local iface = string.gsub(iface_out, "%s+", "")
+                if iface and iface ~= "" then
+                    -- Activar la interfaz específica
+                    exec("sudo nmcli device set " .. iface .. " managed yes 2>/dev/null")
+                    exec("sudo nmcli device connect " .. iface .. " 2>/dev/null")
+                    os.execute("sleep 1")
+                end
+            end
+            
             -- Verificar que se activó
             local verify_check = exec("sudo nmcli -t -f WIFI g 2>/dev/null")
             if verify_check then
