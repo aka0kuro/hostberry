@@ -198,7 +198,7 @@
     }
   }
   
-  // Update connect buttons in network table
+  // Update connect buttons in network cards
   function updateConnectButtons(currentSSID) {
     const tbody = document.getElementById('networksTable');
     if (!tbody) return;
@@ -210,24 +210,25 @@
       if (currentSSID && btnSSID === currentSSID) {
         // Esta es la red conectada
         if (!btn.disabled || btn.className.indexOf('btn-success') === -1) {
-          btn.className = 'btn btn-sm btn-success connect-network-btn';
+          btn.className = 'btn btn-success connect-network-btn';
           btn.disabled = true;
-          btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>' + t('wifi.connected', 'Connected');
+          btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>' + t('wifi.connected', 'Connected');
         }
       } else {
         // Ya no está conectada o no es la red conectada, restaurar botón
         if (btn.disabled || btn.className.indexOf('btn-success') !== -1) {
-          btn.className = 'btn btn-sm btn-outline-primary connect-network-btn';
+          btn.className = 'btn btn-primary connect-network-btn';
           btn.disabled = false;
-          btn.innerHTML = '<i class="bi bi-wifi me-1"></i>' + t('wifi.connect', 'Connect');
+          btn.innerHTML = '<i class="bi bi-wifi me-2"></i>' + t('wifi.connect', 'Connect');
           
           // Re-agregar event listener
-          const row = btn.closest('tr');
-          if (row) {
-            btn.onclick = function() {
+          const card = btn.closest('.network-card');
+          if (card) {
+            btn.onclick = function(e) {
+              e.stopPropagation();
               const ssid = btn.getAttribute('data-ssid');
               const security = btn.getAttribute('data-security');
-              showConnectInline(ssid, security, row);
+              showConnectInline(ssid, security, card);
             };
           }
         }
