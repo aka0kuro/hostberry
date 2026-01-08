@@ -170,20 +170,20 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 				time.Sleep(1 * time.Second)
 				
 				// Detectar y activar la interfaz WiFi específica
-				ifaceCmd := exec.Command("sh", "-c", "sudo nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
+				ifaceCmd := execCommand("nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
 				ifaceOut, ifaceErr := ifaceCmd.Output()
 				if ifaceErr == nil {
 					iface := strings.TrimSpace(string(ifaceOut))
 					if iface != "" {
 						// Activar la interfaz específica
-						exec.Command("sh", "-c", fmt.Sprintf("sudo nmcli device set %s managed yes 2>/dev/null", iface)).Run()
-						exec.Command("sh", "-c", fmt.Sprintf("sudo nmcli device connect %s 2>/dev/null", iface)).Run()
+						execCommand(fmt.Sprintf("nmcli device set %s managed yes 2>/dev/null", iface)).Run()
+						execCommand(fmt.Sprintf("nmcli device connect %s 2>/dev/null", iface)).Run()
 						time.Sleep(1 * time.Second)
 					}
 				}
 				
 				// Verificar que se activó correctamente
-				verifyOut, verifyErr := exec.Command("sh", "-c", "sudo nmcli -t -f WIFI g 2>/dev/null").CombinedOutput()
+				verifyOut, verifyErr := execCommand("nmcli -t -f WIFI g 2>/dev/null").CombinedOutput()
 				if verifyErr == nil {
 					verifyState := strings.ToLower(strings.TrimSpace(string(verifyOut)))
 					if strings.Contains(verifyState, "enabled") || strings.Contains(verifyState, "on") {
