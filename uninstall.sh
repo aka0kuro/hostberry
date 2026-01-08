@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # HostBerry - Script de Desinstalación
+# Este script es un wrapper que llama a install.sh --uninstall
 
 set -e
 
