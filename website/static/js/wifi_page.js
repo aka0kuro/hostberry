@@ -77,7 +77,8 @@
     
     // WiFi Status Card
     if (wifiStatusValue && wifiStatusBar && wifiStatusIcon) {
-      const isEnabled = data.enabled !== false;
+      // Verificar explícitamente si enabled es true
+      const isEnabled = data.enabled === true || (data.enabled !== false && !data.hard_blocked && !data.soft_blocked);
       const isBlocked = data.hard_blocked || data.soft_blocked;
       
       if (isBlocked) {
