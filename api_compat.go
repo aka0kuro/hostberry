@@ -699,21 +699,39 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 			iface := strings.TrimSpace(string(ifaceOut))
 			if iface != "" {
 				// Obtener IP
-				ipOut, _ := exec.Command("sh", "-c", fmt.Sprintf("ip addr show %s 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d/ -f1 | head -1", iface)).Output()
+				ipCmd := exec.Command("sh", "-c", fmt.Sprintf("ip addr show %s 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d/ -f1 | head -1", iface))
+				ipOut, _ := ipCmd.Output()
 				if ipStr := strings.TrimSpace(string(ipOut)); ipStr != "" {
 					connectionInfo["ip"] = ipStr
 				}
 				
 				// Obtener MAC
-				macOut, _ := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/address 2>/dev/null", iface)).Output()
+				macCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/address 2>/dev/null", iface))
+				macOut, _ := macCmd.Output()
 				if macStr := strings.TrimSpace(string(macOut)); macStr != "" {
 					connectionInfo["mac"] = macStr
 				}
 				
 				// Obtener velocidad
-				speedOut, _ := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/speed 2>/dev/null", iface)).Output()
+				speedCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/speed 2>/dev/null", iface))
+				speedOut, _ := speedCmd.Output()
 				if speedStr := strings.TrimSpace(string(speedOut)); speedStr != "" && speedStr != "-1" {
 					connectionInfo["speed"] = speedStr + " Mbps"
+				}
+			}
+		}
+	} else if enabled {
+		// Si WiFi está habilitado pero no conectado, intentar obtener información básica de la interfaz
+		ifaceCmd := execCommand("nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
+		if ifaceOut, err := ifaceCmd.Output(); err == nil {
+			iface := strings.TrimSpace(string(ifaceOut))
+			if iface != "" {
+				connectionInfo = fiber.Map{}
+				// Obtener MAC aunque no esté conectado
+				macCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/address 2>/dev/null", iface))
+				macOut, _ := macCmd.Output()
+				if macStr := strings.TrimSpace(string(macOut)); macStr != "" {
+					connectionInfo["mac"] = macStr
 				}
 			}
 		}
