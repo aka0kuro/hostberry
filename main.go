@@ -103,6 +103,10 @@ func main() {
 	// Crear aplicación Fiber
 	app := createApp()
 
+	// IMPORTANTE: Registrar archivos estáticos ANTES de aplicar middlewares globales
+	// para evitar que cualquier middleware intercepte /static/*
+	setupStaticFiles(app)
+
 	// Configurar rutas
 	setupRoutes(app)
 
