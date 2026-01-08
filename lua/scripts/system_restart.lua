@@ -13,7 +13,8 @@ log("INFO", "Reinicio del sistema solicitado por: " .. user)
 
 -- Ejecutar comando de reinicio
 -- Intentar con systemctl primero (más moderno), luego con shutdown
-local restart_cmd = "sudo systemctl reboot"
+-- NOTA: No incluir "sudo" - executeCommand lo agrega automáticamente si es necesario
+local restart_cmd = "systemctl reboot"
 local output, err = exec(restart_cmd)
 
 -- Si systemctl falla, intentar con shutdown
@@ -26,7 +27,7 @@ if err then
         local test_cmd = "command -v " .. path .. " 2>/dev/null"
         local test_out, test_err = exec(test_cmd)
         if not test_err and test_out and test_out ~= "" then
-            restart_cmd = "sudo " .. path .. " -r +1"
+            restart_cmd = path .. " -r +1"
             output, err = exec(restart_cmd)
             found = true
             break
@@ -34,7 +35,7 @@ if err then
     end
     if not found then
         -- Último recurso: intentar con reboot directo
-        restart_cmd = "sudo reboot"
+        restart_cmd = "reboot"
         output, err = exec(restart_cmd)
     end
 end
