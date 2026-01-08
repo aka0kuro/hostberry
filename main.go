@@ -194,6 +194,10 @@ func createApp() *fiber.App {
 	}
 	log.Println("✅ Engine de templates asignado correctamente a Fiber app")
 
+	// IMPORTANTE: Registrar archivos estáticos ANTES de aplicar middlewares globales
+	// para evitar que cualquier middleware intercepte /static/*
+	setupStaticFiles(app)
+
 	// Middlewares globales
 	// Configurar logger con formato más legible
 	app.Use(logger.New(logger.Config{
