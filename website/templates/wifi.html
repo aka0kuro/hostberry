@@ -454,6 +454,92 @@ body.light-theme .dashboard-card-body {
     width: 100%;
 }
 
+.networks-connect-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.network-connect-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.network-connect-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border-color: var(--hb-primary);
+}
+
+body.light-theme .network-connect-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+body.light-theme .network-connect-card:hover {
+    background: rgba(255, 255, 255, 1) !important;
+    border-color: var(--hb-primary) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+}
+
+.network-connect-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.network-connect-ssid {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--hb-text-light);
+    margin: 0;
+}
+
+body.light-theme .network-connect-ssid {
+    color: #212529;
+}
+
+.network-connect-security {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.network-connect-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+    color: var(--hb-text-muted);
+}
+
+body.light-theme .network-connect-info {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.network-connect-signal {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.network-connect-action {
+    margin-top: 0.5rem;
+    width: 100%;
+}
+
 .info-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
