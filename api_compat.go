@@ -393,27 +393,40 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 	var hardBlocked bool = false
 	var softBlocked bool = false
 	
-	// Método 1: Verificar con nmcli
+	// Método 1: Verificar con nmcli (más confiable)
 	wifiCheck := exec.Command("sh", "-c", "nmcli -t -f WIFI g 2>/dev/null")
-	wifiOut, _ := wifiCheck.Output()
-	wifiState := strings.ToLower(strings.TrimSpace(string(wifiOut)))
-	if strings.Contains(wifiState, "enabled") || strings.Contains(wifiState, "on") {
-		enabled = true
+	wifiOut, err := wifiCheck.Output()
+	if err == nil {
+		wifiState := strings.ToLower(strings.TrimSpace(string(wifiOut)))
+		if strings.Contains(wifiState, "enabled") || strings.Contains(wifiState, "on") {
+			enabled = true
+		} else if strings.Contains(wifiState, "disabled") || strings.Contains(wifiState, "off") {
+			enabled = false
+		}
 	}
 	
-	// Método 2: Si nmcli no funciona, verificar con rfkill
-	if !enabled {
-		rfkillOut, _ := exec.Command("sh", "-c", "rfkill list wifi 2>/dev/null").CombinedOutput()
-		rfkillStr := strings.ToLower(string(rfkillOut))
-		if strings.Contains(rfkillStr, "hard blocked: yes") {
-			hardBlocked = true
-		}
-		if strings.Contains(rfkillStr, "soft blocked: yes") {
-			softBlocked = true
-		}
-		// Si no está bloqueado, asumir que está habilitado
-		if !hardBlocked && !softBlocked {
-			enabled = true
+	// Método 2: Verificar con rfkill para obtener información de bloqueo
+	rfkillOut, _ := exec.Command("sh", "-c", "rfkill list wifi 2>/dev/null").CombinedOutput()
+	rfkillStr := strings.ToLower(string(rfkillOut))
+	if strings.Contains(rfkillStr, "hard blocked: yes") {
+		hardBlocked = true
+		enabled = false
+	}
+	if strings.Contains(rfkillStr, "soft blocked: yes") {
+		softBlocked = true
+		enabled = false
+	}
+	
+	// Si nmcli no está disponible y rfkill no muestra bloqueo, verificar con iwconfig
+	if !enabled && !hardBlocked && !softBlocked {
+		iwOut, _ := exec.Command("sh", "-c", "iwconfig 2>/dev/null | grep -i 'wlan' | head -1").CombinedOutput()
+		if len(iwOut) > 0 {
+			// Si hay una interfaz WiFi, verificar si está activa
+			iwStatus, _ := exec.Command("sh", "-c", "iwconfig 2>/dev/null | grep -i 'wlan' | head -1 | grep -i 'unassociated'").CombinedOutput()
+			if len(iwStatus) == 0 {
+				// No está "unassociated", podría estar habilitado
+				enabled = true
+			}
 		}
 	}
 	
