@@ -282,6 +282,11 @@ func setupRoutes(app *fiber.App) {
 		}
 	}
 
+	// Health check endpoints (sin autenticación) - después de estáticos
+	app.Get("/health", healthCheckHandler)
+	app.Get("/health/ready", readinessCheckHandler)
+	app.Get("/health/live", livenessCheckHandler)
+
 	// Rutas web
 	web := app.Group("/")
 	{
