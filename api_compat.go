@@ -197,21 +197,21 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 		}
 	}
 
-	// Método 2: Intentar con rfkill (siempre con sudo)
-	rfkillOut, rfkillErr := exec.Command("sh", "-c", "sudo rfkill list wifi 2>/dev/null | grep -i 'wifi' | head -1").CombinedOutput()
+	// Método 2: Intentar con rfkill
+	rfkillOut, rfkillErr := execCommand("rfkill list wifi 2>/dev/null | grep -i 'wifi' | head -1").CombinedOutput()
 	if rfkillErr == nil && strings.Contains(strings.ToLower(string(rfkillOut)), "wifi") {
 		// Obtener estado actual
-		statusOut, _ := exec.Command("sh", "-c", "sudo rfkill list wifi 2>/dev/null | grep -i 'soft blocked'").CombinedOutput()
+		statusOut, _ := execCommand("rfkill list wifi 2>/dev/null | grep -i 'soft blocked'").CombinedOutput()
 		isBlocked := strings.Contains(strings.ToLower(string(statusOut)), "yes")
 		
 		var rfkillCmd string
 		if isBlocked {
-			rfkillCmd = "sudo rfkill unblock wifi"
+			rfkillCmd = "rfkill unblock wifi"
 		} else {
-			rfkillCmd = "sudo rfkill block wifi"
+			rfkillCmd = "rfkill block wifi"
 		}
 		
-		_, rfkillToggleErr := exec.Command("sh", "-c", rfkillCmd+" 2>/dev/null").CombinedOutput()
+		_, rfkillToggleErr := execCommand(rfkillCmd + " 2>/dev/null").CombinedOutput()
 		if rfkillToggleErr == nil {
 			InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando rfkill con sudo (usuario: %s)", user.Username), "wifi", &userID)
 			return c.JSON(fiber.Map{"success": true, "message": "WiFi toggle exitoso"})
