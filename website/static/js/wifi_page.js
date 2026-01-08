@@ -185,8 +185,34 @@
         // Actualizar botones de conexión en las tarjetas
         updateConnectButtons(statusData.current_connection);
       } else {
+        // No conectado, pero intentar obtener información básica de la interfaz WiFi
         if (statusEl) statusEl.innerHTML = '<span class="badge bg-danger">' + t('wifi.not_connected', 'Not Connected') + '</span>';
         if (ssidEl) ssidEl.textContent = t('wifi.no_connection', 'No connection');
+        
+        // Intentar obtener IP y MAC de la interfaz WiFi aunque no esté conectada
+        if (statusData.enabled) {
+          // Si WiFi está habilitado, intentar obtener información de la interfaz
+          try {
+            const ifaceResp = await apiRequest('/api/v1/wifi/interfaces');
+            if (ifaceResp.ok) {
+              const ifaceData = await ifaceResp.json();
+              if (ifaceData.interfaces && ifaceData.interfaces.length > 0) {
+                const wifiIface = ifaceData.interfaces.find(i => i.type === 'wifi' || i.name.startsWith('wlan'));
+                if (wifiIface && wifiIface.name) {
+                  // Intentar obtener IP de la interfaz
+                  const ipCmd = `ip addr show ${wifiIface.name} 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d/ -f1 | head -1`;
+                  const macCmd = `cat /sys/class/net/${wifiIface.name}/address 2>/dev/null`;
+                  
+                  // Nota: Estos comandos necesitarían un endpoint adicional o ejecutarse en el backend
+                  // Por ahora, mostrar -- si no hay conexión
+                }
+              }
+            }
+          } catch (e) {
+            console.error('Error obteniendo información de interfaz:', e);
+          }
+        }
+        
         if (signalEl) signalEl.textContent = '--';
         if (securityEl) securityEl.textContent = '--';
         if (channelEl) channelEl.textContent = '--';
