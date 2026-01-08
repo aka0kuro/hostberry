@@ -278,15 +278,15 @@ func wifiUnblockHandler(c *fiber.Ctx) error {
 	method := ""
 	var lastError error
 
-	// Verificar si rfkill está disponible (siempre con sudo)
+	// Verificar si rfkill está disponible
 	rfkillCheck := exec.Command("sh", "-c", "command -v rfkill 2>/dev/null")
 	if rfkillCheck.Run() == nil {
 		// Verificar si hay WiFi bloqueado
-		rfkillOut, rfkillErr := exec.Command("sh", "-c", "sudo rfkill list wifi 2>/dev/null | grep -i 'wifi' | head -1").CombinedOutput()
+		rfkillOut, rfkillErr := execCommand("rfkill list wifi 2>/dev/null | grep -i 'wifi' | head -1").CombinedOutput()
 		if rfkillErr == nil && strings.Contains(strings.ToLower(string(rfkillOut)), "wifi") {
-			// Desbloquear con sudo
-			rfkillCmd := "sudo rfkill unblock wifi"
-			rfkillOutSudo, rfkillUnblockErr := exec.Command("sh", "-c", rfkillCmd+" 2>&1").CombinedOutput()
+			// Desbloquear
+			rfkillCmd := "rfkill unblock wifi"
+			rfkillOutSudo, rfkillUnblockErr := execCommand(rfkillCmd + " 2>&1").CombinedOutput()
 			if rfkillUnblockErr == nil {
 				success = true
 				method = "rfkill (con sudo)"
