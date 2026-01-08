@@ -833,14 +833,54 @@ EOF
         IWCONFIG_PATH="/sbin/iwconfig"
     fi
     
+    # Detectar rutas de comandos de sistema
+    REBOOT_PATH=""
+    SHUTDOWN_PATH=""
+    
+    # Buscar reboot
+    if command -v reboot &> /dev/null; then
+        REBOOT_PATH=$(command -v reboot)
+    elif [ -f "/usr/sbin/reboot" ]; then
+        REBOOT_PATH="/usr/sbin/reboot"
+    elif [ -f "/sbin/reboot" ]; then
+        REBOOT_PATH="/sbin/reboot"
+    fi
+    
+    # Buscar shutdown (ya detectado arriba, pero asegurarse)
+    if command -v shutdown &> /dev/null; then
+        SHUTDOWN_PATH=$(command -v shutdown)
+    elif [ -f "/usr/sbin/shutdown" ]; then
+        SHUTDOWN_PATH="/usr/sbin/shutdown"
+    elif [ -f "/sbin/shutdown" ]; then
+        SHUTDOWN_PATH="/sbin/shutdown"
+    fi
+    
     # Configurar sudoers
     cat > "/etc/sudoers.d/hostberry" <<EOF
 # Permisos para HostBerry
 $USER_NAME ALL=(ALL) NOPASSWD: $SAFE_DIR/set-timezone
-$USER_NAME ALL=(ALL) NOPASSWD: /sbin/shutdown
-$USER_NAME ALL=(ALL) NOPASSWD: /usr/sbin/shutdown
-$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/shutdown
 EOF
+    
+    # Agregar permisos para shutdown si está disponible
+    if [ -n "$SHUTDOWN_PATH" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SHUTDOWN_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para shutdown: $SHUTDOWN_PATH"
+    fi
+    
+    # Agregar permisos para reboot si está disponible
+    if [ -n "$REBOOT_PATH" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $REBOOT_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para reboot: $REBOOT_PATH"
+    fi
+    
+    # También agregar permisos para systemctl (más moderno y confiable)
+    if command -v systemctl &> /dev/null; then
+        SYSTEMCTL_PATH=$(command -v systemctl)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH reboot" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH poweroff" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH shutdown" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para systemctl: $SYSTEMCTL_PATH"
+    fi
     
     # Agregar permisos WiFi si los comandos están disponibles
     if [ -n "$NMCLI_PATH" ]; then
