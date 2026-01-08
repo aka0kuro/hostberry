@@ -136,9 +136,18 @@
   // Load current connection status
   async function loadConnectionStatus() {
     try {
+      console.log('Cargando estado de conexión WiFi...');
       const resp = await apiRequest('/api/wifi/status');
-      const data = await resp.ok ? await resp.json() : null;
+      
+      if (!resp.ok) {
+        console.error('Error en respuesta API:', resp.status, resp.statusText);
+        throw new Error('Error al cargar estado: ' + resp.status);
+      }
+      
+      const data = await resp.json();
+      console.log('Datos recibidos:', data);
       const statusData = data?.status || data || {};
+      console.log('Estado procesado:', statusData);
       
       const statusEl = document.getElementById('connection-status');
       const ssidEl = document.getElementById('connection-ssid');
@@ -152,6 +161,7 @@
       // Update status cards
       updateStatusCards(statusData);
       
+      // Mostrar datos incluso si no está conectado (pero WiFi está habilitado)
       if (statusData.connected && statusData.current_connection) {
         if (statusEl) statusEl.innerHTML = '<span class="badge bg-success">' + t('wifi.connected', 'Connected') + '</span>';
         if (ssidEl) ssidEl.textContent = statusData.current_connection || statusData.ssid || '--';
