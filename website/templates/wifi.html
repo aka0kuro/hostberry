@@ -939,6 +939,9 @@ body.light-theme .wifi-interface-select-icon {
         #networks-table-container {
             width: 100% !important;
             max-width: 100% !important;
+            box-sizing: border-box !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
         
         .networks-cards-container {
@@ -948,6 +951,8 @@ body.light-theme .wifi-interface-select-icon {
             width: 100% !important;
             max-width: 100% !important;
             box-sizing: border-box !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
 
         .network-card {
@@ -957,6 +962,16 @@ body.light-theme .wifi-interface-select-icon {
             flex-shrink: 0 !important;
             flex-grow: 0 !important;
             box-sizing: border-box !important;
+            min-width: 0 !important;
+        }
+        
+        .network-card-content {
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+        }
+        
+        .network-card-actions {
+            flex-shrink: 0 !important;
         }
     }
 
