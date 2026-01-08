@@ -848,8 +848,14 @@ body.light-theme .wifi-interface-select-icon {
         border-top: none;
     }
 
-    /* Desktop - tarjetas a todo ancho */
+    /* Desktop (>= 992px) - tarjetas a todo ancho, una por fila */
     @media (min-width: 992px) {
+        .networks-cards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
         .network-card {
             width: 100%;
             max-width: 100%;
