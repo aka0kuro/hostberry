@@ -768,6 +768,13 @@
               data.networks.forEach(function(network) {
                 const card = document.createElement('div');
                 card.className = 'network-card';
+                // Asegurar que la tarjeta mantenga su ancho completo
+                card.style.width = '100%';
+                card.style.maxWidth = '100%';
+                card.style.flexBasis = '100%';
+                card.style.flexShrink = '0';
+                card.style.flexGrow = '0';
+                card.style.boxSizing = 'border-box';
                 const security = network.security || 'Open';
                 const securityColor = getSecurityColor(security);
                 const signalStrength = network.signal || 0;
