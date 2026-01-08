@@ -134,15 +134,18 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 		result, err := luaEngine.Execute("wifi_toggle.lua", fiber.Map{
 			"user": user.Username,
 		})
-		if err == nil {
+		if err == nil && result != nil {
 			if success, ok := result["success"].(bool); ok && success {
 				InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando Lua (usuario: %s)", user.Username), "wifi", &userID)
 				return c.JSON(fiber.Map{"success": true, "message": "WiFi toggle exitoso"})
 			}
-			if errorMsg, ok := result["error"].(string); ok {
+			if errorMsg, ok := result["error"].(string); ok && errorMsg != "" {
 				InsertLog("ERROR", fmt.Sprintf("Error en WiFi toggle (usuario: %s): %s", user.Username, errorMsg), "wifi", &userID)
-				return c.Status(500).JSON(fiber.Map{"error": errorMsg})
+				return c.Status(500).JSON(fiber.Map{"success": false, "error": errorMsg})
 			}
+		} else if err != nil {
+			// Si hay un error ejecutando el script Lua, continuar con fallback
+			InsertLog("WARN", fmt.Sprintf("Error ejecutando script Lua, usando fallback (usuario: %s): %v", user.Username, err), "wifi", &userID)
 		}
 	}
 
