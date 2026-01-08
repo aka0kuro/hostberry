@@ -249,9 +249,38 @@
       
       try {
         const resp = await apiRequest('/api/v1/wifi/toggle', { method: 'POST' });
-        const data = await resp.json();
         
-        if (resp.ok && data.success) {
+        // Verificar si la respuesta es exitosa antes de parsear JSON
+        if (!resp.ok) {
+          // Si es 401, el apiRequest ya maneja la redirección
+          if (resp.status === 401) {
+            return; // Ya se redirigió a login
+          }
+          
+          // Intentar obtener mensaje de error
+          let errorMsg = t('errors.operation_failed', 'Operation failed');
+          try {
+            const errorData = await resp.json();
+            errorMsg = errorData.error || errorMsg;
+          } catch (e) {
+            // Si no se puede parsear JSON, usar mensaje genérico
+            errorMsg = t('errors.operation_failed', 'Operation failed') + ' (HTTP ' + resp.status + ')';
+          }
+          showAlert('danger', errorMsg);
+          return;
+        }
+        
+        // Parsear respuesta solo si es exitosa
+        let data;
+        try {
+          data = await resp.json();
+        } catch (e) {
+          console.error('Error parsing response:', e);
+          showAlert('danger', t('errors.invalid_response', 'Invalid response from server'));
+          return;
+        }
+        
+        if (data.success) {
           showAlert('success', t('wifi.wifi_toggled', 'WiFi status changed successfully'));
           setTimeout(async () => {
             await loadConnectionStatus();
@@ -268,7 +297,12 @@
         }
       } catch (e) {
         console.error('Error toggling WiFi:', e);
-        showAlert('danger', t('errors.network_error', 'Network error'));
+        // No cerrar sesión por errores de red, solo mostrar mensaje
+        if (e.message && e.message.includes('401')) {
+          // Si es 401, ya se manejó en apiRequest
+          return;
+        }
+        showAlert('danger', t('errors.network_error', 'Network error: ') + e.message);
       } finally {
         if (btn) {
           btn.disabled = false;
