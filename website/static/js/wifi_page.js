@@ -1235,14 +1235,6 @@
     }
   }
   
-  // Initialize when DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initWiFiPage);
-  } else {
-    // DOM already loaded
-    initWiFiPage();
-  }
-  
   // Toggle Software Switch
   async function toggleSoftwareSwitch() {
     const btn = document.getElementById('toggle-software-switch-btn');
