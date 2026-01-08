@@ -636,51 +636,19 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 	if !enabled && !hardBlocked && !softBlocked {
 		iwOut, _ := execCommand("iwconfig 2>/dev/null | grep -i 'wlan' | head -1").CombinedOutput()
 		// Filtrar mensajes de error de sudo
-		iwOutStr := string(iwOut)
-		iwLines := strings.Split(iwOutStr, "\n")
-		var cleanIwLines []string
-		for _, line := range iwLines {
-			line = strings.TrimSpace(line)
-			if line != "" && 
-			   !strings.Contains(line, "sudo: unable to open log file") &&
-			   !strings.Contains(line, "Read-only file system") {
-				cleanIwLines = append(cleanIwLines, line)
-			}
-		}
-		cleanIwOut := []byte(strings.Join(cleanIwLines, "\n"))
+		cleanIwOut := filterSudoErrors(iwOut)
 		if len(cleanIwOut) > 0 {
 			// Si hay una interfaz WiFi, verificar si está activa
 			iwStatus, _ := execCommand("iwconfig 2>/dev/null | grep -i 'wlan' | head -1 | grep -i 'unassociated'").CombinedOutput()
 			// Filtrar también la salida de iwStatus
-			iwStatusStr := string(iwStatus)
-			iwStatusLines := strings.Split(iwStatusStr, "\n")
-			var cleanIwStatusLines []string
-			for _, line := range iwStatusLines {
-				line = strings.TrimSpace(line)
-				if line != "" && 
-				   !strings.Contains(line, "sudo: unable to open log file") &&
-				   !strings.Contains(line, "Read-only file system") {
-					cleanIwStatusLines = append(cleanIwStatusLines, line)
-				}
-			}
-			if len(cleanIwStatusLines) == 0 {
+			cleanIwStatus := filterSudoErrors(iwStatus)
+			if len(cleanIwStatus) == 0 {
 				// No está "unassociated", verificar también con nmcli
 				wifiCheck3 := execCommand("nmcli -t -f WIFI g 2>/dev/null")
 				wifiOut3, err3 := wifiCheck3.Output()
 				if err3 == nil {
 					// Filtrar mensajes de error de sudo
-					wifiOut3Str := string(wifiOut3)
-					lines3 := strings.Split(wifiOut3Str, "\n")
-					var cleanLines3 []string
-					for _, line := range lines3 {
-						line = strings.TrimSpace(line)
-						if line != "" && 
-						   !strings.Contains(line, "sudo: unable to open log file") &&
-						   !strings.Contains(line, "Read-only file system") {
-							cleanLines3 = append(cleanLines3, line)
-						}
-					}
-					wifiState3 := strings.ToLower(strings.Join(cleanLines3, " "))
+					wifiState3 := strings.ToLower(strings.TrimSpace(filterSudoErrors(wifiOut3)))
 					if strings.Contains(wifiState3, "enabled") || strings.Contains(wifiState3, "on") {
 						enabled = true
 					}
