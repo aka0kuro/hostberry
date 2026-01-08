@@ -227,38 +227,68 @@ func wifiUnblockHandler(c *fiber.Ctx) error {
 
 	success := false
 	method := ""
+	var lastError error
 
-	// Método 1: Intentar con rfkill unblock (más directo para desbloquear)
-	rfkillOut, rfkillErr := exec.Command("sh", "-c", "rfkill list wifi 2>/dev/null | grep -i 'wifi' | head -1").CombinedOutput()
-	if rfkillErr == nil && strings.Contains(strings.ToLower(string(rfkillOut)), "wifi") {
-		// Desbloquear WiFi con rfkill
-		rfkillCmd := "sudo rfkill unblock wifi"
-		_, rfkillUnblockErr := exec.Command("sh", "-c", rfkillCmd+" 2>/dev/null").CombinedOutput()
-		if rfkillUnblockErr == nil {
-			success = true
-			method = "rfkill"
+	// Verificar si rfkill está disponible
+	rfkillCheck := exec.Command("sh", "-c", "command -v rfkill 2>/dev/null")
+	if rfkillCheck.Run() == nil {
+		// Verificar si hay WiFi bloqueado
+		rfkillOut, rfkillErr := exec.Command("sh", "-c", "rfkill list wifi 2>/dev/null | grep -i 'wifi' | head -1").CombinedOutput()
+		if rfkillErr == nil && strings.Contains(strings.ToLower(string(rfkillOut)), "wifi") {
+			// Método 1: Intentar sin sudo primero
+			rfkillCmdNoSudo := "rfkill unblock wifi"
+			_, rfkillUnblockErrNoSudo := exec.Command("sh", "-c", rfkillCmdNoSudo+" 2>&1").CombinedOutput()
+			if rfkillUnblockErrNoSudo == nil {
+				success = true
+				method = "rfkill (sin sudo)"
+			} else {
+				// Método 2: Intentar con sudo
+				rfkillCmd := "sudo rfkill unblock wifi"
+				rfkillOutSudo, rfkillUnblockErr := exec.Command("sh", "-c", rfkillCmd+" 2>&1").CombinedOutput()
+				if rfkillUnblockErr == nil {
+					success = true
+					method = "rfkill (con sudo)"
+				} else {
+					lastError = fmt.Errorf("rfkill error: %s", string(rfkillOutSudo))
+				}
+			}
 		}
 	}
 
-	// Método 2: Intentar con nmcli radio wifi on (siempre intentar habilitar después de desbloquear)
-	if success || !success {
-		nmcliCmd := "sudo nmcli radio wifi on"
-		_, nmcliErr := exec.Command("sh", "-c", nmcliCmd+" 2>/dev/null").CombinedOutput()
-		if nmcliErr == nil {
-			success = true
-			if method == "" {
-				method = "nmcli"
-			}
-		} else {
-			// Intentar sin sudo
+	// Método 3: Intentar con nmcli (siempre intentar habilitar después de desbloquear o si rfkill falló)
+	if !success {
+		nmcliCheck := exec.Command("sh", "-c", "command -v nmcli 2>/dev/null")
+		if nmcliCheck.Run() == nil {
+			// Intentar sin sudo primero
 			nmcliCmdNoSudo := "nmcli radio wifi on"
-			_, nmcliErrNoSudo := exec.Command("sh", "-c", nmcliCmdNoSudo+" 2>/dev/null").CombinedOutput()
+			nmcliOutNoSudo, nmcliErrNoSudo := exec.Command("sh", "-c", nmcliCmdNoSudo+" 2>&1").CombinedOutput()
 			if nmcliErrNoSudo == nil {
 				success = true
-				if method == "" {
-					method = "nmcli (sin sudo)"
+				method = "nmcli (sin sudo)"
+			} else {
+				// Intentar con sudo
+				nmcliCmd := "sudo nmcli radio wifi on"
+				nmcliOut, nmcliErr := exec.Command("sh", "-c", nmcliCmd+" 2>&1").CombinedOutput()
+				if nmcliErr == nil {
+					success = true
+					method = "nmcli (con sudo)"
+				} else {
+					if lastError == nil {
+						lastError = fmt.Errorf("nmcli error: %s", string(nmcliOut))
+					}
 				}
 			}
+		}
+	}
+
+	// Si rfkill funcionó, también intentar habilitar con nmcli
+	if success && method == "rfkill (sin sudo)" || method == "rfkill (con sudo)" {
+		nmcliCheck := exec.Command("sh", "-c", "command -v nmcli 2>/dev/null")
+		if nmcliCheck.Run() == nil {
+			// Intentar habilitar sin sudo
+			exec.Command("sh", "-c", "nmcli radio wifi on 2>/dev/null").Run()
+			// Si falla, intentar con sudo
+			exec.Command("sh", "-c", "sudo nmcli radio wifi on 2>/dev/null").Run()
 		}
 	}
 
@@ -270,10 +300,29 @@ func wifiUnblockHandler(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"success": true, "message": "WiFi desbloqueado exitosamente"})
 	}
 
-	// Si todos los métodos fallan
-	errorMsg := "No se pudo desbloquear WiFi. Verifica que tengas permisos sudo configurados (NOPASSWD) o que rfkill/nmcli estén disponibles."
-	InsertLog("ERROR", fmt.Sprintf("Error desbloqueando WiFi (usuario: %s): %s", user.Username, errorMsg), "wifi", &userID)
-	return c.Status(500).JSON(fiber.Map{"error": errorMsg})
+	// Si todos los métodos fallan, proporcionar información útil
+	errorDetails := "No se pudo desbloquear WiFi."
+	if lastError != nil {
+		errorDetails += fmt.Sprintf(" Último error: %v", lastError)
+	}
+	
+	// Verificar qué comandos están disponibles
+	availableCmds := []string{}
+	if exec.Command("sh", "-c", "command -v rfkill 2>/dev/null").Run() == nil {
+		availableCmds = append(availableCmds, "rfkill")
+	}
+	if exec.Command("sh", "-c", "command -v nmcli 2>/dev/null").Run() == nil {
+		availableCmds = append(availableCmds, "nmcli")
+	}
+	
+	if len(availableCmds) == 0 {
+		errorDetails += " No se encontraron comandos rfkill ni nmcli instalados."
+	} else {
+		errorDetails += fmt.Sprintf(" Comandos disponibles: %s. Verifica permisos sudo (NOPASSWD) ejecutando: sudo fix_wifi_permissions.sh", strings.Join(availableCmds, ", "))
+	}
+	
+	InsertLog("ERROR", fmt.Sprintf("Error desbloqueando WiFi (usuario: %s): %s", user.Username, errorDetails), "wifi", &userID)
+	return c.Status(500).JSON(fiber.Map{"error": errorDetails})
 }
 
 func wifiConfigHandler(c *fiber.Ctx) error {
