@@ -588,8 +588,8 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 	var hardBlocked bool = false
 	var softBlocked bool = false
 	
-	// Método 1: Verificar con nmcli (más confiable, con sudo)
-	wifiCheck := exec.Command("sh", "-c", "sudo nmcli -t -f WIFI g 2>/dev/null")
+	// Método 1: Verificar con nmcli (más confiable)
+	wifiCheck := execCommand("nmcli -t -f WIFI g 2>/dev/null")
 	wifiOut, err := wifiCheck.Output()
 	if err == nil {
 		wifiState := strings.ToLower(strings.TrimSpace(string(wifiOut)))
