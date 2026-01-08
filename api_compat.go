@@ -647,14 +647,14 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 		}
 	}
 	
-	// Obtener SSID actual si está conectado (con sudo)
-	ssidOut, _ := exec.Command("sh", "-c", "sudo nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
+	// Obtener SSID actual si está conectado
+	ssidOut, _ := execCommand("nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
 	ssid := strings.TrimSpace(string(ssidOut))
 	connected := ssid != ""
 	
-	// Si no hay SSID con nmcli, intentar con iwconfig (con sudo)
+	// Si no hay SSID con nmcli, intentar con iwconfig
 	if !connected {
-		iwOut, _ := exec.Command("sh", "-c", "sudo iwconfig 2>/dev/null | grep -i 'essid' | grep -v 'off/any' | head -1").CombinedOutput()
+		iwOut, _ := execCommand("iwconfig 2>/dev/null | grep -i 'essid' | grep -v 'off/any' | head -1").CombinedOutput()
 		iwStr := string(iwOut)
 		if strings.Contains(iwStr, "ESSID:") {
 			// Extraer SSID
