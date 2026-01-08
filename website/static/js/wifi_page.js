@@ -628,7 +628,7 @@
           if (loadingEl) loadingEl.style.display = 'none';
           
           if (data.success && data.networks && data.networks.length > 0) {
-            // Mostrar tabla con las redes
+            // Mostrar tarjetas con las redes
             if (tableEl) tableEl.style.display = 'block';
             if (tbody) {
               // Obtener red conectada actual para comparar
@@ -654,12 +654,14 @@
               });
               
               data.networks.forEach(function(network) {
-                const tr = document.createElement('tr');
+                const card = document.createElement('div');
+                card.className = 'network-card';
                 const security = network.security || 'Open';
                 const securityColor = getSecurityColor(security);
                 const signalStrength = network.signal || 0;
                 const signalPercent = Math.min(100, Math.max(0, (signalStrength + 100) * 2));
                 const signalClass = signalPercent > 70 ? 'text-success' : (signalPercent > 40 ? 'text-warning' : 'text-danger');
+                const signalIcon = signalPercent > 70 ? 'bi-wifi' : (signalPercent > 40 ? 'bi-wifi-2' : 'bi-wifi-1');
                 const frequency = network.frequency || (network.channel ? getFrequencyFromChannel(network.channel) : '--');
                 const ssid = network.ssid || t('wifi.hidden_network', 'Hidden Network');
                 const isConnected = currentSSID && currentSSID === ssid;
@@ -667,31 +669,58 @@
                 // Botón de conexión - mostrar "Connected" si está conectado
                 let connectButtonHtml = '';
                 if (isConnected) {
-                  connectButtonHtml = '<button class="btn btn-sm btn-success connect-network-btn" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + (security || 'Open').replace(/"/g, '&quot;') + '" disabled>' +
-                    '<i class="bi bi-check-circle me-1"></i>' + t('wifi.connected', 'Connected') +
+                  connectButtonHtml = '<button class="btn btn-success connect-network-btn" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + (security || 'Open').replace(/"/g, '&quot;') + '" disabled>' +
+                    '<i class="bi bi-check-circle me-2"></i>' + t('wifi.connected', 'Connected') +
                   '</button>';
                 } else {
-                  connectButtonHtml = '<button class="btn btn-sm btn-outline-primary connect-network-btn" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + (security || 'Open').replace(/"/g, '&quot;') + '">' +
-                    '<i class="bi bi-wifi me-1"></i>' + t('wifi.connect', 'Connect') +
+                  connectButtonHtml = '<button class="btn btn-primary connect-network-btn" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + (security || 'Open').replace(/"/g, '&quot;') + '">' +
+                    '<i class="bi bi-wifi me-2"></i>' + t('wifi.connect', 'Connect') +
                   '</button>';
                 }
                 
-                tr.innerHTML = 
-                  '<td><strong>' + ssid + '</strong></td>' +
-                  '<td><span class="badge bg-' + securityColor + '">' + security + '</span></td>' +
-                  '<td><span class="' + signalClass + '"><i class="bi bi-signal"></i> ' + signalStrength + ' dBm</span></td>' +
-                  '<td>' + (network.channel || '--') + '</td>' +
-                  '<td>' + frequency + '</td>' +
-                  '<td>' + connectButtonHtml + '</td>';
-                tbody.appendChild(tr);
+                card.innerHTML = 
+                  '<div class="network-card-content">' +
+                    '<div class="network-card-icon ' + signalClass + '">' +
+                      '<i class="bi ' + signalIcon + '"></i>' +
+                    '</div>' +
+                    '<div class="network-card-info">' +
+                      '<h6 class="network-card-ssid">' + ssid + '</h6>' +
+                      '<div class="network-card-details">' +
+                        '<div class="network-card-detail-item">' +
+                          '<span class="badge bg-' + securityColor + ' network-card-security-badge">' + security + '</span>' +
+                        '</div>' +
+                        '<div class="network-card-detail-item network-card-signal ' + signalClass + '">' +
+                          '<i class="bi bi-signal"></i> ' +
+                          '<span>' + signalStrength + ' dBm</span>' +
+                        '</div>' +
+                        '<div class="network-card-detail-item">' +
+                          '<i class="bi bi-broadcast"></i> ' +
+                          '<span>' + t('wifi.network_channel', 'Channel') + ': ' + (network.channel || '--') + '</span>' +
+                        '</div>' +
+                        '<div class="network-card-detail-item">' +
+                          '<i class="bi bi-speedometer2"></i> ' +
+                          '<span>' + frequency + '</span>' +
+                        '</div>' +
+                      '</div>' +
+                    '</div>' +
+                  '</div>' +
+                  '<div class="network-card-actions">' +
+                    connectButtonHtml +
+                  '</div>';
+                
+                tbody.appendChild(card);
               });
               
               // Agregar event listeners a los botones de conexión (solo los que no están conectados)
               tbody.querySelectorAll('.connect-network-btn:not([disabled])').forEach(function(btn) {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function(e) {
+                  e.stopPropagation();
                   const ssid = btn.getAttribute('data-ssid');
                   const security = btn.getAttribute('data-security');
-                  showConnectInline(ssid, security, btn.closest('tr'));
+                  const card = btn.closest('.network-card');
+                  if (card) {
+                    showConnectInline(ssid, security, card);
+                  }
                 });
               });
             }
