@@ -642,6 +642,84 @@ body.light-theme .network-connect-form-input {
     flex: 1;
 }
 
+.wifi-interface-label {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    color: var(--hb-text-light);
+}
+
+body.light-theme .wifi-interface-label {
+    color: #212529;
+}
+
+.wifi-interface-select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.wifi-interface-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 2.5rem;
+    background-image: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+}
+
+body.light-theme .wifi-interface-select {
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    color: #212529;
+}
+
+.wifi-interface-select:hover {
+    border-color: var(--hb-primary);
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .wifi-interface-select:hover {
+    background: rgba(255, 255, 255, 1);
+    border-color: var(--hb-primary);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.wifi-interface-select:focus {
+    border-color: var(--hb-primary);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+.wifi-interface-select-icon {
+    position: absolute;
+    right: 1rem;
+    pointer-events: none;
+    color: var(--hb-text-muted);
+    font-size: 1rem;
+    transition: transform 0.3s ease;
+}
+
+body.light-theme .wifi-interface-select-icon {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.wifi-interface-select-wrapper:hover .wifi-interface-select-icon {
+    color: var(--hb-primary);
+}
+
+.wifi-interface-select:focus + .wifi-interface-select-icon {
+    color: var(--hb-primary);
+    transform: rotate(180deg);
+}
+
 /* Responsive */
 @media (max-width: 991px) {
     .stat-card {
