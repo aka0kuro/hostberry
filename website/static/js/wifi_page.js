@@ -1006,6 +1006,55 @@
     }
   };
   
+  // Disconnect from network
+  async function disconnectFromNetwork(ssid) {
+    if (!confirm(t('wifi.disconnect_confirm', 'Are you sure you want to disconnect from') + ' ' + ssid + '?')) {
+      return;
+    }
+    
+    try {
+      const resp = await apiRequest('/api/wifi/disconnect', { method: 'POST' });
+      
+      if (!resp.ok) {
+        if (resp.status === 401) return;
+        let errorMsg = t('errors.disconnect_failed', 'Disconnect failed');
+        try {
+          const errorData = await resp.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch (e) {
+          errorMsg = t('errors.disconnect_failed', 'Disconnect failed') + ' (HTTP ' + resp.status + ')';
+        }
+        showAlert('danger', errorMsg);
+        return;
+      }
+      
+      const data = await resp.json();
+      
+      if (data.success !== false) {
+        showAlert('success', t('wifi.disconnected', 'Disconnected successfully'));
+        
+        // Actualizar botones
+        updateConnectButtons(null);
+        
+        // Actualizar estado después de un momento
+        setTimeout(() => {
+          loadConnectionStatus();
+          // Escanear redes después de desconectar
+          setTimeout(() => {
+            scanNetworks();
+          }, 2000);
+        }, 1500);
+      } else {
+        const errorMsg = data.error || t('errors.disconnect_failed', 'Disconnect failed');
+        showAlert('danger', errorMsg);
+      }
+    } catch (e) {
+      console.error('Error disconnecting from network:', e);
+      if (e.message && e.message.includes('401')) return;
+      showAlert('danger', t('errors.network_error', 'Network error: ') + e.message);
+    }
+  }
+  
   // Connect to network
   async function connectToNetwork(ssid, security, password, cardElement) {
     const submitBtn = cardElement ? cardElement.querySelector('.network-connect-submit') : null;
