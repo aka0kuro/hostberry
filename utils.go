@@ -45,7 +45,8 @@ func executeCommand(cmd string) (string, error) {
 		"top", "free", "df", "nproc",
 		"iwlist", "nmcli", "iw",
 		"ip", "wg", "wg-quick", "systemctl", "pgrep",
-		"sudo", "sh",
+		"sudo", "sh", "reboot", "shutdown", "poweroff",
+		"rfkill", "ifconfig", "iwconfig",
 	}
 	
 	// Validar comando
