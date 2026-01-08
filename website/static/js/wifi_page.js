@@ -768,11 +768,11 @@
                 const ssid = network.ssid || t('wifi.hidden_network', 'Hidden Network');
                 const isConnected = currentSSID && currentSSID === ssid;
                 
-                // Botón de conexión - mostrar "Connected" si está conectado
+                // Botón de conexión - mostrar "Disconnect" si está conectado
                 let connectButtonHtml = '';
                 if (isConnected) {
-                  connectButtonHtml = '<button class="btn btn-success connect-network-btn" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + (security || 'Open').replace(/"/g, '&quot;') + '" disabled>' +
-                    '<i class="bi bi-check-circle me-2"></i>' + t('wifi.connected', 'Connected') +
+                  connectButtonHtml = '<button class="btn btn-danger disconnect-network-btn" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + (security || 'Open').replace(/"/g, '&quot;') + '">' +
+                    '<i class="bi bi-x-circle me-2"></i>' + t('wifi.disconnect', 'Disconnect') +
                   '</button>';
                 } else {
                   connectButtonHtml = '<button class="btn btn-primary connect-network-btn" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + (security || 'Open').replace(/"/g, '&quot;') + '">' +
