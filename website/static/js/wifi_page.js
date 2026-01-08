@@ -296,20 +296,26 @@
       const btnSSID = btn.getAttribute('data-ssid');
       
       if (currentSSID && btnSSID === currentSSID) {
-        // Esta es la red conectada
-        if (!btn.disabled || btn.className.indexOf('btn-success') === -1) {
-          btn.className = 'btn btn-success connect-network-btn';
-          btn.disabled = true;
-          btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>' + t('wifi.connected', 'Connected');
+        // Esta es la red conectada - mostrar botón Disconnect
+        if (!btn.disabled || btn.className.indexOf('btn-danger') === -1) {
+          btn.className = 'btn btn-danger disconnect-network-btn';
+          btn.disabled = false; // Habilitado para poder desconectar
+          btn.innerHTML = '<i class="bi bi-x-circle me-2"></i>' + t('wifi.disconnect', 'Disconnect');
+          
+          // Reemplazar event listener para desconectar
+          btn.onclick = function(e) {
+            e.stopPropagation();
+            disconnectFromNetwork(ssid);
+          };
         }
       } else {
-        // Ya no está conectada o no es la red conectada, restaurar botón
-        if (btn.disabled || btn.className.indexOf('btn-success') !== -1) {
+        // Ya no está conectada o no es la red conectada, restaurar botón Connect
+        if (btn.className.indexOf('btn-danger') !== -1 || btn.disabled) {
           btn.className = 'btn btn-primary connect-network-btn';
           btn.disabled = false;
           btn.innerHTML = '<i class="bi bi-wifi me-2"></i>' + t('wifi.connect', 'Connect');
           
-          // Re-agregar event listener
+          // Re-agregar event listener para conectar
           const card = btn.closest('.network-card');
           if (card) {
             btn.onclick = function(e) {
