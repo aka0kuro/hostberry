@@ -942,7 +942,13 @@ start_service() {
 show_final_info() {
     echo ""
     echo -e "${GREEN}========================================${NC}"
-    echo -e "${GREEN}  HostBerry instalado correctamente${NC}"
+    if [ "$MODE" = "update" ]; then
+        echo -e "${GREEN}  HostBerry actualizado correctamente${NC}"
+    elif [ "$MODE" = "uninstall" ]; then
+        echo -e "${GREEN}  HostBerry desinstalado correctamente${NC}"
+    else
+        echo -e "${GREEN}  HostBerry instalado correctamente${NC}"
+    fi
     echo -e "${GREEN}========================================${NC}"
     echo ""
     echo -e "${BLUE}Ubicación de instalación:${NC} $INSTALL_DIR"
