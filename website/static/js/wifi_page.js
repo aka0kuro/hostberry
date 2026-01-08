@@ -810,20 +810,21 @@
     }
   }
   
-  // Show connect inline form in table row
-  function showConnectInline(ssid, security, rowElement) {
-    // Verificar si ya hay un formulario en esta fila
-    let formRow = rowElement.nextElementSibling;
-    if (formRow && formRow.classList.contains('connect-form-row')) {
-      formRow.remove();
+  // Show connect inline form in network card
+  function showConnectInline(ssid, security, cardElement) {
+    // Verificar si ya hay un formulario en esta tarjeta
+    let formDiv = cardElement.querySelector('.network-connect-form-wrapper');
+    if (formDiv) {
+      formDiv.remove();
       return;
     }
     
-    // Crear nueva fila con formulario
-    const newRow = document.createElement('tr');
-    newRow.className = 'connect-form-row';
-    newRow.innerHTML = 
-      '<td colspan="6" style="padding: 1.5rem; background: rgba(255, 255, 255, 0.02);">' +
+    // Crear nuevo div con formulario
+    const formWrapper = document.createElement('div');
+    formWrapper.className = 'network-connect-form-wrapper';
+    formWrapper.style.cssText = 'width: 100%; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1);';
+    formWrapper.innerHTML = 
+      '<div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.02); border-radius: 8px;">' +
         '<div class="network-connect-form show">' +
           '<div class="network-connect-form-group">' +
             '<label class="network-connect-form-label">' + t('wifi.network_ssid', 'Network Name (SSID)') + '</label>' +
