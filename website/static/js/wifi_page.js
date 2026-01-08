@@ -933,7 +933,7 @@
         const data = await resp.json();
         
         if (data.success) {
-          showAlert('success', t('wifi.connecting', 'Connecting to') + ': ' + ssid);
+          showAlert('success', t('wifi.connected_to', 'Connected to') + ': ' + ssid);
           
           // Guardar última red conectada para auto-reconexión
           localStorage.setItem('wifi_last_connected_ssid', ssid);
