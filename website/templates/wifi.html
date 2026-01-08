@@ -825,12 +825,26 @@ body.light-theme .wifi-interface-select-icon {
         font-weight: 500;
     }
 
-    .connect-form-row {
-        background: rgba(255, 255, 255, 0.02) !important;
+    .network-connect-form-wrapper {
+        width: 100%;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    body.light-theme .connect-form-row {
-        background: rgba(0, 0, 0, 0.02) !important;
+    body.light-theme .network-connect-form-wrapper {
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .network-card {
+        flex-wrap: wrap;
+    }
+
+    .network-connect-form-wrapper .network-connect-form {
+        display: block !important;
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
     }
 
     @media (max-width: 768px) {
