@@ -861,15 +861,18 @@ body.light-theme .wifi-interface-select-icon {
     .network-card-content {
         display: flex;
         align-items: center;
-        gap: 1.5rem;
+        gap: 1rem;
         flex: 1;
         min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
     }
 
     .network-card-icon {
-        font-size: 2rem;
+        font-size: 1.5rem;
         opacity: 0.8;
         flex-shrink: 0;
+        min-width: 1.5rem;
     }
 
     .network-card-info {
