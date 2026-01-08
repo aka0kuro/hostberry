@@ -609,21 +609,18 @@
     if (tableEl) tableEl.style.display = 'none';
     if (tbody) tbody.innerHTML = '';
     
-    // Escanear automáticamente sin botón
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
       
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 20000);
-        
-        const requestBody = selectedInterface ? { interface: selectedInterface } : {};
-        const resp = await apiRequest('/api/v1/wifi/scan', { 
-          method: 'POST',
-          body: requestBody,
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
+      const requestBody = selectedInterface ? { interface: selectedInterface } : {};
+      const resp = await apiRequest('/api/v1/wifi/scan', { 
+        method: 'POST',
+        body: requestBody,
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
         
         if (resp.ok) {
           const data = await resp.json();
