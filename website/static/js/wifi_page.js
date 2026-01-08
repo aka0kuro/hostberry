@@ -684,241 +684,150 @@
     const tbody = document.getElementById('networksTable');
     const interfaceSelect = document.getElementById('wifi-interface');
     
-    // Obtener interfaz seleccionada
-    const selectedInterface = interfaceSelect ? interfaceSelect.value : '';
-    if (selectedInterface) {
-      localStorage.setItem('wifi_interface', selectedInterface);
-      console.log('Interfaz WiFi guardada:', selectedInterface);
-    } else {
-      // Si es auto-detect (vacío), limpiar localStorage
-      localStorage.removeItem('wifi_interface');
-      console.log('Usando auto-detección de interfaz WiFi');
-    }
-    
-    // Verificar estado del WiFi primero (con múltiples intentos)
-    let wifiStatus = await checkWiFiStatus();
-    let statusAttempts = 0;
-    const maxStatusAttempts = 5; // Aumentar intentos
-    
-    // Si WiFi no está habilitado, intentar verificar varias veces (puede estar activándose)
-    while ((!wifiStatus.enabled || wifiStatus.blocked) && statusAttempts < maxStatusAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Esperar más entre intentos
-      await loadConnectionStatus(); // Actualizar estado en UI
-      wifiStatus = await checkWiFiStatus();
-      statusAttempts++;
-    }
-    
-    // Si después de todos los intentos aún no está habilitado, mostrar mensaje pero intentar escanear de todos modos
-    if (!wifiStatus.enabled || wifiStatus.blocked) {
-      // Intentar escanear de todos modos (puede que el estado no se haya actualizado pero WiFi esté activo)
-      console.log("WiFi puede estar activándose, intentando escanear de todos modos...");
-      // Mostrar advertencia pero continuar con el escaneo
-      showAlert('warning', t('wifi.wifi_may_be_enabling', 'WiFi may still be enabling, attempting to scan anyway...'));
-    }
-    
+    // Show loading state and ensure other states are hidden
     if (loadingEl) loadingEl.style.display = 'block';
     if (emptyEl) emptyEl.style.display = 'none';
     if (tableEl) tableEl.style.display = 'none';
     if (tbody) tbody.innerHTML = '';
     
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000);
-      
-      const requestBody = selectedInterface ? { interface: selectedInterface } : {};
-      const resp = await apiRequest('/api/v1/wifi/scan', { 
-        method: 'POST',
-        body: requestBody,
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-        
-        if (resp.ok) {
-          const data = await resp.json();
-          
-          if (loadingEl) loadingEl.style.display = 'none';
-          
-          if (data.success && data.networks && data.networks.length > 0) {
-            // Mostrar tarjetas con las redes
-            if (tableEl) {
-              tableEl.style.display = 'block';
-              // Asegurar que el contenedor mantenga su ancho completo
-              tableEl.style.width = '100%';
-              tableEl.style.maxWidth = '100%';
-            }
-            if (tbody) {
-              // Obtener red conectada actual para comparar
-              let currentSSID = null;
-              try {
-                const statusResp = await apiRequest('/api/wifi/status');
-                if (statusResp.ok) {
-                  const statusData = await statusResp.json();
-                  const status = statusData.status || statusData;
-                  if (status.connected && status.current_connection) {
-                    currentSSID = status.current_connection;
-                  }
-                }
-              } catch (e) {
-                console.error('Error getting current connection:', e);
-              }
-              
-              // Ordenar por señal (mayor a menor)
-              data.networks.sort((a, b) => {
-                const signalA = parseInt(a.signal) || 0;
-                const signalB = parseInt(b.signal) || 0;
-                return signalB - signalA;
-              });
-              
-              data.networks.forEach(function(network) {
-                const card = document.createElement('div');
-                card.className = 'network-card';
-                // Asegurar que la tarjeta mantenga su ancho completo
-                card.style.width = '100%';
-                card.style.maxWidth = '100%';
-                card.style.flexBasis = '100%';
-                card.style.flexShrink = '0';
-                card.style.flexGrow = '0';
-                card.style.boxSizing = 'border-box';
-                const security = network.security || 'Open';
-                const securityColor = getSecurityColor(security);
-                const signalStrength = network.signal || 0;
-                const signalPercent = Math.min(100, Math.max(0, (signalStrength + 100) * 2));
-                const signalClass = signalPercent > 70 ? 'text-success' : (signalPercent > 40 ? 'text-warning' : 'text-danger');
-                const signalIcon = signalPercent > 70 ? 'bi-wifi' : (signalPercent > 40 ? 'bi-wifi-2' : 'bi-wifi-1');
-                const frequency = network.frequency || (network.channel ? getFrequencyFromChannel(network.channel) : '--');
-                const ssid = network.ssid || t('wifi.hidden_network', 'Hidden Network');
-                const isConnected = currentSSID && currentSSID === ssid;
-                
-                // Botón de conexión - mostrar "Disconnect" si está conectado
-                let connectButtonHtml = '';
-                if (isConnected) {
-                  connectButtonHtml = '<button class="btn btn-danger disconnect-network-btn" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + (security || 'Open').replace(/"/g, '&quot;') + '">' +
-                    '<i class="bi bi-x-circle me-2"></i>' + t('wifi.disconnect', 'Disconnect') +
-                  '</button>';
-                } else {
-                  connectButtonHtml = '<button class="btn btn-primary connect-network-btn" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + (security || 'Open').replace(/"/g, '&quot;') + '">' +
-                    '<i class="bi bi-wifi me-2"></i>' + t('wifi.connect', 'Connect') +
-                  '</button>';
-                }
-                
-                card.innerHTML = 
-                  '<div class="network-card-content">' +
-                    '<div class="network-card-icon ' + signalClass + '">' +
-                      '<i class="bi ' + signalIcon + '"></i>' +
-                    '</div>' +
-                    '<div class="network-card-info">' +
-                      '<h6 class="network-card-ssid">' + ssid + '</h6>' +
-                      '<div class="network-card-details">' +
-                        '<div class="network-card-detail-item">' +
-                          '<span class="badge bg-' + securityColor + ' network-card-security-badge">' + security + '</span>' +
-                        '</div>' +
-                        '<div class="network-card-detail-item network-card-signal ' + signalClass + '">' +
-                          '<i class="bi bi-signal"></i> ' +
-                          '<span>' + signalStrength + ' dBm</span>' +
-                        '</div>' +
-                        '<div class="network-card-detail-item">' +
-                          '<i class="bi bi-broadcast"></i> ' +
-                          '<span>' + t('wifi.network_channel', 'Channel') + ': ' + (network.channel || '--') + '</span>' +
-                        '</div>' +
-                        '<div class="network-card-detail-item">' +
-                          '<i class="bi bi-speedometer2"></i> ' +
-                          '<span>' + frequency + '</span>' +
-                        '</div>' +
-                      '</div>' +
-                    '</div>' +
-                  '</div>' +
-                  '<div class="network-card-actions">' +
-                    connectButtonHtml +
-                  '</div>';
-                
-                tbody.appendChild(card);
-              });
-              
-              // Agregar event listeners a los botones de conexión
-              tbody.querySelectorAll('.connect-network-btn:not([disabled])').forEach(function(btn) {
-                btn.addEventListener('click', function(e) {
-                  e.stopPropagation();
-                  const ssid = btn.getAttribute('data-ssid');
-                  const security = btn.getAttribute('data-security');
-                  const card = btn.closest('.network-card');
-                  if (card) {
-                    showConnectInline(ssid, security, card);
-                  }
-                });
-              });
-              
-              // Agregar event listeners a los botones de desconexión
-              tbody.querySelectorAll('.disconnect-network-btn:not([disabled])').forEach(function(btn) {
-                btn.addEventListener('click', function(e) {
-                  e.stopPropagation();
-                  const ssid = btn.getAttribute('data-ssid');
-                  disconnectFromNetwork(ssid);
-                });
-              });
-            }
-            
-            // Actualizar contador de redes
-            updateStatusCards({});
-            showAlert('success', t('wifi.found_networks', 'Found {count} networks').replace('{count}', data.networks.length));
-          } else {
-            if (emptyEl) {
-              emptyEl.innerHTML = 
-                '<div class="text-center py-5">' +
-                '<i class="bi bi-wifi-off" style="font-size: 4rem; opacity: 0.5;"></i>' +
-                '<p class="mt-3">' + t('wifi.no_networks', 'No networks found') + '</p>' +
-                '<p class="text-muted small">' + t('wifi.no_networks_desc', 'No WiFi networks were found in your area. Make sure WiFi is enabled and try again.') + '</p>' +
-                '<button class="btn btn-primary mt-3" onclick="scanNetworks()">' +
-                '<i class="bi bi-search me-2"></i>' + t('wifi.scan_networks', 'Scan Networks') +
-                '</button>' +
-                '</div>';
-              emptyEl.style.display = 'block';
-            }
-            showAlert('info', t('wifi.no_networks_scan', 'No networks found during scan.'));
-          }
-        } else {
-          const errorData = await resp.json().catch(() => ({}));
-          if (loadingEl) loadingEl.style.display = 'none';
-          if (emptyEl) {
-            emptyEl.innerHTML = 
-              '<div class="text-center py-5">' +
-              '<i class="bi bi-exclamation-triangle text-warning" style="font-size: 4rem;"></i>' +
-              '<p class="mt-3">' + t('errors.scan_failed', 'Scan failed') + '</p>' +
-              '<p class="text-muted small">' + (errorData.error || t('errors.unknown_error', 'Unknown error')) + '</p>' +
-              '<button class="btn btn-primary mt-3" onclick="scanNetworks()">' +
-              '<i class="bi bi-arrow-clockwise me-2"></i>' + t('common.retry', 'Retry') +
-              '</button>' +
-              '</div>';
-            emptyEl.style.display = 'block';
-          }
-          if (tableEl) tableEl.style.display = 'none';
-          showAlert('danger', errorData.error || t('errors.scan_failed', 'Scan failed'));
-        }
-      } catch (error) {
-        console.error('Error scanning networks:', error);
-        if (loadingEl) loadingEl.style.display = 'none';
-        if (emptyEl) {
-          emptyEl.innerHTML = 
-            '<div class="text-center py-5">' +
-            '<i class="bi bi-exclamation-triangle text-danger" style="font-size: 4rem;"></i>' +
-            '<p class="mt-3">' + t('errors.scan_error', 'Scan error') + '</p>' +
-            '<p class="text-muted small">' + error.message + '</p>' +
-            '<button class="btn btn-primary mt-3" onclick="scanNetworks()">' +
-            '<i class="bi bi-arrow-clockwise me-2"></i>' + t('common.retry', 'Retry') +
-            '</button>' +
-            '</div>';
-          emptyEl.style.display = 'block';
-        }
-        if (tableEl) tableEl.style.display = 'none';
-        
-        let msg = error.message;
-        if (error.name === 'AbortError') {
-          msg = t('wifi.scan_timeout', 'Scan timed out. Please try again.');
-        } else if (msg.includes('Failed to fetch')) {
-          msg = t('errors.connection_error', 'Connection error with the server.');
-        }
-        showAlert('danger', msg);
+      console.log('Iniciando escaneo de redes WiFi...');
+      let url = '/api/wifi/scan';
+      const selectedInterface = interfaceSelect ? interfaceSelect.value : '';
+      if (selectedInterface) {
+        url += '?interface=' + encodeURIComponent(selectedInterface);
       }
+      const resp = await apiRequest(url);
+      
+      if (!resp.ok) {
+        console.error('Error en respuesta API:', resp.status, resp.statusText);
+        let errorText = '';
+        try {
+          errorText = await resp.text();
+          console.error('Error response:', errorText);
+        } catch (e) {
+          console.error('No se pudo leer el texto de error:', e);
+        }
+        
+        // Hide loading state
+        if (loadingEl) loadingEl.style.display = 'none';
+        
+        // Show error in empty state container
+        if (emptyEl) {
+          emptyEl.style.display = 'block';
+          emptyEl.innerHTML = `
+            <div class="text-center py-5">
+              <i class="bi bi-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
+              <p class="mt-3">${t('errors.scan_failed', 'Scan failed')}</p>
+              <p class="text-muted small">${errorText || t('errors.unknown_error', 'Unknown error')}</p>
+              <button class="btn btn-primary mt-3" onclick="scanNetworks()">
+                <i class="bi bi-arrow-clockwise me-2"></i>${t('common.retry', 'Retry')}
+              </button>
+            </div>
+          `;
+        }
+        throw new Error('Error al escanear redes: HTTP ' + resp.status);
+      }
+      
+      let data;
+      try {
+        const text = await resp.text();
+        if (!text || text.trim() === '') {
+          console.warn('Respuesta vacía del servidor');
+          data = { networks: [] };
+        } else {
+          data = JSON.parse(text);
+        }
+      } catch (parseError) {
+        console.error('Error parsing JSON response:', parseError);
+        console.error('Response was not valid JSON');
+        data = { networks: [] };
+      }
+      
+      console.log('Redes recibidas:', data);
+      
+      // Hide loading state
+      if (loadingEl) loadingEl.style.display = 'none';
+      
+      let networks = [];
+      if (data.networks && Array.isArray(data.networks)) {
+        networks = data.networks;
+      } else if (data && Array.isArray(data)) {
+        networks = data;
+      }
+      
+      if (networks.length === 0) {
+        if (emptyEl) emptyEl.style.display = 'block';
+        if (tableEl) tableEl.style.display = 'none';
+      } else {
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (tableEl) tableEl.style.display = 'block';
+        if (tbody) {
+          tbody.innerHTML = '';
+          networks.forEach((net, index) => {
+            const signal = net.signal || net.rssi || 0;
+            const signalPercent = Math.min(100, Math.max(0, (parseInt(signal) + 100) * 2));
+            const signalIcon = signalPercent > 70 ? 'bi-wifi' : (signalPercent > 40 ? 'bi-wifi' : 'bi-wifi');
+            const signalColor = signalPercent > 70 ? 'text-success' : (signalPercent > 40 ? 'text-warning' : 'text-danger');
+            const security = net.security || net.encryption || 'none';
+            const securityIcon = security === 'none' ? 'bi-unlock' : 'bi-lock';
+            const ssid = net.ssid || `Unnamed-${index}`;
+            const escapedSsid = ssid.replace(/'/g, '\'').replace(/"/g, '"');
+            
+            const row = document.createElement('tr');
+            row.className = 'network-card';
+            row.innerHTML = `
+              <td class="network-card-content">
+                <div class="network-card-icon ${signalColor}">
+                  <i class="bi ${signalIcon}"></i>
+                </div>
+                <div class="network-card-info">
+                  <div class="network-card-ssid">${ssid}</div>
+                  <div class="network-card-details">
+                    <span class="network-card-detail-item">
+                      <i class="bi bi-bar-chart me-1"></i> ${signal}dBm (${signalPercent}%)
+                    </span>
+                    <span class="network-card-detail-item">
+                      <i class="bi ${securityIcon} me-1"></i> ${security.toUpperCase()}
+                    </span>
+                    ${net.channel ? `<span class="network-card-detail-item"><i class="bi bi-hash me-1"></i> ${net.channel}</span>` : ''}
+                  </div>
+                </div>
+              </td>
+              <td class="network-card-actions">
+                <button class="btn btn-primary btn-sm" onclick="connectToNetwork('${escapedSsid}', '${security}')">
+                  <i class="bi bi-box-arrow-in-right me-2"></i>${t('wifi.connect', 'Connect')}
+                </button>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+        }
+      }
+      
+      // Update status cards after scan
+      loadConnectionStatus();
+    } catch (error) {
+      console.error('Error escaneando redes:', error);
+      
+      // Hide loading state
+      if (loadingEl) loadingEl.style.display = 'none';
+      
+      // Show error in empty state container
+      if (emptyEl) {
+        emptyEl.style.display = 'block';
+        emptyEl.innerHTML = `
+          <div class="text-center py-5">
+            <i class="bi bi-exclamation-triangle text-danger" style="font-size: 4rem;"></i>
+            <p class="mt-3">${t('errors.scan_error', 'Scan error')}</p>
+            <p class="text-muted small">${error.message}</p>
+            <button class="btn btn-primary mt-3" onclick="scanNetworks()">
+              <i class="bi bi-arrow-clockwise me-2"></i>${t('common.retry', 'Retry')}
+            </button>
+          </div>
+        `;
+      }
+    }
   }
   
   // Show connect inline form in network card
