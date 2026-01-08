@@ -1078,37 +1078,6 @@
       });
     }
     
-    // WiFi connect form
-    const wifiConnectForm = document.getElementById('wifiConnectForm');
-    if (wifiConnectForm) {
-      wifiConnectForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const ssid = document.getElementById('connectSSIDHidden')?.value || document.getElementById('connectSSID')?.value;
-        const password = document.getElementById('connectPassword')?.value || '';
-        const security = document.getElementById('connectSecurityHidden')?.value || document.getElementById('connectSecurity')?.value;
-        const submitBtn = document.getElementById('connectSubmitBtn');
-        
-        if (security !== 'Open' && !password) {
-          showAlert('danger', t('wifi.password_required', 'Please enter the network password.'));
-          return;
-        }
-        
-        if (submitBtn) {
-          submitBtn.disabled = true;
-          const originalHtml = submitBtn.innerHTML;
-          submitBtn.innerHTML = '<span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> ' + t('wifi.connecting', 'Connecting...');
-          
-          try {
-            await connectToNetwork(ssid, security, password);
-          } finally {
-            if (submitBtn) {
-              submitBtn.disabled = false;
-              submitBtn.innerHTML = originalHtml;
-            }
-          }
-        }
-      });
-    }
   });
   
   // Toggle Software Switch
