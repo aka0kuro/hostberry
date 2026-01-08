@@ -79,12 +79,6 @@
                         <i class="bi bi-list me-2"></i>
                         {{ call .t "wifi.available_networks" "Available Networks" }}
                     </h5>
-                    <div>
-                        <button class="btn btn-primary btn-sm" id="scan-networks-btn" onclick="scanNetworks()">
-                            <i class="bi bi-search me-2"></i>
-                            {{ call .t "wifi.scan_networks" "Scan Networks" }}
-                        </button>
-                    </div>
                 </div>
                 <div class="dashboard-card-body">
                     <div id="networks-loading" class="text-center py-5" style="display: none;">
