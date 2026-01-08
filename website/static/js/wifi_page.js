@@ -1319,20 +1319,16 @@
     // Refresh connection status every 30 seconds
     setInterval(loadConnectionStatus, 30000);
     
-    // Auto-scan networks on page load solo si no hay conexión activa
-    setTimeout(async () => {
-      const status = await checkWiFiStatus();
-      if (!status.connected) {
-        // Solo escanear si no hay conexión activa
-        scanNetworks();
-      } else {
-        // Si hay conexión, solo cargar las redes ya escaneadas (si existen)
-        console.log('Ya hay conexión activa, omitiendo escaneo automático');
-        // Mostrar mensaje de que está conectado
-        const emptyEl = document.getElementById('networks-empty');
-        if (emptyEl) emptyEl.style.display = 'none';
-      }
+    // Auto-scan networks on page load (siempre, incluso si hay conexión)
+    setTimeout(() => {
+      scanNetworks();
     }, 2000);
+    
+    // Auto-scan networks every 60 seconds
+    setInterval(() => {
+      console.log('Actualizando redes WiFi (cada 60 segundos)...');
+      scanNetworks();
+    }, 60000);
     
     // Region form
     const regionForm = document.getElementById('regionForm');
