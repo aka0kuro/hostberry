@@ -688,8 +688,8 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 		interfaceName = detectWiFiInterface()
 	}
 
-	// Verificar que WiFi esté habilitado
-	wifiCheck := exec.Command("sh", "-c", "nmcli -t -f WIFI g 2>/dev/null")
+	// Verificar que WiFi esté habilitado (con sudo)
+	wifiCheck := exec.Command("sh", "-c", "sudo nmcli -t -f WIFI g 2>/dev/null")
 	wifiOut, _ := wifiCheck.Output()
 	wifiState := strings.ToLower(strings.TrimSpace(string(wifiOut)))
 	if !strings.Contains(wifiState, "enabled") && !strings.Contains(wifiState, "on") {
@@ -701,8 +701,8 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 		})
 	}
 
-	// Método 1: Intentar con nmcli (formato mejorado)
-	cmd := exec.Command("sh", "-c", "nmcli -t -f SSID,SIGNAL,SECURITY,CHAN dev wifi list 2>&1")
+	// Método 1: Intentar con nmcli (formato mejorado, con sudo)
+	cmd := exec.Command("sh", "-c", "sudo nmcli -t -f SSID,SIGNAL,SECURITY,CHAN dev wifi list 2>&1")
 	out, err := cmd.CombinedOutput()
 	output := strings.TrimSpace(string(out))
 
