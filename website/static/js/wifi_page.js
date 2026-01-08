@@ -998,9 +998,15 @@
             form.classList.remove('show');
           }
           
+          // Actualizar botones inmediatamente
+          updateConnectButtons(ssid);
+          
           setTimeout(() => {
             loadConnectionStatus();
-            // No escanear automáticamente después de conectar
+            // Actualizar botones nuevamente después de cargar estado
+            setTimeout(() => {
+              updateConnectButtons(ssid);
+            }, 500);
           }, 2000);
         } else {
           const errorMsg = data.error || t('errors.connection_failed', 'Connection failed');
