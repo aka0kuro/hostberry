@@ -183,9 +183,26 @@
     const text = document.getElementById('toggle-wifi-text');
     const icon = document.getElementById('toggle-wifi-icon');
     const unblockBtn = document.getElementById('unblock-wifi-btn');
+    const softwareSwitchBtn = document.getElementById('toggle-software-switch-btn');
+    const softwareSwitchText = document.getElementById('software-switch-text');
+    const softwareSwitchIcon = document.getElementById('software-switch-icon');
     
     const isEnabled = statusData.enabled !== false;
     const isBlocked = statusData.hard_blocked || statusData.soft_blocked;
+    const isSoftBlocked = statusData.soft_blocked;
+    
+    // Actualizar botón de software switch
+    if (softwareSwitchBtn && softwareSwitchText && softwareSwitchIcon) {
+      if (isSoftBlocked) {
+        softwareSwitchBtn.className = 'btn btn-success btn-lg';
+        softwareSwitchText.textContent = t('wifi.enable_software_switch', 'Enable Software Switch');
+        softwareSwitchIcon.className = 'bi bi-toggle-on me-2';
+      } else {
+        softwareSwitchBtn.className = 'btn btn-secondary btn-lg';
+        softwareSwitchText.textContent = t('wifi.disable_software_switch', 'Disable Software Switch');
+        softwareSwitchIcon.className = 'bi bi-toggle-off me-2';
+      }
+    }
     
     if (isBlocked) {
       // Mostrar botón de desbloqueo y ocultar toggle
