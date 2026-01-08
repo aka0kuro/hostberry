@@ -280,7 +280,8 @@
           return;
         }
         
-        if (data.success) {
+        // Verificar si la operación fue exitosa
+        if (data.success === true) {
           showAlert('success', t('wifi.wifi_toggled', 'WiFi status changed successfully'));
           setTimeout(async () => {
             await loadConnectionStatus();
@@ -292,7 +293,8 @@
             }
           }, 2000);
         } else {
-          const errorMsg = data.error || t('errors.operation_failed', 'Operation failed');
+          // Si success es false o no está definido, mostrar error
+          const errorMsg = data.error || data.message || t('errors.operation_failed', 'Operation failed');
           showAlert('danger', errorMsg);
         }
       } catch (e) {
