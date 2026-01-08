@@ -623,18 +623,7 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 		wifiOut2, err2 := wifiCheck2.Output()
 		if err2 == nil {
 			// Filtrar mensajes de error de sudo
-			wifiOut2Str := string(wifiOut2)
-			lines2 := strings.Split(wifiOut2Str, "\n")
-			var cleanLines2 []string
-			for _, line := range lines2 {
-				line = strings.TrimSpace(line)
-				if line != "" && 
-				   !strings.Contains(line, "sudo: unable to open log file") &&
-				   !strings.Contains(line, "Read-only file system") {
-					cleanLines2 = append(cleanLines2, line)
-				}
-			}
-			wifiState2 := strings.ToLower(strings.Join(cleanLines2, " "))
+			wifiState2 := strings.ToLower(strings.TrimSpace(filterSudoErrors(wifiOut2)))
 			if strings.Contains(wifiState2, "enabled") || strings.Contains(wifiState2, "on") {
 				enabled = true
 			} else if strings.Contains(wifiState2, "disabled") || strings.Contains(wifiState2, "off") {
