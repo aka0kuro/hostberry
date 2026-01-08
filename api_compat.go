@@ -225,8 +225,6 @@ func wifiUnblockHandler(c *fiber.Ctx) error {
 	user := c.Locals("user").(*User)
 	userID := user.ID
 
-	print_info("Desbloqueando WiFi (usuario: %s)", user.Username)
-
 	// Método 1: Intentar con rfkill unblock (más directo para desbloquear)
 	rfkillOut, rfkillErr := exec.Command("sh", "-c", "rfkill list wifi 2>/dev/null | grep -i 'wifi' | head -1").CombinedOutput()
 	if rfkillErr == nil && strings.Contains(strings.ToLower(string(rfkillOut)), "wifi") {
