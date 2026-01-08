@@ -1138,9 +1138,9 @@
     }
     
     // Refresh handlers
-    document.addEventListener('DOMContentLoaded', function() {
-    loadConnectionStatus();
-    loadRegion();
+    function initWiFiPage() {
+      loadConnectionStatus();
+      loadRegion();
     
     // Cargar interfaces WiFi y restaurar selección guardada
     loadWiFiInterfaces().then(function() {
