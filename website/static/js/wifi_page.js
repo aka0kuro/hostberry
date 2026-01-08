@@ -291,13 +291,23 @@
     const tbody = document.getElementById('networksTable');
     if (!tbody) return;
     
-    const buttons = tbody.querySelectorAll('.connect-network-btn');
+    // Asegurar que las tarjetas mantengan su ancho completo
+    const cards = tbody.querySelectorAll('.network-card');
+    cards.forEach(function(card) {
+      card.style.width = '100%';
+      card.style.maxWidth = '100%';
+      card.style.flexBasis = '100%';
+      card.style.flexShrink = '0';
+      card.style.flexGrow = '0';
+    });
+    
+    const buttons = tbody.querySelectorAll('.connect-network-btn, .disconnect-network-btn');
     buttons.forEach(function(btn) {
       const btnSSID = btn.getAttribute('data-ssid');
       
       if (currentSSID && btnSSID === currentSSID) {
         // Esta es la red conectada - mostrar botón Disconnect
-        if (!btn.disabled || btn.className.indexOf('btn-danger') === -1) {
+        if (btn.className.indexOf('btn-danger') === -1) {
           btn.className = 'btn btn-danger disconnect-network-btn';
           btn.disabled = false; // Habilitado para poder desconectar
           btn.innerHTML = '<i class="bi bi-x-circle me-2"></i>' + t('wifi.disconnect', 'Disconnect');
@@ -310,7 +320,7 @@
         }
       } else {
         // Ya no está conectada o no es la red conectada, restaurar botón Connect
-        if (btn.className.indexOf('btn-danger') !== -1 || btn.disabled) {
+        if (btn.className.indexOf('btn-primary') === -1) {
           btn.className = 'btn btn-primary connect-network-btn';
           btn.disabled = false;
           btn.innerHTML = '<i class="bi bi-wifi me-2"></i>' + t('wifi.connect', 'Connect');
