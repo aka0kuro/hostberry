@@ -812,7 +812,7 @@ StandardError=journal
 SyslogIdentifier=${SERVICE_NAME}
 
 # Seguridad
-NoNewPrivileges=true
+# NoNewPrivileges=true  # Deshabilitado para permitir sudo en comandos WiFi
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
