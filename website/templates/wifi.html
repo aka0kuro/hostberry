@@ -920,8 +920,15 @@ body.light-theme .wifi-interface-select-icon {
     .network-card-actions {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 0.75rem;
         flex-shrink: 0;
+        min-width: auto;
+    }
+    
+    .network-card-actions .btn {
+        white-space: nowrap;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
     }
 
     .network-card-security-badge {
