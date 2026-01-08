@@ -708,6 +708,28 @@
   // Show connect modal
   function showConnectModal(ssid, security) {
     const modal = document.getElementById('connectModal');
+    
+    // Hacer scroll suave hacia el modal cuando se abre
+    if (modal) {
+      // Esperar a que el modal se muestre y luego hacer scroll
+      const scrollToModal = () => {
+        modal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      };
+      
+      // Si el modal ya está visible, hacer scroll inmediatamente
+      if (modal.classList.contains('show')) {
+        setTimeout(scrollToModal, 100);
+      } else {
+        // Si no está visible, esperar a que se muestre
+        const observer = new MutationObserver((mutations) => {
+          if (modal.classList.contains('show')) {
+            setTimeout(scrollToModal, 100);
+            observer.disconnect();
+          }
+        });
+        observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
+      }
+    }
     const ssidInput = document.getElementById('connectSSID');
     const ssidHidden = document.getElementById('connectSSIDHidden');
     const securityInput = document.getElementById('connectSecurity');
