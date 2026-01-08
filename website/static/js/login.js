@@ -90,13 +90,20 @@
         });
         const result = await resp.json();
         if(resp.ok){
+          // Guardar token en localStorage (para navegadores que no guardan cookies)
           localStorage.setItem('access_token', result.access_token);
           showAlert('success', i18n.login_success);
           setTimeout(()=>{
+            // IMPORTANT: si no hay cookies, las páginas protegidas necesitan token por query (?token=)
+            const token = encodeURIComponent(result.access_token || '');
+            const lang = (document.documentElement && document.documentElement.lang === 'es') ? 'es' : 'en';
+            const langQ = `lang=${encodeURIComponent(lang)}`;
+            const tokenQ = token ? `token=${token}` : '';
+            const qs = [langQ, tokenQ].filter(Boolean).join('&');
             if(result.password_change_required){
-              window.location.href = '/first-login';
+              window.location.href = `/first-login?${qs}`;
             } else {
-              window.location.href = '/dashboard';
+              window.location.href = `/dashboard?${qs}`;
             }
           }, 800);
         } else {
