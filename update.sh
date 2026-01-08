@@ -250,8 +250,10 @@ main() {
     fi
     
     # Ejecutar el instalador en modo actualización
+    # El instalador preservará automáticamente la base de datos
     if [ -f "${SCRIPT_DIR}/install.sh" ]; then
         print_info "Ejecutando instalador en modo actualización..."
+        print_info "La base de datos será preservada automáticamente"
         exec "${SCRIPT_DIR}/install.sh" --update
     else
         print_error "install.sh no encontrado en ${SCRIPT_DIR}"
