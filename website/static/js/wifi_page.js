@@ -643,23 +643,9 @@
           if (loadingEl) loadingEl.style.display = 'none';
           
           if (data.success && data.networks && data.networks.length > 0) {
-            // Ocultar tabla y mostrar interfaz de conexión
-            if (tableEl) tableEl.style.display = 'none';
-            
-            const connectContainer = document.getElementById('networks-connect-container');
-            const connectGrid = document.getElementById('networks-connect-grid');
-            
-            if (connectContainer && connectGrid) {
-              connectContainer.style.display = 'block';
-              connectGrid.innerHTML = '';
-              
-              // Ordenar por señal (mayor a menor)
-              data.networks.sort((a, b) => {
-                const signalA = parseInt(a.signal) || 0;
-                const signalB = parseInt(b.signal) || 0;
-                return signalB - signalA;
-              });
-              
+            // Mostrar tabla con las redes
+            if (tableEl) tableEl.style.display = 'block';
+            if (tbody) {
               // Obtener red conectada actual para comparar
               let currentSSID = null;
               try {
@@ -675,171 +661,54 @@
                 console.error('Error getting current connection:', e);
               }
               
+              // Ordenar por señal (mayor a menor)
+              data.networks.sort((a, b) => {
+                const signalA = parseInt(a.signal) || 0;
+                const signalB = parseInt(b.signal) || 0;
+                return signalB - signalA;
+              });
+              
               data.networks.forEach(function(network) {
+                const tr = document.createElement('tr');
                 const security = network.security || 'Open';
                 const securityColor = getSecurityColor(security);
                 const signalStrength = network.signal || 0;
                 const signalPercent = Math.min(100, Math.max(0, (signalStrength + 100) * 2));
                 const signalClass = signalPercent > 70 ? 'text-success' : (signalPercent > 40 ? 'text-warning' : 'text-danger');
-                const signalIcon = signalPercent > 70 ? 'bi-wifi' : (signalPercent > 40 ? 'bi-wifi-2' : 'bi-wifi-1');
                 const frequency = network.frequency || (network.channel ? getFrequencyFromChannel(network.channel) : '--');
                 const ssid = network.ssid || t('wifi.hidden_network', 'Hidden Network');
                 const isConnected = currentSSID && currentSSID === ssid;
                 
-                const card = document.createElement('div');
-                card.className = 'network-connect-card';
-                card.setAttribute('data-ssid', ssid.replace(/"/g, '&quot;'));
-                card.setAttribute('data-security', security.replace(/"/g, '&quot;'));
-                
                 // Botón de conexión - mostrar "Connected" si está conectado
                 let connectButtonHtml = '';
                 if (isConnected) {
-                  connectButtonHtml = '<button class="btn btn-success network-connect-action" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + security.replace(/"/g, '&quot;') + '" disabled>' +
-                    '<i class="bi bi-check-circle me-2"></i>' + t('wifi.connected', 'Connected') +
+                  connectButtonHtml = '<button class="btn btn-sm btn-success connect-network-btn" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + (security || 'Open').replace(/"/g, '&quot;') + '" disabled>' +
+                    '<i class="bi bi-check-circle me-1"></i>' + t('wifi.connected', 'Connected') +
                   '</button>';
                 } else {
-                  connectButtonHtml = '<button class="btn btn-primary network-connect-action" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + security.replace(/"/g, '&quot;') + '">' +
-                    '<i class="bi bi-wifi me-2"></i>' + t('wifi.connect', 'Connect') +
+                  connectButtonHtml = '<button class="btn btn-sm btn-outline-primary connect-network-btn" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + (security || 'Open').replace(/"/g, '&quot;') + '">' +
+                    '<i class="bi bi-wifi me-1"></i>' + t('wifi.connect', 'Connect') +
                   '</button>';
                 }
                 
-                card.innerHTML = 
-                  '<div class="network-connect-header">' +
-                    '<h6 class="network-connect-ssid">' + ssid + '</h6>' +
-                    '<span class="badge bg-' + securityColor + ' network-connect-security">' + security + '</span>' +
-                  '</div>' +
-                  '<div class="network-connect-info">' +
-                    '<span class="network-connect-signal ' + signalClass + '">' +
-                      '<i class="bi ' + signalIcon + '"></i> ' + signalStrength + ' dBm' +
-                    '</span>' +
-                    '<span>' + (network.channel ? 'Ch ' + network.channel : '--') + '</span>' +
-                  '</div>' +
-                  connectButtonHtml +
-                  '<div class="network-connect-form" data-ssid="' + ssid.replace(/"/g, '&quot;') + '" data-security="' + security.replace(/"/g, '&quot;') + '">' +
-                    '<div class="network-connect-form-group">' +
-                      '<label class="network-connect-form-label">' + t('wifi.network_ssid', 'Network Name (SSID)') + '</label>' +
-                      '<input type="text" class="network-connect-form-input" value="' + ssid.replace(/"/g, '&quot;') + '" readonly>' +
-                    '</div>' +
-                    '<div class="network-connect-form-group">' +
-                      '<label class="network-connect-form-label">' + t('wifi.security_type', 'Security Type') + '</label>' +
-                      '<input type="text" class="network-connect-form-input" value="' + security.replace(/"/g, '&quot;') + '" readonly>' +
-                    '</div>' +
-                    (security !== 'Open' ? 
-                      '<div class="network-connect-form-group">' +
-                        '<label class="network-connect-form-label">' + t('auth.password', 'Password') + '</label>' +
-                        '<div style="position: relative;">' +
-                          '<input type="password" class="network-connect-form-input network-connect-password" placeholder="' + t('auth.password_placeholder', 'Password') + '" autocomplete="current-password">' +
-                          '<button type="button" class="btn btn-sm btn-outline-secondary" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%);" onclick="togglePasswordVisibility(this)">' +
-                            '<i class="bi bi-eye"></i>' +
-                          '</button>' +
-                        '</div>' +
-                      '</div>' : '') +
-                    '<div class="network-connect-form-actions">' +
-                      '<button type="button" class="btn btn-secondary network-connect-cancel">' + t('common.cancel', 'Cancel') + '</button>' +
-                      '<button type="button" class="btn btn-primary network-connect-submit">' +
-                        '<i class="bi bi-wifi me-2"></i>' + t('wifi.connect_now', 'Connect Now') +
-                      '</button>' +
-                    '</div>' +
-                  '</div>';
-                
-                // Agregar event listener al botón Connect (solo si no está conectado)
-                const connectBtn = card.querySelector('.network-connect-action');
-                if (connectBtn && !isConnected && !connectBtn.disabled) {
-                  connectBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const form = card.querySelector('.network-connect-form');
-                    if (form) {
-                      form.classList.add('show');
-                      // Hacer scroll hacia la tarjeta
-                      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      // Enfocar el campo de contraseña si existe
-                      const passwordInput = form.querySelector('.network-connect-password');
-                      if (passwordInput) {
-                        setTimeout(() => passwordInput.focus(), 300);
-                      }
-                    }
-                  });
-                }
-                
-                // Botón cancelar
-                const cancelBtn = card.querySelector('.network-connect-cancel');
-                if (cancelBtn) {
-                  cancelBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const form = card.querySelector('.network-connect-form');
-                    if (form) {
-                      form.classList.remove('show');
-                    }
-                  });
-                }
-                
-                // Botón conectar
-                const submitBtn = card.querySelector('.network-connect-submit');
-                if (submitBtn) {
-                  submitBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const form = card.querySelector('.network-connect-form');
-                    const ssid = form.getAttribute('data-ssid');
-                    const security = form.getAttribute('data-security');
-                    const passwordInput = form.querySelector('.network-connect-password');
-                    const password = passwordInput ? passwordInput.value : '';
-                    
-                    if (security !== 'Open' && !password) {
-                      showAlert('danger', t('wifi.password_required', 'Please enter the network password.'));
-                      if (passwordInput) passwordInput.focus();
-                      return;
-                    }
-                    
-                    connectToNetwork(ssid, security, password, card);
-                  });
-                }
-                
-                connectGrid.appendChild(card);
+                tr.innerHTML = 
+                  '<td><strong>' + ssid + '</strong></td>' +
+                  '<td><span class="badge bg-' + securityColor + '">' + security + '</span></td>' +
+                  '<td><span class="' + signalClass + '"><i class="bi bi-signal"></i> ' + signalStrength + ' dBm</span></td>' +
+                  '<td>' + (network.channel || '--') + '</td>' +
+                  '<td>' + frequency + '</td>' +
+                  '<td>' + connectButtonHtml + '</td>';
+                tbody.appendChild(tr);
               });
               
-              // Hacer scroll hacia la sección de conexión
-              setTimeout(() => {
-                connectContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }, 100);
-            } else {
-              // Fallback a tabla si no existe el contenedor de conexión
-              if (tableEl) tableEl.style.display = 'block';
-              if (tbody) {
-                // Ordenar por señal (mayor a menor)
-                data.networks.sort((a, b) => {
-                  const signalA = parseInt(a.signal) || 0;
-                  const signalB = parseInt(b.signal) || 0;
-                  return signalB - signalA;
+              // Agregar event listeners a los botones de conexión (solo los que no están conectados)
+              tbody.querySelectorAll('.connect-network-btn:not([disabled])').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                  const ssid = btn.getAttribute('data-ssid');
+                  const security = btn.getAttribute('data-security');
+                  showConnectInline(ssid, security, btn.closest('tr'));
                 });
-                
-                data.networks.forEach(function(network) {
-                  const tr = document.createElement('tr');
-                  const security = network.security || 'Open';
-                  const securityColor = getSecurityColor(security);
-                  const signalStrength = network.signal || 0;
-                  const signalPercent = Math.min(100, Math.max(0, (signalStrength + 100) * 2));
-                  const signalClass = signalPercent > 70 ? 'text-success' : (signalPercent > 40 ? 'text-warning' : 'text-danger');
-                  const frequency = network.frequency || network.channel ? getFrequencyFromChannel(network.channel) : '--';
-                  
-                  tr.innerHTML = 
-                    '<td><strong>' + (network.ssid || t('wifi.hidden_network', 'Hidden Network')) + '</strong></td>' +
-                    '<td><span class="badge bg-' + securityColor + '">' + security + '</span></td>' +
-                    '<td><span class="' + signalClass + '"><i class="bi bi-signal"></i> ' + signalStrength + ' dBm</span></td>' +
-                    '<td>' + (network.channel || '--') + '</td>' +
-                    '<td>' + frequency + '</td>' +
-                    '<td><button class="btn btn-sm btn-outline-primary connect-network-btn" data-ssid="' + (network.ssid || '').replace(/"/g, '&quot;') + '" data-security="' + (security || 'Open').replace(/"/g, '&quot;') + '"><i class="bi bi-wifi"></i> ' + t('wifi.connect', 'Connect') + '</button></td>';
-                  tbody.appendChild(tr);
-                });
-                
-                // Agregar event listeners a los botones de conexión
-                tbody.querySelectorAll('.connect-network-btn').forEach(function(btn) {
-                  btn.addEventListener('click', function() {
-                    const ssid = btn.getAttribute('data-ssid');
-                    const security = btn.getAttribute('data-security');
-                    showConnectModal(ssid, security);
-                  });
-                });
-              }
+              });
             }
             
             // Actualizar contador de redes
