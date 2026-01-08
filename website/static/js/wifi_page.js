@@ -851,33 +851,38 @@
             '</button>' +
           '</div>' +
         '</div>' +
-      '</td>';
+      '</div>';
     
-    // Insertar después de la fila actual
-    rowElement.parentNode.insertBefore(newRow, rowElement.nextSibling);
+    // Insertar después del contenido de la tarjeta
+    const cardContent = cardElement.querySelector('.network-card-content');
+    if (cardContent) {
+      cardElement.insertBefore(formWrapper, cardContent.nextSibling);
+    } else {
+      cardElement.appendChild(formWrapper);
+    }
     
     // Hacer scroll hacia el formulario
     setTimeout(() => {
-      newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      const passwordInput = newRow.querySelector('.network-connect-password');
+      formWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const passwordInput = formWrapper.querySelector('.network-connect-password');
       if (passwordInput) {
         passwordInput.focus();
       }
     }, 100);
     
     // Botón cancelar
-    const cancelBtn = newRow.querySelector('.network-connect-cancel');
+    const cancelBtn = formWrapper.querySelector('.network-connect-cancel');
     if (cancelBtn) {
       cancelBtn.addEventListener('click', function() {
-        newRow.remove();
+        formWrapper.remove();
       });
     }
     
     // Botón conectar
-    const submitBtn = newRow.querySelector('.network-connect-submit');
+    const submitBtn = formWrapper.querySelector('.network-connect-submit');
     if (submitBtn) {
       submitBtn.addEventListener('click', function() {
-        const passwordInput = newRow.querySelector('.network-connect-password');
+        const passwordInput = formWrapper.querySelector('.network-connect-password');
         const password = passwordInput ? passwordInput.value : '';
         
         if (security !== 'Open' && !password) {
@@ -886,7 +891,7 @@
           return;
         }
         
-        connectToNetwork(ssid, security, password, newRow);
+        connectToNetwork(ssid, security, password, cardElement);
       });
     }
   }
