@@ -649,6 +649,7 @@
     "wifi_toggled": "Estado de WiFi cambiado exitosamente",
     "wifi_unblocked": "WiFi desbloqueado exitosamente",
     "wifi_enabling": "WiFi se está habilitando, por favor espera un momento e intenta escanear nuevamente",
+    "scanning_networks": "Buscando redes...",
     "unblock_wifi": "Desbloquear WiFi",
     "unblocking": "Desbloqueando...",
     "hard_blocked": "Bloqueado por hardware: Verifica el interruptor físico de WiFi",
