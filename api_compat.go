@@ -668,6 +668,57 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 		}
 	}
 	
+	// Obtener información detallada de la conexión si está conectado
+	var connectionInfo fiber.Map = nil
+	if connected && ssid != "" {
+		connectionInfo = fiber.Map{
+			"ssid": ssid,
+		}
+		
+		// Obtener señal (signal strength)
+		signalOut, _ := execCommand("nmcli -t -f ACTIVE,SIGNAL dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
+		if signalStr := strings.TrimSpace(string(signalOut)); signalStr != "" {
+			connectionInfo["signal"] = signalStr
+		}
+		
+		// Obtener seguridad
+		securityOut, _ := execCommand("nmcli -t -f ACTIVE,SECURITY dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
+		if securityStr := strings.TrimSpace(string(securityOut)); securityStr != "" {
+			connectionInfo["security"] = securityStr
+		}
+		
+		// Obtener canal
+		channelOut, _ := execCommand("nmcli -t -f ACTIVE,CHAN dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
+		if channelStr := strings.TrimSpace(string(channelOut)); channelStr != "" {
+			connectionInfo["channel"] = channelStr
+		}
+		
+		// Obtener IP address de la interfaz WiFi
+		ifaceCmd := execCommand("nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
+		if ifaceOut, err := ifaceCmd.Output(); err == nil {
+			iface := strings.TrimSpace(string(ifaceOut))
+			if iface != "" {
+				// Obtener IP
+				ipOut, _ := exec.Command("sh", "-c", fmt.Sprintf("ip addr show %s 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d/ -f1 | head -1", iface)).Output()
+				if ipStr := strings.TrimSpace(string(ipOut)); ipStr != "" {
+					connectionInfo["ip"] = ipStr
+				}
+				
+				// Obtener MAC
+				macOut, _ := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/address 2>/dev/null", iface)).Output()
+				if macStr := strings.TrimSpace(string(macOut)); macStr != "" {
+					connectionInfo["mac"] = macStr
+				}
+				
+				// Obtener velocidad
+				speedOut, _ := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/speed 2>/dev/null", iface)).Output()
+				if speedStr := strings.TrimSpace(string(speedOut)); speedStr != "" && speedStr != "-1" {
+					connectionInfo["speed"] = speedStr + " Mbps"
+				}
+			}
+		}
+	}
+	
 	return c.JSON(fiber.Map{
 		"enabled":          enabled,
 		"connected":        connected,
@@ -675,6 +726,7 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 		"ssid":             ssid,
 		"hard_blocked":     hardBlocked,
 		"soft_blocked":     softBlocked,
+		"connection_info":  connectionInfo,
 	})
 }
 
