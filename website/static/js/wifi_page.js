@@ -198,43 +198,36 @@
     }
   }
   
-  // Update connect buttons in network cards
+  // Update connect buttons in network table
   function updateConnectButtons(currentSSID) {
-    const connectGrid = document.getElementById('networks-connect-grid');
-    if (!connectGrid) return;
+    const tbody = document.getElementById('networksTable');
+    if (!tbody) return;
     
-    const cards = connectGrid.querySelectorAll('.network-connect-card');
-    cards.forEach(function(card) {
-      const cardSSID = card.getAttribute('data-ssid');
-      const connectBtn = card.querySelector('.network-connect-action');
+    const buttons = tbody.querySelectorAll('.connect-network-btn');
+    buttons.forEach(function(btn) {
+      const btnSSID = btn.getAttribute('data-ssid');
       
-      if (!connectBtn) return;
-      
-      if (currentSSID && cardSSID === currentSSID) {
+      if (currentSSID && btnSSID === currentSSID) {
         // Esta es la red conectada
-        if (!connectBtn.disabled || connectBtn.className.indexOf('btn-success') === -1) {
-          connectBtn.className = 'btn btn-success network-connect-action';
-          connectBtn.disabled = true;
-          connectBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>' + t('wifi.connected', 'Connected');
+        if (!btn.disabled || btn.className.indexOf('btn-success') === -1) {
+          btn.className = 'btn btn-sm btn-success connect-network-btn';
+          btn.disabled = true;
+          btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>' + t('wifi.connected', 'Connected');
         }
       } else {
         // Ya no está conectada o no es la red conectada, restaurar botón
-        if (connectBtn.disabled || connectBtn.className.indexOf('btn-success') !== -1) {
-          connectBtn.className = 'btn btn-primary network-connect-action';
-          connectBtn.disabled = false;
-          connectBtn.innerHTML = '<i class="bi bi-wifi me-2"></i>' + t('wifi.connect', 'Connect');
+        if (btn.disabled || btn.className.indexOf('btn-success') !== -1) {
+          btn.className = 'btn btn-sm btn-outline-primary connect-network-btn';
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-wifi me-1"></i>' + t('wifi.connect', 'Connect');
           
-          // Re-agregar event listener si se perdió
-          const form = card.querySelector('.network-connect-form');
-          if (form) {
-            connectBtn.onclick = function(e) {
-              e.stopPropagation();
-              form.classList.add('show');
-              card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              const passwordInput = form.querySelector('.network-connect-password');
-              if (passwordInput) {
-                setTimeout(() => passwordInput.focus(), 300);
-              }
+          // Re-agregar event listener
+          const row = btn.closest('tr');
+          if (row) {
+            btn.onclick = function() {
+              const ssid = btn.getAttribute('data-ssid');
+              const security = btn.getAttribute('data-security');
+              showConnectInline(ssid, security, row);
             };
           }
         }
