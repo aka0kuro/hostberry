@@ -218,9 +218,9 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 		}
 	}
 
-	// Método 3: Intentar con iwconfig/ifconfig (siempre con sudo)
+	// Método 3: Intentar con iwconfig/ifconfig
 	// Primero intentar detectar interfaz con nmcli
-	ifaceCmd := exec.Command("sh", "-c", "sudo nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
+	ifaceCmd := execCommand("nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
 	ifaceOut, ifaceErr := ifaceCmd.Output()
 	var iface string
 	if ifaceErr == nil {
@@ -229,13 +229,13 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 	
 	// Si no se encontró con nmcli, intentar con iwconfig
 	if iface == "" {
-		iwOut, iwErr := exec.Command("sh", "-c", "sudo iwconfig 2>/dev/null | grep -i 'wlan' | head -1 | awk '{print $1}'").CombinedOutput()
+		iwOut, iwErr := execCommand("iwconfig 2>/dev/null | grep -i 'wlan' | head -1 | awk '{print $1}'").CombinedOutput()
 		if iwErr == nil {
 			iface = strings.TrimSpace(string(iwOut))
 		}
 	}
 	
-	// Si no se encontró, intentar con ip link
+	// Si no se encontró, intentar con ip link (sin sudo, solo lectura)
 	if iface == "" {
 		ipOut, ipErr := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}' | grep -E '^wlan|^wl' | head -1").Output()
 		if ipErr == nil {
@@ -244,23 +244,22 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 	}
 	
 	if iface != "" {
-		// Verificar estado actual de la interfaz
+		// Verificar estado actual de la interfaz (sin sudo, solo lectura)
 		statusOut, _ := exec.Command("sh", "-c", fmt.Sprintf("ip link show %s 2>/dev/null | grep -i 'state'", iface)).CombinedOutput()
 		isDown := strings.Contains(strings.ToLower(string(statusOut)), "down") || strings.Contains(strings.ToLower(string(statusOut)), "disabled")
 		
-		var iwCmd string
 		if isDown {
 			// Activar interfaz: primero desbloquear con rfkill, luego activar con ip/ifconfig
-			exec.Command("sh", "-c", fmt.Sprintf("sudo rfkill unblock wifi 2>/dev/null")).Run()
-			exec.Command("sh", "-c", fmt.Sprintf("sudo ip link set %s up 2>/dev/null", iface)).Run()
-			exec.Command("sh", "-c", fmt.Sprintf("sudo ifconfig %s up 2>/dev/null", iface)).Run()
+			execCommand("rfkill unblock wifi 2>/dev/null").Run()
+			execCommand(fmt.Sprintf("ip link set %s up 2>/dev/null", iface)).Run()
+			execCommand(fmt.Sprintf("ifconfig %s up 2>/dev/null", iface)).Run()
 			time.Sleep(1 * time.Second)
-			InsertLog("INFO", fmt.Sprintf("WiFi activado usando ifconfig/ip con sudo en interfaz %s (usuario: %s)", iface, user.Username), "wifi", &userID)
+			InsertLog("INFO", fmt.Sprintf("WiFi activado usando ifconfig/ip en interfaz %s (usuario: %s)", iface, user.Username), "wifi", &userID)
 			return c.JSON(fiber.Map{"success": true, "message": fmt.Sprintf("WiFi activado en interfaz %s", iface)})
 		} else {
-			iwCmd = fmt.Sprintf("sudo ifconfig %s down", iface)
-			exec.Command("sh", "-c", iwCmd+" 2>/dev/null").Run()
-			InsertLog("INFO", fmt.Sprintf("WiFi desactivado usando ifconfig con sudo en interfaz %s (usuario: %s)", iface, user.Username), "wifi", &userID)
+			iwCmd := fmt.Sprintf("ifconfig %s down", iface)
+			execCommand(iwCmd + " 2>/dev/null").Run()
+			InsertLog("INFO", fmt.Sprintf("WiFi desactivado usando ifconfig en interfaz %s (usuario: %s)", iface, user.Username), "wifi", &userID)
 			return c.JSON(fiber.Map{"success": true, "message": fmt.Sprintf("WiFi desactivado en interfaz %s", iface)})
 		}
 	}
