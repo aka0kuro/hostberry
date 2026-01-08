@@ -175,7 +175,18 @@
       }
       
       console.log('Datos recibidos del API:', data);
-      const statusData = data?.status || data || {};
+      
+      // Intentar extraer statusData de varias formas posibles
+      let statusData = {};
+      if (data && data.status) {
+        statusData = data.status;
+      } else if (data && data.success !== undefined) {
+        // La respuesta es directamente el objeto de estado
+        statusData = data;
+      } else if (data && typeof data === 'object') {
+        statusData = data;
+      }
+      
       console.log('Estado procesado:', statusData);
       
       // Debug: mostrar todos los datos disponibles
