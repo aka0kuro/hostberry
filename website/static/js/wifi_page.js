@@ -616,13 +616,10 @@
     if (loadingEl) loadingEl.style.display = 'block';
     if (emptyEl) emptyEl.style.display = 'none';
     if (tableEl) tableEl.style.display = 'none';
-    if (connectContainer) connectContainer.style.display = 'none';
     if (tbody) tbody.innerHTML = '';
     
-    if (scanBtn) {
-      scanBtn.disabled = true;
-      const originalHtml = scanBtn.innerHTML;
-      scanBtn.innerHTML = '<span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> ' + t('wifi.scanning', 'Scanning...');
+    // Escanear automáticamente sin botón
+    try {
       
       try {
         const controller = new AbortController();
