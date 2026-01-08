@@ -736,10 +736,9 @@ body.light-theme .wifi-interface-select-icon {
     /* En escritorio, forzar que la tarjeta ocupe todo el ancho */
     @media (min-width: 992px) {
         .networks-cards-container {
-            display: grid !important;
-            grid-template-columns: repeat(2, minmax(320px, 1fr));
-            gap: 0.75rem;
-
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.75rem !important;
             width: 100% !important;
             max-width: 100% !important;
             padding: 0 !important;
@@ -748,10 +747,13 @@ body.light-theme .wifi-interface-select-icon {
         }
 
         .network-card {
-            width: auto !important;
+            width: 100% !important;
             max-width: 100% !important;
+            flex-basis: 100% !important;
+            flex-shrink: 0 !important;
+            flex-grow: 0 !important;
             box-sizing: border-box !important;
-            padding: 0.6rem 0.9rem !important;
+            padding: 0.65rem 1rem !important;
             min-height: auto !important;
             height: auto !important;
         }
