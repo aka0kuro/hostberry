@@ -305,7 +305,7 @@
           // Reemplazar event listener para desconectar
           btn.onclick = function(e) {
             e.stopPropagation();
-            disconnectFromNetwork(ssid);
+            disconnectFromNetwork(btnSSID);
           };
         }
       } else {
