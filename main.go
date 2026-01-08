@@ -247,9 +247,9 @@ func createApp() *fiber.App {
 	return app
 }
 
-func setupRoutes(app *fiber.App) {
-	// IMPORTANTE: Archivos estáticos DEBEN registrarse PRIMERO, antes de cualquier otra ruta
-	// para evitar que middlewares o handlers intercepten las peticiones de /static/*
+// setupStaticFiles registra los archivos estáticos ANTES de cualquier middleware
+// para asegurar que /static/* siempre se sirva correctamente sin interceptación
+func setupStaticFiles(app *fiber.App) {
 	// Archivos estáticos: preferir filesystem (para poder actualizar JS/CSS sin recompilar),
 	// fallback a embebidos si no existe ./website/static.
 	if _, err := os.Stat("./website/static"); err == nil {
@@ -285,8 +285,10 @@ func setupRoutes(app *fiber.App) {
 			log.Println("✅ Archivos estáticos cargados desde archivos embebidos")
 		}
 	}
+}
 
-	// Health check endpoints (sin autenticación) - después de estáticos
+func setupRoutes(app *fiber.App) {
+	// Health check endpoints (sin autenticación)
 	app.Get("/health", healthCheckHandler)
 	app.Get("/health/ready", readinessCheckHandler)
 	app.Get("/health/live", livenessCheckHandler)
