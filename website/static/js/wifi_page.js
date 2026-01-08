@@ -677,9 +677,9 @@
                     '</div>' +
                   '</div>';
                 
-                // Agregar event listener al botón Connect
+                // Agregar event listener al botón Connect (solo si no está conectado)
                 const connectBtn = card.querySelector('.network-connect-action');
-                if (connectBtn) {
+                if (connectBtn && !isConnected && !connectBtn.disabled) {
                   connectBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     const form = card.querySelector('.network-connect-form');
