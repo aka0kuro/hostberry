@@ -155,13 +155,29 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 	state := strings.TrimSpace(string(out))
 	if err == nil && state != "" {
 		var cmd string
+		var wasEnabled bool
 		if strings.Contains(strings.ToLower(state), "enabled") || strings.Contains(strings.ToLower(state), "on") {
 			cmd = "sudo nmcli radio wifi off"
+			wasEnabled = true
 		} else {
 			cmd = "sudo nmcli radio wifi on"
+			wasEnabled = false
 		}
 		_, err2 := exec.Command("sh", "-c", cmd+" 2>/dev/null").CombinedOutput()
 		if err2 == nil {
+			// Si se activó WiFi, esperar un momento y verificar que realmente se activó
+			if !wasEnabled {
+				time.Sleep(2 * time.Second)
+				// Verificar que se activó correctamente
+				verifyOut, verifyErr := exec.Command("sh", "-c", "sudo nmcli -t -f WIFI g 2>/dev/null").CombinedOutput()
+				if verifyErr == nil {
+					verifyState := strings.ToLower(strings.TrimSpace(string(verifyOut)))
+					if strings.Contains(verifyState, "enabled") || strings.Contains(verifyState, "on") {
+						InsertLog("INFO", fmt.Sprintf("WiFi activado exitosamente usando nmcli con sudo (usuario: %s)", user.Username), "wifi", &userID)
+						return c.JSON(fiber.Map{"success": true, "message": "WiFi activado exitosamente"})
+					}
+				}
+			}
 			InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando nmcli con sudo (usuario: %s)", user.Username), "wifi", &userID)
 			return c.JSON(fiber.Map{"success": true, "message": "WiFi toggle exitoso"})
 		}
