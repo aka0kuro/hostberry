@@ -26,12 +26,13 @@ GITHUB_REPO="https://github.com/aka0kuro/Hostberry.git"
 TEMP_CLONE_DIR="/tmp/hostberry-install"
 
 # Modo de operación
-MODE="install"  # install o update
+MODE="install"  # install, update o uninstall
 
 # Procesar argumentos
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --update) MODE="update" ;;
+        --uninstall) MODE="uninstall" ;;
         *) echo "Opción desconocida: $1"; exit 1 ;;
     esac
     shift
