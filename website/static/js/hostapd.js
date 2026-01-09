@@ -313,6 +313,9 @@
         
         console.log('HostAPD toggle result:', result);
         
+        // Verificar si realmente se activó
+        const actuallyEnabled = result.enabled === true;
+        
         if (result.error) {
           HostBerry.showAlert('warning', translateError(result.error));
           restoreButton();
