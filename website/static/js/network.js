@@ -611,6 +611,7 @@
         packetsSent = sentPackets;
         errors = recvErrs + sentErrs;
         drop = recvDrop + sentDrop;
+        console.log(`Found interface ${interfaceName}: recv=${recvBytes}, sent=${sentBytes}`);
         break; // Salir del loop cuando se encuentra la interfaz especificada
       } else if (!interfaceName) {
         // Si no se especificó interfaz, usar la primera no-loopback con tráfico
