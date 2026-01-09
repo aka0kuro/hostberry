@@ -222,11 +222,27 @@ body.light-theme .dashboard-card-body {
 /* Asegurar que los estados vacíos no hagan la tarjeta más grande */
 #networks-empty,
 #networks-loading {
-    min-height: 150px;
+    min-height: auto;
+    max-height: 300px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    padding: 2rem 1rem;
+}
+
+/* Asegurar que el contenedor de redes tenga altura consistente */
+#networks-table-container {
+    min-height: auto;
+}
+
+/* Cuando no hay redes, mantener el tamaño de la tarjeta consistente */
+.dashboard-card:has(#networks-empty:not([style*="display: none"])) .dashboard-card-body,
+.dashboard-card:has(#networks-loading:not([style*="display: none"])) .dashboard-card-body {
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 /* WiFi Controls */
