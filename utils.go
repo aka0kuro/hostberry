@@ -132,7 +132,12 @@ func executeCommand(cmd string) (string, error) {
 			strings.Contains(line, "Read-only file system") ||
 			strings.Contains(line, "sudo: unable to stat") ||
 			strings.Contains(line, "sudo: unable to resolve host") ||
-			strings.Contains(line, "Name or service not known") {
+			strings.Contains(line, "Name or service not known") ||
+			strings.HasPrefix(line, "sudo: unable to resolve host") {
+			continue
+		}
+		// Filtrar líneas que empiecen con "sudo:" y contengan "unable to resolve"
+		if strings.HasPrefix(line, "sudo:") && strings.Contains(line, "unable to resolve") {
 			continue
 		}
 		if line != "" {
