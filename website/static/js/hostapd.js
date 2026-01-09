@@ -459,6 +459,71 @@
     }
   }
 
+  // Cargar configuración de HostAPD y rellenar el formulario
+  async function loadHostAPDConfig() {
+    try {
+      const resp = await HostBerry.apiRequest('/api/v1/hostapd/config');
+      if (resp && resp.ok) {
+        const result = await resp.json();
+        if (result.success && result.config) {
+          const config = result.config;
+          
+          // Rellenar campos del formulario
+          if (config.interface) {
+            const interfaceSelect = document.getElementById('hostapd-interface');
+            if (interfaceSelect) {
+              // Esperar a que las interfaces se carguen
+              setTimeout(() => {
+                interfaceSelect.value = config.interface;
+              }, 500);
+            }
+          }
+          
+          if (config.ssid) {
+            const ssidInput = document.getElementById('hostapd-ssid');
+            if (ssidInput) ssidInput.value = config.ssid;
+          }
+          
+          if (config.channel) {
+            const channelSelect = document.getElementById('hostapd-channel');
+            if (channelSelect) channelSelect.value = config.channel;
+          }
+          
+          if (config.security) {
+            const securitySelect = document.getElementById('hostapd-security');
+            if (securitySelect) securitySelect.value = config.security;
+          }
+          
+          if (config.gateway) {
+            const gatewayInput = document.getElementById('hostapd-gateway');
+            if (gatewayInput) gatewayInput.value = config.gateway;
+          }
+          
+          if (config.dhcp_range_start) {
+            const dhcpStartInput = document.getElementById('hostapd-dhcp-start');
+            if (dhcpStartInput) dhcpStartInput.value = config.dhcp_range_start;
+          }
+          
+          if (config.dhcp_range_end) {
+            const dhcpEndInput = document.getElementById('hostapd-dhcp-end');
+            if (dhcpEndInput) dhcpEndInput.value = config.dhcp_range_end;
+          }
+          
+          if (config.lease_time) {
+            const leaseTimeInput = document.getElementById('hostapd-lease-time');
+            if (leaseTimeInput) leaseTimeInput.value = config.lease_time;
+          }
+          
+          // Nota: No cargamos la contraseña por seguridad
+          console.log('HostAPD configuration loaded:', config);
+        }
+      }
+    } catch (e) {
+      console.error('Error loading HostAPD config:', e);
+      // No mostrar error si el archivo no existe (primera vez)
+    }
+  }
+
   // Inicializar página
   function initHostAPDPage() {
     // Esperar a que HostBerry esté disponible
