@@ -188,6 +188,19 @@
       
       if (resp.ok && data.success) {
         showAlert('success', t('wifi.wifi_toggled', 'WiFi state changed successfully'));
+        // Actualizar texto del botón según el nuevo estado
+        const statusResp = await apiRequest('/api/v1/wifi/status');
+        if (statusResp.ok) {
+          const statusData = await statusResp.json();
+          if (text) {
+            text.textContent = statusData.enabled 
+              ? t('wifi.disable_wifi', 'Disable WiFi')
+              : t('wifi.enable_wifi', 'Enable WiFi');
+          }
+          if (icon) {
+            icon.className = statusData.enabled ? 'bi bi-wifi-off' : 'bi bi-wifi';
+          }
+        }
         await loadConnectionStatus();
       } else {
         showAlert('danger', data.error || t('wifi.toggle_error', 'Error toggling WiFi'));
