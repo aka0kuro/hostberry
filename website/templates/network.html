@@ -93,6 +93,9 @@
                     <h5 class="dashboard-card-title">
                         <i class="bi bi-graph-up me-2"></i>
                         {{ call .t "monitoring.network_chart" "Network Traffic" }}
+                        <span class="badge bg-secondary ms-2" id="net-traffic-interface-badge" style="font-size: 0.7rem; font-weight: normal;">
+                            {{ call .t "monitoring.network_auto" "Auto" }}
+                        </span>
                     </h5>
                     <select class="form-select form-select-sm" id="net-traffic-interface-select" style="max-width: 200px;">
                         <option value="">{{ call .t "monitoring.network_auto" "Auto" }}</option>
