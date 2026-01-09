@@ -302,10 +302,7 @@
         // Obtener token del localStorage o cookie
         const token = localStorage.getItem('access_token') || '';
         
-        const requestFn = (window.HostBerry && typeof window.HostBerry.apiRequest === 'function')
-          ? (url, options) => window.HostBerry.apiRequest(url, options)
-          : (url, options) => fetch(url, options);
-
+        // Usar fetch directamente para tener control total sobre la respuesta
         const headers = {
           'Content-Type': 'application/json',
           'Accept-Language': currentLang
@@ -316,7 +313,7 @@
           headers['Authorization'] = `Bearer ${token}`;
         }
 
-        const resp = await requestFn('/api/v1/auth/first-login/change', {
+        const resp = await fetch('/api/v1/auth/first-login/change', {
           method: 'POST',
           headers: headers,
           body: JSON.stringify(payload)
@@ -324,9 +321,9 @@
         
         let data = null;
         try {
-          // Puede fallar si el servidor devuelve HTML (p.ej. 502) o body vacío.
+          // Leer el texto de la respuesta primero
           const text = await resp.text();
-          if (text) {
+          if (text && text.trim()) {
             try {
               data = JSON.parse(text);
             } catch (parseErr) {
@@ -336,6 +333,7 @@
             }
           }
         } catch (_jsonErr) {
+          console.error('Error reading response:', _jsonErr);
           data = null;
         }
 
@@ -345,18 +343,30 @@
           
           if (data) {
             // Si data es un objeto con message, usar ese
-            if (typeof data === 'object' && data.message && typeof data.message === 'string') {
+            if (typeof data === 'object' && data !== null && data.message && typeof data.message === 'string') {
               successMessage = data.message;
             } 
             // Si data es un string, usarlo directamente
             else if (typeof data === 'string') {
               successMessage = data;
             }
-            // Si data es un objeto pero no tiene message, no mostrar el objeto completo
-            else if (typeof data === 'object' && !data.message) {
-              // No mostrar el objeto completo, usar el mensaje por defecto
-              console.log('Response data (not shown to user):', Object.keys(data));
+            // Si data es un objeto pero no tiene message, verificar si es el objeto de traducciones
+            else if (typeof data === 'object' && data !== null) {
+              // Verificar si tiene las claves típicas de traducciones (adblock, auth, etc.)
+              const hasTranslationKeys = data.adblock || data.auth || data.common || data.dashboard;
+              if (hasTranslationKeys) {
+                // Es el objeto de traducciones, no mostrar
+                console.warn('Received translations object instead of success message, using default message');
+              } else if (!data.message) {
+                // No es traducciones pero tampoco tiene message, usar por defecto
+                console.log('Response data (not shown to user):', Object.keys(data));
+              }
             }
+          }
+          
+          // Asegurar que el mensaje es un string y no un objeto
+          if (typeof successMessage !== 'string') {
+            successMessage = t('auth.credentials_updated', 'Credenciales actualizadas. Vuelve a iniciar sesión.');
           }
           
           showSuccess(successMessage);
