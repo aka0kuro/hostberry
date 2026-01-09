@@ -1671,7 +1671,7 @@ dhcp-option=3,%s
 dhcp-option=6,%s
 server=8.8.8.8
 server=8.8.4.4
-`, req.Interface, req.DHCPRangeStart, req.DHCPRangeEnd, req.LeaseTime, req.Gateway, req.Gateway)
+`, apInterface, req.DHCPRangeStart, req.DHCPRangeEnd, req.LeaseTime, req.Gateway, req.Gateway)
 	
 	// Guardar configuración de dnsmasq usando un archivo temporal
 	tmpDnsmasqFile := "/tmp/dnsmasq.conf.tmp"
