@@ -109,12 +109,35 @@
         : t('wifi.disconnected', 'Disconnected');
     }
     if (ssidEl) ssidEl.textContent = data.ssid || '--';
-    if (signalEl) signalEl.textContent = data.signal ? data.signal + 'dBm' : '--';
-    if (securityEl) securityEl.textContent = data.security || '--';
-    if (channelEl) channelEl.textContent = data.channel || '--';
-    if (ipEl) ipEl.textContent = data.ip || '--';
-    if (macEl) macEl.textContent = data.mac || '--';
-    if (speedEl) speedEl.textContent = data.speed || '--';
+    
+    // Buscar signal en connection_info primero
+    let signal = 0;
+    if (data.connection_info && data.connection_info.signal) {
+      signal = parseInt(data.connection_info.signal) || 0;
+    } else if (data.signal) {
+      signal = parseInt(data.signal) || 0;
+    }
+    if (signalEl) signalEl.textContent = signal > 0 ? signal + 'dBm' : '--';
+    
+    // Buscar security en connection_info primero
+    const security = (data.connection_info && data.connection_info.security) || data.security || '--';
+    if (securityEl) securityEl.textContent = security;
+    
+    // Buscar channel en connection_info primero
+    const channel = (data.connection_info && data.connection_info.channel) || data.channel || '--';
+    if (channelEl) channelEl.textContent = channel;
+    
+    // Buscar ip en connection_info primero
+    const ip = (data.connection_info && data.connection_info.ip) || data.ip || '--';
+    if (ipEl) ipEl.textContent = ip;
+    
+    // Buscar mac en connection_info primero
+    const mac = (data.connection_info && data.connection_info.mac) || data.mac || '--';
+    if (macEl) macEl.textContent = mac;
+    
+    // Buscar speed en connection_info primero
+    const speed = (data.connection_info && data.connection_info.speed) || data.speed || '--';
+    if (speedEl) speedEl.textContent = speed;
   }
 
   // Cargar interfaces WiFi
