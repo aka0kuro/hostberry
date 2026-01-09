@@ -369,17 +369,24 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 			// Continuar con fallback
 		} else if result != nil {
 			// Asegurar que el resultado tenga el formato correcto
-			if _, ok := result["interfaces"]; ok {
-				// Si ya tiene interfaces, devolverlo tal cual
-				return c.JSON(result)
+			if interfaces, ok := result["interfaces"]; ok {
+				// Verificar si interfaces es un array y tiene elementos
+				if interfacesArray, ok := interfaces.([]interface{}); ok && len(interfacesArray) > 0 {
+					log.Printf("✅ Lua script devolvió %d interfaces", len(interfacesArray))
+					return c.JSON(result)
+				} else if interfacesArray, ok := interfaces.([]map[string]interface{}); ok && len(interfacesArray) > 0 {
+					log.Printf("✅ Lua script devolvió %d interfaces", len(interfacesArray))
+					return c.JSON(result)
+				} else {
+					log.Printf("⚠️ Lua script devolvió interfaces vacías, usando fallback")
+					// Continuar con fallback si está vacío
+				}
 			} else {
-				// Si no tiene interfaces, crear un array vacío
-				return c.JSON(fiber.Map{
-					"interfaces": []interface{}{},
-					"success":   true,
-					"count":     0,
-				})
+				log.Printf("⚠️ Lua script no devolvió campo 'interfaces', usando fallback")
+				// Continuar con fallback
 			}
+		} else {
+			log.Printf("⚠️ Lua script devolvió nil, usando fallback")
 		}
 	}
 
