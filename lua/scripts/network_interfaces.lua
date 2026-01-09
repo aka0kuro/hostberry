@@ -9,6 +9,12 @@ local interfaces_output = exec(interfaces_cmd)
 
 if interfaces_output then
     for iface in interfaces_output:gmatch("[^\r\n]+") do
+        iface = iface:match("^%s*(.-)%s*$") -- Trim whitespace
+        -- Filtrar loopback y interfaces vacías
+        if iface == "" or iface == "lo" then
+            goto continue
+        end
+        
         local interface_info = {}
         interface_info.name = iface
         
