@@ -1,11 +1,12 @@
 -- Script Lua para conectar a una red WiFi
--- Usa nmcli o wpa_supplicant según disponibilidad
+-- Usa wpa_supplicant directamente y guarda en /etc/wpa_supplicant/wpa_supplicant.conf
 
 local result = {}
 
 local ssid = params.ssid or ""
 local password = params.password or ""
 local user = params.user or "unknown"
+local interface = params.interface or "wlan0"
 
 if ssid == "" then
     result.success = false
@@ -13,88 +14,137 @@ if ssid == "" then
     return result
 end
 
-log("INFO", "Conectando a WiFi: " .. ssid .. " (usuario: " .. user .. ")")
+log("INFO", "Conectando a WiFi: " .. ssid .. " (usuario: " .. user .. ") usando wpa_supplicant")
 
--- Intentar con nmcli primero
--- Usar nmcli para guardar la conexión permanentemente
-local nmcli_cmd
-if password and password ~= "" then
-    -- Conectar y guardar la contraseña para reconexión automática
-    -- El comando 'nmcli device wifi connect' guarda automáticamente la conexión
-    nmcli_cmd = "sudo nmcli device wifi connect '" .. ssid:gsub("'", "'\\''") .. "' password '" .. password:gsub("'", "'\\''") .. "'"
-else
-    -- Red abierta sin contraseña
-    nmcli_cmd = "sudo nmcli device wifi connect '" .. ssid:gsub("'", "'\\''") .. "'"
+-- Detener NetworkManager si está corriendo para evitar conflictos
+exec("sudo systemctl stop NetworkManager 2>/dev/null || true")
+
+-- Asegurar que wpa_supplicant esté corriendo
+local wpa_pid = exec("pgrep -f 'wpa_supplicant.*" .. interface .. "'")
+if not wpa_pid or wpa_pid == "" then
+    log("INFO", "Iniciando wpa_supplicant en interfaz " .. interface)
+    -- Iniciar wpa_supplicant si no está corriendo
+    local wpa_config = "/etc/wpa_supplicant/wpa_supplicant-" .. interface .. ".conf"
+    if not file_exists(wpa_config) then
+        wpa_config = "/etc/wpa_supplicant/wpa_supplicant.conf"
+    end
+    
+    local start_cmd = "sudo wpa_supplicant -B -i " .. interface .. " -c " .. wpa_config
+    exec(start_cmd)
+    os.execute("sleep 2") -- Esperar a que wpa_supplicant inicie
 end
 
-local output, err = exec(nmcli_cmd)
+-- Usar wpa_cli para agregar la red a la configuración
+local wpa_cli_cmd = "sudo wpa_cli -i " .. interface
 
--- Si la conexión fue exitosa, verificar y asegurar que esté guardada
-if not err then
-    -- Esperar un momento para que NetworkManager guarde la conexión
-    os.execute("sleep 1")
-    
-    -- Verificar que la conexión esté guardada en NetworkManager
-    local check_cmd = "sudo nmcli connection show | grep -i '" .. ssid:gsub("'", "'\\''") .. "'"
-    local check_output = exec(check_cmd)
-    
-    if not check_output or check_output == "" then
-        -- Si no está guardada, crear una conexión guardada explícitamente
-        log("INFO", "Creando conexión guardada para: " .. ssid)
-        local save_cmd = "sudo nmcli connection add type wifi con-name '" .. ssid:gsub("'", "'\\''") .. "' ifname '*' ssid '" .. ssid:gsub("'", "'\\''") .. "'"
-        if password and password ~= "" then
-            save_cmd = save_cmd .. " wifi-sec.key-mgmt wpa-psk wifi-sec.psk '" .. password:gsub("'", "'\\''") .. "'"
-        else
-            save_cmd = save_cmd .. " wifi-sec.key-mgmt none"
-        end
-        save_cmd = save_cmd .. " connection.autoconnect yes"
-        exec(save_cmd)
-    else
-        -- Si ya existe, habilitar auto-conexión
-        log("INFO", "Habilitando auto-conexión para: " .. ssid)
-        local uuid_cmd = "sudo nmcli connection show | grep -i '" .. ssid:gsub("'", "'\\''") .. "' | head -1 | awk '{print $2}'"
-        local uuid_output = exec(uuid_cmd)
-        if uuid_output and uuid_output ~= "" then
-            local uuid = string.gsub(uuid_output, "%s+", "")
-            if uuid and uuid ~= "" then
-                exec("sudo nmcli connection modify '" .. uuid:gsub("'", "'\\''") .. "' connection.autoconnect yes")
+-- Verificar si la red ya existe
+local list_cmd = wpa_cli_cmd .. " list_networks"
+local list_output = exec(list_cmd)
+local network_exists = false
+local network_id = nil
+
+if list_output then
+    for line in string.gmatch(list_output, "[^\r\n]+") do
+        if string.find(line, ssid, 1, true) then
+            -- Extraer el ID de la red
+            local fields = {}
+            for field in string.gmatch(line, "%S+") do
+                table.insert(fields, field)
+            end
+            if #fields > 0 then
+                network_id = fields[1]
+                network_exists = true
+                log("INFO", "Red " .. ssid .. " ya existe con ID: " .. network_id)
+                break
             end
         end
     end
 end
 
-if err then
-    -- Fallback a wpa_supplicant
-    log("INFO", "nmcli falló, intentando con wpa_supplicant")
+if not network_exists then
+    -- Agregar nueva red
+    log("INFO", "Agregando nueva red: " .. ssid)
+    local add_cmd = wpa_cli_cmd .. " add_network"
+    local add_output = exec(add_cmd)
     
-    -- Crear configuración temporal
-    local config_file = "/tmp/wpa_supplicant_" .. ssid .. ".conf"
-    local config_content = "network={\n"
-    config_content = config_content .. "    ssid=\"" .. ssid .. "\"\n"
-    if password and password ~= "" then
-        config_content = config_content .. "    psk=\"" .. password .. "\"\n"
+    if add_output then
+        network_id = string.gsub(add_output, "%s+", "")
+        log("INFO", "Red agregada con ID: " .. network_id)
+        
+        -- Configurar SSID
+        local set_ssid_cmd = wpa_cli_cmd .. " set_network " .. network_id .. " ssid '\"" .. ssid .. "\"'"
+        exec(set_ssid_cmd)
+        
+        -- Configurar seguridad
+        if password and password ~= "" then
+            -- WPA/WPA2
+            local set_psk_cmd = wpa_cli_cmd .. " set_network " .. network_id .. " psk '\"" .. password .. "\"'"
+            exec(set_psk_cmd)
+            local set_key_mgmt_cmd = wpa_cli_cmd .. " set_network " .. network_id .. " key_mgmt WPA-PSK"
+            exec(set_key_mgmt_cmd)
+        else
+            -- Red abierta
+            local set_key_mgmt_cmd = wpa_cli_cmd .. " set_network " .. network_id .. " key_mgmt NONE"
+            exec(set_key_mgmt_cmd)
+        end
+        
+        -- Habilitar la red
+        local enable_cmd = wpa_cli_cmd .. " enable_network " .. network_id
+        exec(enable_cmd)
+        
+        -- Guardar configuración permanentemente
+        local save_cmd = wpa_cli_cmd .. " save_config"
+        exec(save_cmd)
+        
+        log("INFO", "Configuración guardada en wpa_supplicant")
     else
-        config_content = config_content .. "    key_mgmt=NONE\n"
+        result.success = false
+        result.error = "No se pudo agregar la red"
+        return result
     end
-    config_content = config_content .. "}\n"
+else
+    -- La red ya existe, habilitarla
+    log("INFO", "Habilitando red existente: " .. ssid)
+    local enable_cmd = wpa_cli_cmd .. " enable_network " .. network_id
+    exec(enable_cmd)
     
-    write_file(config_file, config_content)
-    
-    -- Conectar
-    local wpa_cmd = "sudo wpa_supplicant -B -i wlan0 -c " .. config_file
-    output, err = exec(wpa_cmd)
+    -- Si hay una contraseña nueva, actualizarla
+    if password and password ~= "" then
+        local set_psk_cmd = wpa_cli_cmd .. " set_network " .. network_id .. " psk '\"" .. password .. "\"'"
+        exec(set_psk_cmd)
+        local save_cmd = wpa_cli_cmd .. " save_config"
+        exec(save_cmd)
+    end
 end
 
-if err then
-    result.success = false
-    result.error = err
-    result.message = "Error conectando a WiFi"
-    log("ERROR", "Error conectando WiFi: " .. tostring(err))
-else
+-- Intentar conectar
+local select_cmd = wpa_cli_cmd .. " select_network " .. network_id
+exec(select_cmd)
+
+-- Esperar un momento para que se establezca la conexión
+os.execute("sleep 3")
+
+-- Verificar el estado de la conexión
+local status_cmd = wpa_cli_cmd .. " status"
+local status_output = exec(status_cmd)
+local connected = false
+
+if status_output then
+    if string.find(status_output, "wpa_state=COMPLETED") or string.find(status_output, "ssid=" .. ssid) then
+        connected = true
+    end
+end
+
+if connected then
     result.success = true
     result.message = "Conectado a " .. ssid
-    result.output = output
+    result.output = status_output or ""
     log("INFO", "WiFi conectado exitosamente: " .. ssid)
+else
+    result.success = false
+    result.error = "No se pudo establecer la conexión"
+    result.message = "Error conectando a " .. ssid
+    log("ERROR", "Error conectando WiFi: " .. ssid)
 end
 
 return result
