@@ -278,7 +278,7 @@
         btn.style.display = 'none';
             await loadConnectionStatus();
         } else {
-        showAlert('danger', data.error || t('wifi.unblock_error', 'Error unblocking WiFi'));
+        showAlert('danger', translateError(data.error) || t('wifi.unblock_error', 'Error unblocking WiFi'));
       }
     } catch (error) {
       console.error(t('wifi.unblock_error', 'Error unblocking WiFi') + ':', error);
