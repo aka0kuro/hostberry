@@ -765,16 +765,16 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 	hostapdStatus := strings.TrimSpace(string(hostapdOut))
 	isActive := hostapdStatus == "active"
 	
-	var cmd *exec.Cmd
+	var cmdStr string
 	if isActive {
 		// Detener hostapd
-		cmd = exec.Command("sudo", "systemctl", "stop", "hostapd")
+		cmdStr = "sudo systemctl stop hostapd"
 	} else {
 		// Iniciar hostapd
-		cmd = exec.Command("sudo", "systemctl", "start", "hostapd")
+		cmdStr = "sudo systemctl start hostapd"
 	}
 	
-	out, err := executeCommand(cmd)
+	out, err := executeCommand(cmdStr)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{
 			"error":  strings.TrimSpace(out),
@@ -791,15 +791,13 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 
 func hostapdRestartHandler(c *fiber.Ctx) error {
 	// Detener hostapd
-	cmd1 := exec.Command("sudo", "systemctl", "stop", "hostapd")
-	out1, err1 := executeCommand(cmd1)
+	out1, err1 := executeCommand("sudo systemctl stop hostapd")
 	
 	// Esperar un momento
 	time.Sleep(500 * time.Millisecond)
 	
 	// Iniciar hostapd
-	cmd2 := exec.Command("sudo", "systemctl", "start", "hostapd")
-	out2, err2 := executeCommand(cmd2)
+	out2, err2 := executeCommand("sudo systemctl start hostapd")
 	
 	if err1 != nil || err2 != nil {
 		return c.Status(500).JSON(fiber.Map{
@@ -874,9 +872,12 @@ rsn_pairwise=CCMP
 `, req.Password)
 	}
 	
+	// Escapar comillas simples en el contenido para el comando shell
+	configContentEscaped := strings.ReplaceAll(configContent, "'", "'\"'\"'")
+	
 	// Guardar configuración (requiere sudo)
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("echo '%s' | sudo tee %s > /dev/null", configContent, configPath))
-	out, err := executeCommand(cmd)
+	cmdStr := fmt.Sprintf("echo '%s' | sudo tee %s > /dev/null", configContentEscaped, configPath)
+	out, err := executeCommand(cmdStr)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{
 			"error":   fmt.Sprintf("Error saving configuration: %s", strings.TrimSpace(out)),
@@ -885,8 +886,7 @@ rsn_pairwise=CCMP
 	}
 	
 	// Reiniciar hostapd para aplicar cambios
-	cmd2 := exec.Command("sudo", "systemctl", "restart", "hostapd")
-	out2, err2 := executeCommand(cmd2)
+	out2, err2 := executeCommand("sudo systemctl restart hostapd")
 	if err2 != nil {
 		return c.Status(500).JSON(fiber.Map{
 			"error":   fmt.Sprintf("Configuration saved but failed to restart: %s", strings.TrimSpace(out2)),
