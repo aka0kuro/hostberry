@@ -348,6 +348,11 @@
             
             const card = document.createElement('div');
             card.className = 'network-card';
+            // Guardar información en atributos data para acceso fácil
+            card.setAttribute('data-ssid', ssid);
+            card.setAttribute('data-security', security);
+            card.setAttribute('data-signal', signal);
+            card.setAttribute('data-channel', net.channel || '');
             card.innerHTML = `
               <div class="network-card-content">
                 <div class="network-card-icon ${signalColor}">
