@@ -522,6 +522,44 @@ body.light-theme .network-connect-form {
     }
 }
 
+.network-connect-info {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.light-theme .network-connect-info {
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.network-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.network-info-label {
+    font-size: 0.75rem;
+    color: var(--hb-text-muted);
+    font-weight: 500;
+}
+
+body.light-theme .network-info-label {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.network-info-value {
+    font-size: 0.875rem;
+    color: var(--hb-text-light);
+    font-weight: 600;
+}
+
+body.light-theme .network-info-value {
+    color: #212529;
+}
+
 .network-connect-form-group {
     margin-bottom: 1rem;
 }
