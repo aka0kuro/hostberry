@@ -167,6 +167,9 @@
     selects.forEach(select => {
       if (!select) return;
       
+      // Guardar el valor seleccionado actual
+      const currentValue = select.value;
+      
       // Clear existing options except first
       while (select.options.length > 1) {
         select.remove(1);
@@ -175,13 +178,21 @@
       if (Array.isArray(interfaces) && interfaces.length > 0) {
         interfaces.forEach(iface => {
           const ifaceName = (typeof iface === 'string') ? iface : (iface.name || iface.interface || iface);
-          if (ifaceName && ifaceName !== 'lo') {
+          if (ifaceName && ifaceName !== 'lo' && ifaceName !== '') {
             const option = document.createElement('option');
             option.value = ifaceName;
             option.textContent = ifaceName;
             select.appendChild(option);
           }
         });
+        
+        // Restaurar el valor seleccionado si todavía existe
+        if (currentValue) {
+          const optionExists = Array.from(select.options).some(opt => opt.value === currentValue);
+          if (optionExists) {
+            select.value = currentValue;
+          }
+        }
       }
     });
   }
