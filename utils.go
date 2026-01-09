@@ -48,6 +48,7 @@ func executeCommand(cmd string) (string, error) {
 		"ip", "wg", "wg-quick", "systemctl", "pgrep",
 		"sudo", "sh", "reboot", "shutdown", "poweroff",
 		"rfkill", "ifconfig", "iwconfig",
+		"hostapd", "hostapd_cli", "dnsmasq", "iptables", "sysctl", "tee", "cp", "mkdir", "echo",
 	}
 	
 	// Comandos que NO necesitan sudo (pueden ejecutarse directamente)
