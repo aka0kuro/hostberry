@@ -702,11 +702,203 @@ func vpnCertificatesGenerateHandler(c *fiber.Ctx) error {
 
 // ---------- HostAPD ----------
 
-func hostapdAccessPointsHandler(c *fiber.Ctx) error { return c.JSON([]fiber.Map{}) }
-func hostapdClientsHandler(c *fiber.Ctx) error     { return c.JSON([]fiber.Map{}) }
-func hostapdToggleHandler(c *fiber.Ctx) error      { return c.Status(501).JSON(fiber.Map{"error": "HostAPD toggle no implementado"}) }
-func hostapdRestartHandler(c *fiber.Ctx) error     { return c.Status(501).JSON(fiber.Map{"error": "HostAPD restart no implementado"}) }
-func hostapdConfigHandler(c *fiber.Ctx) error      { return c.Status(501).JSON(fiber.Map{"error": "HostAPD config no implementado"}) }
+func hostapdAccessPointsHandler(c *fiber.Ctx) error {
+	// Intentar leer configuración de hostapd
+	// Por ahora, devolver un array vacío o intentar leer desde /etc/hostapd/
+	var aps []fiber.Map
+	
+	// Verificar si hostapd está corriendo
+	hostapdOut, _ := exec.Command("sh", "-c", "systemctl is-active hostapd 2>/dev/null || pgrep hostapd > /dev/null && echo active || echo inactive").CombinedOutput()
+	hostapdStatus := strings.TrimSpace(string(hostapdOut))
+	
+	if hostapdStatus == "active" {
+		// Intentar leer configuración desde hostapd
+		// Por ahora, devolver un punto de acceso genérico si está activo
+		aps = append(aps, fiber.Map{
+			"name":         "hostapd",
+			"ssid":         "HostBerry-AP",
+			"enabled":      true,
+			"clients_count": 0,
+		})
+	}
+	
+	return c.JSON(aps)
+}
+
+func hostapdClientsHandler(c *fiber.Ctx) error {
+	// Intentar leer clientes conectados desde hostapd
+	// Por ahora, devolver un array vacío
+	// En el futuro, se podría leer desde /var/lib/hostapd/ o usando hostapd_cli
+	var clients []fiber.Map
+	
+	// Verificar si hostapd está corriendo
+	hostapdOut, _ := exec.Command("sh", "-c", "systemctl is-active hostapd 2>/dev/null || pgrep hostapd > /dev/null && echo active || echo inactive").CombinedOutput()
+	hostapdStatus := strings.TrimSpace(string(hostapdOut))
+	
+	if hostapdStatus == "active" {
+		// Intentar usar hostapd_cli para obtener clientes
+		cliOut, err := exec.Command("hostapd_cli", "-i", "wlan0", "all_sta").CombinedOutput()
+		if err == nil && len(cliOut) > 0 {
+			// Parsear salida de hostapd_cli (formato simple)
+			lines := strings.Split(strings.TrimSpace(string(cliOut)), "\n")
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+				if line != "" && strings.HasPrefix(line, "sta=") {
+					mac := strings.TrimPrefix(line, "sta=")
+					clients = append(clients, fiber.Map{
+						"mac_address": mac,
+						"ip_address":  "-",
+						"signal":      "-",
+						"uptime":      "-",
+					})
+				}
+			}
+		}
+	}
+	
+	return c.JSON(clients)
+}
+
+func hostapdToggleHandler(c *fiber.Ctx) error {
+	// Verificar estado actual
+	hostapdOut, _ := exec.Command("sh", "-c", "systemctl is-active hostapd 2>/dev/null || pgrep hostapd > /dev/null && echo active || echo inactive").CombinedOutput()
+	hostapdStatus := strings.TrimSpace(string(hostapdOut))
+	isActive := hostapdStatus == "active"
+	
+	var cmd *exec.Cmd
+	if isActive {
+		// Detener hostapd
+		cmd = exec.Command("sudo", "systemctl", "stop", "hostapd")
+	} else {
+		// Iniciar hostapd
+		cmd = exec.Command("sudo", "systemctl", "start", "hostapd")
+	}
+	
+	out, err := executeCommand(cmd)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error":  strings.TrimSpace(out),
+			"success": false,
+		})
+	}
+	
+	return c.JSON(fiber.Map{
+		"success": true,
+		"output":  strings.TrimSpace(out),
+		"enabled": !isActive,
+	})
+}
+
+func hostapdRestartHandler(c *fiber.Ctx) error {
+	// Detener hostapd
+	cmd1 := exec.Command("sudo", "systemctl", "stop", "hostapd")
+	out1, err1 := executeCommand(cmd1)
+	
+	// Esperar un momento
+	time.Sleep(500 * time.Millisecond)
+	
+	// Iniciar hostapd
+	cmd2 := exec.Command("sudo", "systemctl", "start", "hostapd")
+	out2, err2 := executeCommand(cmd2)
+	
+	if err1 != nil || err2 != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error":  "Error reiniciando HostAPD",
+			"stop":   strings.TrimSpace(out1),
+			"start":   strings.TrimSpace(out2),
+			"stopOk":  err1 == nil,
+			"startOk": err2 == nil,
+			"success": false,
+		})
+	}
+	
+	return c.JSON(fiber.Map{
+		"success": true,
+		"output":  "HostAPD restarted successfully",
+	})
+}
+
+func hostapdConfigHandler(c *fiber.Ctx) error {
+	var req struct {
+		Interface string `json:"interface"`
+		SSID      string `json:"ssid"`
+		Password  string `json:"password"`
+		Channel   int    `json:"channel"`
+		Security  string `json:"security"`
+	}
+	
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error":   "Invalid request body",
+			"success": false,
+		})
+	}
+	
+	// Validar campos requeridos
+	if req.Interface == "" || req.SSID == "" || req.Channel < 1 || req.Channel > 13 {
+		return c.Status(400).JSON(fiber.Map{
+			"error":   "Missing required fields: interface, ssid, channel",
+			"success": false,
+		})
+	}
+	
+	// Validar security
+	if req.Security != "wpa2" && req.Security != "wpa3" && req.Security != "open" {
+		req.Security = "wpa2"
+	}
+	
+	// Generar configuración de hostapd
+	configPath := "/etc/hostapd/hostapd.conf"
+	configContent := fmt.Sprintf(`interface=%s
+driver=nl80211
+ssid=%s
+hw_mode=g
+channel=%d
+`, req.Interface, req.SSID, req.Channel)
+	
+	if req.Security == "open" {
+		configContent += "auth_algs=0\n"
+	} else if req.Security == "wpa2" {
+		configContent += fmt.Sprintf(`wpa=2
+wpa_passphrase=%s
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+`, req.Password)
+	} else if req.Security == "wpa3" {
+		configContent += fmt.Sprintf(`wpa=2
+wpa_passphrase=%s
+wpa_key_mgmt=WPA-PSK-SHA256
+wpa_pairwise=CCMP
+rsn_pairwise=CCMP
+`, req.Password)
+	}
+	
+	// Guardar configuración (requiere sudo)
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("echo '%s' | sudo tee %s > /dev/null", configContent, configPath))
+	out, err := executeCommand(cmd)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error":   fmt.Sprintf("Error saving configuration: %s", strings.TrimSpace(out)),
+			"success": false,
+		})
+	}
+	
+	// Reiniciar hostapd para aplicar cambios
+	cmd2 := exec.Command("sudo", "systemctl", "restart", "hostapd")
+	out2, err2 := executeCommand(cmd2)
+	if err2 != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error":   fmt.Sprintf("Configuration saved but failed to restart: %s", strings.TrimSpace(out2)),
+			"success": false,
+		})
+	}
+	
+	return c.JSON(fiber.Map{
+		"success": true,
+		"message": "Configuration saved and HostAPD restarted",
+	})
+}
 
 // ---------- Help ----------
 
