@@ -782,6 +782,29 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 	} else {
 		// Habilitar y iniciar hostapd y dnsmasq
 		action = "enable"
+		
+		// Verificar si existe el archivo de configuración
+		configPath := "/etc/hostapd/hostapd.conf"
+		if _, err := os.Stat(configPath); os.IsNotExist(err) {
+			log.Printf("HostAPD configuration file not found: %s", configPath)
+			return c.Status(400).JSON(fiber.Map{
+				"error":   fmt.Sprintf("HostAPD configuration not found. Please configure HostAPD first using the configuration form. Config file: %s", configPath),
+				"success": false,
+				"config_missing": true,
+			})
+		}
+		
+		// Verificar que el archivo de configuración no esté vacío
+		configContent, _ := os.ReadFile(configPath)
+		if len(configContent) == 0 {
+			log.Printf("HostAPD configuration file is empty: %s", configPath)
+			return c.Status(400).JSON(fiber.Map{
+				"error":   fmt.Sprintf("HostAPD configuration file is empty. Please configure HostAPD first using the configuration form."),
+				"success": false,
+				"config_missing": true,
+			})
+		}
+		
 		enableCmd = "sudo systemctl enable hostapd 2>/dev/null || true"
 		executeCommand("sudo systemctl enable dnsmasq 2>/dev/null || true")
 		cmdStr = "sudo systemctl start hostapd"
