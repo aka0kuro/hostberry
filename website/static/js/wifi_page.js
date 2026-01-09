@@ -611,33 +611,36 @@
       <div class="network-connect-form show">
         <div class="network-connect-info mb-3">
           <div class="row g-2">
-            <div class="col-6">
+            <div class="col-4">
               <div class="network-info-item">
                 <label class="network-info-label">${t('wifi.network_signal', 'Signal')}</label>
                 <div class="network-info-value">${signal}</div>
               </div>
             </div>
-            <div class="col-6">
+            <div class="col-4">
               <div class="network-info-item">
                 <label class="network-info-label">${t('wifi.network_security', 'Security')}</label>
                 <div class="network-info-value">${encryption.toUpperCase()}</div>
               </div>
             </div>
-            ${channel !== '--' ? `
-            <div class="col-6">
+            <div class="col-4">
               <div class="network-info-item">
                 <label class="network-info-label">${t('wifi.network_channel', 'Channel')}</label>
-                <div class="network-info-value">${channel}</div>
+                <div class="network-info-value">${channel !== '--' ? channel : '--'}</div>
               </div>
             </div>
-            ` : ''}
           </div>
         </div>
         <div class="network-connect-form-group">
           <label class="network-connect-form-label">${t('wifi.network_password', 'Password')}</label>
-          <input type="password" class="network-connect-form-input" id="network-password-${ssid.replace(/[^a-zA-Z0-9]/g, '-')}" 
-                 placeholder="${needsPassword ? t('wifi.network_password', 'Password') : t('wifi.open_network', 'Open network')}" 
-                 ${needsPassword ? 'required' : ''}>
+          <div class="password-input-wrapper">
+            <input type="password" class="network-connect-form-input" id="network-password-${ssid.replace(/[^a-zA-Z0-9]/g, '-')}" 
+                   placeholder="${needsPassword ? t('wifi.network_password', 'Password') : t('wifi.open_network', 'Open network')}" 
+                   ${needsPassword ? 'required' : ''}>
+            <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility(this)" title="${t('common.show_password', 'Show password')}">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
         </div>
         <div class="network-connect-form-actions">
           <button class="btn btn-secondary btn-sm" onclick="this.closest('.network-connect-form-wrapper').remove()">
