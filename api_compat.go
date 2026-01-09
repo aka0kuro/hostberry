@@ -1509,7 +1509,7 @@ ExecStart=/usr/sbin/hostapd -B %s
 		log.Printf("Warning: Error creating temporary override file: %v", err)
 	} else {
 		overridePath := fmt.Sprintf("%s/override.conf", overrideDir)
-		cmdStr3 := fmt.Sprintf("cat %s | sudo tee %s > /dev/null && sudo chmod 644 %s", tmpOverrideFile, overridePath, overridePath)
+		cmdStr3 := fmt.Sprintf("sudo sh -c 'cat %s > %s && chmod 644 %s'", tmpOverrideFile, overridePath, overridePath)
 		if out, err := executeCommand(cmdStr3); err != nil {
 			log.Printf("Warning: Error writing override file: %s, output: %s", err, strings.TrimSpace(out))
 		} else {
