@@ -664,10 +664,24 @@
     }
   }
 
+  // Toggle password visibility
+  function togglePasswordVisibility(button) {
+    const input = button.previousElementSibling;
+    if (input && input.type === 'password') {
+      input.type = 'text';
+      button.innerHTML = '<i class="bi bi-eye-slash"></i>';
+      button.setAttribute('title', t('common.hide_password', 'Hide password'));
+    } else if (input && input.type === 'text') {
+      input.type = 'password';
+      button.innerHTML = '<i class="bi bi-eye"></i>';
+      button.setAttribute('title', t('common.show_password', 'Show password'));
+    }
+  }
+
   // Enviar conexión
   async function submitConnect(ssid, security, buttonElement) {
     const formWrapper = buttonElement.closest('.network-connect-form-wrapper');
-    const passwordInput = formWrapper.querySelector('input[type="password"]');
+    const passwordInput = formWrapper.querySelector('input[type="password"], input[type="text"]');
     const password = passwordInput ? passwordInput.value : '';
     
     buttonElement.disabled = true;
