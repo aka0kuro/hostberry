@@ -799,6 +799,9 @@
     loadInterfaces();
     loadRoutingTable();
     
+    // Inicializar badge de interfaz
+    updateTrafficInterfaceBadge(selectedTrafficInterface || '');
+    
     // Network Basic Config Form
     const basicConfigForm = document.getElementById('networkBasicConfigForm');
     if (basicConfigForm) {
