@@ -37,21 +37,6 @@
     }
   };
 
-  // Toggle DHCP Enabled
-  window.toggleDHCPEnabled = function() {
-    const enabled = document.getElementById('dhcp-enabled')?.checked || false;
-    const form = document.getElementById('dhcpConfigForm');
-    const saveBtn = document.getElementById('dhcp-save-btn');
-    if (form) {
-      const inputs = form.querySelectorAll('input, select');
-      inputs.forEach(input => {
-        input.disabled = !enabled;
-      });
-    }
-    if (saveBtn) {
-      saveBtn.disabled = !enabled;
-    }
-  };
 
   // Load Network Interfaces
   async function loadInterfaces() {
