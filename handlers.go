@@ -1038,9 +1038,22 @@ func systemServicesHandler(c *fiber.Ctx) error {
 	}
 	
 	// Verificar HostAPD
-	hostapdOut, _ := exec.Command("sh", "-c", "systemctl is-active hostapd 2>/dev/null || pgrep hostapd > /dev/null && echo active || echo inactive").CombinedOutput()
+	// Primero verificar si el proceso está corriendo
+	pgrepOut, _ := exec.Command("sh", "-c", "pgrep hostapd > /dev/null 2>&1 && echo active || echo inactive").CombinedOutput()
+	pgrepStatus := strings.TrimSpace(string(pgrepOut))
+	
+	// Luego verificar el estado de systemd
+	hostapdOut, _ := exec.Command("sh", "-c", "systemctl is-active hostapd 2>/dev/null || echo inactive").CombinedOutput()
 	hostapdStatus := strings.TrimSpace(string(hostapdOut))
-	hostapdActive := hostapdStatus == "active"
+	
+	// El servicio está activo si systemd dice "active" o si el proceso está corriendo
+	hostapdActive := hostapdStatus == "active" || pgrepStatus == "active"
+	
+	// Usar el estado de systemd como estado principal, pero si el proceso está corriendo, considerarlo activo
+	if hostapdStatus == "inactive" && pgrepStatus == "active" {
+		hostapdStatus = "active"
+	}
+	
 	services["hostapd"] = map[string]interface{}{
 		"status": hostapdStatus,
 		"active": hostapdActive,
