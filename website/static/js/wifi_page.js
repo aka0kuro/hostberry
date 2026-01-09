@@ -666,15 +666,36 @@
 
   // Toggle password visibility
   function togglePasswordVisibility(button) {
-    const input = button.previousElementSibling;
-    if (input && input.type === 'password') {
-      input.type = 'text';
-      button.innerHTML = '<i class="bi bi-eye-slash"></i>';
-      button.setAttribute('title', t('common.hide_password', 'Hide password'));
-    } else if (input && input.type === 'text') {
-      input.type = 'password';
-      button.innerHTML = '<i class="bi bi-eye"></i>';
-      button.setAttribute('title', t('common.show_password', 'Show password'));
+    // Buscar el input dentro del mismo wrapper
+    const wrapper = button.closest('.password-input-wrapper');
+    if (!wrapper) {
+      // Fallback: buscar el input anterior
+      const input = button.previousElementSibling;
+      if (input && (input.type === 'password' || input.type === 'text')) {
+        if (input.type === 'password') {
+          input.type = 'text';
+          button.innerHTML = '<i class="bi bi-eye-slash"></i>';
+          button.setAttribute('title', t('common.hide_password', 'Hide password'));
+        } else {
+          input.type = 'password';
+          button.innerHTML = '<i class="bi bi-eye"></i>';
+          button.setAttribute('title', t('common.show_password', 'Show password'));
+        }
+      }
+      return;
+    }
+    
+    const input = wrapper.querySelector('input[type="password"], input[type="text"]');
+    if (input) {
+      if (input.type === 'password') {
+        input.type = 'text';
+        button.innerHTML = '<i class="bi bi-eye-slash"></i>';
+        button.setAttribute('title', t('common.hide_password', 'Hide password'));
+      } else {
+        input.type = 'password';
+        button.innerHTML = '<i class="bi bi-eye"></i>';
+        button.setAttribute('title', t('common.show_password', 'Show password'));
+      }
     }
   }
 
