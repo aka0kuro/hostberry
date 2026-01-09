@@ -744,7 +744,7 @@
       scanNetworks();
         }, 1000);
       } else {
-        showAlert('danger', data.error || t('wifi.disconnect_error', 'Error disconnecting from WiFi'));
+        showAlert('danger', translateError(data.error) || t('wifi.disconnect_error', 'Error disconnecting from WiFi'));
         buttonElement.disabled = false;
         buttonElement.innerHTML = originalText;
       }
