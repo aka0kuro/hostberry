@@ -890,13 +890,37 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 							if f >= 2412 && f <= 2484 {
 								channel := (f-2412)/5 + 1
 								currentNetwork["channel"] = strconv.Itoa(channel)
+								log.Printf("Parsed channel: %d from freq: %d", channel, f)
 							} else if f >= 5000 && f <= 5825 {
 								channel := (f - 5000) / 5
 								currentNetwork["channel"] = strconv.Itoa(channel)
+								log.Printf("Parsed channel: %d from freq: %d", channel, f)
 							}
 						}
 						break
 					}
+				}
+			} else if strings.Contains(line, "RSN:") || strings.Contains(line, "WPA:") {
+				// Detectar seguridad WPA2/WPA3
+				if strings.Contains(line, "WPA3") || strings.Contains(line, "SAE") {
+					currentNetwork["security"] = "WPA3"
+				} else {
+					currentNetwork["security"] = "WPA2"
+				}
+				log.Printf("Detected security: %s from line: %s", currentNetwork["security"], line)
+			} else if strings.Contains(line, "capability:") {
+				// Detectar si tiene Privacy (WEP o protegida)
+				if strings.Contains(line, "Privacy") {
+					if currentNetwork["security"] == nil || currentNetwork["security"] == "Unknown" {
+						currentNetwork["security"] = "WEP"
+						log.Printf("Detected security: WEP from capability line")
+					}
+				}
+			} else if strings.Contains(line, "WPS:") {
+				// Si tiene WPS, probablemente es WPA2
+				if currentNetwork["security"] == nil || currentNetwork["security"] == "Unknown" {
+					currentNetwork["security"] = "WPA2"
+					log.Printf("Detected security: WPA2 from WPS line")
 				}
 			}
 		}
