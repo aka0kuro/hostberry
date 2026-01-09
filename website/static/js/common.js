@@ -232,8 +232,43 @@
   HostBerry.getServerTimezone = getServerTimezone;
   HostBerry.formatTime = formatTime;
 
+  // Verificar y mantener la sesión activa
+  function setupSessionKeepAlive(){
+    const token = localStorage.getItem('access_token');
+    if(!token) return;
+    
+    // Verificar token periódicamente para detectar expiración antes de que ocurra
+    // Verificar cada 15 minutos (si el token expira en 24 horas, esto es seguro)
+    setInterval(async function(){
+      try{
+        const token = localStorage.getItem('access_token');
+        if(!token) return;
+        
+        // Hacer una petición simple para verificar si el token sigue válido
+        const resp = await fetch('/api/v1/auth/me', {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+        
+        if(resp && resp.status === 401){
+          // Token expirado, redirigir a login
+          console.warn('Token expirado, redirigiendo a login...');
+          localStorage.removeItem('access_token');
+          window.location.href = '/login?error=session_expired';
+        }
+      }catch(_e){
+        // Ignorar errores de red, no hacer nada
+      }
+    }, 15 * 60 * 1000); // Cada 15 minutos
+  }
+
   // Populate navbar username from API if logged in
   document.addEventListener('DOMContentLoaded', async function(){
+    // Configurar keep-alive de sesión
+    setupSessionKeepAlive();
+    
     try{
       const el = document.getElementById('hb-current-username');
       const token = localStorage.getItem('access_token');
