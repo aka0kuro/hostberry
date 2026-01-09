@@ -1017,6 +1017,22 @@ EOF
         print_info "Permisos agregados para mkdir: /bin/mkdir"
     fi
     
+    # chmod (para establecer permisos de archivos)
+    if command -v chmod &> /dev/null; then
+        CHMOD_PATH=$(command -v chmod)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $CHMOD_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para chmod: $CHMOD_PATH"
+    elif [ -f "/bin/chmod" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /bin/chmod" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para chmod: /bin/chmod"
+    fi
+    
+    # Crear directorio /etc/hostapd con permisos correctos
+    print_info "Creando directorio /etc/hostapd..."
+    mkdir -p /etc/hostapd 2>/dev/null || sudo mkdir -p /etc/hostapd 2>/dev/null || true
+    chmod 755 /etc/hostapd 2>/dev/null || sudo chmod 755 /etc/hostapd 2>/dev/null || true
+    print_success "Directorio /etc/hostapd creado/verificado"
+    
     # Validar configuración de sudoers
     if visudo -c -f "/etc/sudoers.d/hostberry" 2>/dev/null; then
         chmod 440 "/etc/sudoers.d/hostberry"
