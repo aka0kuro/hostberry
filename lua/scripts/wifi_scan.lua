@@ -146,9 +146,17 @@ if #result.networks == 0 then
                     current_network.encrypted = false
                 end
             elseif string.find(line, "signal:") then
-                local signal = string.match(line, "signal: (-?%d+)")
+                -- Formato: "signal: -45.00 dBm" o "signal: -45 dBm"
+                local signal = string.match(line, "signal:%s*(-?%d+%.?%d*)")
                 if signal then
-                    current_network.signal = tonumber(signal) or 0
+                    -- Remover espacios y convertir a número
+                    signal = string.gsub(signal, "%s+", "")
+                    local signalNum = tonumber(signal)
+                    if signalNum then
+                        current_network.signal = math.floor(signalNum + 0.5)  -- Redondear
+                    else
+                        current_network.signal = 0
+                    end
                 end
             elseif string.find(line, "freq:") then
                 local freq = string.match(line, "freq: (%d+)")
