@@ -62,7 +62,6 @@ if nmcli_check and nmcli_check ~= "" then
     end
 end
 
--- Método 2: Intentar con rfkill (siempre con sudo)
 local rfkill_check = exec("sudo rfkill list wifi 2>/dev/null | grep -i 'wifi' | head -1")
 if rfkill_check and rfkill_check ~= "" then
     local status_out = exec("sudo rfkill list wifi 2>/dev/null | grep -i 'soft blocked'")
@@ -72,14 +71,35 @@ if rfkill_check and rfkill_check ~= "" then
     end
     
     local cmd
+    local was_enabled = false
     if is_blocked then
         cmd = "sudo rfkill unblock wifi"
+        was_enabled = false
     else
         cmd = "sudo rfkill block wifi"
+        was_enabled = true
     end
     
     local output, err = exec(cmd .. " 2>/dev/null")
     if not err then
+        -- Si se activó WiFi, también activar la interfaz específica
+        if not was_enabled then
+            -- Esperar 1 segundo
+            os.execute("sleep 1")
+            
+            -- Detectar y activar la interfaz WiFi específica usando ip
+            local iface_cmd = "ip -o link show | awk -F': ' '{print $2}' | grep -E '^wlan|^wl' | head -1"
+            local iface_out = exec(iface_cmd)
+            if iface_out and iface_out ~= "" then
+                local iface = string.gsub(iface_out, "%s+", "")
+                if iface and iface ~= "" then
+                    -- Activar la interfaz específica
+                    exec("sudo ip link set " .. iface .. " up 2>/dev/null")
+                    os.execute("sleep 1")
+                end
+            end
+        end
+        
         result.success = true
         result.message = "WiFi toggle exitoso usando rfkill con sudo"
         result.method = "rfkill"
@@ -88,7 +108,7 @@ if rfkill_check and rfkill_check ~= "" then
     end
 end
 
--- Método 3: Intentar con ifconfig (siempre con sudo)
+-- Método 2: Intentar con ip/ifconfig (siempre con sudo)
 local iw_out = exec("sudo iwconfig 2>/dev/null | grep -i 'wlan' | head -1 | awk '{print $1}'")
 if iw_out and iw_out ~= "" then
     local iface = string.gsub(iw_out, "%s+", "")
