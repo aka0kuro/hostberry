@@ -1351,10 +1351,17 @@ func hostapdGetConfigHandler(c *fiber.Ctx) error {
 	}
 	
 	// Extraer valores relevantes
+	// En modo AP+STA, la interfaz en la config será ap0, pero mostramos wlan0 al usuario
+	interfaceForDisplay := config["interface"]
+	if interfaceForDisplay == "ap0" {
+		// Si es ap0, mostrar wlan0 en el formulario (la interfaz física)
+		interfaceForDisplay = "wlan0"
+	}
+	
 	result := fiber.Map{
 		"success": true,
 		"config": fiber.Map{
-			"interface": config["interface"],
+			"interface": interfaceForDisplay, // Mostrar interfaz física al usuario
 			"ssid":      config["ssid"],
 			"channel":   config["channel"],
 			"password":  config["wpa_passphrase"], // Devolver la contraseña para que el usuario pueda verla/editarla
