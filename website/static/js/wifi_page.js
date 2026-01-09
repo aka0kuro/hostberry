@@ -411,6 +411,27 @@
       return;
     }
     
+    // Obtener información de la red desde la tarjeta
+    const cardContent = card ? card.querySelector('.network-card-content') : null;
+    let signal = '--';
+    let channel = '--';
+    let encryption = security || 'Unknown';
+    
+    if (cardContent) {
+      const details = cardContent.querySelectorAll('.network-card-detail-item');
+      details.forEach(detail => {
+        const text = detail.textContent || '';
+        if (text.includes('dBm')) {
+          const match = text.match(/(\d+)dBm/);
+          if (match) signal = match[1] + 'dBm';
+        }
+        if (text.includes('#')) {
+          const match = text.match(/#\s*(\d+)/);
+          if (match) channel = match[1];
+        }
+      });
+    }
+    
     // Crear formulario
     formWrapper = document.createElement('div');
     formWrapper.className = 'network-connect-form-wrapper';
@@ -419,6 +440,30 @@
     
     formWrapper.innerHTML = `
       <div class="network-connect-form show">
+        <div class="network-connect-info mb-3">
+          <div class="row g-2">
+            <div class="col-6">
+              <div class="network-info-item">
+                <label class="network-info-label">${t('wifi.network_signal', 'Signal')}</label>
+                <div class="network-info-value">${signal}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="network-info-item">
+                <label class="network-info-label">${t('wifi.network_security', 'Security')}</label>
+                <div class="network-info-value">${encryption.toUpperCase()}</div>
+              </div>
+            </div>
+            ${channel !== '--' ? `
+            <div class="col-6">
+              <div class="network-info-item">
+                <label class="network-info-label">${t('wifi.network_channel', 'Channel')}</label>
+                <div class="network-info-value">${channel}</div>
+              </div>
+            </div>
+            ` : ''}
+          </div>
+        </div>
         <div class="network-connect-form-group">
           <label class="network-connect-form-label">${t('wifi.network_password', 'Password')}</label>
           <input type="password" class="network-connect-form-input" id="network-password-${ssid.replace(/[^a-zA-Z0-9]/g, '-')}" 
