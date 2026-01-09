@@ -547,7 +547,15 @@
     
     for (const line of lines) {
       const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('Inter-') || trimmed.startsWith(' face')) {
+      // Filtrar líneas de encabezado y vacías
+      if (!trimmed || 
+          trimmed.startsWith('Inter-') || 
+          trimmed.startsWith(' face') ||
+          trimmed.startsWith('face') ||
+          trimmed.toLowerCase().includes('receive') ||
+          trimmed.toLowerCase().includes('transmit') ||
+          trimmed === 'face' ||
+          trimmed.match(/^\s*$/)) {
         continue;
       }
       
@@ -556,8 +564,16 @@
       const parts = trimmed.split(/\s+/);
       if (parts.length < 10) continue;
       
-      const ifaceName = parts[0].replace(':', '');
-      if (!ifaceName || ifaceName === 'lo') continue;
+      const ifaceName = parts[0].replace(':', '').trim();
+      // Filtrar interfaces inválidas
+      if (!ifaceName || 
+          ifaceName === 'lo' || 
+          ifaceName === 'face' ||
+          ifaceName.toLowerCase() === 'interface' ||
+          ifaceName.length > 20 || // Nombres de interfaz no deberían ser tan largos
+          !ifaceName.match(/^[a-zA-Z0-9_-]+$/)) { // Solo caracteres alfanuméricos, guiones y guiones bajos
+        continue;
+      }
       
       const recvBytes = parseInt(parts[1]) || 0;
       const recvPackets = parseInt(parts[2]) || 0;
