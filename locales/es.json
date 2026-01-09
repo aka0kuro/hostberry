@@ -1037,7 +1037,13 @@
     "restart_not_implemented": "Reiniciar HostAPD no implementado",
     "config_not_implemented": "Configurar HostAPD no implementado",
     "error_loading_aps": "Error al cargar puntos de acceso",
-    "error_loading_clients": "Error al cargar clientes"
+    "error_loading_clients": "Error al cargar clientes",
+    "gateway": "Gateway (Router)",
+    "gateway_help": "Dirección IP para el gateway del punto de acceso",
+    "dhcp_range_start": "Inicio del Rango DHCP",
+    "dhcp_range_end": "Fin del Rango DHCP",
+    "lease_time": "Tiempo de Concesión",
+    "lease_time_help": "Ejemplo: 12h, 30m, 1d"
   },
   "settings": {
     "title": "Configuración",
