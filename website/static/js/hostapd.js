@@ -355,10 +355,13 @@
           
           // Restaurar el botón y recargar el estado
           restoreButton();
+          
+          // Recargar el estado después de un delay para dar tiempo al servicio
           setTimeout(() => {
+            loadHostAPDStatus(); // Recargar estado del servicio
             loadAccessPoints();
             loadClients();
-          }, 500);
+          }, 2000); // Aumentar delay para dar más tiempo al servicio
         }
       } else {
         const status = resp ? resp.status : 'unknown';
