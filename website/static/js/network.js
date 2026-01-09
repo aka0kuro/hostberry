@@ -183,7 +183,6 @@
 
   function populateInterfaceSelects(interfaces) {
     const selects = [
-      document.getElementById('dhcp-interface'),
       document.getElementById('net-traffic-interface-select')
     ];
     
