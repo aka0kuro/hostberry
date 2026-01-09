@@ -114,15 +114,17 @@ func executeCommand(cmd string) (string, error) {
 	out, err := cmdObj.CombinedOutput()
 	outputStr := string(out)
 	
-	// Filtrar mensajes de error de sudo relacionados con read-only file system
+	// Filtrar mensajes de error de sudo relacionados con read-only file system y hostname
 	lines := strings.Split(outputStr, "\n")
 	filteredLines := make([]string, 0, len(lines))
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		// Ignorar líneas de error de sudo sobre logs
+		// Ignorar líneas de error de sudo sobre logs, read-only file system y hostname
 		if strings.Contains(line, "sudo: unable to open log file") ||
 			strings.Contains(line, "Read-only file system") ||
-			strings.Contains(line, "sudo: unable to stat") {
+			strings.Contains(line, "sudo: unable to stat") ||
+			strings.Contains(line, "sudo: unable to resolve host") ||
+			strings.Contains(line, "Name or service not known") {
 			continue
 		}
 		if line != "" {
