@@ -744,11 +744,39 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 		interfaceName = detectWiFiInterface()
 	}
 
-	// Verificar que WiFi esté habilitado
-	wifiCheck := execCommand("nmcli -t -f WIFI g 2>/dev/null")
-	wifiOut, _ := wifiCheck.Output()
-	wifiState := strings.ToLower(strings.TrimSpace(filterSudoErrors(wifiOut)))
-	if !strings.Contains(wifiState, "enabled") && !strings.Contains(wifiState, "on") {
+	// Verificar que WiFi esté habilitado (usar rfkill en lugar de solo nmcli)
+	wifiEnabled := false
+	
+	// Método 1: Verificar con rfkill
+	rfkillCheck := execCommand("rfkill list wifi 2>/dev/null")
+	rfkillOut, _ := rfkillCheck.Output()
+	rfkillStr := strings.ToLower(string(filterSudoErrors(rfkillOut)))
+	if !strings.Contains(rfkillStr, "hard blocked: yes") && !strings.Contains(rfkillStr, "soft blocked: yes") {
+		wifiEnabled = true
+	}
+	
+	// Método 2: Si rfkill no funcionó, verificar con nmcli (solo si NetworkManager está corriendo)
+	if !wifiEnabled {
+		if out, _ := exec.Command("pgrep", "NetworkManager").Output(); len(out) > 0 {
+			wifiCheck := execCommand("nmcli -t -f WIFI g 2>/dev/null")
+			wifiOut, _ := wifiCheck.Output()
+			wifiState := strings.ToLower(strings.TrimSpace(filterSudoErrors(wifiOut)))
+			if strings.Contains(wifiState, "enabled") || strings.Contains(wifiState, "on") {
+				wifiEnabled = true
+			}
+		}
+	}
+	
+	// Método 3: Verificar que la interfaz esté activa
+	if !wifiEnabled {
+		ipCheck := execCommand(fmt.Sprintf("ip link show %s 2>/dev/null | grep -i 'state UP'", interfaceName))
+		ipOut, _ := ipCheck.Output()
+		if len(ipOut) > 0 {
+			wifiEnabled = true
+		}
+	}
+	
+	if !wifiEnabled {
 		log.Printf("⚠️  WiFi no está habilitado")
 		return c.JSON(fiber.Map{
 			"success":  false,
@@ -756,13 +784,34 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 			"networks": []fiber.Map{},
 		})
 	}
+	
+	// Asegurar que la interfaz esté en modo managed (no AP) para poder escanear
+	iwInfoCmd := execCommand(fmt.Sprintf("iw dev %s info 2>/dev/null", interfaceName))
+	iwInfoOut, _ := iwInfoCmd.Output()
+	iwInfoStr := string(iwInfoOut)
+	if strings.Contains(iwInfoStr, "type AP") {
+		log.Printf("⚠️  Interfaz está en modo AP, cambiando a modo managed para escanear")
+		executeCommand(fmt.Sprintf("sudo iw dev %s set type managed 2>/dev/null", interfaceName))
+		time.Sleep(1 * time.Second)
+	}
+	
+	// Asegurar que la interfaz esté activa
+	executeCommand(fmt.Sprintf("sudo ip link set %s up 2>/dev/null", interfaceName))
+	time.Sleep(500 * time.Millisecond)
 
-	// Método 1: Intentar con nmcli (formato mejorado)
-	cmd := execCommand("nmcli -t -f SSID,SIGNAL,SECURITY,CHAN dev wifi list 2>&1")
-	out, err := cmd.CombinedOutput()
-	output := strings.TrimSpace(string(out))
+	// Método 1: Intentar con nmcli (solo si NetworkManager está corriendo)
+	var networks []fiber.Map
+	useNmcli := false
+	
+	// Verificar si NetworkManager está corriendo
+	nmCheck := exec.Command("pgrep", "NetworkManager")
+	if nmOut, _ := nmCheck.Output(); len(nmOut) > 0 {
+		useNmcli = true
+		cmd := execCommand("nmcli -t -f SSID,SIGNAL,SECURITY,CHAN dev wifi list 2>&1")
+		out, err := cmd.CombinedOutput()
+		output := strings.TrimSpace(string(out))
 
-	if err == nil && len(output) > 0 && !strings.Contains(output, "Error") && !strings.Contains(output, "permission") {
+		if err == nil && len(output) > 0 && !strings.Contains(output, "Error") && !strings.Contains(output, "permission") {
 		log.Printf("📡 Escaneando con nmcli...")
 		lines := strings.Split(output, "\n")
 		for _, line := range lines {
