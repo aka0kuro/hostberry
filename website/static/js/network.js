@@ -92,7 +92,6 @@
         
         if (interfaces.length > 0) {
           displayInterfaces(interfaces);
-          updateNetworkStatusCard(interfaces);
           // Extraer nombres de interfaces para el selector
           const interfaceNames = interfaces.map(iface => {
             if (typeof iface === 'string') return iface;
@@ -100,6 +99,11 @@
           }).filter(name => name && name !== 'lo');
           populateInterfaceSelects(interfaceNames);
         } else {
+          // Actualizar contadores cuando no hay interfaces
+          const activeCountEl = document.getElementById('active-interfaces-count');
+          if (activeCountEl) {
+            activeCountEl.textContent = '0';
+          }
           updateNetworkStatusCard([]);
           if (container) {
             container.innerHTML = '<p class="text-muted text-center">' + t('network.no_interfaces', 'No interfaces found') + '</p>';
