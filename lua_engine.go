@@ -171,6 +171,75 @@ func (le *LuaEngine) Execute(scriptName string, params map[string]interface{}) (
 	return result, nil
 }
 
+// isArray verifica si una tabla Lua es un array (índices numéricos consecutivos desde 1)
+func isArray(tbl *lua.LTable) bool {
+	maxNumericKey := 0
+	hasStringKeys := false
+	tbl.ForEach(func(key lua.LValue, value lua.LValue) {
+		if numKey, ok := key.(lua.LNumber); ok {
+			if int(numKey) > maxNumericKey {
+				maxNumericKey = int(numKey)
+			}
+		} else {
+			hasStringKeys = true
+		}
+	})
+	// Si tiene claves de string, no es un array puro
+	if hasStringKeys {
+		return false
+	}
+	// Si el máximo índice numérico es igual al número de elementos, es un array
+	return maxNumericKey > 0
+}
+
+// convertLuaTableToArray convierte una tabla Lua a un array de Go
+func convertLuaTableToArray(tbl *lua.LTable) []interface{} {
+	var array []interface{}
+	tbl.ForEach(func(key lua.LValue, value lua.LValue) {
+		if numKey, ok := key.(lua.LNumber); ok {
+			idx := int(numKey) - 1 // Lua usa índices base 1
+			if idx >= 0 {
+				// Asegurar que el array tenga el tamaño suficiente
+				for len(array) <= idx {
+					array = append(array, nil)
+				}
+				array[idx] = convertLuaValue(value)
+			}
+		}
+	})
+	return array
+}
+
+// convertLuaTableToMap convierte una tabla Lua a un mapa de Go
+func convertLuaTableToMap(tbl *lua.LTable) map[string]interface{} {
+	subMap := make(map[string]interface{})
+	tbl.ForEach(func(k lua.LValue, val lua.LValue) {
+		keyStr := k.String()
+		subMap[keyStr] = convertLuaValue(val)
+	})
+	return subMap
+}
+
+// convertLuaValue convierte un valor Lua a un valor Go
+func convertLuaValue(value lua.LValue) interface{} {
+	switch v := value.(type) {
+	case lua.LString:
+		return string(v)
+	case lua.LNumber:
+		return float64(v)
+	case lua.LBool:
+		return bool(v)
+	case *lua.LTable:
+		// Verificar si es array o mapa
+		if isArray(v) {
+			return convertLuaTableToArray(v)
+		}
+		return convertLuaTableToMap(v)
+	default:
+		return v.String()
+	}
+}
+
 // Close cierra el motor Lua
 func (le *LuaEngine) Close() {
 	if le.L != nil {
