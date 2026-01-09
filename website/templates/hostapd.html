@@ -13,52 +13,68 @@
     <!-- HostAPD Status Cards -->
     <div class="row quick-stats-row mb-4 g-3 g-md-4">
         <div class="col-12 col-sm-6 col-lg-3 mb-3 mb-md-4">
-            <div class="stat-card hostapd-status-stat">
-                <div class="stat-icon">
-                    <i class="bi bi-heart-pulse" id="hostapd-status-icon"></i>
+            <div class="dashboard-card info-card hostapd-status-stat">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-heart-pulse me-2" id="hostapd-status-icon"></i>
+                        {{ call .t "hostapd.status" "Status" }}
+                    </h5>
                 </div>
-                <div class="stat-content">
-                    <div class="stat-label">{{ call .t "hostapd.status" "Status" }}</div>
-                    <div class="stat-value" id="hostapd-status-value">--</div>
-                    <div class="stat-progress">
-                        <div class="stat-progress-bar" id="hostapd-status-bar" style="width: 0%"></div>
+                <div class="dashboard-card-body">
+                    <div class="stat-content">
+                        <div class="stat-value" id="hostapd-status-value">--</div>
+                        <div class="stat-progress mt-2">
+                            <div class="stat-progress-bar" id="hostapd-status-bar" style="width: 0%"></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="col-12 col-sm-6 col-lg-3 mb-3 mb-md-4">
-            <div class="stat-card access-points-stat">
-                <div class="stat-icon">
-                    <i class="bi bi-wifi"></i>
+            <div class="dashboard-card info-card access-points-stat">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-wifi me-2"></i>
+                        {{ call .t "hostapd.access_points" "Access Points" }}
+                    </h5>
                 </div>
-                <div class="stat-content">
-                    <div class="stat-label">{{ call .t "hostapd.access_points" "Access Points" }}</div>
-                    <div class="stat-value" id="access-points-count">0</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-lg-3 mb-3 mb-md-4">
-            <div class="stat-card clients-stat">
-                <div class="stat-icon">
-                    <i class="bi bi-people"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-label">{{ call .t "hostapd.clients" "Clients" }}</div>
-                    <div class="stat-value" id="clients-count">0</div>
+                <div class="dashboard-card-body">
+                    <div class="stat-content">
+                        <div class="stat-value" id="access-points-count">0</div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-12 col-sm-6 col-lg-3 mb-3 mb-md-4">
-            <div class="stat-card bandwidth-stat">
-                <div class="stat-icon">
-                    <i class="bi bi-speedometer2"></i>
+            <div class="dashboard-card info-card clients-stat">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-people me-2"></i>
+                        {{ call .t "hostapd.clients" "Clients" }}
+                    </h5>
                 </div>
-                <div class="stat-content">
-                    <div class="stat-label">{{ call .t "hostapd.bandwidth" "Bandwidth" }}</div>
-                    <div class="stat-value" id="bandwidth-value">--</div>
+                <div class="dashboard-card-body">
+                    <div class="stat-content">
+                        <div class="stat-value" id="clients-count">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3 mb-3 mb-md-4">
+            <div class="dashboard-card info-card bandwidth-stat">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-speedometer2 me-2"></i>
+                        {{ call .t "hostapd.bandwidth" "Bandwidth" }}
+                    </h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="stat-content">
+                        <div class="stat-value" id="bandwidth-value">--</div>
+                    </div>
                 </div>
             </div>
         </div>
