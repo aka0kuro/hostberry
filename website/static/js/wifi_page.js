@@ -132,7 +132,7 @@
     // Networks Count Card
     const networksTable = document.getElementById('networksTable');
     if (networksCountValue && networksCountBar && networksTable) {
-      const count = networksTable.querySelectorAll('tr').length;
+      const count = networksTable.querySelectorAll('.network-card').length;
       networksCountValue.textContent = count;
       const countPercent = Math.min(100, (count / 20) * 100); // Asumiendo máximo 20 redes
       networksCountBar.style.width = countPercent + '%';
