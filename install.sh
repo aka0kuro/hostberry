@@ -1082,11 +1082,39 @@ create_hostapd_default_config() {
     HOSTAPD_LEASE_TIME="12h"
     
     # Crear archivo de configuración de hostapd si no existe
+    # Modo AP+STA: usar interfaz virtual ap0 para el AP, permitiendo que wlan0 funcione como estación
     HOSTAPD_CONFIG="/etc/hostapd/hostapd.conf"
     if [ ! -f "$HOSTAPD_CONFIG" ]; then
-        print_info "Creando archivo de configuración de HostAPD: $HOSTAPD_CONFIG"
+        print_info "Creando archivo de configuración de HostAPD (modo AP+STA): $HOSTAPD_CONFIG"
+        
+        # Intentar crear interfaz virtual ap0 si no existe
+        if ! ip link show ap0 > /dev/null 2>&1; then
+            print_info "Creando interfaz virtual ap0 para modo AP+STA..."
+            # Obtener el phy de la interfaz WiFi
+            PHY_NAME=$(iw dev "$HOSTAPD_INTERFACE" info 2>/dev/null | grep wiphy | awk '{print $2}' || \
+                       cat /sys/class/net/"$HOSTAPD_INTERFACE"/phy80211/name 2>/dev/null || \
+                       echo "phy0")
+            
+            # Crear interfaz virtual ap0
+            if iw phy "$PHY_NAME" interface add ap0 type __ap 2>/dev/null; then
+                print_success "Interfaz virtual ap0 creada exitosamente"
+            else
+                print_warning "No se pudo crear interfaz virtual ap0, usando interfaz física directamente"
+                AP_INTERFACE="$HOSTAPD_INTERFACE"
+            fi
+        fi
+        
+        # Usar ap0 si existe, sino usar la interfaz física
+        AP_INTERFACE="ap0"
+        if ! ip link show ap0 > /dev/null 2>&1; then
+            AP_INTERFACE="$HOSTAPD_INTERFACE"
+            print_info "Usando interfaz física $AP_INTERFACE (modo no concurrente)"
+        else
+            print_info "Usando interfaz virtual ap0 (modo AP+STA)"
+        fi
+        
         cat > "$HOSTAPD_CONFIG" <<EOF
-interface=${HOSTAPD_INTERFACE}
+interface=${AP_INTERFACE}
 driver=nl80211
 ssid=${HOSTAPD_SSID}
 hw_mode=g
@@ -1099,7 +1127,8 @@ rsn_pairwise=CCMP
 EOF
         chmod 644 "$HOSTAPD_CONFIG"
         print_success "Archivo de configuración de HostAPD creado con valores por defecto"
-        print_info "  - Interfaz: $HOSTAPD_INTERFACE"
+        print_info "  - Interfaz AP: $AP_INTERFACE"
+        print_info "  - Interfaz STA: $HOSTAPD_INTERFACE (para wpa_supplicant)"
         print_info "  - SSID: $HOSTAPD_SSID"
         print_info "  - Contraseña: $HOSTAPD_PASSWORD"
         print_info "  - Gateway: $HOSTAPD_GATEWAY"
