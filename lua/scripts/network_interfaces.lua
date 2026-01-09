@@ -5,9 +5,13 @@ result.interfaces = {}
 
 -- Obtener todas las interfaces
 local interfaces_cmd = "ip -o link show | awk -F': ' '{print $2}'"
-local interfaces_output = exec(interfaces_cmd)
+local interfaces_output, exec_error = exec(interfaces_cmd)
 
-if interfaces_output then
+if exec_error then
+    log("ERROR", "Error ejecutando comando de interfaces: " .. tostring(exec_error))
+end
+
+if interfaces_output and interfaces_output ~= "" then
     for iface in interfaces_output:gmatch("[^\r\n]+") do
         iface = iface:match("^%s*(.-)%s*$") -- Trim whitespace
         -- Filtrar loopback y interfaces vacías
