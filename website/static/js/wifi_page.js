@@ -339,19 +339,37 @@
       // Filtrar redes inválidas (mensajes de error, etc.)
       networks = networks.filter(net => {
         const ssid = (net.ssid || '').trim();
-        // Filtrar redes con nombres inválidos
-        if (!ssid || ssid === '' || ssid === '--' || ssid === 'sudo' || 
-            ssid.toLowerCase().includes('read-only') || 
-            ssid.toLowerCase().includes('file system') ||
-            ssid.toLowerCase().includes('error') ||
-            ssid.toLowerCase().includes('permission')) {
+        const ssidLower = ssid.toLowerCase();
+        
+        // Filtrar redes con nombres inválidos o mensajes de error
+        if (!ssid || ssid === '' || ssid === '--' || 
+            ssidLower === 'sudo' || 
+            ssidLower.includes('read-only') || 
+            ssidLower.includes('read only') ||
+            ssidLower.includes('file system') ||
+            ssidLower.includes('filesystem') ||
+            ssidLower.includes('error') ||
+            ssidLower.includes('permission') ||
+            ssidLower.includes('denied') ||
+            ssidLower.includes('unable to') ||
+            ssidLower.includes('cannot') ||
+            ssidLower.includes('failed') ||
+            ssidLower.startsWith('sudo:') ||
+            ssidLower.includes('sudo ')) {
           return false;
         }
-        // Filtrar si el signal es 0 y el SSID parece ser un error
+        
+        // Filtrar si el signal es 0 o inválido y el SSID parece ser un error
         const signal = parseInt(net.signal || net.rssi || 0);
-        if (signal === 0 && (ssid.length > 50 || ssid.includes(':'))) {
+        if (signal === 0 && (ssid.length > 50 || ssid.includes(':') || ssid.includes('sudo'))) {
           return false;
         }
+        
+        // Filtrar SSIDs que son claramente mensajes de error del sistema
+        if (ssid.match(/^(sudo|error|permission|denied|failed|cannot|unable)/i)) {
+          return false;
+        }
+        
         return true;
       });
       
