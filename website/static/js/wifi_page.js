@@ -299,6 +299,7 @@
       card.style.flexBasis = '100%';
       card.style.flexShrink = '0';
       card.style.flexGrow = '0';
+      card.style.boxSizing = 'border-box';
     });
     
     const buttons = tbody.querySelectorAll('.connect-network-btn, .disconnect-network-btn');
