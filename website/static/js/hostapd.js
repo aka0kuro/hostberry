@@ -488,7 +488,7 @@
           // Deshabilitar botón y mostrar loading
           if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="bi bi-arrow-clockwise spinning me-2"></i>' + t('common.saving', 'Saving...');
+            submitBtn.innerHTML = '<i class="bi bi-arrow-clockwise spinning me-2"></i>' + (t('common.saving', 'Saving...') || 'Saving...');
           }
           
           const fd = new FormData(this);
