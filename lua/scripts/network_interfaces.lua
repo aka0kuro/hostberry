@@ -58,12 +58,14 @@ if interfaces_output and interfaces_output ~= "" then
         if interface_info.connected and interface_info.ip ~= "N/A" then
             -- Intentar obtener gateway específico de la interfaz
             local gateway_cmd = "ip route | grep " .. iface .. " | grep default | awk '{print $3}' | head -1"
-            interface_info.gateway = exec(gateway_cmd) or "N/A"
+            local gateway_output, _ = exec(gateway_cmd)
+            interface_info.gateway = (gateway_output and gateway_output:match("^%s*(.-)%s*$")) or "N/A"
             
             -- Si no hay gateway específico, obtener el gateway por defecto
-            if interface_info.gateway == "N/A" then
+            if interface_info.gateway == "N/A" or interface_info.gateway == "" then
                 local default_gateway_cmd = "ip route | grep default | awk '{print $3}' | head -1"
-                interface_info.gateway = exec(default_gateway_cmd) or "N/A"
+                local default_gateway_output, _ = exec(default_gateway_cmd)
+                interface_info.gateway = (default_gateway_output and default_gateway_output:match("^%s*(.-)%s*$")) or "N/A"
             end
         else
             interface_info.gateway = "N/A"
