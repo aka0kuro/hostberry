@@ -64,7 +64,16 @@ if interfaces_output then
         end
         
         table.insert(result.interfaces, interface_info)
+        ::continue::
     end
 end
+
+-- Asegurar que siempre hay un campo interfaces (aunque esté vacío)
+if not result.interfaces then
+    result.interfaces = {}
+end
+
+result.success = true
+result.count = #result.interfaces
 
 return result
