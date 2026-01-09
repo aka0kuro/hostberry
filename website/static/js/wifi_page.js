@@ -639,7 +639,7 @@
         // Opcional: escanear nuevamente después de conectar
         setTimeout(() => scanNetworks(), 2000);
         } else {
-        showAlert('danger', data.error || t('wifi.connect_error', 'Error connecting to WiFi'));
+        showAlert('danger', translateError(data.error) || t('wifi.connect_error', 'Error connecting to WiFi'));
         buttonElement.disabled = false;
         buttonElement.innerHTML = `<i class="bi bi-box-arrow-in-right me-2"></i>${t('wifi.connect', 'Connect')}`;
       }
@@ -670,7 +670,7 @@
         await loadConnectionStatus();
         setTimeout(() => scanNetworks(), 2000);
       } else {
-        showAlert('danger', data.error || t('wifi.connect_error', 'Error connecting to WiFi'));
+        showAlert('danger', translateError(data.error) || t('wifi.connect_error', 'Error connecting to WiFi'));
       }
     } catch (error) {
       console.error(t('wifi.connect_error', 'Error connecting to WiFi') + ':', error);
