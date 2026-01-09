@@ -325,13 +325,41 @@
         let data = null;
         try {
           // Puede fallar si el servidor devuelve HTML (p.ej. 502) o body vacío.
-          data = await resp.json();
+          const text = await resp.text();
+          if (text) {
+            try {
+              data = JSON.parse(text);
+            } catch (parseErr) {
+              // Si no es JSON válido, podría ser HTML o texto plano
+              console.warn('Response is not valid JSON:', text.substring(0, 100));
+              data = null;
+            }
+          }
         } catch (_jsonErr) {
           data = null;
         }
 
         if(resp && resp.ok){
-          showSuccess((data && data.message) || t('auth.credentials_updated', 'Credenciales actualizadas. Vuelve a iniciar sesión.'));
+          // Extraer solo el mensaje de la respuesta
+          let successMessage = t('auth.credentials_updated', 'Credenciales actualizadas. Vuelve a iniciar sesión.');
+          
+          if (data) {
+            // Si data es un objeto con message, usar ese
+            if (typeof data === 'object' && data.message && typeof data.message === 'string') {
+              successMessage = data.message;
+            } 
+            // Si data es un string, usarlo directamente
+            else if (typeof data === 'string') {
+              successMessage = data;
+            }
+            // Si data es un objeto pero no tiene message, no mostrar el objeto completo
+            else if (typeof data === 'object' && !data.message) {
+              // No mostrar el objeto completo, usar el mensaje por defecto
+              console.log('Response data (not shown to user):', Object.keys(data));
+            }
+          }
+          
+          showSuccess(successMessage);
           localStorage.removeItem('access_token');
           setTimeout(function(){ 
             window.location.href = `/login?lang=${encodeURIComponent(currentLang)}`;
