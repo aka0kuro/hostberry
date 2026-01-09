@@ -813,44 +813,45 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 
 		if err == nil && len(output) > 0 && !strings.Contains(output, "Error") && !strings.Contains(output, "permission") {
 			log.Printf("📡 Escaneando con nmcli...")
-		lines := strings.Split(output, "\n")
-		for _, line := range lines {
-			line = strings.TrimSpace(line)
-			if line == "" || line == "--" || strings.HasPrefix(line, "Error") {
-				continue
-			}
-			parts := strings.Split(line, ":")
-			if len(parts) >= 2 {
-				ssid := parts[0]
-				signalStr := parts[1]
-				security := "Open"
-				channel := ""
-				if len(parts) >= 3 {
-					security = parts[2]
+			lines := strings.Split(output, "\n")
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+				if line == "" || line == "--" || strings.HasPrefix(line, "Error") {
+					continue
 				}
-				if len(parts) >= 4 {
-					channel = parts[3]
-				}
-				if ssid != "" && ssid != "--" {
-					signal := 0
-					if s, err := strconv.Atoi(signalStr); err == nil {
-						signal = s
+				parts := strings.Split(line, ":")
+				if len(parts) >= 2 {
+					ssid := parts[0]
+					signalStr := parts[1]
+					security := "Open"
+					channel := ""
+					if len(parts) >= 3 {
+						security = parts[2]
 					}
-					networks = append(networks, fiber.Map{
-						"ssid":     ssid,
-						"signal":   signal,
-						"security": security,
-						"channel":  channel,
-					})
+					if len(parts) >= 4 {
+						channel = parts[3]
+					}
+					if ssid != "" && ssid != "--" {
+						signal := 0
+						if s, err := strconv.Atoi(signalStr); err == nil {
+							signal = s
+						}
+						networks = append(networks, fiber.Map{
+							"ssid":     ssid,
+							"signal":   signal,
+							"security": security,
+							"channel":  channel,
+						})
+					}
 				}
 			}
-		}
-		if len(networks) > 0 {
-			log.Printf("✅ Encontradas %d redes con nmcli", len(networks))
-			return c.JSON(fiber.Map{
-				"success":  true,
-				"networks": networks,
-			})
+			if len(networks) > 0 {
+				log.Printf("✅ Encontradas %d redes con nmcli", len(networks))
+				return c.JSON(fiber.Map{
+					"success":  true,
+					"networks": networks,
+				})
+			}
 		}
 	}
 
