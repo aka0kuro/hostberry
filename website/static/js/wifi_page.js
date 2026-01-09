@@ -598,6 +598,83 @@
     }
   }
 
+  // Actualizar botones de conexión en las tarjetas
+  function updateConnectButtons() {
+    const cards = document.querySelectorAll('.network-card');
+    cards.forEach(card => {
+      const ssid = card.getAttribute('data-ssid');
+      const actionsDiv = card.querySelector('.network-card-actions');
+      if (!actionsDiv || !ssid) return;
+      
+      const isConnected = currentConnectedSSID && ssid === currentConnectedSSID;
+      const existingBtn = actionsDiv.querySelector('button');
+      
+      if (existingBtn) {
+        const buttonClass = isConnected ? 'btn-success' : 'btn-primary';
+        const buttonIcon = isConnected ? 'bi-x-circle' : 'bi-box-arrow-in-right';
+        const buttonText = isConnected ? t('wifi.disconnect', 'Disconnect') : t('wifi.connect', 'Connect');
+        const security = card.getAttribute('data-security') || 'none';
+        const escapedSsid = ssid.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const buttonAction = isConnected ? `disconnectWiFi(this)` : `connectToNetwork('${escapedSsid}', '${security}', this)`;
+        
+        existingBtn.className = `btn ${buttonClass} btn-sm`;
+        existingBtn.innerHTML = `<i class="bi ${buttonIcon} me-2"></i>${buttonText}`;
+        existingBtn.setAttribute('onclick', buttonAction);
+      }
+      
+      // Actualizar badge de conectado
+      const ssidDiv = card.querySelector('.network-card-ssid');
+      if (ssidDiv) {
+        const currentText = ssidDiv.textContent.replace(/\s*\(.*?\)\s*$/, '').trim();
+        if (isConnected) {
+          if (!ssidDiv.querySelector('.badge')) {
+            const badge = document.createElement('span');
+            badge.className = 'badge bg-success ms-2';
+            badge.textContent = t('wifi.connected', 'Connected');
+            ssidDiv.appendChild(badge);
+          }
+        } else {
+          const badge = ssidDiv.querySelector('.badge');
+          if (badge) badge.remove();
+        }
+      }
+    });
+  }
+
+  // Desconectar WiFi
+  async function disconnectWiFi(buttonElement) {
+    if (!buttonElement) return;
+    
+    const originalText = buttonElement.innerHTML;
+    buttonElement.disabled = true;
+    buttonElement.innerHTML = `<i class="bi bi-arrow-clockwise spinning me-2"></i>${t('wifi.disconnecting', 'Disconnecting...')}`;
+    
+    try {
+      const resp = await apiRequest('/api/v1/wifi/disconnect', { method: 'POST' });
+      const data = await resp.json();
+      
+      if (resp.ok && data.success) {
+        showAlert('success', t('wifi.disconnected', 'Disconnected from WiFi'));
+        currentConnectedSSID = null;
+        await loadConnectionStatus();
+        // Actualizar botones después de un breve delay
+        setTimeout(() => {
+          updateConnectButtons();
+          scanNetworks();
+        }, 1000);
+      } else {
+        showAlert('danger', data.error || t('wifi.disconnect_error', 'Error disconnecting from WiFi'));
+        buttonElement.disabled = false;
+        buttonElement.innerHTML = originalText;
+      }
+    } catch (error) {
+      console.error('Error desconectando WiFi:', error);
+      showAlert('danger', t('wifi.disconnect_error', 'Error disconnecting from WiFi'));
+      buttonElement.disabled = false;
+      buttonElement.innerHTML = originalText;
+    }
+  }
+
   // Exportar funciones globales
   window.toggleWiFi = toggleWiFi;
   window.unblockWiFi = unblockWiFi;
@@ -605,6 +682,7 @@
   window.scanNetworks = scanNetworks;
   window.connectToNetwork = connectToNetwork;
   window.submitConnect = submitConnect;
+  window.disconnectWiFi = disconnectWiFi;
 
   // Inicializar cuando el DOM esté listo
   document.addEventListener('DOMContentLoaded', async function() {
