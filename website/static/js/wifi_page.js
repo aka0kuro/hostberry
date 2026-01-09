@@ -153,7 +153,8 @@
         signal = -signal;
       }
       // Calcular porcentaje: -30 dBm = 100%, -100 dBm = 0%
-      const signalPercent = signal <= -100 ? 0 : (signal >= -30 ? 100 : Math.min(100, Math.max(0, ((signal + 100) / 70) * 100)));
+      const signalPercentRaw = signal <= -100 ? 0 : (signal >= -30 ? 100 : Math.min(100, Math.max(0, ((signal + 100) / 70) * 100)));
+      const signalPercent = Math.round(signalPercentRaw); // Redondear a número entero
       signalValue.textContent = signal < 0 ? signal + 'dBm' : '--';
       signalBar.style.width = signalPercent + '%';
     }
