@@ -141,7 +141,12 @@
     let activeCount = 0;
     interfaces.forEach(function(iface) {
       if (!iface) return;
-      const isUp = (iface.status === 'up' || iface.status === 'connected' || iface.connected === true || (iface.status && iface.status.toLowerCase() === 'up'));
+      // Verificar estado de la interfaz - puede venir como status, state, o connected
+      const statusValue = iface.status || iface.state || '';
+      const isUp = (statusValue === 'up' || statusValue === 'connected' || 
+                   iface.connected === true || 
+                   (statusValue && statusValue.toLowerCase() === 'up') ||
+                   (iface.ip && iface.ip !== 'N/A' && iface.ip !== ''));
       if (isUp) activeCount++;
       const statusClass = isUp ? 'success' : 'danger';
       const statusIcon = isUp ? 'bi-check-circle' : 'bi-x-circle';
