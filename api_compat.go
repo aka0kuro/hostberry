@@ -114,25 +114,37 @@ func networkConfigHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Validar y aplicar configuración básica
-	// Nota: Cambiar hostname requiere privilegios root y puede requerir reinicio
-	// Por ahora, solo validamos y retornamos éxito (implementación real requiere más trabajo)
-	
+	// Validar configuración
 	errors := []string{}
+	applied := []string{}
 	
+	// Validar y aplicar hostname
 	if req.Hostname != "" {
-		// Validar hostname
 		if len(req.Hostname) > 64 || len(req.Hostname) < 1 {
 			errors = append(errors, "Hostname must be between 1 and 64 characters")
+		} else if !strings.ContainsAny(req.Hostname, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-") {
+			errors = append(errors, "Hostname contains invalid characters")
+		} else {
+			// Aplicar hostname usando hostnamectl
+			cmd := fmt.Sprintf("hostnamectl set-hostname %s", req.Hostname)
+			if out, err := executeCommand(cmd); err != nil {
+				errors = append(errors, fmt.Sprintf("Failed to set hostname: %v", err))
+			} else {
+				applied = append(applied, fmt.Sprintf("Hostname set to %s", req.Hostname))
+				_ = out // Ignorar salida
+			}
 		}
-		// Nota: Aplicar hostname requiere: echo "newhostname" | sudo tee /etc/hostname && sudo hostnamectl set-hostname newhostname
 	}
 	
+	// Validar y aplicar DNS
+	dnsServers := []string{}
 	if req.DNS1 != "" {
 		// Validar formato IP
 		cmd := exec.Command("sh", "-c", fmt.Sprintf("echo '%s' | grep -E '^([0-9]{1,3}\\.){3}[0-9]{1,3}$'", req.DNS1))
 		if err := cmd.Run(); err != nil {
 			errors = append(errors, "Invalid DNS1 format")
+		} else {
+			dnsServers = append(dnsServers, req.DNS1)
 		}
 	}
 	
@@ -140,27 +152,79 @@ func networkConfigHandler(c *fiber.Ctx) error {
 		cmd := exec.Command("sh", "-c", fmt.Sprintf("echo '%s' | grep -E '^([0-9]{1,3}\\.){3}[0-9]{1,3}$'", req.DNS2))
 		if err := cmd.Run(); err != nil {
 			errors = append(errors, "Invalid DNS2 format")
+		} else {
+			dnsServers = append(dnsServers, req.DNS2)
 		}
 	}
 	
+	// Aplicar DNS usando nmcli o systemd-resolved
+	if len(dnsServers) > 0 {
+		// Intentar con nmcli primero (más común en sistemas con NetworkManager)
+		dnsStr := strings.Join(dnsServers, " ")
+		cmd := fmt.Sprintf("nmcli connection modify $(nmcli -t -f NAME connection show --active | head -1) ipv4.dns '%s' 2>&1", dnsStr)
+		if out, err := executeCommand(cmd); err != nil {
+			// Si nmcli falla, intentar con systemd-resolved
+			// systemd-resolved requiere editar /etc/systemd/resolved.conf
+			// Por ahora, solo reportamos el error de nmcli
+			errors = append(errors, fmt.Sprintf("Failed to set DNS: %v (output: %s)", err, out))
+		} else {
+			// Aplicar cambios de DNS
+			applyCmd := "nmcli connection up $(nmcli -t -f NAME connection show --active | head -1) 2>&1"
+			if _, err := executeCommand(applyCmd); err != nil {
+				// No es crítico si falla el apply, el DNS puede aplicarse en el próximo reinicio
+			}
+			applied = append(applied, fmt.Sprintf("DNS set to %s", strings.Join(dnsServers, ", ")))
+		}
+	}
+	
+	// Validar y aplicar Gateway
 	if req.Gateway != "" {
 		cmd := exec.Command("sh", "-c", fmt.Sprintf("echo '%s' | grep -E '^([0-9]{1,3}\\.){3}[0-9]{1,3}$'", req.Gateway))
 		if err := cmd.Run(); err != nil {
 			errors = append(errors, "Invalid Gateway format")
+		} else {
+			// Aplicar gateway usando nmcli o ip route
+			// Intentar con nmcli primero
+			nmcliCmd := fmt.Sprintf("nmcli connection modify $(nmcli -t -f NAME connection show --active | head -1) ipv4.gateway %s 2>&1", req.Gateway)
+			if out, err := executeCommand(nmcliCmd); err != nil {
+				// Si nmcli falla, intentar con ip route
+				ipCmd := fmt.Sprintf("ip route replace default via %s 2>&1", req.Gateway)
+				if out2, err2 := executeCommand(ipCmd); err2 != nil {
+					errors = append(errors, fmt.Sprintf("Failed to set gateway: %v (nmcli: %s, ip: %s)", err2, out, out2))
+				} else {
+					applied = append(applied, fmt.Sprintf("Gateway set to %s", req.Gateway))
+				}
+			} else {
+				// Aplicar cambios de gateway
+				applyCmd := "nmcli connection up $(nmcli -t -f NAME connection show --active | head -1) 2>&1"
+				if _, err := executeCommand(applyCmd); err != nil {
+					// No es crítico si falla el apply
+				}
+				applied = append(applied, fmt.Sprintf("Gateway set to %s", req.Gateway))
+			}
 		}
 	}
 	
 	if len(errors) > 0 {
+		errorMsg := strings.Join(errors, "; ")
+		if len(applied) > 0 {
+			errorMsg += " (Some settings were applied: " + strings.Join(applied, ", ") + ")"
+		}
 		return c.Status(400).JSON(fiber.Map{
 			"success": false,
-			"error":   strings.Join(errors, "; "),
+			"error":   errorMsg,
 		})
 	}
 
-	// Por ahora, retornar éxito (la implementación real de aplicar cambios requiere más trabajo)
+	// Si todo se aplicó correctamente
+	message := "Configuration applied successfully"
+	if len(applied) > 0 {
+		message = strings.Join(applied, "; ")
+	}
+	
 	return c.JSON(fiber.Map{
 		"success": true,
-		"message": "Configuration validated. Note: Applying network configuration requires additional implementation.",
+		"message": message,
 	})
 }
 
