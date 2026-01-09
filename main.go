@@ -812,7 +812,7 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 		output := strings.TrimSpace(string(out))
 
 		if err == nil && len(output) > 0 && !strings.Contains(output, "Error") && !strings.Contains(output, "permission") {
-		log.Printf("📡 Escaneando con nmcli...")
+			log.Printf("📡 Escaneando con nmcli...")
 		lines := strings.Split(output, "\n")
 		for _, line := range lines {
 			line = strings.TrimSpace(line)
