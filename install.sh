@@ -916,6 +916,31 @@ EOF
         print_info "Permisos agregados para iwconfig: $IWCONFIG_PATH"
     fi
     
+    # Agregar permisos para hostapd y systemctl hostapd
+    if command -v hostapd &> /dev/null; then
+        HOSTAPD_PATH=$(command -v hostapd)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $HOSTAPD_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para hostapd: $HOSTAPD_PATH"
+    fi
+    
+    if command -v hostapd_cli &> /dev/null; then
+        HOSTAPD_CLI_PATH=$(command -v hostapd_cli)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $HOSTAPD_CLI_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para hostapd_cli: $HOSTAPD_CLI_PATH"
+    fi
+    
+    # Agregar permisos para systemctl con hostapd (ya está agregado arriba, pero específico para hostapd)
+    if command -v systemctl &> /dev/null; then
+        SYSTEMCTL_PATH=$(command -v systemctl)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH start hostapd" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH stop hostapd" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH restart hostapd" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH status hostapd" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH enable hostapd" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH disable hostapd" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para systemctl hostapd"
+    fi
+    
     # Validar configuración de sudoers
     if visudo -c -f "/etc/sudoers.d/hostberry" 2>/dev/null; then
         chmod 440 "/etc/sudoers.d/hostberry"
