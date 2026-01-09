@@ -440,7 +440,7 @@
       updateStatusCards({});
       await loadConnectionStatus();
     } catch (error) {
-      console.error('Error escaneando redes:', error);
+      console.error(t('wifi.scan_error', 'Error scanning WiFi networks') + ':', error);
       
       if (loadingEl) loadingEl.style.display = 'none';
       
