@@ -666,11 +666,20 @@
 
   // Toggle password visibility
   function togglePasswordVisibility(button) {
+    if (!button) {
+      console.warn("togglePasswordVisibility: button is null");
+      return;
+    }
+    
     // Buscar el input dentro del mismo wrapper
     const wrapper = button.closest('.password-input-wrapper');
     if (!wrapper) {
-      // Fallback: buscar el input anterior
-      const input = button.previousElementSibling;
+      console.warn("togglePasswordVisibility: password-input-wrapper not found");
+      // Fallback: buscar el input anterior o siguiente
+      let input = button.previousElementSibling;
+      if (!input || (input.type !== 'password' && input.type !== 'text')) {
+        input = button.nextElementSibling;
+      }
       if (input && (input.type === 'password' || input.type === 'text')) {
         if (input.type === 'password') {
           input.type = 'text';
@@ -681,6 +690,8 @@
           button.innerHTML = '<i class="bi bi-eye"></i>';
           button.setAttribute('title', t('common.show_password', 'Show password'));
         }
+      } else {
+        console.warn("togglePasswordVisibility: input not found");
       }
       return;
     }
@@ -696,6 +707,8 @@
         button.innerHTML = '<i class="bi bi-eye"></i>';
         button.setAttribute('title', t('common.show_password', 'Show password'));
       }
+    } else {
+      console.warn("togglePasswordVisibility: input not found in wrapper");
     }
   }
 
