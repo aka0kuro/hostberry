@@ -987,17 +987,7 @@ EOF
     fi
     
     # Agregar permisos para comandos básicos necesarios para hostapd
-    # tee (para escribir archivos de configuración)
-    if command -v tee &> /dev/null; then
-        TEE_PATH=$(command -v tee)
-        echo "$USER_NAME ALL=(ALL) NOPASSWD: $TEE_PATH" >> "/etc/sudoers.d/hostberry"
-        print_info "Permisos agregados para tee: $TEE_PATH"
-    elif [ -f "/usr/bin/tee" ]; then
-        echo "$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/tee" >> "/etc/sudoers.d/hostberry"
-        print_info "Permisos agregados para tee: /usr/bin/tee"
-    fi
-    
-    # cp (para hacer backup de configuraciones)
+    # cp (para copiar archivos de configuración)
     if command -v cp &> /dev/null; then
         CP_PATH=$(command -v cp)
         echo "$USER_NAME ALL=(ALL) NOPASSWD: $CP_PATH" >> "/etc/sudoers.d/hostberry"
@@ -1025,26 +1015,6 @@ EOF
     elif [ -f "/bin/chmod" ]; then
         echo "$USER_NAME ALL=(ALL) NOPASSWD: /bin/chmod" >> "/etc/sudoers.d/hostberry"
         print_info "Permisos agregados para chmod: /bin/chmod"
-    fi
-    
-    # bash (para ejecutar scripts de configuración)
-    if command -v bash &> /dev/null; then
-        BASH_PATH=$(command -v bash)
-        echo "$USER_NAME ALL=(ALL) NOPASSWD: $BASH_PATH" >> "/etc/sudoers.d/hostberry"
-        print_info "Permisos agregados para bash: $BASH_PATH"
-    elif [ -f "/bin/bash" ]; then
-        echo "$USER_NAME ALL=(ALL) NOPASSWD: /bin/bash" >> "/etc/sudoers.d/hostberry"
-        print_info "Permisos agregados para bash: /bin/bash"
-    fi
-    
-    # sh (para ejecutar scripts de configuración)
-    if command -v sh &> /dev/null; then
-        SH_PATH=$(command -v sh)
-        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SH_PATH" >> "/etc/sudoers.d/hostberry"
-        print_info "Permisos agregados para sh: $SH_PATH"
-    elif [ -f "/bin/sh" ]; then
-        echo "$USER_NAME ALL=(ALL) NOPASSWD: /bin/sh" >> "/etc/sudoers.d/hostberry"
-        print_info "Permisos agregados para sh: /bin/sh"
     fi
     
     # Crear directorio /etc/hostapd con permisos correctos
