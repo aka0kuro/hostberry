@@ -1075,6 +1075,94 @@ EOF
     fi
 }
 
+# Crear configuración por defecto de HostAPD
+create_hostapd_default_config() {
+    print_info "Creando configuración por defecto de HostAPD..."
+    
+    # Valores por defecto
+    HOSTAPD_INTERFACE="wlan0"
+    HOSTAPD_SSID="hostberry-ap"
+    HOSTAPD_PASSWORD="hostberry12"
+    HOSTAPD_CHANNEL="6"
+    HOSTAPD_GATEWAY="192.168.4.1"
+    HOSTAPD_DHCP_START="192.168.4.2"
+    HOSTAPD_DHCP_END="192.168.4.254"
+    HOSTAPD_LEASE_TIME="12h"
+    
+    # Crear archivo de configuración de hostapd si no existe
+    HOSTAPD_CONFIG="/etc/hostapd/hostapd.conf"
+    if [ ! -f "$HOSTAPD_CONFIG" ]; then
+        print_info "Creando archivo de configuración de HostAPD: $HOSTAPD_CONFIG"
+        cat > "$HOSTAPD_CONFIG" <<EOF
+interface=${HOSTAPD_INTERFACE}
+driver=nl80211
+ssid=${HOSTAPD_SSID}
+hw_mode=g
+channel=${HOSTAPD_CHANNEL}
+wpa=2
+wpa_passphrase=${HOSTAPD_PASSWORD}
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+EOF
+        chmod 644 "$HOSTAPD_CONFIG"
+        print_success "Archivo de configuración de HostAPD creado con valores por defecto"
+        print_info "  - Interfaz: $HOSTAPD_INTERFACE"
+        print_info "  - SSID: $HOSTAPD_SSID"
+        print_info "  - Contraseña: $HOSTAPD_PASSWORD"
+        print_info "  - Gateway: $HOSTAPD_GATEWAY"
+    else
+        print_info "Archivo de configuración de HostAPD ya existe, no se sobrescribe"
+    fi
+    
+    # Crear archivo de configuración de dnsmasq si no existe o hacer backup
+    DNSMASQ_CONFIG="/etc/dnsmasq.conf"
+    if [ -f "$DNSMASQ_CONFIG" ]; then
+        # Hacer backup si no existe
+        if [ ! -f "${DNSMASQ_CONFIG}.backup" ]; then
+            cp "$DNSMASQ_CONFIG" "${DNSMASQ_CONFIG}.backup"
+            print_info "Backup de configuración de dnsmasq creado"
+        fi
+    fi
+    
+    # Crear configuración de dnsmasq para HostAPD (solo si no tiene configuración de hostapd)
+    if ! grep -q "interface=${HOSTAPD_INTERFACE}" "$DNSMASQ_CONFIG" 2>/dev/null; then
+        print_info "Agregando configuración de dnsmasq para HostAPD..."
+        cat >> "$DNSMASQ_CONFIG" <<EOF
+
+# Configuración para HostAPD (agregada por HostBerry)
+interface=${HOSTAPD_INTERFACE}
+dhcp-range=${HOSTAPD_DHCP_START},${HOSTAPD_DHCP_END},255.255.255.0,${HOSTAPD_LEASE_TIME}
+dhcp-option=3,${HOSTAPD_GATEWAY}
+dhcp-option=6,${HOSTAPD_GATEWAY}
+server=8.8.8.8
+server=8.8.4.4
+EOF
+        print_success "Configuración de dnsmasq actualizada"
+    else
+        print_info "Configuración de dnsmasq para HostAPD ya existe"
+    fi
+    
+    # Crear archivo de override de systemd para hostapd si no existe
+    OVERRIDE_DIR="/etc/systemd/system/hostapd.service.d"
+    OVERRIDE_FILE="${OVERRIDE_DIR}/override.conf"
+    if [ ! -f "$OVERRIDE_FILE" ]; then
+        print_info "Creando archivo de override de systemd para hostapd..."
+        mkdir -p "$OVERRIDE_DIR"
+        cat > "$OVERRIDE_FILE" <<EOF
+[Service]
+ExecStart=
+ExecStart=/usr/sbin/hostapd -B ${HOSTAPD_CONFIG}
+EOF
+        chmod 644 "$OVERRIDE_FILE"
+        print_success "Archivo de override de systemd creado"
+    else
+        print_info "Archivo de override de systemd ya existe"
+    fi
+    
+    print_success "Configuración por defecto de HostAPD creada"
+}
+
 # Crear servicio systemd
 create_systemd_service() {
     print_info "Creando servicio systemd..."
