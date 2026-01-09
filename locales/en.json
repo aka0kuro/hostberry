@@ -792,7 +792,9 @@
     "open_network": "Open network",
     "unknown": "Unknown",
     "unnamed_network": "Unnamed network",
-    "connected": "Connected"
+    "connected": "Connected",
+    "enable_wifi": "Enable WiFi",
+    "disable_wifi": "Disable WiFi"
   },
   "vpn": {
     "title": "VPN",
