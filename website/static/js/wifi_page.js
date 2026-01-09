@@ -148,8 +148,13 @@
       } else if (data.signal) {
         signal = parseInt(data.signal) || 0;
       }
-      const signalPercent = signal > 0 ? Math.min(100, Math.max(0, (signal + 100) * 2)) : 0;
-      signalValue.textContent = signal > 0 ? signal + 'dBm' : '--';
+      // Si la señal es positiva, convertir a negativa (error de parsing)
+      if (signal > 0) {
+        signal = -signal;
+      }
+      // Calcular porcentaje: -30 dBm = 100%, -100 dBm = 0%
+      const signalPercent = signal <= -100 ? 0 : (signal >= -30 ? 100 : Math.min(100, Math.max(0, ((signal + 100) / 70) * 100)));
+      signalValue.textContent = signal < 0 ? signal + 'dBm' : '--';
       signalBar.style.width = signalPercent + '%';
     }
 
