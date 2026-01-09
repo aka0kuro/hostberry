@@ -204,19 +204,30 @@
     try {
       const resp = await apiRequest('/api/v1/wifi/interfaces');
       if (!resp.ok) return;
-        const data = await resp.json();
+      const data = await resp.json();
       const select = document.getElementById('wifi-interface');
       if (!select) return;
       
       select.innerHTML = '<option value="">' + t('wifi.auto_detect', 'Auto-detect') + '</option>';
+      
+      // El backend puede devolver interfaces como array de objetos o array de strings
+      let interfaces = [];
       if (data.interfaces && Array.isArray(data.interfaces)) {
-        data.interfaces.forEach(iface => {
-          const option = document.createElement('option');
-          option.value = iface;
-          option.textContent = iface;
-          select.appendChild(option);
-        });
+        interfaces = data.interfaces;
+      } else if (Array.isArray(data)) {
+        interfaces = data;
       }
+      
+      interfaces.forEach(iface => {
+        // Si es un objeto, extraer el nombre
+        const ifaceName = (typeof iface === 'object' && iface.name) ? iface.name : iface;
+        if (ifaceName && ifaceName !== '') {
+          const option = document.createElement('option');
+          option.value = ifaceName;
+          option.textContent = ifaceName;
+          select.appendChild(option);
+        }
+      });
     } catch (error) {
       console.error(t('wifi.networks_error', 'Error getting WiFi networks') + ':', error);
     }
