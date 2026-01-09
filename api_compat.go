@@ -308,55 +308,8 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 		}
 	}
 
-	// Fallback: Intentar métodos directos
-	// Método 1: Intentar con nmcli
-	out, err := execCommand("nmcli -t -f WIFI g 2>/dev/null").CombinedOutput()
-	state := strings.TrimSpace(string(out))
-	if err == nil && state != "" {
-		var cmd string
-		var wasEnabled bool
-		if strings.Contains(strings.ToLower(state), "enabled") || strings.Contains(strings.ToLower(state), "on") {
-			cmd = "nmcli radio wifi off"
-			wasEnabled = true
-		} else {
-			cmd = "nmcli radio wifi on"
-			wasEnabled = false
-		}
-		_, err2 := execCommand(cmd + " 2>/dev/null").CombinedOutput()
-		if err2 == nil {
-			// Si se activó WiFi, también activar la interfaz específica
-			if !wasEnabled {
-				time.Sleep(1 * time.Second)
-				
-				// Detectar y activar la interfaz WiFi específica
-				ifaceCmd := execCommand("nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
-				ifaceOut, ifaceErr := ifaceCmd.Output()
-				if ifaceErr == nil {
-					iface := strings.TrimSpace(string(ifaceOut))
-					if iface != "" {
-						// Activar la interfaz específica
-						execCommand(fmt.Sprintf("nmcli device set %s managed yes 2>/dev/null", iface)).Run()
-						execCommand(fmt.Sprintf("nmcli device connect %s 2>/dev/null", iface)).Run()
-						time.Sleep(1 * time.Second)
-					}
-				}
-				
-				// Verificar que se activó correctamente
-				verifyOut, verifyErr := execCommand("nmcli -t -f WIFI g 2>/dev/null").CombinedOutput()
-				if verifyErr == nil {
-					verifyState := strings.ToLower(strings.TrimSpace(string(verifyOut)))
-					if strings.Contains(verifyState, "enabled") || strings.Contains(verifyState, "on") {
-						InsertLog("INFO", fmt.Sprintf("WiFi activado exitosamente usando nmcli con sudo (usuario: %s)", user.Username), "wifi", &userID)
-						return c.JSON(fiber.Map{"success": true, "message": "WiFi activado exitosamente"})
-					}
-				}
-			}
-			InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando nmcli con sudo (usuario: %s)", user.Username), "wifi", &userID)
-			return c.JSON(fiber.Map{"success": true, "message": "WiFi toggle exitoso"})
-		}
-	}
-
-	// Método 2: Intentar con rfkill
+	// Fallback: Intentar métodos directos usando rfkill e ip (sin nmcli)
+	// Método 1: Usar rfkill para habilitar/deshabilitar WiFi
 	rfkillOut, rfkillErr := execCommand("rfkill list wifi 2>/dev/null | grep -i 'wifi' | head -1").CombinedOutput()
 	if rfkillErr == nil && strings.Contains(strings.ToLower(string(rfkillOut)), "wifi") {
 		// Obtener estado actual
