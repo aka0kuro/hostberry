@@ -253,11 +253,28 @@
   // Toggle HostAPD
   window.toggleHostAPD = async function() {
     const btn = document.getElementById('toggle-hostapd-btn');
+    const toggleText = document.getElementById('toggle-hostapd-text');
+    let originalBtnClass = '';
+    let originalText = '';
+    
     if (btn) {
       btn.disabled = true;
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<i class="bi bi-arrow-clockwise spinning me-2"></i>' + t('common.loading', 'Loading...');
+      originalBtnClass = btn.className;
+      originalText = toggleText ? toggleText.textContent : btn.textContent;
+      if (toggleText) {
+        toggleText.innerHTML = '<i class="bi bi-arrow-clockwise spinning me-2"></i>' + t('common.loading', 'Loading...');
+      } else {
+        btn.innerHTML = '<i class="bi bi-arrow-clockwise spinning me-2"></i>' + t('common.loading', 'Loading...');
+      }
     }
+    
+    const restoreButton = () => {
+      if (btn) {
+        btn.disabled = false;
+        // Recargar el estado para actualizar el botón correctamente
+        loadHostAPDStatus();
+      }
+    };
     
     try {
       console.log('Toggling HostAPD...');
@@ -279,10 +296,7 @@
           const text = await resp.text().catch(() => '');
           console.log('Response text:', text);
           HostBerry.showAlert('warning', t('errors.unexpected_response', 'Unexpected response from server'));
-          if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-          }
+          restoreButton();
           return;
         }
         
@@ -290,14 +304,16 @@
         
         if (result.error) {
           HostBerry.showAlert('warning', translateError(result.error));
+          restoreButton();
         } else {
           const action = result.enabled ? t('hostapd.enabled', 'Enabled') : t('hostapd.disabled', 'Disabled');
           HostBerry.showAlert('success', t('hostapd.hostapd_status_changed', 'HostAPD {status}').replace('{status}', action));
+          // Restaurar el botón y recargar el estado
+          restoreButton();
           setTimeout(() => {
-            loadHostAPDStatus();
             loadAccessPoints();
             loadClients();
-          }, 1000);
+          }, 500);
         }
       } else {
         const status = resp ? resp.status : 'unknown';
@@ -310,15 +326,12 @@
         }
         console.error('Error response:', errorText);
         HostBerry.showAlert('danger', translateError(errorText) || t('errors.operation_failed', 'Operation failed'));
+        restoreButton();
       }
     } catch (e) {
       console.error('Error toggling HostAPD:', e);
       HostBerry.showAlert('danger', t('errors.network_error', 'Network error') + ': ' + (e.message || String(e)));
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        // El texto se actualizará automáticamente cuando loadHostAPDStatus() se ejecute
-      }
+      restoreButton();
     }
   };
 
