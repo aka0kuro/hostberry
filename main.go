@@ -956,6 +956,7 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 				}
 			}
 		}
+		// Guardar última red si existe
 		if ssid, ok := currentNetwork["ssid"].(string); ok && ssid != "" {
 			networks = append(networks, fiber.Map{
 				"ssid":     currentNetwork["ssid"],
@@ -964,8 +965,41 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 				"channel":  currentNetwork["channel"],
 			})
 		}
+		
+		// Eliminar duplicados basándose en SSID (mantener el que tiene mejor señal)
+		seen := make(map[string]fiber.Map)
+		for _, net := range networks {
+			ssid, ok := net["ssid"].(string)
+			if ok && ssid != "" {
+				existing, exists := seen[ssid]
+				if !exists {
+					seen[ssid] = net
+				} else {
+					// Si ya existe, mantener el que tiene mejor señal
+					existingSignal := 0
+					currentSignal := 0
+					if s, ok := existing["signal"].(int); ok {
+						existingSignal = s
+					}
+					if s, ok := net["signal"].(int); ok {
+						currentSignal = s
+					}
+					// Si la señal actual es mejor (más alta, menos negativa), reemplazar
+					if currentSignal > existingSignal {
+						seen[ssid] = net
+					}
+				}
+			}
+		}
+		// Convertir map a slice
+		uniqueNetworks := []fiber.Map{}
+		for _, net := range seen {
+			uniqueNetworks = append(uniqueNetworks, net)
+		}
+		networks = uniqueNetworks
+		
 		if len(networks) > 0 {
-			log.Printf("✅ Encontradas %d redes con iw", len(networks))
+			log.Printf("✅ Encontradas %d redes únicas con iw", len(networks))
 			return c.JSON(fiber.Map{
 				"success":  true,
 				"networks": networks,
