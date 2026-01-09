@@ -467,6 +467,7 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 		interfaces = append(interfaces, iface)
 	}
 
+	log.Printf("✅ Fallback devolvió %d interfaces", len(interfaces))
 	return c.JSON(fiber.Map{"interfaces": interfaces})
 }
 
