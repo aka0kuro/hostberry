@@ -833,11 +833,10 @@
     updateTrafficStats();
     setInterval(updateTrafficStats, 5000);
     
-    // Refresh interfaces, routing table and status periodically
+    // Refresh interfaces and routing table periodically
     setInterval(() => {
       loadInterfaces();
       loadRoutingTable();
-      loadNetworkStatus();
     }, 30000);
   }
 
