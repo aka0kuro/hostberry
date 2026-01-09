@@ -722,7 +722,7 @@
         }
       }
     } catch (error) {
-      console.error('Error verificando estado inicial:', error);
+      console.error(t('wifi.status_error', 'Error getting WiFi status') + ':', error);
     }
   });
 })();
