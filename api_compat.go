@@ -317,14 +317,33 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 		isBlocked := strings.Contains(strings.ToLower(string(statusOut)), "yes")
 		
 		var rfkillCmd string
+		var wasEnabled bool
 		if isBlocked {
 			rfkillCmd = "rfkill unblock wifi"
+			wasEnabled = false
 		} else {
 			rfkillCmd = "rfkill block wifi"
+			wasEnabled = true
 		}
 		
 		_, rfkillToggleErr := execCommand(rfkillCmd + " 2>/dev/null").CombinedOutput()
 		if rfkillToggleErr == nil {
+			// Si se activó WiFi, también activar la interfaz específica
+			if !wasEnabled {
+				time.Sleep(1 * time.Second)
+				
+				// Detectar y activar la interfaz WiFi específica usando ip
+				ifaceCmd := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}' | grep -E '^wlan|^wl' | head -1")
+				ifaceOut, ifaceErr := ifaceCmd.Output()
+				if ifaceErr == nil {
+					iface := strings.TrimSpace(string(ifaceOut))
+					if iface != "" {
+						// Activar la interfaz específica
+						execCommand(fmt.Sprintf("ip link set %s up 2>/dev/null", iface)).Run()
+						time.Sleep(1 * time.Second)
+					}
+				}
+			}
 			InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando rfkill con sudo (usuario: %s)", user.Username), "wifi", &userID)
 			return c.JSON(fiber.Map{"success": true, "message": "WiFi toggle exitoso"})
 		}
