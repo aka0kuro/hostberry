@@ -974,6 +974,7 @@
     "hostapd_alert": "HostAPD Alert",
     "enable_failed": "Failed to enable HostAPD. Check configuration and logs.",
     "hostapd_status_changed": "HostAPD {status}",
+    "config_required": "HostAPD configuration required. Please configure HostAPD first using the configuration form below.",
     "access_point_name": "Access Point Name",
     "access_point_ssid": "Access Point SSID",
     "access_point_password": "Access Point Password",
