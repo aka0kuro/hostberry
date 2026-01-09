@@ -61,7 +61,7 @@
     }
     
     try {
-      const resp = await HostBerry.apiRequest('/api/v1/system/network/interfaces');
+      const resp = await HostBerry.apiRequest('/api/v1/network/interfaces');
       if (!resp) {
         throw new Error('No response from server');
       }
