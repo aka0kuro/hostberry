@@ -690,7 +690,7 @@
         buttonElement.innerHTML = originalText;
       }
     } catch (error) {
-      console.error('Error desconectando WiFi:', error);
+      console.error(t('wifi.disconnect_error', 'Error disconnecting from WiFi') + ':', error);
       showAlert('danger', t('wifi.disconnect_error', 'Error disconnecting from WiFi'));
       buttonElement.disabled = false;
       buttonElement.innerHTML = originalText;
