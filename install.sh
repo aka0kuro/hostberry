@@ -1027,6 +1027,26 @@ EOF
         print_info "Permisos agregados para chmod: /bin/chmod"
     fi
     
+    # bash (para ejecutar scripts de configuración)
+    if command -v bash &> /dev/null; then
+        BASH_PATH=$(command -v bash)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $BASH_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para bash: $BASH_PATH"
+    elif [ -f "/bin/bash" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /bin/bash" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para bash: /bin/bash"
+    fi
+    
+    # sh (para ejecutar scripts de configuración)
+    if command -v sh &> /dev/null; then
+        SH_PATH=$(command -v sh)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SH_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para sh: $SH_PATH"
+    elif [ -f "/bin/sh" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /bin/sh" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para sh: /bin/sh"
+    fi
+    
     # Crear directorio /etc/hostapd con permisos correctos
     print_info "Creando directorio /etc/hostapd..."
     if [ ! -d "/etc/hostapd" ]; then
