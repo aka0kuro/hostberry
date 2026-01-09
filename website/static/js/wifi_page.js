@@ -36,7 +36,7 @@
     try {
       const resp = await apiRequest('/api/v1/wifi/status');
       if (!resp.ok) {
-        console.error('Error obteniendo estado WiFi:', resp.status);
+        console.error(t('wifi.status_error', 'Error getting WiFi status') + ':', resp.status);
         return;
       }
       const data = await resp.json();
