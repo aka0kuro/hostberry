@@ -112,10 +112,14 @@ if not nmcli_err and nmcli_output and nmcli_output ~= "" then
     end
 end
 
--- Método 2: Si nmcli no encontró redes, intentar con iw
+-- Método 2: Usar iw directamente (más confiable cuando NetworkManager no está disponible)
 if #result.networks == 0 then
-    log("INFO", "Intentando con iw en interfaz " .. interface)
-    local iw_cmd = "sudo iw dev " .. interface .. " scan 2>&1 | grep -E 'SSID|signal|freq' | head -30"
+    log("INFO", "Escaneando con iw en interfaz " .. interface)
+    -- Asegurar que la interfaz esté activa
+    exec("sudo ip link set " .. interface .. " up 2>/dev/null")
+    os.execute("sleep 1")
+    
+    local iw_cmd = "sudo iw dev " .. interface .. " scan 2>&1"
     local iw_output, iw_err = exec(iw_cmd)
     
     if not iw_err and iw_output and iw_output ~= "" then
