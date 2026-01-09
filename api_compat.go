@@ -1025,15 +1025,39 @@ rsn_pairwise=CCMP
 	
 	log.Printf("Temporary file created successfully, size: %d bytes", len(configContent))
 	
+	// Verificar que el archivo temporal existe justo antes de copiarlo
+	if _, err := os.Stat(tmpFile); os.IsNotExist(err) {
+		log.Printf("Temporary file does not exist before copy: %s", tmpFile)
+		return c.Status(500).JSON(fiber.Map{
+			"error":   "Temporary file was not created or was deleted",
+			"success": false,
+		})
+	}
+	
+	// Verificar que podemos leer el archivo temporal
+	if fileInfo, err := os.Stat(tmpFile); err == nil {
+		log.Printf("Temporary file exists, size: %d bytes, mode: %v", fileInfo.Size(), fileInfo.Mode())
+	} else {
+		log.Printf("Cannot stat temporary file: %v", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error":   fmt.Sprintf("Cannot access temporary file: %v", err),
+			"success": false,
+		})
+	}
+	
 	// Copiar archivo temporal a la ubicación final con sudo
 	// Primero asegurar que el directorio existe
 	executeCommand("sudo mkdir -p /etc/hostapd 2>/dev/null || true")
+	executeCommand("sudo chmod 755 /etc/hostapd 2>/dev/null || true")
 	
 	cmdStr := fmt.Sprintf("sudo cp %s %s", tmpFile, configPath)
 	log.Printf("Executing: %s", cmdStr)
 	out, err := executeCommand(cmdStr)
 	if err != nil {
-		os.Remove(tmpFile) // Limpiar archivo temporal
+		// Verificar si el archivo temporal todavía existe después del error
+		if _, statErr := os.Stat(tmpFile); os.IsNotExist(statErr) {
+			log.Printf("Temporary file was deleted after copy attempt")
+		}
 		errorMsg := strings.TrimSpace(out)
 		if errorMsg == "" {
 			errorMsg = err.Error()
@@ -1041,19 +1065,15 @@ rsn_pairwise=CCMP
 		log.Printf("Error copying config file: %v, output: '%s', errorMsg: '%s'", err, out, errorMsg)
 		// Si el error es "exit status X", intentar obtener más información
 		if strings.Contains(err.Error(), "exit status") {
-			// Verificar si el archivo temporal existe
-			if _, statErr := os.Stat(tmpFile); os.IsNotExist(statErr) {
-				errorMsg = "Temporary file was deleted before copy"
+			// Verificar permisos del directorio destino
+			destDir := "/etc/hostapd"
+			if _, statErr := os.Stat(destDir); os.IsNotExist(statErr) {
+				errorMsg = fmt.Sprintf("Destination directory %s does not exist", destDir)
 			} else {
-				// Verificar permisos del directorio destino
-				destDir := "/etc/hostapd"
-				if _, statErr := os.Stat(destDir); os.IsNotExist(statErr) {
-					errorMsg = fmt.Sprintf("Destination directory %s does not exist", destDir)
-				} else {
-					errorMsg = fmt.Sprintf("Failed to copy file (exit status error). Check permissions for %s", destDir)
-				}
+				errorMsg = fmt.Sprintf("Failed to copy file (exit status error). Check permissions for %s", destDir)
 			}
 		}
+		// No eliminar el archivo temporal aquí, mantenerlo para depuración
 		return c.Status(500).JSON(fiber.Map{
 			"error":   fmt.Sprintf("Error saving hostapd configuration: %s", errorMsg),
 			"success": false,
