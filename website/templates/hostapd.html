@@ -137,6 +137,29 @@
                 </div>
             </div>
         </div>
+
+        <!-- Diagnostics (shown when service is running but not transmitting) -->
+        <div class="col-12" id="diagnosticsSection" style="display: none;">
+            <div class="dashboard-card info-card border-warning">
+                <div class="dashboard-card-header bg-warning bg-opacity-10">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-exclamation-triangle me-2 text-warning"></i>
+                        {{ call .t "hostapd.diagnostics" "HostAPD Diagnostics" }}
+                    </h5>
+                    <button class="btn btn-sm btn-outline-warning" onclick="loadDiagnostics()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+                <div class="dashboard-card-body">
+                    <div id="diagnosticsContainer">
+                        <div class="text-center py-4">
+                            <div class="spinning mb-3"><i class="bi bi-arrow-clockwise" style="font-size: 2rem;"></i></div>
+                            <p class="text-muted">{{ call .t "common.loading" "Loading..." }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Clients and Configuration -->
