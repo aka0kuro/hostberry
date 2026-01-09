@@ -197,10 +197,33 @@
           const isActive = ap.active === true || 
                           (ap.enabled === true || ap.enabled === 'true') ||
                           (ap.status === 'active');
+          
+          // Verificar si el servicio está corriendo pero no transmite
+          const serviceRunning = ap.service_running === true;
+          const transmitting = ap.transmitting === true;
+          const status = ap.status || 'inactive';
+          
+          // Determinar el estado visual
+          let statusBadge = '';
+          let statusText = '';
+          if (isActive && transmitting) {
+            statusBadge = 'success';
+            statusText = t('hostapd.active', 'Active');
+          } else if (serviceRunning && !transmitting) {
+            statusBadge = 'warning';
+            statusText = t('hostapd.service_running_not_transmitting', 'Running but not transmitting');
+          } else if (status === 'error') {
+            statusBadge = 'danger';
+            statusText = t('hostapd.error', 'Error');
+          } else {
+            statusBadge = 'danger';
+            statusText = t('hostapd.inactive', 'Inactive');
+          }
+          
           html += '<tr>';
           html += `<td>${ap.name || ap.interface || '-'}</td>`;
           html += `<td>${ap.ssid || '-'}</td>`;
-          html += `<td><span class="badge bg-${isActive ? 'success' : 'danger'}">${isActive ? t('hostapd.active', 'Active') : t('hostapd.inactive', 'Inactive')}</span></td>`;
+          html += `<td><span class="badge bg-${statusBadge}" title="${serviceRunning && !transmitting ? t('hostapd.check_diagnostics', 'Service is running but WiFi network is not visible. Check diagnostics.') : ''}">${statusText}</span></td>`;
           html += `<td>${ap.clients_count || 0}</td>`;
           html += `<td><button class="btn btn-sm btn-outline-primary" onclick="configureAccessPoint('${ap.name || ap.ssid || ''}')"><i class="bi bi-gear"></i></button></td>`;
           html += '</tr>';
