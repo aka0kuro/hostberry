@@ -213,6 +213,9 @@ body.light-theme .dashboard-card-header {
     color: var(--hb-text-light);
     display: flex;
     align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 body.light-theme .dashboard-card-title {
