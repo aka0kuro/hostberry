@@ -707,7 +707,6 @@ func hostapdAccessPointsHandler(c *fiber.Ctx) error {
 	
 	// Verificar si hostapd está corriendo (múltiples métodos para mayor confiabilidad)
 	hostapdActive := false
-	hostapdStatus := "inactive"
 	hostapdTransmitting := false // Verificar si realmente está transmitiendo
 	
 	// Método 1: Verificar con systemctl
@@ -715,7 +714,6 @@ func hostapdAccessPointsHandler(c *fiber.Ctx) error {
 	systemctlStatus := strings.TrimSpace(string(systemctlOut))
 	if systemctlStatus == "active" {
 		hostapdActive = true
-		hostapdStatus = "active"
 	}
 	
 	// Método 2: Verificar si el proceso está corriendo
@@ -724,7 +722,6 @@ func hostapdAccessPointsHandler(c *fiber.Ctx) error {
 		pgrepStatus := strings.TrimSpace(string(pgrepOut))
 		if pgrepStatus == "active" {
 			hostapdActive = true
-			hostapdStatus = "active"
 		}
 	}
 	
