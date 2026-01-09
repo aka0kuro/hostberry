@@ -718,47 +718,34 @@
     }
   };
 
-  // Load Network Status
-  async function loadNetworkStatus() {
-    try {
-      const resp = await HostBerry.apiRequest('/api/v1/system/network/status');
-      if (resp && resp.ok) {
-        const data = await resp.json();
-        const statusEl = document.getElementById('network-status-value');
-        const statusBar = document.getElementById('network-status-bar');
-        
-        if (statusEl) {
-          // Determinar estado de la red
-          let statusText = '--';
-          let statusPercent = 0;
-          
-          if (data.connected || data.status === 'connected' || data.status === 'up') {
-            statusText = t('network.connected', 'Connected');
-            statusPercent = 100;
-          } else if (data.status === 'disconnected' || data.status === 'down') {
-            statusText = t('network.disconnected', 'Disconnected');
-            statusPercent = 0;
-          } else if (data.interfaces && Array.isArray(data.interfaces)) {
-            // Contar interfaces activas
-            const activeCount = data.interfaces.filter(iface => {
-              const status = iface.status || iface.state || '';
-              return status === 'up' || status === 'connected' || (iface.ip && iface.ip !== 'N/A');
-            }).length;
-            if (activeCount > 0) {
-              statusText = t('network.connected', 'Connected');
-              statusPercent = Math.min(100, (activeCount / data.interfaces.length) * 100);
-            }
-          }
-          
-          statusEl.textContent = statusText;
-          if (statusBar) {
-            statusBar.style.width = statusPercent + '%';
-          }
-        }
-      }
-    } catch (e) {
-      console.error('Error loading network status:', e);
-      // No mostrar error, solo dejar los valores por defecto
+  // Load Network Status - usa los datos de interfaces ya cargados
+  function updateNetworkStatusCard(interfaces) {
+    const statusEl = document.getElementById('network-status-value');
+    const statusBar = document.getElementById('network-status-bar');
+    
+    if (!statusEl) return;
+    
+    if (!interfaces || !Array.isArray(interfaces) || interfaces.length === 0) {
+      statusEl.textContent = t('network.disconnected', 'Disconnected');
+      if (statusBar) statusBar.style.width = '0%';
+      return;
+    }
+    
+    // Contar interfaces activas
+    const activeCount = interfaces.filter(iface => {
+      if (!iface) return false;
+      const status = iface.status || iface.state || '';
+      const hasIp = iface.ip && iface.ip !== 'N/A' && iface.ip !== '';
+      return status === 'up' || status === 'connected' || hasIp;
+    }).length;
+    
+    if (activeCount > 0) {
+      statusEl.textContent = t('network.connected', 'Connected');
+      const percent = Math.min(100, Math.round((activeCount / interfaces.length) * 100));
+      if (statusBar) statusBar.style.width = percent + '%';
+    } else {
+      statusEl.textContent = t('network.disconnected', 'Disconnected');
+      if (statusBar) statusBar.style.width = '0%';
     }
   }
 
