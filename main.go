@@ -391,11 +391,12 @@ func setupRoutes(app *fiber.App) {
 		// HostAPD
 		hostapd := api.Group("/hostapd", requireAuth)
 		{
-			hostapd.Get("/access-points", hostapdAccessPointsHandler)
-			hostapd.Get("/clients", hostapdClientsHandler)
-			hostapd.Post("/toggle", hostapdToggleHandler)
-			hostapd.Post("/restart", hostapdRestartHandler)
-			hostapd.Post("/config", hostapdConfigHandler)
+		hostapd.Get("/access-points", hostapdAccessPointsHandler)
+		hostapd.Get("/clients", hostapdClientsHandler)
+		hostapd.Get("/config", hostapdGetConfigHandler)
+		hostapd.Post("/toggle", hostapdToggleHandler)
+		hostapd.Post("/restart", hostapdRestartHandler)
+		hostapd.Post("/config", hostapdConfigHandler)
 		}
 
 		// Help
