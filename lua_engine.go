@@ -93,6 +93,15 @@ func (le *LuaEngine) registerFunctions() {
 		L.Push(lua.LString(value))
 		return 1
 	}))
+
+	// Función para verificar si un archivo existe
+	le.L.SetGlobal("file_exists", le.L.NewFunction(func(L *lua.LState) int {
+		path := L.CheckString(1)
+		_, err := os.Stat(path)
+		exists := err == nil
+		L.Push(lua.LBool(exists))
+		return 1
+	}))
 }
 
 // Execute ejecuta un script Lua y retorna el resultado
