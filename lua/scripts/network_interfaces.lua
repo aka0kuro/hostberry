@@ -24,7 +24,8 @@ if interfaces_output and interfaces_output ~= "" then
         
         -- Estado
         local state_cmd = "cat /sys/class/net/" .. iface .. "/operstate 2>/dev/null"
-        interface_info.state = exec(state_cmd) or "unknown"
+        local state_output, _ = exec(state_cmd)
+        interface_info.state = (state_output and state_output:match("^%s*(.-)%s*$")) or "unknown"
         interface_info.connected = (interface_info.state == "up")
         
         -- IP y máscara de red
