@@ -474,7 +474,7 @@
     // Obtener información de la red desde los atributos data de la tarjeta
     let signal = '--';
     let channel = '--';
-    let encryption = security || 'Unknown';
+    let encryption = security || t('wifi.unknown', 'Unknown');
     
     if (card) {
       const cardSignal = card.getAttribute('data-signal');
