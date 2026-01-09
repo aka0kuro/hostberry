@@ -475,6 +475,7 @@
       loadAccessPoints();
       loadClients();
       loadInterfaces();
+      loadHostAPDConfig(); // Cargar configuración existente
       
       // Configurar formulario
       const form = document.getElementById('hostapdConfigForm');
