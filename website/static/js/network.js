@@ -354,7 +354,8 @@
     
     try {
       const ctx = canvas.getContext('2d');
-      netTrafficChart = new Chart(ctx, {
+      const ChartLib = typeof Chart !== 'undefined' ? Chart : window.Chart;
+      netTrafficChart = new ChartLib(ctx, {
         type: 'line',
         data: {
           labels: netTrafficHistory.labels,
