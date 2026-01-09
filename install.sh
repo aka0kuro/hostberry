@@ -1307,6 +1307,7 @@ main() {
     build_project
     create_database
     configure_permissions
+    create_hostapd_default_config
     configure_firewall
     create_systemd_service
     start_service
