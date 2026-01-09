@@ -630,6 +630,7 @@
     // Si se especificó una interfaz pero no se encontró, devolver 0 pero con el nombre de la interfaz
     if (interfaceName && !foundInterface) {
       // La interfaz especificada no existe en /proc/net/dev
+      console.warn(`Interface ${interfaceName} not found in /proc/net/dev. Available interfaces:`, interfaces);
       // Devolver datos vacíos pero con el nombre de la interfaz para que el frontend sepa qué interfaz se está mostrando
       return {
         bytes_recv: 0,
