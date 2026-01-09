@@ -870,36 +870,6 @@
       });
     }
 
-    // DHCP Config Form
-    const dhcpConfigForm = document.getElementById('dhcpConfigForm');
-    if (dhcpConfigForm) {
-      dhcpConfigForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const fd = new FormData(this);
-        const data = {
-          dhcp_enabled: document.getElementById('dhcp-enabled')?.checked || false,
-          dhcp_interface: fd.get('dhcp_interface'),
-          dhcp_range_start: fd.get('dhcp_range_start'),
-          dhcp_range_end: fd.get('dhcp_range_end'),
-          dhcp_gateway: fd.get('dhcp_gateway'),
-          dhcp_lease_time: fd.get('dhcp_lease_time')
-        };
-        try {
-          const resp = await HostBerry.apiRequest('/api/v1/system/network/dhcp/config', {
-            method: 'POST',
-            body: data
-          });
-          if (resp && resp.ok) {
-            HostBerry.showAlert('success', t('messages.config_saved', 'Configuration saved'));
-          } else {
-            HostBerry.showAlert('danger', t('errors.config_update_error', 'Error updating configuration'));
-          }
-        } catch (e) {
-          HostBerry.showAlert('danger', t('errors.network_error', 'Network error'));
-        }
-      });
-    }
-
     // Traffic Interface Select
     const trafficSelect = document.getElementById('net-traffic-interface-select');
     if (trafficSelect) {
