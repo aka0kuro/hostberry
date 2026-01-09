@@ -44,6 +44,7 @@
       currentConnectedSSID = (data.connected && data.ssid) ? data.ssid : null;
       updateStatusCards(data);
       updateConnectionInfo(data);
+      updateButtonTexts(data);
       // Actualizar botones de conexión en las tarjetas
       updateConnectButtons();
     } catch (error) {
