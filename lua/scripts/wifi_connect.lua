@@ -24,9 +24,16 @@ local wpa_pid = exec("pgrep -f 'wpa_supplicant.*" .. interface .. "'")
 if not wpa_pid or wpa_pid == "" then
     log("INFO", "Iniciando wpa_supplicant en interfaz " .. interface)
     -- Iniciar wpa_supplicant si no está corriendo
+    -- Crear archivo de configuración si no existe
     local wpa_config = "/etc/wpa_supplicant/wpa_supplicant-" .. interface .. ".conf"
     if not file_exists(wpa_config) then
         wpa_config = "/etc/wpa_supplicant/wpa_supplicant.conf"
+        -- Si tampoco existe el archivo genérico, crearlo
+        if not file_exists(wpa_config) then
+            local default_config = "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=US\n"
+            write_file(wpa_config, default_config)
+            exec("sudo chmod 600 " .. wpa_config)
+        end
     end
     
     local start_cmd = "sudo wpa_supplicant -B -i " .. interface .. " -c " .. wpa_config
