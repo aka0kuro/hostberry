@@ -317,7 +317,12 @@
         const actuallyEnabled = result.enabled === true;
         
         if (result.error) {
-          HostBerry.showAlert('warning', translateError(result.error));
+          // Si falta la configuración, mostrar mensaje más claro
+          if (result.config_missing) {
+            HostBerry.showAlert('warning', t('hostapd.config_required', 'HostAPD configuration required. Please configure HostAPD first using the configuration form below.'));
+          } else {
+            HostBerry.showAlert('warning', translateError(result.error));
+          }
           restoreButton();
         } else {
           // Usar el estado real del servicio desde la respuesta
@@ -330,7 +335,8 @@
           } else {
             // Si se intentó activar pero no se activó, mostrar advertencia
             if (result.action === 'enable') {
-              HostBerry.showAlert('warning', t('hostapd.enable_failed', 'Failed to enable HostAPD. Check configuration and logs.') + statusMsg);
+              const errorMsg = result.error || t('hostapd.enable_failed', 'Failed to enable HostAPD. Check configuration and logs.');
+              HostBerry.showAlert('warning', errorMsg + statusMsg);
             } else {
               HostBerry.showAlert('success', t('hostapd.hostapd_status_changed', 'HostAPD {status}').replace('{status}', action) + statusMsg);
             }
