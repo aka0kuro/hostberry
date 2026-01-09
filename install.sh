@@ -1093,12 +1093,12 @@ EOF
             cp "$DNSMASQ_CONFIG" "${DNSMASQ_CONFIG}.backup"
             print_info "Backup de configuración de dnsmasq creado"
         fi
-    fi
-    
-    # Crear configuración de dnsmasq para HostAPD (solo si no tiene configuración de hostapd)
-    if ! grep -q "interface=${HOSTAPD_INTERFACE}" "$DNSMASQ_CONFIG" 2>/dev/null; then
-        print_info "Agregando configuración de dnsmasq para HostAPD..."
-        cat >> "$DNSMASQ_CONFIG" <<EOF
+        # Verificar si ya tiene configuración de hostapd
+        if grep -q "interface=${HOSTAPD_INTERFACE}" "$DNSMASQ_CONFIG" 2>/dev/null; then
+            print_info "Configuración de dnsmasq para HostAPD ya existe"
+        else
+            print_info "Agregando configuración de dnsmasq para HostAPD..."
+            cat >> "$DNSMASQ_CONFIG" <<EOF
 
 # Configuración para HostAPD (agregada por HostBerry)
 interface=${HOSTAPD_INTERFACE}
@@ -1108,9 +1108,22 @@ dhcp-option=6,${HOSTAPD_GATEWAY}
 server=8.8.8.8
 server=8.8.4.4
 EOF
-        print_success "Configuración de dnsmasq actualizada"
+            print_success "Configuración de dnsmasq actualizada"
+        fi
     else
-        print_info "Configuración de dnsmasq para HostAPD ya existe"
+        # Crear archivo de configuración de dnsmasq desde cero
+        print_info "Creando archivo de configuración de dnsmasq..."
+        cat > "$DNSMASQ_CONFIG" <<EOF
+# Configuración de dnsmasq para HostAPD (creada por HostBerry)
+interface=${HOSTAPD_INTERFACE}
+dhcp-range=${HOSTAPD_DHCP_START},${HOSTAPD_DHCP_END},255.255.255.0,${HOSTAPD_LEASE_TIME}
+dhcp-option=3,${HOSTAPD_GATEWAY}
+dhcp-option=6,${HOSTAPD_GATEWAY}
+server=8.8.8.8
+server=8.8.4.4
+EOF
+        chmod 644 "$DNSMASQ_CONFIG"
+        print_success "Archivo de configuración de dnsmasq creado"
     fi
     
     # Crear archivo de override de systemd para hostapd si no existe
