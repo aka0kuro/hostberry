@@ -900,10 +900,15 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 					}
 				}
 			} else if strings.Contains(line, "freq:") {
+				// Formato: "freq: 2412" o "freq: 2412 [MHz]"
 				parts := strings.Fields(line)
 				for i, part := range parts {
 					if part == "freq:" && i+1 < len(parts) {
-						if f, err := strconv.Atoi(parts[i+1]); err == nil {
+						freqStr := strings.TrimSpace(parts[i+1])
+						// Remover "[MHz]" si está presente
+						freqStr = strings.TrimSuffix(freqStr, "[MHz]")
+						freqStr = strings.TrimSpace(freqStr)
+						if f, err := strconv.Atoi(freqStr); err == nil {
 							// Convertir frecuencia a canal
 							if f >= 2412 && f <= 2484 {
 								channel := (f-2412)/5 + 1
@@ -913,7 +918,11 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 								channel := (f - 5000) / 5
 								currentNetwork["channel"] = strconv.Itoa(channel)
 								log.Printf("Parsed channel: %d from freq: %d", channel, f)
+							} else {
+								log.Printf("Warning: Frecuencia fuera de rango: %d", f)
 							}
+						} else {
+							log.Printf("Warning: Could not parse frequency from line: %s, error: %v", line, err)
 						}
 						break
 					}
