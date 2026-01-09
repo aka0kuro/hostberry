@@ -1094,8 +1094,20 @@ server=8.8.4.4
 ExecStart=
 ExecStart=/usr/sbin/hostapd -B %s
 `, configPath)
-	overrideContentEscaped := strings.ReplaceAll(overrideContent, "'", "'\"'\"'")
-	executeCommand(fmt.Sprintf("echo '%s' | sudo tee %s/override.conf > /dev/null", overrideContentEscaped, overrideDir))
+	// Guardar override usando un archivo temporal
+	tmpOverrideFile := "/tmp/hostapd-override.conf.tmp"
+	if err := os.WriteFile(tmpOverrideFile, []byte(overrideContent), 0644); err != nil {
+		log.Printf("Warning: Error creating temporary override file: %v", err)
+	} else {
+		overridePath := fmt.Sprintf("%s/override.conf", overrideDir)
+		cmdStr3 := fmt.Sprintf("sudo cp %s %s && sudo chmod 644 %s", tmpOverrideFile, overridePath, overridePath)
+		if out, err := executeCommand(cmdStr3); err != nil {
+			log.Printf("Warning: Error copying override file: %s, output: %s", err, strings.TrimSpace(out))
+		} else {
+			log.Printf("Override file created successfully")
+		}
+		os.Remove(tmpOverrideFile)
+	}
 	executeCommand("sudo systemctl daemon-reload")
 	
 	// Habilitar hostapd para que inicie al arrancar
