@@ -800,13 +800,9 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 	time.Sleep(500 * time.Millisecond)
 
 	// Método 1: Intentar con nmcli (solo si NetworkManager está corriendo)
-	var networks []fiber.Map
-	useNmcli := false
-	
 	// Verificar si NetworkManager está corriendo
 	nmCheck := exec.Command("pgrep", "NetworkManager")
 	if nmOut, _ := nmCheck.Output(); len(nmOut) > 0 {
-		useNmcli = true
 		cmd := execCommand("nmcli -t -f SSID,SIGNAL,SECURITY,CHAN dev wifi list 2>&1")
 		out, err := cmd.CombinedOutput()
 		output := strings.TrimSpace(string(out))
