@@ -375,6 +375,14 @@ body.light-theme .info-label {
     font-size: 1rem;
     font-weight: 500;
     color: var(--hb-text-light);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Hacer el texto más pequeño cuando es "Disconnected" */
+.info-value.text-disconnected,
+.info-value[data-status="disconnected"] {
+    font-size: 0.85rem;
 }
 
 body.light-theme .info-value {
