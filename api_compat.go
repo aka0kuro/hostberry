@@ -838,15 +838,28 @@ func hostapdAccessPointsHandler(c *fiber.Ctx) error {
 			}
 		}
 		
+		// El punto de acceso está realmente activo solo si está transmitiendo
+		// Si el servicio está corriendo pero no transmite, mostrar como inactivo
+		actuallyActive := hostapdActive && hostapdTransmitting
+		
 		aps = append(aps, fiber.Map{
 			"name":          interfaceName,
 			"ssid":          ssid,
 			"interface":     interfaceName,
 			"channel":       channel,
 			"security":      security,
-			"enabled":       hostapdActive, // Usar la variable booleana directamente
-			"active":        hostapdActive, // Agregar también 'active' para compatibilidad
-			"status":        hostapdStatus,  // Agregar 'status' para más información
+			"enabled":       actuallyActive, // Solo true si realmente está transmitiendo
+			"active":        actuallyActive, // Solo true si realmente está transmitiendo
+			"status":        func() string {
+				if actuallyActive {
+					return "active"
+				} else if hostapdActive {
+					return "error" // Servicio corriendo pero no transmite
+				}
+				return "inactive"
+			}(),
+			"transmitting":  hostapdTransmitting, // Nuevo campo para diagnóstico
+			"service_running": hostapdActive,     // Servicio corriendo (pero puede no transmitir)
 			"clients_count": clientsCount,
 		})
 	}
