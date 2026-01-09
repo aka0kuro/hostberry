@@ -387,6 +387,9 @@
             const buttonText = isConnected ? t('wifi.disconnect', 'Disconnect') : t('wifi.connect', 'Connect');
             const buttonAction = isConnected ? `disconnectWiFi(this)` : `connectToNetwork('${escapedSsid}', '${security}', this)`;
             
+            // Traducción para "Connected" badge
+            const connectedBadge = isConnected ? ` <span class="badge bg-success ms-2">${t('wifi.connected', 'Connected')}</span>` : '';
+            
             card.innerHTML = `
               <div class="network-card-content">
                 <div class="network-card-icon ${signalColor}">
