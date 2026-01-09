@@ -919,6 +919,9 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 		executeCommand("sudo systemctl stop dnsmasq 2>/dev/null || true")
 		cmdStr = "sudo systemctl stop hostapd"
 		enableCmd = "sudo systemctl disable hostapd 2>/dev/null || true"
+		
+		// En modo AP+STA, no eliminamos ap0 al detener porque puede ser recreada automáticamente
+		// La interfaz virtual ap0 puede mantenerse para facilitar el reinicio
 	} else {
 		// Habilitar y iniciar hostapd y dnsmasq
 		action = "enable"
