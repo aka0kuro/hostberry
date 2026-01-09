@@ -248,11 +248,15 @@
         throw new Error('No response from server');
       }
       
+      console.log('Routing table response status:', resp.status, 'ok:', resp.ok);
+      
       if (resp.ok) {
         let data;
         try {
-          data = await resp.json();
-          console.log('Routing table response:', data);
+          const text = await resp.text();
+          console.log('Routing table raw response:', text);
+          data = JSON.parse(text);
+          console.log('Routing table parsed data:', data, 'type:', typeof data, 'isArray:', Array.isArray(data));
         } catch (jsonError) {
           console.error('Error parsing JSON:', jsonError);
           if (tbody) {
@@ -265,13 +269,18 @@
         let routes = [];
         if (Array.isArray(data)) {
           routes = data;
+          console.log('Using data as array, length:', routes.length);
         } else if (data.routes && Array.isArray(data.routes)) {
           routes = data.routes;
+          console.log('Using data.routes, length:', routes.length);
         } else if (data.data && Array.isArray(data.data)) {
           routes = data.data;
+          console.log('Using data.data, length:', routes.length);
+        } else {
+          console.warn('Unexpected data format:', data);
         }
         
-        console.log('Parsed routes:', routes);
+        console.log('Final routes array:', routes, 'length:', routes.length);
         
         if (routes.length > 0) {
           displayRoutingTable(routes);
