@@ -461,6 +461,107 @@
     }
   };
 
+  // Cargar diagnósticos de HostAPD
+  window.loadDiagnostics = async function() {
+    const container = document.getElementById('diagnosticsContainer');
+    if (!container) return;
+    
+    container.innerHTML = '<div class="text-center py-4"><div class="spinning mb-3"><i class="bi bi-arrow-clockwise" style="font-size: 2rem;"></i></div><p class="text-muted">' + t('common.loading', 'Loading...') + '</p></div>';
+    
+    try {
+      const resp = await HostBerry.apiRequest('/api/v1/hostapd/diagnostics');
+      if (resp && resp.ok) {
+        const diagnostics = await resp.json();
+        
+        let html = '<div class="diagnostics-content">';
+        
+        // Estado del servicio
+        html += '<div class="mb-4">';
+        html += '<h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2"></i>' + t('hostapd.service_status', 'Service Status') + '</h6>';
+        html += '<div class="row g-2">';
+        html += '<div class="col-md-6"><strong>' + t('hostapd.service_running', 'Service Running') + ':</strong> <span class="badge bg-' + (diagnostics.service_running ? 'success' : 'danger') + '">' + (diagnostics.service_running ? t('common.yes', 'Yes') : t('common.no', 'No')) + '</span></div>';
+        html += '<div class="col-md-6"><strong>' + t('hostapd.transmitting', 'Transmitting') + ':</strong> <span class="badge bg-' + (diagnostics.transmitting ? 'success' : 'warning') + '">' + (diagnostics.transmitting ? t('common.yes', 'Yes') : t('common.no', 'No')) + '</span></div>';
+        html += '<div class="col-md-6"><strong>' + t('hostapd.interface', 'Interface') + ':</strong> <code>' + (diagnostics.interface || 'N/A') + '</code></div>';
+        html += '<div class="col-md-6"><strong>' + t('hostapd.interface_up', 'Interface Up') + ':</strong> <span class="badge bg-' + (diagnostics.interface_up ? 'success' : 'danger') + '">' + (diagnostics.interface_up ? t('common.yes', 'Yes') : t('common.no', 'No')) + '</span></div>';
+        html += '<div class="col-md-6"><strong>' + t('hostapd.interface_in_ap_mode', 'Interface in AP Mode') + ':</strong> <span class="badge bg-' + (diagnostics.interface_in_ap_mode ? 'success' : 'warning') + '">' + (diagnostics.interface_in_ap_mode ? t('common.yes', 'Yes') : t('common.no', 'No')) + '</span></div>';
+        html += '<div class="col-md-6"><strong>DNSmasq:</strong> <span class="badge bg-' + (diagnostics.dnsmasq_running ? 'success' : 'warning') + '">' + (diagnostics.dnsmasq_running ? t('common.running', 'Running') : t('common.stopped', 'Stopped')) + '</span></div>';
+        html += '</div>';
+        html += '</div>';
+        
+        // Errores detectados
+        if (diagnostics.has_errors && diagnostics.errors && diagnostics.errors.length > 0) {
+          html += '<div class="mb-4">';
+          html += '<h6 class="fw-bold mb-3 text-danger"><i class="bi bi-exclamation-triangle me-2"></i>' + t('hostapd.errors_detected', 'Errors Detected') + '</h6>';
+          html += '<ul class="list-unstyled">';
+          diagnostics.errors.forEach(error => {
+            html += '<li class="mb-2"><span class="badge bg-danger me-2">!</span>' + error + '</li>';
+          });
+          html += '</ul>';
+          html += '</div>';
+        }
+        
+        // Logs recientes
+        if (diagnostics.recent_logs) {
+          html += '<div class="mb-4">';
+          html += '<h6 class="fw-bold mb-3"><i class="bi bi-file-text me-2"></i>' + t('hostapd.recent_logs', 'Recent Logs') + '</h6>';
+          html += '<pre class="bg-dark text-light p-3 rounded" style="max-height: 300px; overflow-y: auto; font-size: 0.85rem;">' + escapeHtml(diagnostics.recent_logs.substring(0, 2000)) + '</pre>';
+          html += '</div>';
+        }
+        
+        // Sugerencias de solución
+        html += '<div class="alert alert-info">';
+        html += '<h6 class="fw-bold mb-2"><i class="bi bi-lightbulb me-2"></i>' + t('hostapd.troubleshooting_tips', 'Troubleshooting Tips') + '</h6>';
+        html += '<ul class="mb-0">';
+        
+        if (!diagnostics.interface_up) {
+          html += '<li>' + t('hostapd.tip_interface_down', 'The network interface is down. Try: sudo ip link set {interface} up').replace('{interface}', diagnostics.interface || 'wlan0') + '</li>';
+        }
+        if (!diagnostics.interface_in_ap_mode && diagnostics.service_running) {
+          html += '<li>' + t('hostapd.tip_driver_issue', 'The interface is not in AP mode. This may indicate a driver issue. Check if your WiFi adapter supports AP mode.') + '</li>';
+        }
+        if (diagnostics.has_errors) {
+          html += '<li>' + t('hostapd.tip_check_logs', 'Check the logs above for specific error messages. Common issues: driver not supporting AP mode, interface already in use, or incorrect channel.') + '</li>';
+        }
+        if (!diagnostics.dnsmasq_running && diagnostics.service_running) {
+          html += '<li>' + t('hostapd.tip_dnsmasq', 'DNSmasq is not running. This is needed for DHCP. Try: sudo systemctl start dnsmasq') + '</li>';
+        }
+        if (diagnostics.service_running && !diagnostics.transmitting && !diagnostics.has_errors) {
+          html += '<li>' + t('hostapd.tip_restart', 'Try restarting HostAPD: sudo systemctl restart hostapd') + '</li>';
+          html += '<li>' + t('hostapd.tip_check_wifi', 'Make sure the WiFi interface is not being used by NetworkManager or another service. Try: sudo systemctl stop NetworkManager') + '</li>';
+        }
+        
+        html += '</ul>';
+        html += '</div>';
+        
+        html += '</div>';
+        container.innerHTML = html;
+      } else {
+        const errorText = await resp.text().catch(() => '');
+        container.innerHTML = `
+          <div class="text-center py-4">
+            <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+            <p class="text-muted mt-3">${translateError(errorText) || t('hostapd.error_loading_diagnostics', 'Error loading diagnostics')}</p>
+          </div>
+        `;
+      }
+    } catch (e) {
+      console.error('Error loading diagnostics:', e);
+      container.innerHTML = `
+        <div class="text-center py-4">
+          <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+          <p class="text-muted mt-3">${t('errors.network_error', 'Network error')}: ${e.message || String(e)}</p>
+        </div>
+      `;
+    }
+  };
+  
+  // Función auxiliar para escapar HTML
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   // Restart HostAPD
   window.restartHostAPD = async function() {
     if (!confirm(t('hostapd.confirm_restart', 'Are you sure you want to restart HostAPD?'))) {
