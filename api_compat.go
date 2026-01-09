@@ -729,7 +729,8 @@ func hostapdAccessPointsHandler(c *fiber.Ctx) error {
 	// Esto es más confiable que solo verificar el proceso
 	if hostapdActive {
 		// Intentar obtener la interfaz desde la configuración primero
-		interfaceName := "wlan0" // default
+		// En modo AP+STA, la interfaz será ap0 (virtual), no wlan0
+		interfaceName := "ap0" // default para modo AP+STA
 		if configContent, err := os.ReadFile("/etc/hostapd/hostapd.conf"); err == nil {
 			lines := strings.Split(string(configContent), "\n")
 			for _, line := range lines {
