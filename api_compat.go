@@ -891,6 +891,10 @@ func hostapdConfigHandler(c *fiber.Ctx) error {
 	
 	// 2. Generar configuración de hostapd
 	configPath := "/etc/hostapd/hostapd.conf"
+	
+	// Asegurar que el directorio existe
+	executeCommand("sudo mkdir -p /etc/hostapd 2>/dev/null || true")
+	
 	configContent := fmt.Sprintf(`interface=%s
 driver=nl80211
 ssid=%s
