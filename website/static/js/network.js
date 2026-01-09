@@ -92,7 +92,12 @@
         
         if (interfaces.length > 0) {
           displayInterfaces(interfaces);
-          populateInterfaceSelects(interfaces);
+          // Extraer nombres de interfaces para el selector
+          const interfaceNames = interfaces.map(iface => {
+            if (typeof iface === 'string') return iface;
+            return iface.name || iface.interface || '';
+          }).filter(name => name && name !== 'lo');
+          populateInterfaceSelects(interfaceNames);
         } else {
           if (container) {
             container.innerHTML = '<p class="text-muted text-center">' + t('network.no_interfaces', 'No interfaces found') + '</p>';
