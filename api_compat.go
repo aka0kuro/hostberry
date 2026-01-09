@@ -1114,7 +1114,7 @@ func hostapdGetConfigHandler(c *fiber.Ctx) error {
 			"interface": config["interface"],
 			"ssid":      config["ssid"],
 			"channel":   config["channel"],
-			"password":  "", // No devolver la contraseña por seguridad
+			"password":  config["wpa_passphrase"], // Devolver la contraseña para que el usuario pueda verla/editarla
 		},
 	}
 	
