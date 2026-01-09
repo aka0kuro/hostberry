@@ -24,9 +24,33 @@ end
 
 log("INFO", "Usando interfaz WiFi: " .. interface)
 
--- Verificar que WiFi esté habilitado primero (con sudo)
-local wifi_check = exec("sudo nmcli -t -f WIFI g 2>/dev/null")
-local wifi_enabled = wifi_check and (string.find(string.lower(wifi_check), "enabled") or string.find(string.lower(wifi_check), "on"))
+-- Verificar que WiFi esté habilitado (usar rfkill en lugar de nmcli)
+local wifi_enabled = false
+local rfkill_check = exec("sudo rfkill list wifi 2>/dev/null")
+if rfkill_check then
+    local rfkill_lower = string.lower(rfkill_check)
+    if not string.find(rfkill_lower, "hard blocked: yes") and not string.find(rfkill_lower, "soft blocked: yes") then
+        wifi_enabled = true
+    end
+end
+
+-- Si rfkill no está disponible, verificar con nmcli (pero no fallar si no está)
+if not wifi_enabled then
+    local nmcli_check = exec("sudo nmcli -t -f WIFI g 2>/dev/null")
+    if nmcli_check then
+        local nmcli_lower = string.lower(nmcli_check)
+        wifi_enabled = string.find(nmcli_lower, "enabled") or string.find(nmcli_lower, "on")
+    end
+end
+
+-- Si aún no está habilitado, verificar que la interfaz esté activa
+if not wifi_enabled then
+    local ip_check = exec("ip link show " .. interface .. " 2>/dev/null | grep -i 'state UP'")
+    if ip_check and ip_check ~= "" then
+        wifi_enabled = true
+        log("INFO", "WiFi habilitado (interfaz activa)")
+    end
+end
 
 if not wifi_enabled then
     log("WARN", "WiFi no está habilitado")
@@ -36,9 +60,26 @@ if not wifi_enabled then
     return result
 end
 
--- Método 1: Intentar usar nmcli primero (más moderno y confiable, con sudo)
-local nmcli_cmd = "sudo nmcli -t -f SSID,SIGNAL,SECURITY,CHAN dev wifi list 2>&1"
-local nmcli_output, nmcli_err = exec(nmcli_cmd)
+-- Asegurar que la interfaz esté en modo managed (no AP) para poder escanear
+-- Si está en modo AP, no podrá escanear
+local iw_info = exec("iw dev " .. interface .. " info 2>/dev/null")
+if iw_info then
+    if string.find(iw_info, "type AP") then
+        log("WARN", "Interfaz está en modo AP, no se puede escanear. Necesita estar en modo managed.")
+        -- Intentar cambiar a modo managed temporalmente
+        exec("sudo iw dev " .. interface .. " set type managed 2>/dev/null")
+        os.execute("sleep 1")
+    end
+end
+
+-- Método 1: Intentar usar nmcli primero (solo si NetworkManager está corriendo)
+local nmcli_output, nmcli_err = nil, nil
+if exec("pgrep NetworkManager > /dev/null 2>&1") == "" then
+    log("INFO", "NetworkManager no está corriendo, usando iw directamente")
+else
+    local nmcli_cmd = "sudo nmcli -t -f SSID,SIGNAL,SECURITY,CHAN dev wifi list 2>&1"
+    nmcli_output, nmcli_err = exec(nmcli_cmd)
+end
 
 if not nmcli_err and nmcli_output and nmcli_output ~= "" then
     log("INFO", "Usando nmcli para escanear")
