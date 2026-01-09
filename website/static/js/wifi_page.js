@@ -203,14 +203,18 @@
   async function loadInterfaces() {
     try {
       const resp = await apiRequest('/api/v1/wifi/interfaces');
-      if (!resp.ok) return;
+      if (!resp.ok) {
+        console.warn('Error obteniendo interfaces WiFi:', resp.status);
+        return;
+      }
       const data = await resp.json();
       const select = document.getElementById('wifi-interface');
       if (!select) return;
       
       select.innerHTML = '<option value="">' + t('wifi.auto_detect', 'Auto-detect') + '</option>';
       
-      // El backend puede devolver interfaces como array de objetos o array de strings
+      // El backend devuelve {success: true, interfaces: [...]}
+      // donde interfaces es un array de objetos {name, type, state}
       let interfaces = [];
       if (data.interfaces && Array.isArray(data.interfaces)) {
         interfaces = data.interfaces;
@@ -218,10 +222,20 @@
         interfaces = data;
       }
       
+      if (interfaces.length === 0) {
+        console.warn('No se encontraron interfaces WiFi');
+      }
+      
       interfaces.forEach(iface => {
         // Si es un objeto, extraer el nombre
-        const ifaceName = (typeof iface === 'object' && iface.name) ? iface.name : iface;
-        if (ifaceName && ifaceName !== '') {
+        let ifaceName = '';
+        if (typeof iface === 'object' && iface !== null) {
+          ifaceName = iface.name || iface.interface || iface.device || '';
+        } else if (typeof iface === 'string') {
+          ifaceName = iface;
+        }
+        
+        if (ifaceName && ifaceName !== '' && ifaceName !== '--') {
           const option = document.createElement('option');
           option.value = ifaceName;
           option.textContent = ifaceName;
