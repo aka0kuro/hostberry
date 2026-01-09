@@ -210,10 +210,23 @@ body.light-theme .dashboard-card-title {
 .dashboard-card-body {
     padding: 1.5rem;
     flex: 1;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
 }
 
 body.light-theme .dashboard-card-body {
     color: #212529;
+}
+
+/* Asegurar que los estados vacíos no hagan la tarjeta más grande */
+#networks-empty,
+#networks-loading {
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 /* WiFi Controls */
