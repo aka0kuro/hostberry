@@ -788,20 +788,22 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 		if _, err := os.Stat(configPath); os.IsNotExist(err) {
 			log.Printf("HostAPD configuration file not found: %s", configPath)
 			return c.Status(400).JSON(fiber.Map{
-				"error":   fmt.Sprintf("HostAPD configuration not found. Please configure HostAPD first using the configuration form. Config file: %s", configPath),
-				"success": false,
+				"error":         "HostAPD configuration not found. Please configure HostAPD first using the configuration form below.",
+				"success":       false,
 				"config_missing": true,
+				"config_path":   configPath,
 			})
 		}
 		
 		// Verificar que el archivo de configuración no esté vacío
-		configContent, _ := os.ReadFile(configPath)
-		if len(configContent) == 0 {
-			log.Printf("HostAPD configuration file is empty: %s", configPath)
+		configContent, err := os.ReadFile(configPath)
+		if err != nil || len(configContent) == 0 {
+			log.Printf("HostAPD configuration file is empty or unreadable: %s", configPath)
 			return c.Status(400).JSON(fiber.Map{
-				"error":   fmt.Sprintf("HostAPD configuration file is empty. Please configure HostAPD first using the configuration form."),
-				"success": false,
+				"error":         "HostAPD configuration file is empty or invalid. Please configure HostAPD first using the configuration form below.",
+				"success":       false,
 				"config_missing": true,
+				"config_path":   configPath,
 			})
 		}
 		
