@@ -1520,6 +1520,13 @@ func hostapdConfigHandler(c *fiber.Ctx) error {
 	// 5. Activar interfaz virtual ap0
 	if out, err := executeCommand(fmt.Sprintf("sudo ip link set %s up", apInterface)); err != nil {
 		log.Printf("Warning: Error bringing interface %s up: %s", apInterface, strings.TrimSpace(out))
+	} else {
+		log.Printf("Successfully created and activated virtual interface %s", apInterface)
+		// Verificar que la interfaz existe
+		checkCmd := fmt.Sprintf("ip link show %s", apInterface)
+		if checkOut, checkErr := executeCommand(checkCmd); checkErr == nil {
+			log.Printf("Interface %s verified: %s", apInterface, strings.TrimSpace(checkOut))
+		}
 	}
 	
 	// 6. Generar configuración de hostapd usando la interfaz virtual ap0
