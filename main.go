@@ -582,53 +582,31 @@ func detectWiFiInterface() string {
 }
 
 // wifiInterfacesHandler devuelve las interfaces WiFi disponibles
+// Usa solo ip/iw, sin nmcli
 func wifiInterfacesHandler(c *fiber.Ctx) error {
 	var interfaces []fiber.Map
 
-	// Método 1: nmcli (con sudo)
-	cmd := exec.Command("sh", "-c", "sudo nmcli -t -f DEVICE,TYPE,STATE dev status 2>/dev/null | grep wifi")
+	// Buscar interfaces wlan* usando ip
+	cmd := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}' | grep -E '^wlan|^wl'")
 	out, err := cmd.Output()
 	if err == nil {
 		lines := strings.Split(strings.TrimSpace(string(out)), "\n")
-		for _, line := range lines {
-			parts := strings.Split(line, ":")
-			if len(parts) >= 2 {
-				iface := fiber.Map{
-					"name":  parts[0],
-					"type":  parts[1],
-					"state": "unknown",
+		for _, ifaceName := range lines {
+			ifaceName = strings.TrimSpace(ifaceName)
+			if ifaceName != "" {
+				// Verificar estado usando /sys/class/net
+				stateCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/operstate 2>/dev/null", ifaceName))
+				stateOut, _ := stateCmd.Output()
+				state := strings.TrimSpace(string(stateOut))
+				if state == "" {
+					state = "unknown"
 				}
-				if len(parts) >= 3 {
-					iface["state"] = parts[2]
-				}
-				interfaces = append(interfaces, iface)
-			}
-		}
-	}
 
-	// Fallback: buscar interfaces wlan* manualmente
-	if len(interfaces) == 0 {
-		cmd2 := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}' | grep -E '^wlan|^wl'")
-		out2, err2 := cmd2.Output()
-		if err2 == nil {
-			lines := strings.Split(strings.TrimSpace(string(out2)), "\n")
-			for _, ifaceName := range lines {
-				ifaceName = strings.TrimSpace(ifaceName)
-				if ifaceName != "" {
-					// Verificar estado
-					stateCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/operstate 2>/dev/null", ifaceName))
-					stateOut, _ := stateCmd.Output()
-					state := strings.TrimSpace(string(stateOut))
-					if state == "" {
-						state = "unknown"
-					}
-
-					interfaces = append(interfaces, fiber.Map{
-						"name":  ifaceName,
-						"type":  "wifi",
-						"state": state,
-					})
-				}
+				interfaces = append(interfaces, fiber.Map{
+					"name":  ifaceName,
+					"type":  "wifi",
+					"state": state,
+				})
 			}
 		}
 	}
