@@ -355,6 +355,10 @@
     try {
       const ctx = canvas.getContext('2d');
       const ChartLib = typeof Chart !== 'undefined' ? Chart : window.Chart;
+      // Ocultar mensaje de carga
+      const chartLoading = document.getElementById('chart-loading');
+      if (chartLoading) chartLoading.style.display = 'none';
+      
       netTrafficChart = new ChartLib(ctx, {
         type: 'line',
         data: {
