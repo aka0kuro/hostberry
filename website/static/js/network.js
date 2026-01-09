@@ -70,6 +70,7 @@
         let data;
         try {
           data = await resp.json();
+          console.log('Network interfaces response:', data);
         } catch (jsonError) {
           console.error('Error parsing JSON:', jsonError);
           if (container) {
@@ -89,6 +90,8 @@
         } else if (data.success !== false && data.interfaces) {
           interfaces = Array.isArray(data.interfaces) ? data.interfaces : [];
         }
+        
+        console.log('Parsed interfaces:', interfaces);
         
         if (interfaces.length > 0) {
           displayInterfaces(interfaces);
