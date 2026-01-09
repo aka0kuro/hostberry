@@ -672,16 +672,51 @@ func wifiScanHandler(c *fiber.Ctx) error {
 			// Fallback: intentar escanear directamente con comandos del sistema
 			return wifiScanFallback(c, interfaceName)
 		}
-		// Verificar que el resultado tenga networks
+		// Verificar que el resultado sea válido
 		if result != nil {
+			// Verificar si hay un error explícito del script
+			if success, ok := result["success"].(bool); ok && !success {
+				errorMsg := "Error al escanear redes"
+				if errStr, ok := result["error"].(string); ok && errStr != "" {
+					errorMsg = errStr
+				}
+				log.Printf("⚠️  Script Lua reportó error: %s", errorMsg)
+				return c.Status(500).JSON(fiber.Map{
+					"success":  false,
+					"error":    errorMsg,
+					"networks": []fiber.Map{},
+				})
+			}
+			// Verificar si hay networks en el resultado
 			if networks, ok := result["networks"]; ok {
+				// Convertir networks a formato correcto si es necesario
+				var networksArray []fiber.Map
+				if networksSlice, ok := networks.([]interface{}); ok {
+					for _, net := range networksSlice {
+						if netMap, ok := net.(map[string]interface{}); ok {
+							networksArray = append(networksArray, fiber.Map{
+								"ssid":     netMap["ssid"],
+								"signal":   netMap["signal"],
+								"security": netMap["security"],
+								"channel":  netMap["channel"],
+							})
+						}
+					}
+				} else if networksArray, ok := networks.([]fiber.Map); ok {
+					// Ya está en el formato correcto
+				} else {
+					// Intentar convertir desde map[string]interface{}
+					log.Printf("⚠️  Formato de networks inesperado, usando fallback")
+					return wifiScanFallback(c, interfaceName)
+				}
 				return c.JSON(fiber.Map{
 					"success":  true,
-					"networks": networks,
+					"networks": networksArray,
 				})
 			}
 		}
-		// Si no hay networks, usar fallback
+		// Si no hay networks y no hay error explícito, usar fallback
+		log.Printf("⚠️  Script Lua no retornó networks, usando fallback")
 		return wifiScanFallback(c, interfaceName)
 	}
 
