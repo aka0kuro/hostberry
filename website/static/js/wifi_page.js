@@ -416,25 +416,25 @@
       return;
     }
     
-    // Obtener información de la red desde la tarjeta
-    const cardContent = card ? card.querySelector('.network-card-content') : null;
+    // Obtener información de la red desde los atributos data de la tarjeta
     let signal = '--';
     let channel = '--';
     let encryption = security || 'Unknown';
     
-    if (cardContent) {
-      const details = cardContent.querySelectorAll('.network-card-detail-item');
-      details.forEach(detail => {
-        const text = detail.textContent || '';
-        if (text.includes('dBm')) {
-          const match = text.match(/(\d+)dBm/);
-          if (match) signal = match[1] + 'dBm';
-        }
-        if (text.includes('#')) {
-          const match = text.match(/#\s*(\d+)/);
-          if (match) channel = match[1];
-        }
-      });
+    if (card) {
+      const cardSignal = card.getAttribute('data-signal');
+      const cardChannel = card.getAttribute('data-channel');
+      const cardSecurity = card.getAttribute('data-security');
+      
+      if (cardSignal && cardSignal !== '0' && cardSignal !== '') {
+        signal = cardSignal + 'dBm';
+      }
+      if (cardChannel && cardChannel !== '') {
+        channel = cardChannel;
+      }
+      if (cardSecurity && cardSecurity !== '') {
+        encryption = cardSecurity;
+      }
     }
     
     // Crear formulario
