@@ -316,7 +316,21 @@
         if (result.error) {
           // Si falta la configuración, mostrar mensaje más claro
           if (result.config_missing) {
-            HostBerry.showAlert('warning', t('hostapd.config_required', 'HostAPD configuration required. Please configure HostAPD first using the configuration form below.'));
+            const configMsg = t('hostapd.config_required', 'HostAPD configuration required. Please configure HostAPD first using the configuration form below.');
+            HostBerry.showAlert('warning', configMsg);
+            // Scroll suave hacia el formulario de configuración
+            setTimeout(() => {
+              const configForm = document.getElementById('hostapdConfigForm');
+              if (configForm) {
+                configForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Resaltar el formulario brevemente
+                configForm.style.transition = 'box-shadow 0.3s ease';
+                configForm.style.boxShadow = '0 0 20px rgba(255, 193, 7, 0.5)';
+                setTimeout(() => {
+                  configForm.style.boxShadow = '';
+                }, 2000);
+              }
+            }, 500);
           } else {
             HostBerry.showAlert('warning', translateError(result.error));
           }
