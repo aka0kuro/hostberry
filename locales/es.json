@@ -980,6 +980,7 @@
     "hostapd_alert": "Alerta de HostAPD",
     "enable_failed": "No se pudo habilitar HostAPD. Verifica la configuración y los logs.",
     "hostapd_status_changed": "HostAPD {status}",
+    "config_required": "Configuración de HostAPD requerida. Por favor, configura HostAPD primero usando el formulario de configuración a continuación.",
     "access_point_name": "Nombre de Punto de Acceso",
     "access_point_ssid": "SSID de Punto de Acceso",
     "access_point_password": "Contraseña de Punto de Acceso",
