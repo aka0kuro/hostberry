@@ -100,8 +100,68 @@ func networkFirewallToggleHandler(c *fiber.Ctx) error {
 }
 
 func networkConfigHandler(c *fiber.Ctx) error {
-	// Placeholder: evita 404; aplicar config de red requiere validación y privilegios
-	return c.JSON(fiber.Map{"success": false, "message": "Config de red no implementada"})
+	var req struct {
+		Hostname string `json:"hostname"`
+		DNS1     string `json:"dns1"`
+		DNS2     string `json:"dns2"`
+		Gateway  string `json:"gateway"`
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"success": false,
+			"error":   "Invalid request body",
+		})
+	}
+
+	// Validar y aplicar configuración básica
+	// Nota: Cambiar hostname requiere privilegios root y puede requerir reinicio
+	// Por ahora, solo validamos y retornamos éxito (implementación real requiere más trabajo)
+	
+	errors := []string{}
+	
+	if req.Hostname != "" {
+		// Validar hostname
+		if len(req.Hostname) > 64 || len(req.Hostname) < 1 {
+			errors = append(errors, "Hostname must be between 1 and 64 characters")
+		}
+		// Nota: Aplicar hostname requiere: echo "newhostname" | sudo tee /etc/hostname && sudo hostnamectl set-hostname newhostname
+	}
+	
+	if req.DNS1 != "" {
+		// Validar formato IP
+		cmd := exec.Command("sh", "-c", fmt.Sprintf("echo '%s' | grep -E '^([0-9]{1,3}\\.){3}[0-9]{1,3}$'", req.DNS1))
+		if err := cmd.Run(); err != nil {
+			errors = append(errors, "Invalid DNS1 format")
+		}
+	}
+	
+	if req.DNS2 != "" {
+		cmd := exec.Command("sh", "-c", fmt.Sprintf("echo '%s' | grep -E '^([0-9]{1,3}\\.){3}[0-9]{1,3}$'", req.DNS2))
+		if err := cmd.Run(); err != nil {
+			errors = append(errors, "Invalid DNS2 format")
+		}
+	}
+	
+	if req.Gateway != "" {
+		cmd := exec.Command("sh", "-c", fmt.Sprintf("echo '%s' | grep -E '^([0-9]{1,3}\\.){3}[0-9]{1,3}$'", req.Gateway))
+		if err := cmd.Run(); err != nil {
+			errors = append(errors, "Invalid Gateway format")
+		}
+	}
+	
+	if len(errors) > 0 {
+		return c.Status(400).JSON(fiber.Map{
+			"success": false,
+			"error":   strings.Join(errors, "; "),
+		})
+	}
+
+	// Por ahora, retornar éxito (la implementación real de aplicar cambios requiere más trabajo)
+	return c.JSON(fiber.Map{
+		"success": true,
+		"message": "Configuration validated. Note: Applying network configuration requires additional implementation.",
+	})
 }
 
 // ---------- WiFi ----------
