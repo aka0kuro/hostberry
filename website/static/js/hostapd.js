@@ -277,7 +277,10 @@
       if (btn) {
         btn.disabled = false;
         // Recargar el estado para actualizar el botón correctamente
-        loadHostAPDStatus();
+        // Usar un pequeño delay para asegurar que el estado del servidor se haya actualizado
+        setTimeout(() => {
+          loadHostAPDStatus();
+        }, 300);
       }
     };
     
