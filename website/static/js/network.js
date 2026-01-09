@@ -769,7 +769,7 @@
           gateway: fd.get('gateway')
         };
         try {
-          const resp = await HostBerry.apiRequest('/api/v1/system/network/config', {
+          const resp = await HostBerry.apiRequest('/api/v1/network/config', {
             method: 'POST',
             body: data
           });
