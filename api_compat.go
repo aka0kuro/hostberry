@@ -1459,18 +1459,59 @@ func hostapdConfigHandler(c *fiber.Ctx) error {
 		req.Security = "wpa2"
 	}
 	
-	// 1. Configurar IP de la interfaz
-	ipCmd := fmt.Sprintf("sudo ip addr add %s/24 dev %s 2>/dev/null || sudo ip addr replace %s/24 dev %s", req.Gateway, req.Interface, req.Gateway, req.Interface)
+	// Modo AP+STA: Crear interfaz virtual ap0 para el punto de acceso
+	// Esto permite que wlan0 funcione como estación (STA) mientras ap0 funciona como AP
+	apInterface := "ap0"
+	phyInterface := req.Interface // wlan0 o la interfaz física
+	
+	log.Printf("Configuring AP+STA mode: creating virtual interface %s from %s", apInterface, phyInterface)
+	
+	// 1. Obtener el nombre del phy de la interfaz física
+	phyCmd := fmt.Sprintf("iw dev %s info 2>/dev/null | grep 'wiphy' | awk '{print $2}' || cat /sys/class/net/%s/phy80211/name 2>/dev/null || echo ''", phyInterface, phyInterface)
+	phyOut, _ := executeCommand(phyCmd)
+	phyName := strings.TrimSpace(phyOut)
+	
+	if phyName == "" {
+		// Fallback: intentar obtener el phy de otra manera
+		phyCmd2 := fmt.Sprintf("iw list | grep -A 1 'Wiphy' | tail -1 | awk '{print $2}' || echo 'phy0'")
+		phyOut2, _ := executeCommand(phyCmd2)
+		phyName = strings.TrimSpace(phyOut2)
+		if phyName == "" {
+			phyName = "phy0" // Valor por defecto
+		}
+	}
+	
+	log.Printf("Using phy: %s for virtual interface creation", phyName)
+	
+	// 2. Eliminar interfaz virtual ap0 si ya existe (para recrearla limpia)
+	executeCommand(fmt.Sprintf("sudo iw dev %s del 2>/dev/null || true", apInterface))
+	
+	// 3. Crear interfaz virtual ap0 en modo AP
+	createApCmd := fmt.Sprintf("sudo iw phy %s interface add %s type __ap", phyName, apInterface)
+	if out, err := executeCommand(createApCmd); err != nil {
+		log.Printf("Warning: Error creating virtual interface %s: %s. Trying alternative method...", apInterface, strings.TrimSpace(out))
+		// Método alternativo: usar el nombre de la interfaz directamente
+		createApCmd2 := fmt.Sprintf("sudo iw dev %s interface add %s type __ap", phyInterface, apInterface)
+		if out2, err2 := executeCommand(createApCmd2); err2 != nil {
+			log.Printf("Error creating virtual interface with alternative method: %s", strings.TrimSpace(out2))
+			// Si falla, usar la interfaz física directamente (modo no concurrente)
+			apInterface = phyInterface
+			log.Printf("Falling back to using physical interface %s directly (non-concurrent mode)", apInterface)
+		}
+	}
+	
+	// 4. Configurar IP de la interfaz virtual ap0
+	ipCmd := fmt.Sprintf("sudo ip addr add %s/24 dev %s 2>/dev/null || sudo ip addr replace %s/24 dev %s", req.Gateway, apInterface, req.Gateway, apInterface)
 	if out, err := executeCommand(ipCmd); err != nil {
-		log.Printf("Warning: Error setting IP on interface: %s", strings.TrimSpace(out))
+		log.Printf("Warning: Error setting IP on interface %s: %s", apInterface, strings.TrimSpace(out))
 	}
 	
-	// Activar interfaz
-	if out, err := executeCommand(fmt.Sprintf("sudo ip link set %s up", req.Interface)); err != nil {
-		log.Printf("Warning: Error bringing interface up: %s", strings.TrimSpace(out))
+	// 5. Activar interfaz virtual ap0
+	if out, err := executeCommand(fmt.Sprintf("sudo ip link set %s up", apInterface)); err != nil {
+		log.Printf("Warning: Error bringing interface %s up: %s", apInterface, strings.TrimSpace(out))
 	}
 	
-	// 2. Generar configuración de hostapd
+	// 6. Generar configuración de hostapd usando la interfaz virtual ap0
 	configPath := "/etc/hostapd/hostapd.conf"
 	
 	// Asegurar que el directorio existe
@@ -1481,7 +1522,7 @@ driver=nl80211
 ssid=%s
 hw_mode=g
 channel=%d
-`, req.Interface, req.SSID, req.Channel)
+`, apInterface, req.SSID, req.Channel)
 	
 	if req.Security == "open" {
 		configContent += "auth_algs=0\n"
