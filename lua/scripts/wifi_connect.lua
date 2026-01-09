@@ -19,6 +19,21 @@ log("INFO", "Conectando a WiFi: " .. ssid .. " (usuario: " .. user .. ") usando 
 -- Detener NetworkManager si está corriendo para evitar conflictos
 exec("sudo systemctl stop NetworkManager 2>/dev/null || true")
 
+-- Asegurar que la interfaz esté en modo managed (no AP) para poder conectarse
+-- Si está en modo AP, cambiarla a managed temporalmente
+local iw_info = exec("iw dev " .. interface .. " info 2>/dev/null")
+if iw_info then
+    if string.find(iw_info, "type AP") then
+        log("INFO", "Interfaz está en modo AP, cambiando a modo managed para conexión STA")
+        exec("sudo iw dev " .. interface .. " set type managed 2>/dev/null")
+        os.execute("sleep 1")
+    end
+end
+
+-- Asegurar que la interfaz esté activa
+exec("sudo ip link set " .. interface .. " up 2>/dev/null")
+os.execute("sleep 1")
+
 -- Asegurar que wpa_supplicant esté corriendo
 local wpa_pid = exec("pgrep -f 'wpa_supplicant.*" .. interface .. "'")
 if not wpa_pid or wpa_pid == "" then
