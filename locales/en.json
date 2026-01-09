@@ -1015,6 +1015,8 @@
     "subtitle": "Manage your wireless access point",
     "status": "Status",
     "enable_hostapd": "Enable HostAPD",
+    "stop_hostapd": "Stop HostAPD",
+    "click_start": "Click \"Start Service\" button above to start the service",
     "disable_hostapd": "Disable HostAPD",
     "restart_hostapd": "Restart HostAPD",
     "interface": "Interface",
