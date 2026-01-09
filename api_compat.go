@@ -1005,6 +1005,7 @@ rsn_pairwise=CCMP
 	// Guardar configuración de hostapd usando un archivo temporal
 	// Crear archivo temporal
 	tmpFile := "/tmp/hostapd.conf.tmp"
+	log.Printf("Creating temporary config file: %s", tmpFile)
 	if err := os.WriteFile(tmpFile, []byte(configContent), 0644); err != nil {
 		log.Printf("Error creating temporary config file: %v", err)
 		return c.Status(500).JSON(fiber.Map{
@@ -1013,16 +1014,55 @@ rsn_pairwise=CCMP
 		})
 	}
 	
-	// Copiar archivo temporal a la ubicación final con sudo
-	cmdStr := fmt.Sprintf("sudo cp %s %s && sudo chmod 644 %s", tmpFile, configPath, configPath)
-	if out, err := executeCommand(cmdStr); err != nil {
-		os.Remove(tmpFile) // Limpiar archivo temporal
-		log.Printf("Error copying config file: %s, output: %s", err, strings.TrimSpace(out))
+	// Verificar que el archivo temporal se creó correctamente
+	if _, err := os.Stat(tmpFile); os.IsNotExist(err) {
+		log.Printf("Temporary file was not created: %s", tmpFile)
 		return c.Status(500).JSON(fiber.Map{
-			"error":   fmt.Sprintf("Error saving hostapd configuration: %s", strings.TrimSpace(out)),
+			"error":   "Failed to create temporary config file",
 			"success": false,
 		})
 	}
+	
+	log.Printf("Temporary file created successfully, size: %d bytes", len(configContent))
+	
+	// Copiar archivo temporal a la ubicación final con sudo
+	// Primero asegurar que el directorio existe
+	executeCommand("sudo mkdir -p /etc/hostapd 2>/dev/null || true")
+	
+	cmdStr := fmt.Sprintf("sudo cp %s %s", tmpFile, configPath)
+	log.Printf("Executing: %s", cmdStr)
+	if out, err := executeCommand(cmdStr); err != nil {
+		os.Remove(tmpFile) // Limpiar archivo temporal
+		log.Printf("Error copying config file: %v, output: %s", err, strings.TrimSpace(out))
+		errorMsg := strings.TrimSpace(out)
+		if errorMsg == "" {
+			errorMsg = err.Error()
+		}
+		return c.Status(500).JSON(fiber.Map{
+			"error":   fmt.Sprintf("Error saving hostapd configuration: %s", errorMsg),
+			"success": false,
+		})
+	}
+	
+	// Establecer permisos
+	chmodCmd := fmt.Sprintf("sudo chmod 644 %s", configPath)
+	log.Printf("Setting permissions: %s", chmodCmd)
+	if out, err := executeCommand(chmodCmd); err != nil {
+		log.Printf("Warning: Error setting permissions: %v, output: %s", err, strings.TrimSpace(out))
+		// No fallar aquí, continuar
+	}
+	
+	// Verificar que el archivo se creó correctamente
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		os.Remove(tmpFile)
+		log.Printf("Config file was not created at: %s", configPath)
+		return c.Status(500).JSON(fiber.Map{
+			"error":   fmt.Sprintf("Config file was not created at %s", configPath),
+			"success": false,
+		})
+	}
+	
+	log.Printf("HostAPD config file created successfully at: %s", configPath)
 	
 	// Limpiar archivo temporal
 	os.Remove(tmpFile)
