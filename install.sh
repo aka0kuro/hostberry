@@ -929,7 +929,7 @@ EOF
         print_info "Permisos agregados para hostapd_cli: $HOSTAPD_CLI_PATH"
     fi
     
-    # Agregar permisos para systemctl con hostapd (ya está agregado arriba, pero específico para hostapd)
+    # Agregar permisos para systemctl con hostapd y dnsmasq
     if command -v systemctl &> /dev/null; then
         SYSTEMCTL_PATH=$(command -v systemctl)
         echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH start hostapd" >> "/etc/sudoers.d/hostberry"
@@ -938,7 +938,83 @@ EOF
         echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH status hostapd" >> "/etc/sudoers.d/hostberry"
         echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH enable hostapd" >> "/etc/sudoers.d/hostberry"
         echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH disable hostapd" >> "/etc/sudoers.d/hostberry"
-        print_info "Permisos agregados para systemctl hostapd"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH start dnsmasq" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH stop dnsmasq" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH restart dnsmasq" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH enable dnsmasq" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH disable dnsmasq" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH daemon-reload" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para systemctl hostapd y dnsmasq"
+    fi
+    
+    # Agregar permisos para ip (configuración de interfaces de red)
+    if command -v ip &> /dev/null; then
+        IP_PATH=$(command -v ip)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $IP_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para ip: $IP_PATH"
+    elif [ -f "/usr/sbin/ip" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /usr/sbin/ip" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para ip: /usr/sbin/ip"
+    elif [ -f "/sbin/ip" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /sbin/ip" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para ip: /sbin/ip"
+    fi
+    
+    # Agregar permisos para sysctl (habilitar IP forwarding)
+    if command -v sysctl &> /dev/null; then
+        SYSCTL_PATH=$(command -v sysctl)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSCTL_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para sysctl: $SYSCTL_PATH"
+    elif [ -f "/usr/sbin/sysctl" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /usr/sbin/sysctl" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para sysctl: /usr/sbin/sysctl"
+    elif [ -f "/sbin/sysctl" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /sbin/sysctl" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para sysctl: /sbin/sysctl"
+    fi
+    
+    # Agregar permisos para iptables (configuración de NAT)
+    if command -v iptables &> /dev/null; then
+        IPTABLES_PATH=$(command -v iptables)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $IPTABLES_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para iptables: $IPTABLES_PATH"
+    elif [ -f "/usr/sbin/iptables" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /usr/sbin/iptables" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para iptables: /usr/sbin/iptables"
+    elif [ -f "/sbin/iptables" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /sbin/iptables" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para iptables: /sbin/iptables"
+    fi
+    
+    # Agregar permisos para comandos básicos necesarios para hostapd
+    # tee (para escribir archivos de configuración)
+    if command -v tee &> /dev/null; then
+        TEE_PATH=$(command -v tee)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $TEE_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para tee: $TEE_PATH"
+    elif [ -f "/usr/bin/tee" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/tee" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para tee: /usr/bin/tee"
+    fi
+    
+    # cp (para hacer backup de configuraciones)
+    if command -v cp &> /dev/null; then
+        CP_PATH=$(command -v cp)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $CP_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para cp: $CP_PATH"
+    elif [ -f "/bin/cp" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /bin/cp" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para cp: /bin/cp"
+    fi
+    
+    # mkdir (para crear directorios de configuración)
+    if command -v mkdir &> /dev/null; then
+        MKDIR_PATH=$(command -v mkdir)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $MKDIR_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para mkdir: $MKDIR_PATH"
+    elif [ -f "/bin/mkdir" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /bin/mkdir" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para mkdir: /bin/mkdir"
     fi
     
     # Validar configuración de sudoers
