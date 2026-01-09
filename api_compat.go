@@ -936,35 +936,75 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 				}
 			}
 			
-			// Obtener el phy de la interfaz física
-			phyCmd := fmt.Sprintf("iw dev %s info 2>/dev/null | grep 'wiphy' | awk '{print $2}' || cat /sys/class/net/%s/phy80211/name 2>/dev/null || echo 'phy0'", phyInterface, phyInterface)
+			// Asegurar que la interfaz física esté activa
+			executeCommand(fmt.Sprintf("sudo ip link set %s up 2>/dev/null || true", phyInterface))
+			time.Sleep(500 * time.Millisecond)
+			
+			// Obtener el phy de la interfaz física (múltiples métodos)
+			phyName := ""
+			
+			// Método 1: Desde iw dev info
+			phyCmd := fmt.Sprintf("iw dev %s info 2>/dev/null | grep 'wiphy' | awk '{print $2}'", phyInterface)
 			phyOut, _ := executeCommand(phyCmd)
-			phyName := strings.TrimSpace(phyOut)
+			phyName = strings.TrimSpace(phyOut)
+			
+			// Método 2: Desde /sys/class/net
 			if phyName == "" {
-				phyName = "phy0"
+				phyCmd2 := fmt.Sprintf("cat /sys/class/net/%s/phy80211/name 2>/dev/null", phyInterface)
+				phyOut2, _ := executeCommand(phyCmd2)
+				phyName = strings.TrimSpace(phyOut2)
 			}
 			
-			// Crear interfaz ap0
+			// Método 3: Desde iw list
+			if phyName == "" {
+				phyCmd3 := "iw list 2>/dev/null | grep -A 1 'Wiphy' | tail -1 | awk '{print $2}'"
+				phyOut3, _ := executeCommand(phyCmd3)
+				phyName = strings.TrimSpace(phyOut3)
+			}
+			
+			// Método 4: Valor por defecto
+			if phyName == "" {
+				phyName = "phy0"
+				log.Printf("Warning: Could not detect phy name, using default: %s", phyName)
+			}
+			
+			log.Printf("Creating ap0 interface using phy %s from interface %s...", phyName, phyInterface)
+			
+			// Eliminar ap0 si existe antes de crearla
+			executeCommand("sudo iw dev ap0 del 2>/dev/null || true")
+			time.Sleep(1 * time.Second)
+			
+			// Crear interfaz ap0 usando phy
 			createApCmd := fmt.Sprintf("sudo iw phy %s interface add ap0 type __ap", phyName)
-			if out, err := executeCommand(createApCmd); err != nil {
-				log.Printf("Warning: Could not create ap0 interface: %s", strings.TrimSpace(out))
+			createOut, createErr := executeCommand(createApCmd)
+			if createErr != nil {
+				log.Printf("Warning: Could not create ap0 interface with phy %s: %s", phyName, strings.TrimSpace(createOut))
 				// Intentar método alternativo
 				createApCmd2 := fmt.Sprintf("sudo iw dev %s interface add ap0 type __ap", phyInterface)
-				if out2, err2 := executeCommand(createApCmd2); err2 != nil {
-					log.Printf("Warning: Alternative method also failed: %s", strings.TrimSpace(out2))
+				createOut2, createErr2 := executeCommand(createApCmd2)
+				if createErr2 != nil {
+					log.Printf("Warning: Alternative method also failed: %s", strings.TrimSpace(createOut2))
 				} else {
-					log.Printf("Successfully created ap0 interface using alternative method")
+					log.Printf("Successfully created ap0 interface using alternative method (from %s)", phyInterface)
 					ap0Exists = true
 				}
 			} else {
-				log.Printf("Successfully created ap0 interface")
+				log.Printf("Successfully created ap0 interface using phy %s", phyName)
 				ap0Exists = true
 			}
 			
-			// Activar la interfaz ap0 si se creó
+			// Verificar que la interfaz se creó
 			if ap0Exists {
-				executeCommand("sudo ip link set ap0 up 2>/dev/null || true")
-				log.Printf("Activated ap0 interface")
+				verifyCmd := "ip link show ap0 2>/dev/null"
+				verifyOut, verifyErr := executeCommand(verifyCmd)
+				if verifyErr == nil && strings.TrimSpace(verifyOut) != "" {
+					log.Printf("Interface ap0 verified: %s", strings.TrimSpace(verifyOut))
+					// Activar la interfaz ap0
+					executeCommand("sudo ip link set ap0 up 2>/dev/null || true")
+					log.Printf("Activated ap0 interface")
+				} else {
+					log.Printf("Warning: ap0 was created but verification failed")
+				}
 			}
 		}
 		
