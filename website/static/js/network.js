@@ -616,10 +616,17 @@
       // Necesitamos leer los datos de nuevo para esta interfaz
       for (const line of lines) {
         const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('Inter-') || trimmed.startsWith(' face')) continue;
+        if (!trimmed || 
+            trimmed.startsWith('Inter-') || 
+            trimmed.startsWith(' face') ||
+            trimmed.startsWith('face') ||
+            trimmed.toLowerCase().includes('receive') ||
+            trimmed.toLowerCase().includes('transmit') ||
+            trimmed === 'face') continue;
         const parts = trimmed.split(/\s+/);
         if (parts.length < 10) continue;
-        const ifaceName = parts[0].replace(':', '');
+        const ifaceName = parts[0].replace(':', '').trim();
+        if (!ifaceName || ifaceName === 'face' || ifaceName === 'lo') continue;
         if (ifaceName === foundInterface) {
           bytesRecv = parseInt(parts[1]) || 0;
           bytesSent = parseInt(parts[9]) || 0;
