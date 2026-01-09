@@ -193,11 +193,14 @@
         html += '</tr></thead><tbody>';
         
         aps.forEach(ap => {
-          const enabled = ap.enabled !== false;
+          // Verificar estado: usar 'active' si está disponible, sino 'enabled', sino verificar 'status'
+          const isActive = ap.active === true || 
+                          (ap.enabled === true || ap.enabled === 'true') ||
+                          (ap.status === 'active');
           html += '<tr>';
-          html += `<td>${ap.name || ap.ssid || '-'}</td>`;
+          html += `<td>${ap.name || ap.interface || '-'}</td>`;
           html += `<td>${ap.ssid || '-'}</td>`;
-          html += `<td><span class="badge bg-${enabled ? 'success' : 'danger'}">${enabled ? t('hostapd.active', 'Active') : t('hostapd.inactive', 'Inactive')}</span></td>`;
+          html += `<td><span class="badge bg-${isActive ? 'success' : 'danger'}">${isActive ? t('hostapd.active', 'Active') : t('hostapd.inactive', 'Inactive')}</span></td>`;
           html += `<td>${ap.clients_count || 0}</td>`;
           html += `<td><button class="btn btn-sm btn-outline-primary" onclick="configureAccessPoint('${ap.name || ap.ssid || ''}')"><i class="bi bi-gear"></i></button></td>`;
           html += '</tr>';
