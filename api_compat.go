@@ -950,6 +950,60 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 			})
 		}
 		
+		// En modo AP+STA, verificar y crear interfaz ap0 si no existe
+		ap0CheckCmd := "ip link show ap0 2>/dev/null"
+		ap0Exists := false
+		if out, err := executeCommand(ap0CheckCmd); err == nil && strings.TrimSpace(out) != "" {
+			ap0Exists = true
+			log.Printf("Interface ap0 already exists")
+		} else {
+			log.Printf("Interface ap0 does not exist, creating it...")
+			// Leer la configuración para obtener la interfaz física
+			phyInterface := "wlan0"
+			if configContent, err := os.ReadFile(configPath); err == nil {
+				lines := strings.Split(string(configContent), "\n")
+				for _, line := range lines {
+					line = strings.TrimSpace(line)
+					if strings.HasPrefix(line, "interface=") {
+						// Si la interfaz en la config es ap0, necesitamos obtener la interfaz física
+						// Por defecto usamos wlan0
+						break
+					}
+				}
+			}
+			
+			// Obtener el phy de la interfaz física
+			phyCmd := fmt.Sprintf("iw dev %s info 2>/dev/null | grep 'wiphy' | awk '{print $2}' || cat /sys/class/net/%s/phy80211/name 2>/dev/null || echo 'phy0'", phyInterface, phyInterface)
+			phyOut, _ := executeCommand(phyCmd)
+			phyName := strings.TrimSpace(phyOut)
+			if phyName == "" {
+				phyName = "phy0"
+			}
+			
+			// Crear interfaz ap0
+			createApCmd := fmt.Sprintf("sudo iw phy %s interface add ap0 type __ap", phyName)
+			if out, err := executeCommand(createApCmd); err != nil {
+				log.Printf("Warning: Could not create ap0 interface: %s", strings.TrimSpace(out))
+				// Intentar método alternativo
+				createApCmd2 := fmt.Sprintf("sudo iw dev %s interface add ap0 type __ap", phyInterface)
+				if out2, err2 := executeCommand(createApCmd2); err2 != nil {
+					log.Printf("Warning: Alternative method also failed: %s", strings.TrimSpace(out2))
+				} else {
+					log.Printf("Successfully created ap0 interface using alternative method")
+					ap0Exists = true
+				}
+			} else {
+				log.Printf("Successfully created ap0 interface")
+				ap0Exists = true
+			}
+			
+			// Activar la interfaz ap0 si se creó
+			if ap0Exists {
+				executeCommand("sudo ip link set ap0 up 2>/dev/null || true")
+				log.Printf("Activated ap0 interface")
+			}
+		}
+		
 		// Verificar si el servicio está masked y desbloquearlo si es necesario
 		maskedCheck, _ := exec.Command("sh", "-c", "systemctl is-enabled hostapd 2>&1").CombinedOutput()
 		maskedStatus := strings.TrimSpace(string(maskedCheck))
