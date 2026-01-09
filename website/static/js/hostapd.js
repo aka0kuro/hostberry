@@ -314,8 +314,22 @@
           HostBerry.showAlert('warning', translateError(result.error));
           restoreButton();
         } else {
-          const action = result.enabled ? t('hostapd.enabled', 'Enabled') : t('hostapd.disabled', 'Disabled');
-          HostBerry.showAlert('success', t('hostapd.hostapd_status_changed', 'HostAPD {status}').replace('{status}', action));
+          // Usar el estado real del servicio desde la respuesta
+          const actuallyEnabled = result.enabled === true;
+          const action = actuallyEnabled ? t('hostapd.enabled', 'Enabled') : t('hostapd.disabled', 'Disabled');
+          const statusMsg = result.status ? ` (${result.status})` : '';
+          
+          if (actuallyEnabled) {
+            HostBerry.showAlert('success', t('hostapd.hostapd_status_changed', 'HostAPD {status}').replace('{status}', action) + statusMsg);
+          } else {
+            // Si se intentó activar pero no se activó, mostrar advertencia
+            if (result.action === 'enable') {
+              HostBerry.showAlert('warning', t('hostapd.enable_failed', 'Failed to enable HostAPD. Check configuration and logs.') + statusMsg);
+            } else {
+              HostBerry.showAlert('success', t('hostapd.hostapd_status_changed', 'HostAPD {status}').replace('{status}', action) + statusMsg);
+            }
+          }
+          
           // Restaurar el botón y recargar el estado
           restoreButton();
           setTimeout(() => {
