@@ -916,9 +916,17 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 				}
 			}
 			if len(errorLines) > 0 {
-				errorMsg = strings.Join(errorLines[:min(3, len(errorLines))], "; ")
+				maxLines := 3
+				if len(errorLines) < maxLines {
+					maxLines = len(errorLines)
+				}
+				errorMsg = strings.Join(errorLines[:maxLines], "; ")
 			} else if len(lines) > 0 {
-				errorMsg = strings.Join(lines[len(lines)-min(3, len(lines)):], "; ")
+				maxLines := 3
+				if len(lines) < maxLines {
+					maxLines = len(lines)
+				}
+				errorMsg = strings.Join(lines[len(lines)-maxLines:], "; ")
 			}
 		}
 		
