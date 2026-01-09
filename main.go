@@ -689,7 +689,7 @@ func wifiScanHandler(c *fiber.Ctx) error {
 			}
 			// Verificar si hay networks en el resultado
 			if networks, ok := result["networks"]; ok {
-				// Convertir networks a formato correcto si es necesario
+				// Convertir networks a formato correcto
 				var networksArray []fiber.Map
 				if networksSlice, ok := networks.([]interface{}); ok {
 					for _, net := range networksSlice {
@@ -702,11 +702,8 @@ func wifiScanHandler(c *fiber.Ctx) error {
 							})
 						}
 					}
-				} else if networksArray, ok := networks.([]fiber.Map); ok {
-					// Ya está en el formato correcto
 				} else {
-					// Intentar convertir desde map[string]interface{}
-					log.Printf("⚠️  Formato de networks inesperado, usando fallback")
+					log.Printf("⚠️  Formato de networks inesperado: %T, usando fallback", networks)
 					return wifiScanFallback(c, interfaceName)
 				}
 				return c.JSON(fiber.Map{
