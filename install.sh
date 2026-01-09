@@ -99,9 +99,9 @@ install_dependencies() {
     DEPS="wget curl build-essential iw"
     
     # Instalar hostapd y herramientas relacionadas
-    print_info "Instalando hostapd y herramientas WiFi..."
-    apt-get install -y hostapd dnsmasq iptables || print_warning "Algunos paquetes de hostapd no se pudieron instalar"
-    print_success "Paquetes de hostapd instalados"
+    print_info "Instalando hostapd, wpa_supplicant y herramientas WiFi..."
+    apt-get install -y hostapd dnsmasq iptables wpa_supplicant || print_warning "Algunos paquetes de hostapd/wpa_supplicant no se pudieron instalar"
+    print_success "Paquetes de hostapd y wpa_supplicant instalados"
     
     # Verificar si Go está instalado
     if ! command -v go &> /dev/null; then
