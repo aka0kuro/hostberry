@@ -10,6 +10,51 @@
     return defaultValue || key;
   };
 
+  // Función para traducir mensajes de error del backend
+  const translateError = (errorMessage) => {
+    if (!errorMessage) return '';
+    
+    const errorLower = errorMessage.toLowerCase();
+    
+    // Mapeo de mensajes de error comunes del backend
+    const errorMap = {
+      'lua engine no disponible': t('wifi.lua_engine_unavailable', 'Lua engine not available'),
+      'lua engine not available': t('wifi.lua_engine_unavailable', 'Lua engine not available'),
+      'wifi no está habilitado': t('wifi.wifi_not_enabled', 'WiFi is not enabled'),
+      'wifi is not enabled': t('wifi.wifi_not_enabled', 'WiFi is not enabled'),
+      'por favor, habilita wifi primero': t('wifi.enable_wifi_first', 'Please enable WiFi first'),
+      'please enable wifi first': t('wifi.enable_wifi_first', 'Please enable WiFi first'),
+      'no se encontraron redes wifi': t('wifi.no_networks_found', 'No WiFi networks found'),
+      'no wifi networks found': t('wifi.no_networks_found', 'No WiFi networks found'),
+      'verifica que wifi esté habilitado': t('wifi.check_wifi_enabled', 'Make sure WiFi is enabled'),
+      'make sure wifi is enabled': t('wifi.check_wifi_enabled', 'Make sure WiFi is enabled'),
+      'error ejecutando script lua': t('wifi.lua_script_error', 'Error executing Lua script'),
+      'error executing lua script': t('wifi.lua_script_error', 'Error executing Lua script'),
+      'script no encontrado': t('wifi.script_not_found', 'Script not found'),
+      'script not found': t('wifi.script_not_found', 'Script not found'),
+      'error conectando a wifi': t('wifi.connect_error', 'Error connecting to WiFi'),
+      'error connecting to wifi': t('wifi.connect_error', 'Error connecting to WiFi'),
+      'error desconectando de wifi': t('wifi.disconnect_error', 'Error disconnecting from WiFi'),
+      'error disconnecting from wifi': t('wifi.disconnect_error', 'Error disconnecting from WiFi'),
+      'error cambiando estado de wifi': t('wifi.toggle_error', 'Error toggling WiFi'),
+      'error toggling wifi': t('wifi.toggle_error', 'Error toggling WiFi'),
+      'error desbloqueando wifi': t('wifi.unblock_error', 'Error unblocking WiFi'),
+      'error unblocking wifi': t('wifi.unblock_error', 'Error unblocking WiFi'),
+      'error escaneando redes': t('wifi.scan_error', 'Error scanning WiFi networks'),
+      'error scanning networks': t('wifi.scan_error', 'Error scanning WiFi networks'),
+    };
+    
+    // Buscar coincidencia exacta o parcial
+    for (const [key, translation] of Object.entries(errorMap)) {
+      if (errorLower.includes(key)) {
+        return translation;
+      }
+    }
+    
+    // Si no hay coincidencia, devolver el mensaje original
+    return errorMessage;
+  };
+
   // Función para mostrar alertas
   const showAlert = (type, message) => {
     if (window.HostBerry && window.HostBerry.showAlert) {
