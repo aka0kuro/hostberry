@@ -910,25 +910,30 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 						break
 					}
 				}
-			} else if strings.Contains(line, "RSN:") || strings.Contains(line, "WPA:") {
-				// Detectar seguridad WPA2/WPA3
-				if strings.Contains(line, "WPA3") || strings.Contains(line, "SAE") {
+			} else if strings.Contains(line, "RSN:") {
+				// RSN (Robust Security Network) indica WPA2 o WPA3
+				if strings.Contains(line, "WPA3") || strings.Contains(line, "SAE") || strings.Contains(line, "suite-B") {
 					currentNetwork["security"] = "WPA3"
 				} else {
 					currentNetwork["security"] = "WPA2"
 				}
-				log.Printf("Detected security: %s from line: %s", currentNetwork["security"], line)
+				log.Printf("Detected security: %s from RSN line: %s", currentNetwork["security"], line)
+			} else if strings.Contains(line, "WPA:") {
+				// WPA indica WPA2 (WPA1 es raro)
+				currentNetwork["security"] = "WPA2"
+				log.Printf("Detected security: WPA2 from WPA line: %s", line)
 			} else if strings.Contains(line, "capability:") {
 				// Detectar si tiene Privacy (WEP o protegida)
 				if strings.Contains(line, "Privacy") {
-					if currentNetwork["security"] == nil || currentNetwork["security"] == "Unknown" {
+					// Solo establecer WEP si no se ha detectado otra seguridad
+					if sec, ok := currentNetwork["security"].(string); !ok || sec == "Open" || sec == "" {
 						currentNetwork["security"] = "WEP"
 						log.Printf("Detected security: WEP from capability line")
 					}
 				}
 			} else if strings.Contains(line, "WPS:") {
 				// Si tiene WPS, probablemente es WPA2
-				if currentNetwork["security"] == nil || currentNetwork["security"] == "Unknown" {
+				if sec, ok := currentNetwork["security"].(string); !ok || sec == "Open" || sec == "" {
 					currentNetwork["security"] = "WPA2"
 					log.Printf("Detected security: WPA2 from WPS line")
 				}
