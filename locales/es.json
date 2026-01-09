@@ -798,7 +798,9 @@
     "open_network": "Red abierta",
     "unknown": "Desconocido",
     "unnamed_network": "Red sin nombre",
-    "connected": "Conectado"
+    "connected": "Conectado",
+    "enable_wifi": "Habilitar WiFi",
+    "disable_wifi": "Deshabilitar WiFi"
   },
   "vpn": {
     "title": "VPN",
