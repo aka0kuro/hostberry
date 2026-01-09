@@ -73,9 +73,15 @@
 
     // Signal
     if (signalValue && signalBar) {
-      const signal = data.signal || 0;
-      const signalPercent = Math.min(100, Math.max(0, (parseInt(signal) + 100) * 2));
-      signalValue.textContent = signal ? signal + 'dBm' : '--';
+      // Buscar signal en connection_info primero, luego en data directamente
+      let signal = 0;
+      if (data.connection_info && data.connection_info.signal) {
+        signal = parseInt(data.connection_info.signal) || 0;
+      } else if (data.signal) {
+        signal = parseInt(data.signal) || 0;
+      }
+      const signalPercent = signal > 0 ? Math.min(100, Math.max(0, (signal + 100) * 2)) : 0;
+      signalValue.textContent = signal > 0 ? signal + 'dBm' : '--';
       signalBar.style.width = signalPercent + '%';
     }
 
