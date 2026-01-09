@@ -379,13 +379,21 @@
             card.setAttribute('data-security', security);
             card.setAttribute('data-signal', signal);
             card.setAttribute('data-channel', net.channel || '');
+            
+            // Verificar si esta es la red conectada actualmente
+            const isConnected = currentConnectedSSID && ssid === currentConnectedSSID;
+            const buttonClass = isConnected ? 'btn-success' : 'btn-primary';
+            const buttonIcon = isConnected ? 'bi-x-circle' : 'bi-box-arrow-in-right';
+            const buttonText = isConnected ? t('wifi.disconnect', 'Disconnect') : t('wifi.connect', 'Connect');
+            const buttonAction = isConnected ? `disconnectWiFi(this)` : `connectToNetwork('${escapedSsid}', '${security}', this)`;
+            
             card.innerHTML = `
               <div class="network-card-content">
                 <div class="network-card-icon ${signalColor}">
                   <i class="bi bi-wifi"></i>
                 </div>
                 <div class="network-card-info">
-                  <div class="network-card-ssid">${ssid}</div>
+                  <div class="network-card-ssid">${ssid}${isConnected ? ' <span class="badge bg-success ms-2">' + t('wifi.connected', 'Connected') + '</span>' : ''}</div>
                   <div class="network-card-details">
                     <span class="network-card-detail-item">
                       <i class="bi bi-bar-chart me-1"></i> ${signal}dBm (${signalPercent}%)
@@ -398,8 +406,8 @@
                 </div>
               </div>
               <div class="network-card-actions">
-                <button class="btn btn-primary btn-sm" onclick="connectToNetwork('${escapedSsid}', '${security}', this)">
-                  <i class="bi bi-box-arrow-in-right me-2"></i>${t('wifi.connect', 'Connect')}
+                <button class="btn ${buttonClass} btn-sm" onclick="${buttonAction}">
+                  <i class="bi ${buttonIcon} me-2"></i>${buttonText}
                 </button>
               </div>
             `;
