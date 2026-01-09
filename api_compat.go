@@ -835,13 +835,28 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 		var errorDetails string
 		if action == "enable" {
 			// Obtener logs del servicio
-			journalOut, _ := exec.Command("sh", "-c", "sudo journalctl -u hostapd -n 10 --no-pager 2>/dev/null | tail -5").CombinedOutput()
+			journalOut, _ := exec.Command("sh", "-c", "sudo journalctl -u hostapd -n 20 --no-pager 2>/dev/null | tail -10").CombinedOutput()
 			journalLogs := strings.TrimSpace(string(journalOut))
 			if journalLogs != "" {
-				errorDetails = fmt.Sprintf(" Service logs: %s", journalLogs)
+				// Extraer solo las líneas de error más relevantes
+				lines := strings.Split(journalLogs, "\n")
+				errorLines := []string{}
+				for _, line := range lines {
+					line = strings.TrimSpace(line)
+					if line != "" && (strings.Contains(strings.ToLower(line), "error") || 
+						strings.Contains(strings.ToLower(line), "failed") ||
+						strings.Contains(strings.ToLower(line), "fail")) {
+						errorLines = append(errorLines, line)
+					}
+				}
+				if len(errorLines) > 0 {
+					errorDetails = fmt.Sprintf(" Recent errors: %s", strings.Join(errorLines, "; "))
+				} else {
+					errorDetails = fmt.Sprintf(" Last logs: %s", strings.Join(lines[len(lines)-3:], "; "))
+				}
 			} else {
 				// Intentar obtener el estado del servicio
-				statusOut, _ := exec.Command("sh", "-c", "sudo systemctl status hostapd --no-pager 2>/dev/null | head -10").CombinedOutput()
+				statusOut, _ := exec.Command("sh", "-c", "sudo systemctl status hostapd --no-pager 2>/dev/null | head -15").CombinedOutput()
 				statusInfo := strings.TrimSpace(string(statusOut))
 				if statusInfo != "" {
 					errorDetails = fmt.Sprintf(" Service status: %s", statusInfo)
@@ -858,10 +873,84 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 	log.Printf("HostAPD %s command executed. Output: %s", action, strings.TrimSpace(out))
 	
 	// Verificar el estado después de la operación
-	time.Sleep(500 * time.Millisecond) // Dar tiempo al servicio para iniciar/detener
+	// Dar más tiempo al servicio para iniciar si es enable
+	if action == "enable" {
+		time.Sleep(1500 * time.Millisecond) // Más tiempo para que hostapd inicie
+	} else {
+		time.Sleep(500 * time.Millisecond)
+	}
+	
+	// Verificar estado del servicio
 	hostapdOut2, _ := exec.Command("sh", "-c", "systemctl is-active hostapd 2>/dev/null || pgrep hostapd > /dev/null && echo active || echo inactive").CombinedOutput()
 	hostapdStatus2 := strings.TrimSpace(string(hostapdOut2))
 	actuallyActive := hostapdStatus2 == "active"
+	
+	// Si intentamos habilitar pero sigue inactivo, obtener más información
+	if action == "enable" && !actuallyActive {
+		log.Printf("HostAPD failed to start. Checking logs...")
+		// Verificar si el servicio está habilitado pero falló
+		enabledOut, _ := exec.Command("sh", "-c", "systemctl is-enabled hostapd 2>/dev/null || echo disabled").CombinedOutput()
+		enabledStatus := strings.TrimSpace(string(enabledOut))
+		
+		// Obtener logs recientes
+		journalOut, _ := exec.Command("sh", "-c", "sudo journalctl -u hostapd -n 15 --no-pager 2>/dev/null | tail -8").CombinedOutput()
+		journalLogs := strings.TrimSpace(string(journalOut))
+		
+		// Obtener estado detallado
+		statusOut, _ := exec.Command("sh", "-c", "sudo systemctl status hostapd --no-pager 2>/dev/null | head -20").CombinedOutput()
+		statusInfo := strings.TrimSpace(string(statusOut))
+		
+		var errorMsg string
+		if journalLogs != "" {
+			// Buscar líneas de error
+			lines := strings.Split(journalLogs, "\n")
+			errorLines := []string{}
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+				if line != "" {
+					lowerLine := strings.ToLower(line)
+					if strings.Contains(lowerLine, "error") || strings.Contains(lowerLine, "failed") || 
+						strings.Contains(lowerLine, "fail") || strings.Contains(lowerLine, "cannot") {
+						errorLines = append(errorLines, line)
+					}
+				}
+			}
+			if len(errorLines) > 0 {
+				errorMsg = strings.Join(errorLines[:min(3, len(errorLines))], "; ")
+			} else if len(lines) > 0 {
+				errorMsg = strings.Join(lines[len(lines)-min(3, len(lines)):], "; ")
+			}
+		}
+		
+		if errorMsg == "" && statusInfo != "" {
+			// Extraer información relevante del status
+			statusLines := strings.Split(statusInfo, "\n")
+			for _, line := range statusLines {
+				if strings.Contains(strings.ToLower(line), "active:") || 
+					strings.Contains(strings.ToLower(line), "failed") ||
+					strings.Contains(strings.ToLower(line), "error") {
+					errorMsg = strings.TrimSpace(line)
+					break
+				}
+			}
+		}
+		
+		if errorMsg != "" {
+			return c.Status(500).JSON(fiber.Map{
+				"error":   fmt.Sprintf("Failed to enable HostAPD. Service status: %s (enabled: %s). %s", hostapdStatus2, enabledStatus, errorMsg),
+				"success": false,
+				"status":  hostapdStatus2,
+				"enabled": false,
+			})
+		} else {
+			return c.Status(500).JSON(fiber.Map{
+				"error":   fmt.Sprintf("Failed to enable HostAPD. Service status: %s (enabled: %s). Check configuration and logs.", hostapdStatus2, enabledStatus),
+				"success": false,
+				"status":  hostapdStatus2,
+				"enabled": false,
+			})
+		}
+	}
 	
 	log.Printf("HostAPD status after %s: %s (actuallyActive: %v)", action, hostapdStatus2, actuallyActive)
 	
