@@ -127,7 +127,16 @@
     if (connectionStatusValue) {
       const connected = data.connected || false;
       const ssid = data.ssid || '--';
-      connectionStatusValue.textContent = connected ? ssid : t('wifi.disconnected', 'Disconnected');
+      const statusText = connected ? ssid : t('wifi.disconnected', 'Disconnected');
+      connectionStatusValue.textContent = statusText;
+      // Agregar clase para texto desconectado
+      if (!connected) {
+        connectionStatusValue.classList.add('text-disconnected');
+        connectionStatusValue.setAttribute('data-status', 'disconnected');
+      } else {
+        connectionStatusValue.classList.remove('text-disconnected');
+        connectionStatusValue.removeAttribute('data-status');
+      }
     }
 
     // Signal
