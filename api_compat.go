@@ -1495,53 +1495,96 @@ func hostapdConfigHandler(c *fiber.Ctx) error {
 	
 	log.Printf("Configuring AP+STA mode: creating virtual interface %s from %s", apInterface, phyInterface)
 	
-	// 1. Obtener el nombre del phy de la interfaz física
-	phyCmd := fmt.Sprintf("iw dev %s info 2>/dev/null | grep 'wiphy' | awk '{print $2}' || cat /sys/class/net/%s/phy80211/name 2>/dev/null || echo ''", phyInterface, phyInterface)
+	// 1. Asegurar que la interfaz física esté activa antes de crear la virtual
+	executeCommand(fmt.Sprintf("sudo ip link set %s up 2>/dev/null || true", phyInterface))
+	time.Sleep(500 * time.Millisecond)
+	
+	// 2. Obtener el nombre del phy de la interfaz física
+	// Método 1: Desde iw dev info
+	phyCmd := fmt.Sprintf("iw dev %s info 2>/dev/null | grep 'wiphy' | awk '{print $2}'", phyInterface)
 	phyOut, _ := executeCommand(phyCmd)
 	phyName := strings.TrimSpace(phyOut)
 	
+	// Método 2: Desde /sys/class/net
 	if phyName == "" {
-		// Fallback: intentar obtener el phy de otra manera
-		phyCmd2 := fmt.Sprintf("iw list | grep -A 1 'Wiphy' | tail -1 | awk '{print $2}' || echo 'phy0'")
+		phyCmd2 := fmt.Sprintf("cat /sys/class/net/%s/phy80211/name 2>/dev/null", phyInterface)
 		phyOut2, _ := executeCommand(phyCmd2)
 		phyName = strings.TrimSpace(phyOut2)
-		if phyName == "" {
-			phyName = "phy0" // Valor por defecto
-		}
 	}
 	
-	log.Printf("Using phy: %s for virtual interface creation", phyName)
+	// Método 3: Desde iw list
+	if phyName == "" {
+		phyCmd3 := "iw list 2>/dev/null | grep -A 1 'Wiphy' | tail -1 | awk '{print $2}'"
+		phyOut3, _ := executeCommand(phyCmd3)
+		phyName = strings.TrimSpace(phyOut3)
+	}
 	
-	// 2. Verificar si la interfaz ap0 ya existe
+	// Método 4: Valor por defecto
+	if phyName == "" {
+		phyName = "phy0"
+		log.Printf("Warning: Could not detect phy name, using default: %s", phyName)
+	}
+	
+	log.Printf("Using phy: %s for virtual interface creation from %s", phyName, phyInterface)
+	
+	// 3. Verificar si la interfaz ap0 ya existe
 	checkApCmd := fmt.Sprintf("ip link show %s 2>/dev/null", apInterface)
 	apExists := false
-	if out, err := executeCommand(checkApCmd); err == nil && strings.TrimSpace(out) != "" {
+	checkOut, checkErr := executeCommand(checkApCmd)
+	if checkErr == nil && strings.TrimSpace(checkOut) != "" {
 		apExists = true
 		log.Printf("Interface %s already exists, reusing it", apInterface)
+		// Si existe pero está down, activarla
+		executeCommand(fmt.Sprintf("sudo ip link set %s up 2>/dev/null || true", apInterface))
 	}
 	
-	// 3. Si no existe, eliminar cualquier interfaz ap0 anterior y crear una nueva
+	// 4. Si no existe, eliminar cualquier interfaz ap0 anterior y crear una nueva
 	if !apExists {
-		// Eliminar interfaz virtual ap0 si ya existe (para recrearla limpia)
-		executeCommand(fmt.Sprintf("sudo iw dev %s del 2>/dev/null || true", apInterface))
-		time.Sleep(500 * time.Millisecond)
+		log.Printf("Interface %s does not exist, creating it...", apInterface)
 		
-		// Crear interfaz virtual ap0 en modo AP
+		// Eliminar interfaz virtual ap0 si ya existe (para recrearla limpia)
+		delOut, delErr := executeCommand(fmt.Sprintf("sudo iw dev %s del 2>/dev/null || true", apInterface))
+		if delErr == nil {
+			log.Printf("Removed existing %s interface (if it existed): %s", apInterface, strings.TrimSpace(delOut))
+		}
+		time.Sleep(1 * time.Second)
+		
+		// Crear interfaz virtual ap0 en modo AP usando phy
+		log.Printf("Creating virtual interface %s using phy %s...", apInterface, phyName)
 		createApCmd := fmt.Sprintf("sudo iw phy %s interface add %s type __ap", phyName, apInterface)
-		if out, err := executeCommand(createApCmd); err != nil {
-			log.Printf("Warning: Error creating virtual interface %s with phy: %s. Trying alternative method...", apInterface, strings.TrimSpace(out))
+		createOut, createErr := executeCommand(createApCmd)
+		
+		if createErr != nil {
+			log.Printf("Error creating virtual interface %s with phy %s: %s", apInterface, phyName, strings.TrimSpace(createOut))
+			log.Printf("Trying alternative method: using interface %s directly...", phyInterface)
+			
 			// Método alternativo: usar el nombre de la interfaz directamente
 			createApCmd2 := fmt.Sprintf("sudo iw dev %s interface add %s type __ap", phyInterface, apInterface)
-			if out2, err2 := executeCommand(createApCmd2); err2 != nil {
-				log.Printf("Error creating virtual interface with alternative method: %s", strings.TrimSpace(out2))
+			createOut2, createErr2 := executeCommand(createApCmd2)
+			
+			if createErr2 != nil {
+				log.Printf("Error creating virtual interface with alternative method: %s", strings.TrimSpace(createOut2))
 				// Si falla, usar la interfaz física directamente (modo no concurrente)
 				apInterface = phyInterface
 				log.Printf("Falling back to using physical interface %s directly (non-concurrent mode)", apInterface)
 			} else {
-				log.Printf("Successfully created interface %s using alternative method", apInterface)
+				log.Printf("Successfully created interface %s using alternative method (from %s)", apInterface, phyInterface)
+				apExists = true
 			}
 		} else {
 			log.Printf("Successfully created interface %s using phy %s", apInterface, phyName)
+			apExists = true
+		}
+		
+		// Verificar que la interfaz se creó correctamente
+		if apExists && apInterface == "ap0" {
+			verifyCmd := fmt.Sprintf("ip link show %s", apInterface)
+			verifyOut, verifyErr := executeCommand(verifyCmd)
+			if verifyErr == nil && strings.TrimSpace(verifyOut) != "" {
+				log.Printf("Interface %s verified successfully: %s", apInterface, strings.TrimSpace(verifyOut))
+			} else {
+				log.Printf("Warning: Interface %s was created but verification failed", apInterface)
+			}
 		}
 	}
 	
