@@ -101,15 +101,15 @@
 
   // Actualizar información de conexión
   function updateConnectionInfo(data) {
-    const statusEl = document.getElementById('connection-status');
-    const ssidEl = document.getElementById('connection-ssid');
-    const signalEl = document.getElementById('connection-signal');
-    const securityEl = document.getElementById('connection-security');
-    const channelEl = document.getElementById('connection-channel');
-    const ipEl = document.getElementById('connection-ip');
-    const macEl = document.getElementById('connection-mac');
-    const speedEl = document.getElementById('connection-speed');
-
+      const statusEl = document.getElementById('connection-status');
+      const ssidEl = document.getElementById('connection-ssid');
+      const signalEl = document.getElementById('connection-signal');
+      const securityEl = document.getElementById('connection-security');
+      const channelEl = document.getElementById('connection-channel');
+      const ipEl = document.getElementById('connection-ip');
+      const macEl = document.getElementById('connection-mac');
+      const speedEl = document.getElementById('connection-speed');
+      
     if (statusEl) {
       statusEl.textContent = data.connected 
         ? t('wifi.connected', 'Connected') 
@@ -152,7 +152,7 @@
     try {
       const resp = await apiRequest('/api/v1/wifi/interfaces');
       if (!resp.ok) return;
-      const data = await resp.json();
+        const data = await resp.json();
       const select = document.getElementById('wifi-interface');
       if (!select) return;
       
@@ -169,7 +169,7 @@
       console.error(t('wifi.networks_error', 'Error getting WiFi networks') + ':', error);
     }
   }
-
+  
   // Toggle WiFi
   async function toggleWiFi() {
     const btn = document.getElementById('toggle-wifi-btn');
@@ -178,12 +178,12 @@
     
     if (!btn || btn.disabled) return;
     
-    btn.disabled = true;
+      btn.disabled = true;
     const originalText = text.textContent;
     text.textContent = t('wifi.enabling', 'Enabling...');
-    
-    try {
-      const resp = await apiRequest('/api/v1/wifi/toggle', { method: 'POST' });
+      
+      try {
+        const resp = await apiRequest('/api/v1/wifi/toggle', { method: 'POST' });
       const data = await resp.json();
       
       if (resp.ok && data.success) {
@@ -201,44 +201,44 @@
             icon.className = statusData.enabled ? 'bi bi-wifi-off' : 'bi bi-wifi';
           }
         }
-        await loadConnectionStatus();
-      } else {
+          await loadConnectionStatus();
+          } else {
         showAlert('danger', data.error || t('wifi.toggle_error', 'Error toggling WiFi'));
       }
     } catch (error) {
       console.error(t('wifi.toggle_error', 'Error toggling WiFi') + ':', error);
       showAlert('danger', t('wifi.toggle_error', 'Error toggling WiFi'));
-    } finally {
-      btn.disabled = false;
+      } finally {
+          btn.disabled = false;
       text.textContent = originalText;
     }
   }
-
+  
   // Unblock WiFi
   async function unblockWiFi() {
     const btn = document.getElementById('unblock-wifi-btn');
     if (!btn || btn.disabled) return;
     
-    btn.disabled = true;
+      btn.disabled = true;
     const originalText = btn.querySelector('span').textContent;
     btn.querySelector('span').textContent = t('wifi.unblocking', 'Unblocking...');
-    
-    try {
-      const resp = await apiRequest('/api/v1/wifi/unblock', { method: 'POST' });
+      
+      try {
+        const resp = await apiRequest('/api/v1/wifi/unblock', { method: 'POST' });
       const data = await resp.json();
       
       if (resp.ok && data.success) {
-        showAlert('success', t('wifi.wifi_unblocked', 'WiFi unblocked successfully'));
+          showAlert('success', t('wifi.wifi_unblocked', 'WiFi unblocked successfully'));
         btn.style.display = 'none';
-        await loadConnectionStatus();
-      } else {
+            await loadConnectionStatus();
+        } else {
         showAlert('danger', data.error || t('wifi.unblock_error', 'Error unblocking WiFi'));
       }
     } catch (error) {
       console.error(t('wifi.unblock_error', 'Error unblocking WiFi') + ':', error);
       showAlert('danger', t('wifi.unblock_error', 'Error unblocking WiFi'));
-    } finally {
-      btn.disabled = false;
+      } finally {
+          btn.disabled = false;
       btn.querySelector('span').textContent = originalText;
     }
   }
@@ -255,7 +255,7 @@
     
     try {
       const resp = await apiRequest('/api/v1/wifi/software-switch', { method: 'POST' });
-      const data = await resp.json();
+        const data = await resp.json();
       
       if (resp.ok && data.success) {
         showAlert('success', t('wifi.software_switch_toggled', 'Software switch toggled successfully'));
@@ -268,7 +268,7 @@
             : t('wifi.enable_software_switch', 'Enable Software Switch');
         }
         await loadConnectionStatus();
-      } else {
+            } else {
         showAlert('danger', data.error || t('wifi.toggle_error', 'Error toggling switch'));
       }
     } catch (error) {
@@ -472,7 +472,7 @@
       }
     }
   }
-
+  
   // Conectar a red
   async function connectToNetwork(ssid, security, buttonElement) {
     const card = buttonElement ? buttonElement.closest('.network-card') : null;
@@ -480,10 +480,10 @@
     
     // Si ya hay un formulario, removerlo
     if (formWrapper) {
-      formWrapper.remove();
-      return;
-    }
-    
+        formWrapper.remove();
+          return;
+        }
+        
     // Obtener información de la red desde los atributos data de la tarjeta
     let signal = '--';
     let channel = '--';
@@ -556,7 +556,7 @@
     
     if (card) {
       card.appendChild(formWrapper);
-    } else {
+      } else {
       // Si no hay card, mostrar modal o alert
       const password = needsPassword ? prompt(t('wifi.network_password', 'Password') + ':', '') : '';
       if (password !== null) {
@@ -573,26 +573,26 @@
     
     buttonElement.disabled = true;
     buttonElement.innerHTML = `<i class="bi bi-arrow-clockwise spinning me-2"></i>${t('wifi.connecting', 'Connecting...')}`;
-    
-    try {
-      const resp = await apiRequest('/api/v1/wifi/connect', {
-        method: 'POST',
-        body: {
-          ssid: ssid,
+      
+      try {
+        const resp = await apiRequest('/api/v1/wifi/connect', {
+          method: 'POST',
+          body: { 
+            ssid: ssid, 
           password: password,
           security: security
         }
       });
-      
-      const data = await resp.json();
-      
+        
+        const data = await resp.json();
+        
       if (resp.ok && data.success) {
         showAlert('success', t('wifi.connected_to', 'Connected to {ssid}').replace('{ssid}', ssid));
-        formWrapper.remove();
+            formWrapper.remove();
         await loadConnectionStatus();
         // Opcional: escanear nuevamente después de conectar
         setTimeout(() => scanNetworks(), 2000);
-      } else {
+        } else {
         showAlert('danger', data.error || t('wifi.connect_error', 'Error connecting to WiFi'));
         buttonElement.disabled = false;
         buttonElement.innerHTML = `<i class="bi bi-box-arrow-in-right me-2"></i>${t('wifi.connect', 'Connect')}`;
@@ -667,7 +667,7 @@
             badge.textContent = t('wifi.connected', 'Connected');
             ssidDiv.appendChild(badge);
           }
-        } else {
+          } else {
           const badge = ssidDiv.querySelector('.badge');
           if (badge) badge.remove();
         }
@@ -693,9 +693,9 @@
         currentConnectedSSID = null;
         await loadConnectionStatus();
         // Actualizar botones después de un breve delay
-        setTimeout(() => {
+    setTimeout(() => {
           updateConnectButtons();
-          scanNetworks();
+      scanNetworks();
         }, 1000);
       } else {
         showAlert('danger', data.error || t('wifi.disconnect_error', 'Error disconnecting from WiFi'));
@@ -719,16 +719,44 @@
   window.submitConnect = submitConnect;
   window.disconnectWiFi = disconnectWiFi;
 
+  // Actualizar textos de botones según el estado
+  function updateButtonTexts(data) {
+    // Botón toggle WiFi
+    const toggleWifiText = document.getElementById('toggle-wifi-text');
+    const toggleWifiIcon = document.getElementById('toggle-wifi-icon');
+    if (toggleWifiText && data.enabled !== undefined) {
+      toggleWifiText.textContent = data.enabled 
+        ? t('wifi.disable_wifi', 'Disable WiFi')
+        : t('wifi.enable_wifi', 'Enable WiFi');
+    }
+    if (toggleWifiIcon && data.enabled !== undefined) {
+      toggleWifiIcon.className = data.enabled ? 'bi bi-wifi-off' : 'bi bi-wifi';
+    }
+    
+    // Botón software switch
+    const softwareSwitchText = document.getElementById('software-switch-text');
+    const softwareSwitchIcon = document.getElementById('software-switch-icon');
+    if (softwareSwitchText && data.soft_blocked !== undefined) {
+      softwareSwitchText.textContent = data.soft_blocked
+        ? t('wifi.enable_software_switch', 'Enable Software Switch')
+        : t('wifi.disable_software_switch', 'Disable Software Switch');
+    }
+    if (softwareSwitchIcon && data.soft_blocked !== undefined) {
+      softwareSwitchIcon.className = data.soft_blocked ? 'bi bi-toggle-off' : 'bi bi-toggle-on';
+    }
+  }
+
   // Inicializar cuando el DOM esté listo
   document.addEventListener('DOMContentLoaded', async function() {
     await loadInterfaces();
-    await loadConnectionStatus();
+            await loadConnectionStatus();
     
-    // Verificar si WiFi está bloqueado
+    // Verificar si WiFi está bloqueado y actualizar botones
     try {
       const resp = await apiRequest('/api/v1/wifi/status');
       if (resp.ok) {
         const data = await resp.json();
+        updateButtonTexts(data);
         const unblockBtn = document.getElementById('unblock-wifi-btn');
         if (unblockBtn && data.hard_blocked) {
           unblockBtn.style.display = 'block';
