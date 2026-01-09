@@ -131,17 +131,13 @@ body.light-theme .stat-label {
     margin-bottom: 0.5rem;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    line-height: 1.2;
 }
 
 /* Hacer el texto más pequeño cuando es "Disconnected" o texto largo */
-.stat-value:has-text("Disconnected"),
-.stat-value:has-text("Desconectado") {
-    font-size: 1.2rem;
-}
-
-/* Alternativa usando selector de atributo */
+.stat-value.text-disconnected,
 .stat-value[data-status="disconnected"] {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
 }
 
 body.light-theme .stat-value {
