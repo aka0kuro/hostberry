@@ -437,7 +437,7 @@
   // Cargar interfaces WiFi para el selector
   async function loadInterfaces() {
     const select = document.getElementById('hostapd-interface');
-    if (!select) return;
+    if (!select) return Promise.resolve();
     
     try {
       const resp = await HostBerry.apiRequest('/api/v1/wifi/interfaces');
@@ -454,8 +454,10 @@
           select.appendChild(option);
         });
       }
+      return Promise.resolve();
     } catch (e) {
       console.error('Error loading interfaces:', e);
+      return Promise.resolve();
     }
   }
 
