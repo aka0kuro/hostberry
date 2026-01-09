@@ -87,10 +87,15 @@
     
     if (toggleBtn) {
       toggleBtn.className = 'btn ' + (enabled ? 'btn-outline-danger' : 'btn-outline-success');
+      toggleBtn.disabled = false; // Asegurar que el botón esté habilitado
     }
     
     if (toggleText) {
-      toggleText.textContent = enabled ? t('hostapd.disable_hostapd', 'Disable HostAPD') : t('hostapd.enable_hostapd', 'Enable HostAPD');
+      toggleText.innerHTML = enabled ? t('hostapd.disable_hostapd', 'Disable HostAPD') : t('hostapd.enable_hostapd', 'Enable HostAPD');
+    } else if (toggleBtn) {
+      // Si no hay toggleText, actualizar el contenido del botón directamente
+      const icon = enabled ? 'bi-x-circle' : 'bi-router';
+      toggleBtn.innerHTML = '<i class="bi ' + icon + ' me-2"></i><span>' + (enabled ? t('hostapd.disable_hostapd', 'Disable HostAPD') : t('hostapd.enable_hostapd', 'Enable HostAPD')) + '</span>';
     }
     
     if (container) {
