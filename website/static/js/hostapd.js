@@ -481,6 +481,16 @@
       if (form) {
         form.addEventListener('submit', async function(e) {
           e.preventDefault();
+          
+          const submitBtn = form.querySelector('button[type="submit"]');
+          const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+          
+          // Deshabilitar botón y mostrar loading
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bi bi-arrow-clockwise spinning me-2"></i>' + t('common.saving', 'Saving...');
+          }
+          
           const fd = new FormData(this);
           const data = {
             interface: fd.get('interface'),
@@ -494,7 +504,28 @@
             lease_time: fd.get('lease_time') || '12h'
           };
           
+          // Validar campos requeridos
+          if (!data.interface || !data.ssid || !data.channel) {
+            HostBerry.showAlert('warning', t('hostapd.fill_required_fields', 'Please fill in all required fields: Interface, SSID, and Channel'));
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalBtnText;
+            }
+            return;
+          }
+          
+          // Validar password si security no es "open"
+          if (data.security !== 'open' && !data.password) {
+            HostBerry.showAlert('warning', t('hostapd.password_required', 'Password is required for WPA2/WPA3 security'));
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalBtnText;
+            }
+            return;
+          }
+          
           try {
+            console.log('Saving HostAPD configuration:', data);
             const resp = await HostBerry.apiRequest('/api/v1/hostapd/config', {
               method: 'POST',
               body: data
@@ -505,18 +536,28 @@
               if (result.error) {
                 HostBerry.showAlert('warning', translateError(result.error));
               } else {
-                HostBerry.showAlert('success', t('messages.changes_saved', 'Changes saved successfully'));
+                HostBerry.showAlert('success', t('hostapd.config_saved', 'HostAPD configuration saved successfully. The service will be restarted automatically.'));
+                // Recargar estado después de guardar
                 setTimeout(() => {
+                  loadHostAPDStatus();
                   loadAccessPoints();
-                }, 1000);
+                  loadClients();
+                }, 1500);
               }
             } else {
               const errorText = await resp.text().catch(() => '');
-              HostBerry.showAlert('danger', translateError(errorText) || t('errors.configuration_error', 'Configuration error'));
+              const errorMsg = translateError(errorText) || t('errors.configuration_error', 'Configuration error');
+              HostBerry.showAlert('danger', errorMsg);
             }
           } catch (e) {
             console.error('Error saving HostAPD config:', e);
-            HostBerry.showAlert('danger', t('errors.network_error', 'Network error'));
+            HostBerry.showAlert('danger', t('errors.network_error', 'Network error') + ': ' + (e.message || String(e)));
+          } finally {
+            // Restaurar botón
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalBtnText;
+            }
           }
         });
       }
