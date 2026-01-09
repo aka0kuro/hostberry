@@ -311,7 +311,7 @@
             </div>
           `;
         }
-        throw new Error('Error al escanear redes: HTTP ' + resp.status);
+        throw new Error(t('wifi.scan_error', 'Error scanning WiFi networks') + ': HTTP ' + resp.status);
       }
       
       let data;
