@@ -166,7 +166,7 @@
         });
       }
     } catch (error) {
-      console.error('Error cargando interfaces:', error);
+      console.error(t('wifi.networks_error', 'Error getting WiFi networks') + ':', error);
     }
   }
 
