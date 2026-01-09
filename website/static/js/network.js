@@ -182,8 +182,11 @@
     // Update active interfaces count
     const activeCountEl = document.getElementById('active-interfaces-count');
     if (activeCountEl) {
-      activeCountEl.textContent = activeCount;
+      activeCountEl.textContent = activeCount.toString();
     }
+    
+    // También actualizar el estado de la red con las interfaces
+    updateNetworkStatusCard(interfaces);
   }
 
   function populateInterfaceSelects(interfaces) {
