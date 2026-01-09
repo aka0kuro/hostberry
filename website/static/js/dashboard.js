@@ -222,6 +222,9 @@
             const uptimeFormatted = formatUptime(uptimeSeconds);
             setText('stat-uptime', uptimeFormatted);
 
+            // Cargar estado de servicios para las nuevas tarjetas
+            loadServiceStatus();
+
             // System Info - combinar datos de stats e info
             setText('info-hostname', info.hostname || stats.hostname || stats.host_name || '--');
             setText('info-os', info.os_version || stats.os_version || stats.os || '--');
