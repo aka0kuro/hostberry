@@ -62,7 +62,8 @@
     "critical": "Critical",
     "app_description": "HostBerry - Network Management System for Raspberry Pi",
     "change_theme": "Change theme",
-    "show_password": "Show password"
+    "show_password": "Show password",
+    "hide_password": "Hide password"
   },
   "time": {
     "days_hours": "{days} days, {hours} hours",
