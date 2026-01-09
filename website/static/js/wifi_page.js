@@ -249,7 +249,7 @@
         }
           await loadConnectionStatus();
           } else {
-        showAlert('danger', data.error || t('wifi.toggle_error', 'Error toggling WiFi'));
+        showAlert('danger', translateError(data.error) || t('wifi.toggle_error', 'Error toggling WiFi'));
       }
     } catch (error) {
       console.error(t('wifi.toggle_error', 'Error toggling WiFi') + ':', error);
