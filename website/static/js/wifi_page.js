@@ -28,6 +28,9 @@
     return await fetch(url, opts);
   };
 
+  // Variable global para almacenar la red conectada actualmente
+  let currentConnectedSSID = null;
+
   // Cargar estado de conexión
   async function loadConnectionStatus() {
     try {
@@ -37,8 +40,12 @@
         return;
       }
       const data = await resp.json();
+      // Guardar SSID conectado actualmente
+      currentConnectedSSID = (data.connected && data.ssid) ? data.ssid : null;
       updateStatusCards(data);
       updateConnectionInfo(data);
+      // Actualizar botones de conexión en las tarjetas
+      updateConnectButtons();
     } catch (error) {
       console.error('Error cargando estado WiFi:', error);
     }
