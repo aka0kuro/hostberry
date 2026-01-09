@@ -1211,6 +1211,106 @@ func hostapdRestartHandler(c *fiber.Ctx) error {
 	})
 }
 
+func hostapdDiagnosticsHandler(c *fiber.Ctx) error {
+	diagnostics := make(map[string]interface{})
+	
+	// 1. Verificar estado del servicio
+	systemctlOut, _ := exec.Command("sh", "-c", "systemctl is-active hostapd 2>/dev/null").CombinedOutput()
+	systemctlStatus := strings.TrimSpace(string(systemctlOut))
+	pgrepOut, _ := exec.Command("sh", "-c", "pgrep hostapd > /dev/null 2>&1 && echo active || echo inactive").CombinedOutput()
+	pgrepStatus := strings.TrimSpace(string(pgrepOut))
+	
+	serviceRunning := systemctlStatus == "active" || pgrepStatus == "active"
+	diagnostics["service_running"] = serviceRunning
+	diagnostics["systemctl_status"] = systemctlStatus
+	diagnostics["process_running"] = pgrepStatus == "active"
+	
+	// 2. Leer configuración para obtener la interfaz
+	interfaceName := "wlan0"
+	configPath := "/etc/hostapd/hostapd.conf"
+	if configContent, err := os.ReadFile(configPath); err == nil {
+		lines := strings.Split(string(configContent), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "interface=") {
+				parts := strings.SplitN(line, "=", 2)
+				if len(parts) == 2 {
+					interfaceName = strings.TrimSpace(parts[1])
+					break
+				}
+			}
+		}
+	}
+	diagnostics["interface"] = interfaceName
+	
+	// 3. Verificar si la interfaz está en modo AP
+	iwOut, _ := exec.Command("sh", "-c", fmt.Sprintf("iw dev %s info 2>/dev/null | grep -i 'type AP' || iwconfig %s 2>/dev/null | grep -i 'mode:master' || echo ''", interfaceName, interfaceName)).CombinedOutput()
+	iwStatus := strings.TrimSpace(string(iwOut))
+	transmitting := iwStatus != ""
+	
+	// Verificar también con hostapd_cli
+	if !transmitting && serviceRunning {
+		cliStatusOut, _ := exec.Command("sh", "-c", fmt.Sprintf("hostapd_cli -i %s status 2>/dev/null | grep -i 'state=ENABLED' || echo ''", interfaceName)).CombinedOutput()
+		cliStatus := strings.TrimSpace(string(cliStatusOut))
+		if cliStatus != "" {
+			transmitting = true
+		}
+	}
+	
+	diagnostics["transmitting"] = transmitting
+	diagnostics["interface_in_ap_mode"] = iwStatus != ""
+	
+	// 4. Verificar logs de errores
+	journalOut, _ := exec.Command("sh", "-c", "sudo journalctl -u hostapd -n 50 --no-pager 2>/dev/null | tail -30").CombinedOutput()
+	journalLogs := string(journalOut)
+	diagnostics["recent_logs"] = journalLogs
+	
+	// Buscar errores comunes
+	errors := []string{}
+	journalLower := strings.ToLower(journalLogs)
+	if strings.Contains(journalLower, "could not configure driver") {
+		errors = append(errors, "Driver configuration error")
+	}
+	if strings.Contains(journalLower, "nl80211: could not") {
+		errors = append(errors, "nl80211 driver error")
+	}
+	if strings.Contains(journalLower, "interface") && strings.Contains(journalLower, "not found") {
+		errors = append(errors, "Interface not found")
+	}
+	if strings.Contains(journalLower, "failed to initialize") {
+		errors = append(errors, "Initialization failed")
+	}
+	if strings.Contains(journalLower, "could not set channel") {
+		errors = append(errors, "Channel configuration error")
+	}
+	
+	diagnostics["errors"] = errors
+	diagnostics["has_errors"] = len(errors) > 0
+	
+	// 5. Verificar estado de la interfaz
+	ipOut, _ := exec.Command("sh", "-c", fmt.Sprintf("ip addr show %s 2>/dev/null | grep -i 'state UP' || echo ''", interfaceName)).CombinedOutput()
+	interfaceUp := strings.Contains(strings.ToLower(string(ipOut)), "state up")
+	diagnostics["interface_up"] = interfaceUp
+	
+	// 6. Verificar si dnsmasq está corriendo (necesario para DHCP)
+	dnsmasqOut, _ := exec.Command("sh", "-c", "systemctl is-active dnsmasq 2>/dev/null || echo inactive").CombinedOutput()
+	dnsmasqStatus := strings.TrimSpace(string(dnsmasqOut))
+	diagnostics["dnsmasq_running"] = dnsmasqStatus == "active"
+	
+	// 7. Estado general
+	diagnostics["status"] = func() string {
+		if !serviceRunning {
+			return "service_stopped"
+		}
+		if !transmitting {
+			return "service_running_not_transmitting"
+		}
+		return "ok"
+	}()
+	
+	return c.JSON(diagnostics)
+}
+
 func hostapdGetConfigHandler(c *fiber.Ctx) error {
 	configPath := "/etc/hostapd/hostapd.conf"
 	
