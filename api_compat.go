@@ -1971,13 +1971,63 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 		}
 	}
 	
-	// Obtener SSID actual si está conectado
-	ssidOut, _ := execCommand("nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
-	ssid := strings.TrimSpace(filterSudoErrors(ssidOut))
-	connected := ssid != ""
+	// Obtener SSID actual si está conectado usando wpa_cli o iw
+	ssid := ""
+	connected := false
+	iface := "wlan0"
 	
-	// Si no hay SSID con nmcli, intentar con iwconfig
-	if !connected {
+	// Detectar interfaz WiFi
+	ipIfaceCmd := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}' | grep -E '^wlan|^wl' | head -1")
+	if ipIfaceOut, err := ipIfaceCmd.Output(); err == nil {
+		if ipIfaceStr := strings.TrimSpace(string(ipIfaceOut)); ipIfaceStr != "" {
+			iface = ipIfaceStr
+		}
+	}
+	
+	// Método 1: Intentar con wpa_cli (si está usando wpa_supplicant)
+	wpaStatusCmd := exec.Command("sh", "-c", fmt.Sprintf("sudo wpa_cli -i %s status 2>/dev/null", iface))
+	wpaStatusOut, wpaErr := wpaStatusCmd.CombinedOutput()
+	if wpaErr == nil && len(wpaStatusOut) > 0 {
+		wpaStatus := string(wpaStatusOut)
+		for _, line := range strings.Split(wpaStatus, "\n") {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "ssid=") {
+				ssid = strings.TrimPrefix(line, "ssid=")
+				if ssid != "" {
+					// Verificar si está realmente conectado
+					if strings.Contains(wpaStatus, "wpa_state=COMPLETED") {
+						connected = true
+					}
+				}
+				break
+			}
+		}
+	}
+	
+	// Método 2: Si wpa_cli no funcionó, intentar con iw
+	if !connected || ssid == "" {
+		iwLinkCmd := exec.Command("sh", "-c", fmt.Sprintf("iw dev %s link 2>/dev/null", iface))
+		iwLinkOut, iwErr := iwLinkCmd.CombinedOutput()
+		if iwErr == nil && len(iwLinkOut) > 0 {
+			iwLink := string(iwLinkOut)
+			for _, line := range strings.Split(iwLink, "\n") {
+				line = strings.TrimSpace(line)
+				if strings.HasPrefix(line, "Connected to ") {
+					// Formato: "Connected to aa:bb:cc:dd:ee:ff (on wlan0)"
+					// O buscar SSID en otra línea
+					connected = true
+				} else if strings.Contains(line, "SSID:") {
+					ssid = strings.TrimSpace(strings.TrimPrefix(line, "SSID:"))
+					if ssid != "" {
+						connected = true
+					}
+				}
+			}
+		}
+	}
+	
+	// Método 3: Fallback a iwconfig si está disponible
+	if !connected || ssid == "" {
 		iwOut, _ := execCommand("iwconfig 2>/dev/null | grep -i 'essid' | grep -v 'off/any' | head -1").CombinedOutput()
 		iwStr := filterSudoErrors(iwOut)
 		if strings.Contains(iwStr, "ESSID:") {
