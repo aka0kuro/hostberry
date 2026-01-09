@@ -811,13 +811,22 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 		})
 	}
 	
-	log.Printf("HostAPD %s successful. Output: %s", action, strings.TrimSpace(out))
+	log.Printf("HostAPD %s command executed. Output: %s", action, strings.TrimSpace(out))
+	
+	// Verificar el estado después de la operación
+	time.Sleep(500 * time.Millisecond) // Dar tiempo al servicio para iniciar/detener
+	hostapdOut2, _ := exec.Command("sh", "-c", "systemctl is-active hostapd 2>/dev/null || pgrep hostapd > /dev/null && echo active || echo inactive").CombinedOutput()
+	hostapdStatus2 := strings.TrimSpace(string(hostapdOut2))
+	actuallyActive := hostapdStatus2 == "active"
+	
+	log.Printf("HostAPD status after %s: %s (actuallyActive: %v)", action, hostapdStatus2, actuallyActive)
 	
 	return c.JSON(fiber.Map{
 		"success": true,
 		"output":  strings.TrimSpace(out),
-		"enabled": !isActive,
+		"enabled": actuallyActive,
 		"action":  action,
+		"status":  hostapdStatus2,
 	})
 }
 
