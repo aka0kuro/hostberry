@@ -706,6 +706,17 @@ func wifiScanHandler(c *fiber.Ctx) error {
 					log.Printf("⚠️  Formato de networks inesperado: %T, usando fallback", networks)
 					return wifiScanFallback(c, interfaceName)
 				}
+				// Si hay un error pero networks está vacío, retornar el error
+				if len(networksArray) == 0 {
+					if errStr, ok := result["error"].(string); ok && errStr != "" {
+						log.Printf("⚠️  Script Lua no encontró redes: %s", errStr)
+						return c.JSON(fiber.Map{
+							"success":  true,
+							"error":    errStr,
+							"networks": []fiber.Map{},
+						})
+					}
+				}
 				return c.JSON(fiber.Map{
 					"success":  true,
 					"networks": networksArray,
