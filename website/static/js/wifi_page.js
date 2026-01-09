@@ -710,19 +710,28 @@
       return;
     }
     
-    const input = wrapper.querySelector('input[type="password"], input[type="text"]');
+    // Buscar el input dentro del wrapper
+    let input = wrapper.querySelector('input[type="password"]');
+    if (!input) {
+      input = wrapper.querySelector('input[type="text"]');
+    }
+    // Si aún no se encuentra, buscar cualquier input
+    if (!input) {
+      input = wrapper.querySelector('input');
+    }
+    
     if (input) {
       if (input.type === 'password') {
         input.type = 'text';
         button.innerHTML = '<i class="bi bi-eye-slash"></i>';
         button.setAttribute('title', t('common.hide_password', 'Hide password'));
-      } else {
+      } else if (input.type === 'text') {
         input.type = 'password';
         button.innerHTML = '<i class="bi bi-eye"></i>';
         button.setAttribute('title', t('common.show_password', 'Show password'));
       }
     } else {
-      console.warn("togglePasswordVisibility: input not found in wrapper");
+      console.warn("togglePasswordVisibility: input not found in wrapper", wrapper);
     }
   }
 
