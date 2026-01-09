@@ -89,16 +89,45 @@
     }
     
     if (toggleBtn) {
-      toggleBtn.className = 'btn ' + (isActuallyActive ? 'btn-outline-danger' : 'btn-outline-success');
-      toggleBtn.disabled = false; // Asegurar que el botón esté habilitado
+      // Si está corriendo, mostrar botón para detener
+      if (running) {
+        toggleBtn.className = 'btn btn-outline-danger';
+        toggleBtn.disabled = false;
+      } 
+      // Si está habilitado pero no corriendo, mostrar botón para iniciar
+      else if (enabled && !running) {
+        toggleBtn.className = 'btn btn-success';
+        toggleBtn.disabled = false;
+      }
+      // Si no está habilitado ni corriendo, mostrar botón para habilitar e iniciar
+      else {
+        toggleBtn.className = 'btn btn-outline-success';
+        toggleBtn.disabled = false;
+      }
     }
     
     if (toggleText) {
-      toggleText.innerHTML = isActuallyActive ? t('hostapd.disable_hostapd', 'Disable HostAPD') : t('hostapd.enable_hostapd', 'Enable HostAPD');
+      if (running) {
+        toggleText.innerHTML = t('hostapd.stop_hostapd', 'Stop HostAPD');
+      } else if (enabled && !running) {
+        toggleText.innerHTML = t('hostapd.start_service', 'Start Service');
+      } else {
+        toggleText.innerHTML = t('hostapd.enable_hostapd', 'Enable HostAPD');
+      }
     } else if (toggleBtn) {
       // Si no hay toggleText, actualizar el contenido del botón directamente
-      const icon = isActuallyActive ? 'bi-x-circle' : 'bi-router';
-      toggleBtn.innerHTML = '<i class="bi ' + icon + ' me-2"></i><span>' + (isActuallyActive ? t('hostapd.disable_hostapd', 'Disable HostAPD') : t('hostapd.enable_hostapd', 'Enable HostAPD')) + '</span>';
+      let icon, text;
+      if (running) {
+        icon = 'bi-stop-circle';
+        text = t('hostapd.stop_hostapd', 'Stop HostAPD');
+      } else if (enabled && !running) {
+        icon = 'bi-play-circle';
+        text = t('hostapd.start_service', 'Start Service');
+      } else {
+        icon = 'bi-router';
+        text = t('hostapd.enable_hostapd', 'Enable HostAPD');
+      }
+      toggleBtn.innerHTML = '<i class="bi ' + icon + ' me-2"></i><span>' + text + '</span>';
     }
     
     if (container) {
