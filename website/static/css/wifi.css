@@ -708,6 +708,8 @@ body.light-theme .wifi-interface-select-icon {
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
+        padding: 0;
+        margin: 0;
     }
 
     .network-card {
