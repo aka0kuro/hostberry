@@ -852,11 +852,21 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 						"channel":  currentNetwork["channel"],
 					})
 				}
+				// Guardar red anterior si existe
+				if ssid, ok := currentNetwork["ssid"].(string); ok && ssid != "" {
+					networks = append(networks, fiber.Map{
+						"ssid":     currentNetwork["ssid"],
+						"signal":   currentNetwork["signal"],
+						"security": currentNetwork["security"],
+						"channel":  currentNetwork["channel"],
+					})
+				}
+				// Iniciar nueva red
 				currentNetwork = make(map[string]interface{})
 				ssid := strings.TrimSpace(strings.TrimPrefix(line, "SSID:"))
 				if ssid != "" {
 					currentNetwork["ssid"] = ssid
-					currentNetwork["security"] = "Unknown"
+					currentNetwork["security"] = "Open"  // Por defecto Open, se actualizará si se detecta seguridad
 					currentNetwork["signal"] = 0
 					currentNetwork["channel"] = ""
 				}
