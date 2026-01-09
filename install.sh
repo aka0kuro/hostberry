@@ -929,6 +929,30 @@ EOF
         print_info "Permisos agregados para hostapd_cli: $HOSTAPD_CLI_PATH"
     fi
     
+    # Agregar permisos para wpa_supplicant y wpa_cli (para modo STA)
+    if command -v wpa_supplicant &> /dev/null; then
+        WPA_SUPPLICANT_PATH=$(command -v wpa_supplicant)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $WPA_SUPPLICANT_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para wpa_supplicant: $WPA_SUPPLICANT_PATH"
+    fi
+    
+    if command -v wpa_cli &> /dev/null; then
+        WPA_CLI_PATH=$(command -v wpa_cli)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $WPA_CLI_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para wpa_cli: $WPA_CLI_PATH"
+    fi
+    
+    # Agregar permisos para systemctl con wpa_supplicant
+    if command -v systemctl &> /dev/null; then
+        SYSTEMCTL_PATH=$(command -v systemctl)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH start wpa_supplicant" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH stop wpa_supplicant" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH restart wpa_supplicant" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH status wpa_supplicant" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH stop NetworkManager" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para systemctl wpa_supplicant"
+    fi
+    
     # Agregar permisos para systemctl con hostapd y dnsmasq
     if command -v systemctl &> /dev/null; then
         SYSTEMCTL_PATH=$(command -v systemctl)
