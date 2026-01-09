@@ -124,17 +124,26 @@ if #result.networks == 0 then
     
     if not iw_err and iw_output and iw_output ~= "" then
         local current_network = {}
+        local in_bss = false
+        
         for line in iw_output:gmatch("[^\r\n]+") do
-            if string.find(line, "SSID:") then
-                if current_network.ssid then
+            line = string.gsub(line, "^%s+", "")
+            line = string.gsub(line, "%s+$", "")
+            
+            -- Detectar inicio de un nuevo BSS
+            if string.find(line, "^BSS ") then
+                if current_network.ssid and current_network.ssid ~= "" then
                     table.insert(result.networks, current_network)
                 end
                 current_network = {}
+                in_bss = true
+            elseif string.find(line, "^SSID:") then
                 local ssid = string.match(line, "SSID: (.+)")
-                if ssid then
+                if ssid and ssid ~= "" then
                     current_network.ssid = ssid
                     current_network.security = "Unknown"
                     current_network.signal = 0
+                    current_network.encrypted = false
                 end
             elseif string.find(line, "signal:") then
                 local signal = string.match(line, "signal: (-?%d+)")
@@ -152,10 +161,26 @@ if #result.networks == 0 then
                         current_network.channel = tostring(math.floor((f - 5000) / 5))
                     end
                 end
+            elseif string.find(line, "RSN:") or string.find(line, "WPA:") then
+                current_network.encrypted = true
+                current_network.security = "WPA2"
+            elseif string.find(line, "capability:") then
+                if string.find(line, "Privacy") then
+                    current_network.encrypted = true
+                    if not current_network.security or current_network.security == "Unknown" then
+                        current_network.security = "WEP"
+                    end
+                end
             end
         end
-        if current_network.ssid then
+        
+        -- Agregar la última red si existe
+        if current_network.ssid and current_network.ssid ~= "" then
             table.insert(result.networks, current_network)
+        end
+        
+        if #result.networks > 0 then
+            log("INFO", "Encontradas " .. #result.networks .. " redes con iw")
         end
     end
 end
