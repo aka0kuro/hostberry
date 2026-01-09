@@ -243,7 +243,7 @@
     }
     
     try {
-      const resp = await HostBerry.apiRequest('/api/v1/system/network/routing');
+      const resp = await HostBerry.apiRequest('/api/v1/network/routing');
       if (!resp) {
         throw new Error('No response from server');
       }
