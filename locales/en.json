@@ -972,6 +972,8 @@
     "hostapd_error": "HostAPD Error",
     "hostapd_warning": "HostAPD Warning",
     "hostapd_alert": "HostAPD Alert",
+    "enable_failed": "Failed to enable HostAPD. Check configuration and logs.",
+    "hostapd_status_changed": "HostAPD {status}",
     "access_point_name": "Access Point Name",
     "access_point_ssid": "Access Point SSID",
     "access_point_password": "Access Point Password",
