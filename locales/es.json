@@ -1037,6 +1037,8 @@
     "service_status": "Estado del Servicio",
     "active": "Activo",
     "inactive": "Inactivo",
+    "service_running_not_transmitting": "Ejecutándose pero no transmitiendo",
+    "check_diagnostics": "El servicio está ejecutándose pero la red WiFi no es visible. Verifica los diagnósticos.",
     "active_access_points": "Puntos de Acceso Activos",
     "connected_clients": "Clientes Conectados",
     "bandwidth": "Ancho de Banda",
