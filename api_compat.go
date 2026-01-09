@@ -708,6 +708,7 @@ func hostapdAccessPointsHandler(c *fiber.Ctx) error {
 	// Verificar si hostapd está corriendo (múltiples métodos para mayor confiabilidad)
 	hostapdActive := false
 	hostapdStatus := "inactive"
+	hostapdTransmitting := false // Verificar si realmente está transmitiendo
 	
 	// Método 1: Verificar con systemctl
 	systemctlOut, _ := exec.Command("sh", "-c", "systemctl is-active hostapd 2>/dev/null").CombinedOutput()
@@ -724,6 +725,56 @@ func hostapdAccessPointsHandler(c *fiber.Ctx) error {
 		if pgrepStatus == "active" {
 			hostapdActive = true
 			hostapdStatus = "active"
+		}
+	}
+	
+	// Método 3: Verificar si realmente está transmitiendo (verificar modo AP)
+	// Esto es más confiable que solo verificar el proceso
+	if hostapdActive {
+		// Intentar obtener la interfaz desde la configuración primero
+		interfaceName := "wlan0" // default
+		if configContent, err := os.ReadFile("/etc/hostapd/hostapd.conf"); err == nil {
+			lines := strings.Split(string(configContent), "\n")
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+				if strings.HasPrefix(line, "interface=") {
+					parts := strings.SplitN(line, "=", 2)
+					if len(parts) == 2 {
+						interfaceName = strings.TrimSpace(parts[1])
+						break
+					}
+				}
+			}
+		}
+		
+		// Verificar con iw si la interfaz está en modo AP
+		iwOut, _ := exec.Command("sh", "-c", fmt.Sprintf("iw dev %s info 2>/dev/null | grep -i 'type AP' || iwconfig %s 2>/dev/null | grep -i 'mode:master' || echo ''", interfaceName, interfaceName)).CombinedOutput()
+		iwStatus := strings.TrimSpace(string(iwOut))
+		if iwStatus != "" {
+			hostapdTransmitting = true
+		}
+		
+		// Verificar también con hostapd_cli si está disponible
+		if !hostapdTransmitting {
+			cliStatusOut, _ := exec.Command("sh", "-c", fmt.Sprintf("hostapd_cli -i %s status 2>/dev/null | grep -i 'state=ENABLED' || echo ''", interfaceName)).CombinedOutput()
+			cliStatus := strings.TrimSpace(string(cliStatusOut))
+			if cliStatus != "" {
+				hostapdTransmitting = true
+			}
+		}
+		
+		// Si no está transmitiendo, verificar logs para errores
+		if !hostapdTransmitting {
+			journalOut, _ := exec.Command("sh", "-c", "sudo journalctl -u hostapd -n 30 --no-pager 2>/dev/null | tail -20").CombinedOutput()
+			journalLogs := strings.ToLower(string(journalOut))
+			// Verificar errores comunes
+			if strings.Contains(journalLogs, "could not configure driver") ||
+				strings.Contains(journalLogs, "nl80211: could not") ||
+				strings.Contains(journalLogs, "interface") && strings.Contains(journalLogs, "not found") ||
+				strings.Contains(journalLogs, "failed to initialize") {
+				// Hay errores, el servicio no está transmitiendo realmente
+				hostapdTransmitting = false
+			}
 		}
 	}
 	
