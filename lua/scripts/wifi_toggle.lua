@@ -84,7 +84,7 @@ end
 
 -- Si todos los métodos fallan
 result.success = false
-result.error = "No se pudo cambiar el estado de WiFi. Verifica que tengas permisos sudo configurados (NOPASSWD) o que nmcli/rfkill estén disponibles."
+result.error = "No se pudo cambiar el estado de WiFi. Verifica que tengas permisos sudo configurados (NOPASSWD) o que rfkill/ip estén disponibles."
 result.message = "Error en WiFi toggle"
 log("ERROR", "Error en WiFi toggle: " .. result.error)
 return result
