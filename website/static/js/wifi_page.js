@@ -774,10 +774,10 @@
             const ssid = net.ssid || `Unnamed-${index}`;
             const escapedSsid = ssid.replace(/'/g, '\'').replace(/"/g, '"');
             
-            const row = document.createElement('tr');
-            row.className = 'network-card';
-            row.innerHTML = `
-              <td class="network-card-content">
+            const card = document.createElement('div');
+            card.className = 'network-card';
+            card.innerHTML = `
+              <div class="network-card-content">
                 <div class="network-card-icon ${signalColor}">
                   <i class="bi ${signalIcon}"></i>
                 </div>
@@ -793,14 +793,14 @@
                     ${net.channel ? `<span class="network-card-detail-item"><i class="bi bi-hash me-1"></i> ${net.channel}</span>` : ''}
                   </div>
                 </div>
-              </td>
-              <td class="network-card-actions">
+              </div>
+              <div class="network-card-actions">
                 <button class="btn btn-primary btn-sm" onclick="connectToNetwork('${escapedSsid}', '${security}')">
                   <i class="bi bi-box-arrow-in-right me-2"></i>${t('wifi.connect', 'Connect')}
                 </button>
-              </td>
+              </div>
             `;
-            tbody.appendChild(row);
+            tbody.appendChild(card);
           });
         }
       }
