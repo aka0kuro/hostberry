@@ -690,6 +690,10 @@
       } else if (networkStatsRaw.interfaces && Array.isArray(networkStatsRaw.interfaces)) {
         populateInterfaceSelects(networkStatsRaw.interfaces);
       }
+      
+      // Actualizar badge con la interfaz que realmente se está usando
+      const currentInterface = networkStats.interface || networkStatsRaw.interface || selectedTrafficInterface || '';
+      updateTrafficInterfaceBadge(currentInterface);
 
       const setText = (id, value) => {
         const el = document.getElementById(id);
