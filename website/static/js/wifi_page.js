@@ -47,7 +47,7 @@
       // Actualizar botones de conexión en las tarjetas
       updateConnectButtons();
     } catch (error) {
-      console.error('Error cargando estado WiFi:', error);
+      console.error(t('wifi.status_error', 'Error getting WiFi status') + ':', error);
     }
   }
 
