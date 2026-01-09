@@ -611,7 +611,7 @@
         packetsSent = sentPackets;
         errors = recvErrs + sentErrs;
         drop = recvDrop + sentDrop;
-        break;
+        break; // Salir del loop cuando se encuentra la interfaz especificada
       } else if (!interfaceName) {
         // Si no se especificó interfaz, usar la primera no-loopback con tráfico
         if ((recvBytes > 0 || sentBytes > 0) && !foundInterface) {
@@ -626,8 +626,24 @@
       }
     }
     
-    // Si no se encontró ninguna interfaz con tráfico, usar la primera disponible
-    if (!foundInterface && interfaces.length > 0) {
+    // Si se especificó una interfaz pero no se encontró, devolver 0 pero con el nombre de la interfaz
+    if (interfaceName && !foundInterface) {
+      // La interfaz especificada no existe en /proc/net/dev
+      // Devolver datos vacíos pero con el nombre de la interfaz para que el frontend sepa qué interfaz se está mostrando
+      return {
+        bytes_recv: 0,
+        bytes_sent: 0,
+        packets_recv: 0,
+        packets_sent: 0,
+        errors: 0,
+        drop: 0,
+        interface: interfaceName,
+        interfaces: interfaces
+      };
+    }
+    
+    // Si no se especificó interfaz y no se encontró ninguna con tráfico, usar la primera disponible
+    if (!foundInterface && interfaces.length > 0 && !interfaceName) {
       foundInterface = interfaces[0];
       // Necesitamos leer los datos de nuevo para esta interfaz
       for (const line of lines) {
