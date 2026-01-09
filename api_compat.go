@@ -766,14 +766,29 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 	isActive := hostapdStatus == "active"
 	
 	var cmdStr string
+	var enableCmd string
 	if isActive {
-		// Detener hostapd
+		// Detener hostapd y dnsmasq
+		executeCommand("sudo systemctl stop dnsmasq 2>/dev/null || true")
 		cmdStr = "sudo systemctl stop hostapd"
+		enableCmd = "sudo systemctl disable hostapd 2>/dev/null || true"
 	} else {
-		// Iniciar hostapd
+		// Habilitar y iniciar hostapd y dnsmasq
+		enableCmd = "sudo systemctl enable hostapd 2>/dev/null || true"
+		executeCommand("sudo systemctl enable dnsmasq 2>/dev/null || true")
 		cmdStr = "sudo systemctl start hostapd"
+		// Iniciar dnsmasq después de hostapd
+		executeCommand("sudo systemctl start dnsmasq 2>/dev/null || true")
 	}
 	
+	// Ejecutar comando de habilitación/deshabilitación
+	if enableCmd != "" {
+		if out, err := executeCommand(enableCmd); err != nil {
+			log.Printf("Warning: Error enabling/disabling hostapd: %s", strings.TrimSpace(out))
+		}
+	}
+	
+	// Ejecutar comando de inicio/detención
 	out, err := executeCommand(cmdStr)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{
