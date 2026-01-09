@@ -938,11 +938,13 @@ EOF
         echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH status hostapd" >> "/etc/sudoers.d/hostberry"
         echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH enable hostapd" >> "/etc/sudoers.d/hostberry"
         echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH disable hostapd" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH unmask hostapd" >> "/etc/sudoers.d/hostberry"
         echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH start dnsmasq" >> "/etc/sudoers.d/hostberry"
         echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH stop dnsmasq" >> "/etc/sudoers.d/hostberry"
         echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH restart dnsmasq" >> "/etc/sudoers.d/hostberry"
         echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH enable dnsmasq" >> "/etc/sudoers.d/hostberry"
         echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH disable dnsmasq" >> "/etc/sudoers.d/hostberry"
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH unmask dnsmasq" >> "/etc/sudoers.d/hostberry"
         echo "$USER_NAME ALL=(ALL) NOPASSWD: $SYSTEMCTL_PATH daemon-reload" >> "/etc/sudoers.d/hostberry"
         print_info "Permisos agregados para systemctl hostapd y dnsmasq"
     fi
