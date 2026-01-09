@@ -1163,6 +1163,20 @@ EOF
         print_info "Archivo de override de systemd ya existe"
     fi
     
+    # Asegurarse de que el servicio no esté masked
+    print_info "Verificando estado del servicio hostapd..."
+    if systemctl is-enabled hostapd 2>&1 | grep -q "masked"; then
+        print_info "Desbloqueando servicio hostapd..."
+        systemctl unmask hostapd 2>/dev/null || true
+        print_success "Servicio hostapd desbloqueado"
+    fi
+    
+    # Recargar systemd para aplicar cambios
+    systemctl daemon-reload 2>/dev/null || true
+    
+    # Asegurar permisos correctos del archivo de configuración
+    chmod 644 "$HOSTAPD_CONFIG" 2>/dev/null || true
+    
     print_success "Configuración por defecto de HostAPD creada"
 }
 
