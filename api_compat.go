@@ -2050,20 +2050,12 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 		}
 		
 		// Detectar interfaz WiFi (wlan0 por defecto)
+		// Usar solo ip/iw, sin nmcli
 		iface := "wlan0"
-		// Intentar obtener desde nmcli si está disponible
-		ifaceCmd := execCommand("nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
-		if ifaceOut, err := ifaceCmd.Output(); err == nil {
-			if ifaceStr := strings.TrimSpace(string(ifaceOut)); ifaceStr != "" {
-				iface = ifaceStr
-			}
-		} else {
-			// Fallback: buscar wlan* con ip
-			ipIfaceCmd := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}' | grep -E '^wlan|^wl' | head -1")
-			if ipIfaceOut, err := ipIfaceCmd.Output(); err == nil {
-				if ipIfaceStr := strings.TrimSpace(string(ipIfaceOut)); ipIfaceStr != "" {
-					iface = ipIfaceStr
-				}
+		ipIfaceCmd := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}' | grep -E '^wlan|^wl' | head -1")
+		if ipIfaceOut, err := ipIfaceCmd.Output(); err == nil {
+			if ipIfaceStr := strings.TrimSpace(string(ipIfaceOut)); ipIfaceStr != "" {
+				iface = ipIfaceStr
 			}
 		}
 		
