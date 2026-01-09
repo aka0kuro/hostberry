@@ -861,11 +861,22 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 					currentNetwork["channel"] = ""
 				}
 			} else if strings.Contains(line, "signal:") {
+				// Formato de iw scan: "signal: -45.00 dBm" o "signal: -45 dBm"
 				parts := strings.Fields(line)
 				for i, part := range parts {
 					if part == "signal:" && i+1 < len(parts) {
-						if s, err := strconv.Atoi(parts[i+1]); err == nil {
-							currentNetwork["signal"] = s
+						signalStr := strings.TrimSpace(parts[i+1])
+						// Remover "dBm" si está presente
+						signalStr = strings.TrimSuffix(signalStr, "dBm")
+						signalStr = strings.TrimSpace(signalStr)
+						// Parsear como float primero para manejar decimales
+						if signalFloat, err := strconv.ParseFloat(signalStr, 64); err == nil {
+							// Convertir a entero (redondear)
+							signalInt := int(signalFloat)
+							currentNetwork["signal"] = signalInt
+							log.Printf("Parsed signal: %d dBm from line: %s", signalInt, line)
+						} else {
+							log.Printf("Warning: Could not parse signal from line: %s, error: %v", line, err)
 						}
 						break
 					}
