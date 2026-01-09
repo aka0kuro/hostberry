@@ -322,14 +322,22 @@
 
   function ensureTrafficChart() {
     const canvas = document.getElementById('net-traffic-chart');
-    if (!canvas) return;
-    
-    if (netTrafficChart) return;
-    
-    if (typeof Chart === 'undefined') {
+    if (!canvas) {
+      // Intentar de nuevo después de un tiempo si el canvas no está disponible
       setTimeout(ensureTrafficChart, 500);
       return;
     }
+    
+    if (netTrafficChart) return;
+    
+    // Verificar si Chart.js está disponible
+    if (typeof Chart === 'undefined' && typeof window.Chart === 'undefined') {
+      console.warn('Chart.js not loaded, retrying...');
+      setTimeout(ensureTrafficChart, 500);
+      return;
+    }
+    
+    const ChartLib = typeof Chart !== 'undefined' ? Chart : window.Chart;
     
     if (netTrafficHistory.labels.length === 0) {
       const now = new Date();
