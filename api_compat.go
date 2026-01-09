@@ -828,8 +828,27 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 	out, err := executeCommand(cmdStr)
 	if err != nil {
 		log.Printf("Error executing %s command: %s", action, strings.TrimSpace(out))
+		
+		// Si es un error de inicio, obtener más información de los logs
+		var errorDetails string
+		if action == "enable" {
+			// Obtener logs del servicio
+			journalOut, _ := exec.Command("sh", "-c", "sudo journalctl -u hostapd -n 10 --no-pager 2>/dev/null | tail -5").CombinedOutput()
+			journalLogs := strings.TrimSpace(string(journalOut))
+			if journalLogs != "" {
+				errorDetails = fmt.Sprintf(" Service logs: %s", journalLogs)
+			} else {
+				// Intentar obtener el estado del servicio
+				statusOut, _ := exec.Command("sh", "-c", "sudo systemctl status hostapd --no-pager 2>/dev/null | head -10").CombinedOutput()
+				statusInfo := strings.TrimSpace(string(statusOut))
+				if statusInfo != "" {
+					errorDetails = fmt.Sprintf(" Service status: %s", statusInfo)
+				}
+			}
+		}
+		
 		return c.Status(500).JSON(fiber.Map{
-			"error":   fmt.Sprintf("Failed to %s hostapd: %s", action, strings.TrimSpace(out)),
+			"error":   fmt.Sprintf("Failed to %s hostapd: %s%s", action, strings.TrimSpace(out), errorDetails),
 			"success": false,
 		})
 	}
