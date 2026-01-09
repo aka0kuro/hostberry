@@ -252,6 +252,7 @@
         let data;
         try {
           data = await resp.json();
+          console.log('Routing table response:', data);
         } catch (jsonError) {
           console.error('Error parsing JSON:', jsonError);
           if (tbody) {
@@ -269,6 +270,8 @@
         } else if (data.data && Array.isArray(data.data)) {
           routes = data.data;
         }
+        
+        console.log('Parsed routes:', routes);
         
         if (routes.length > 0) {
           displayRoutingTable(routes);
