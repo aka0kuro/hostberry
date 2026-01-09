@@ -614,7 +614,7 @@
         showAlert('danger', data.error || t('wifi.connect_error', 'Error connecting to WiFi'));
       }
     } catch (error) {
-      console.error('Error conectando:', error);
+      console.error(t('wifi.connect_error', 'Error connecting to WiFi') + ':', error);
       showAlert('danger', t('wifi.connect_error', 'Error connecting to WiFi'));
     }
   }
