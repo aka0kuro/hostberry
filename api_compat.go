@@ -1002,17 +1002,30 @@ rsn_pairwise=CCMP
 `, req.Password)
 	}
 	
-	// Escapar comillas simples en el contenido para el comando shell
-	configContentEscaped := strings.ReplaceAll(configContent, "'", "'\"'\"'")
+	// Guardar configuración de hostapd usando un archivo temporal
+	// Crear archivo temporal
+	tmpFile := "/tmp/hostapd.conf.tmp"
+	if err := os.WriteFile(tmpFile, []byte(configContent), 0644); err != nil {
+		log.Printf("Error creating temporary config file: %v", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error":   fmt.Sprintf("Error creating temporary config file: %v", err),
+			"success": false,
+		})
+	}
 	
-	// Guardar configuración de hostapd
-	cmdStr := fmt.Sprintf("echo '%s' | sudo tee %s > /dev/null", configContentEscaped, configPath)
+	// Copiar archivo temporal a la ubicación final con sudo
+	cmdStr := fmt.Sprintf("sudo cp %s %s && sudo chmod 644 %s", tmpFile, configPath, configPath)
 	if out, err := executeCommand(cmdStr); err != nil {
+		os.Remove(tmpFile) // Limpiar archivo temporal
+		log.Printf("Error copying config file: %s, output: %s", err, strings.TrimSpace(out))
 		return c.Status(500).JSON(fiber.Map{
 			"error":   fmt.Sprintf("Error saving hostapd configuration: %s", strings.TrimSpace(out)),
 			"success": false,
 		})
 	}
+	
+	// Limpiar archivo temporal
+	os.Remove(tmpFile)
 	
 	// 3. Configurar dnsmasq para DHCP
 	dnsmasqConfigPath := "/etc/dnsmasq.conf"
