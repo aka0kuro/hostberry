@@ -1029,9 +1029,20 @@ EOF
     
     # Crear directorio /etc/hostapd con permisos correctos
     print_info "Creando directorio /etc/hostapd..."
-    mkdir -p /etc/hostapd 2>/dev/null || sudo mkdir -p /etc/hostapd 2>/dev/null || true
-    chmod 755 /etc/hostapd 2>/dev/null || sudo chmod 755 /etc/hostapd 2>/dev/null || true
-    print_success "Directorio /etc/hostapd creado/verificado"
+    if [ ! -d "/etc/hostapd" ]; then
+        mkdir -p /etc/hostapd
+        chmod 755 /etc/hostapd
+        print_success "Directorio /etc/hostapd creado con permisos 755"
+    else
+        chmod 755 /etc/hostapd 2>/dev/null || true
+        print_info "Directorio /etc/hostapd ya existe, permisos verificados"
+    fi
+    
+    # Crear también el directorio para systemd override si no existe
+    if [ ! -d "/etc/systemd/system/hostapd.service.d" ]; then
+        mkdir -p /etc/systemd/system/hostapd.service.d
+        print_info "Directorio systemd override para hostapd creado"
+    fi
     
     # Validar configuración de sudoers
     if visudo -c -f "/etc/sudoers.d/hostberry" 2>/dev/null; then
