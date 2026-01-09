@@ -369,7 +369,7 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 			// Continuar con fallback
 		} else if result != nil {
 			// Asegurar que el resultado tenga el formato correcto
-			if interfaces, ok := result["interfaces"]; ok {
+			if _, ok := result["interfaces"]; ok {
 				// Si ya tiene interfaces, devolverlo tal cual
 				return c.JSON(result)
 			} else {
