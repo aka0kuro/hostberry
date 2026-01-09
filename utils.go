@@ -42,7 +42,7 @@ func createDefaultAdmin() {
 func executeCommand(cmd string) (string, error) {
 	// Lista blanca de comandos permitidos
 	allowedCommands := []string{
-		"hostname", "uname", "cat", "grep", "awk", "sed", "cut", "head", "tail",
+		"hostname", "hostnamectl", "uname", "cat", "grep", "awk", "sed", "cut", "head", "tail",
 		"top", "free", "df", "nproc",
 		"iwlist", "nmcli", "iw",
 		"ip", "wg", "wg-quick", "systemctl", "pgrep",
