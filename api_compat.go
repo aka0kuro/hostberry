@@ -1064,66 +1064,23 @@ rsn_pairwise=CCMP
 		})
 	}
 	
-	// Intentar copiar usando un método más robusto
-	// Primero intentar con cp directo
+	// Copiar archivo temporal a la ubicación final con sudo cp
 	cmdStr := fmt.Sprintf("sudo cp %s %s", tmpFile, configPath)
 	log.Printf("Executing: %s", cmdStr)
 	out, err := executeCommand(cmdStr)
 	if err != nil {
-		log.Printf("First copy attempt failed: %v, output: '%s'", err, out)
-		
-		// Intentar método alternativo: leer el archivo temporal y escribirlo directamente
-		log.Printf("Attempting alternative method: reading temp file and writing directly...")
-		tempContent, readErr := os.ReadFile(tmpFile)
-		if readErr != nil {
-			log.Printf("Error reading temp file: %v", readErr)
-			errorMsg := strings.TrimSpace(out)
-			if errorMsg == "" {
-				errorMsg = err.Error()
-			}
-			return c.Status(500).JSON(fiber.Map{
-				"error":   fmt.Sprintf("Error saving hostapd configuration: %s", errorMsg),
-				"success": false,
-			})
+		log.Printf("Error copying config file: %v, output: '%s'", err, out)
+		os.Remove(tmpFile) // Limpiar archivo temporal
+		errorMsg := strings.TrimSpace(out)
+		if errorMsg == "" {
+			errorMsg = err.Error()
 		}
-		
-		// Intentar escribir directamente usando un script temporal
-		scriptFile := "/tmp/write_hostapd_config.sh"
-		scriptContent := fmt.Sprintf("#!/bin/bash\ncat > %s <<'EOF'\n%sEOF\nchmod 644 %s\n", configPath, string(tempContent), configPath)
-		if writeErr := os.WriteFile(scriptFile, []byte(scriptContent), 0755); writeErr != nil {
-			log.Printf("Error creating write script: %v", writeErr)
-			errorMsg := strings.TrimSpace(out)
-			if errorMsg == "" {
-				errorMsg = err.Error()
-			}
-			return c.Status(500).JSON(fiber.Map{
-				"error":   fmt.Sprintf("Error saving hostapd configuration: %s", errorMsg),
-				"success": false,
-			})
-		}
-		
-		// Ejecutar el script con sudo
-		scriptCmd := fmt.Sprintf("sudo %s", scriptFile)
-		log.Printf("Executing script: %s", scriptCmd)
-		scriptOut, scriptErr := executeCommand(scriptCmd)
-		os.Remove(scriptFile) // Limpiar script temporal
-		
-		if scriptErr != nil {
-			log.Printf("Script method also failed: %v, output: '%s'", scriptErr, scriptOut)
-			errorMsg := strings.TrimSpace(out)
-			if errorMsg == "" {
-				errorMsg = err.Error()
-			}
-			return c.Status(500).JSON(fiber.Map{
-				"error":   fmt.Sprintf("Error saving hostapd configuration: %s. Please check sudo permissions for cp command.", errorMsg),
-				"success": false,
-			})
-		}
-		
-		log.Printf("Config file written successfully using script method")
-	} else {
-		log.Printf("File copied successfully using cp command, output: '%s'", strings.TrimSpace(out))
+		return c.Status(500).JSON(fiber.Map{
+			"error":   fmt.Sprintf("Error saving hostapd configuration: %s. Please check sudo permissions for cp command.", errorMsg),
+			"success": false,
+		})
 	}
+	log.Printf("File copied successfully using cp command, output: '%s'", strings.TrimSpace(out))
 	log.Printf("File copied successfully, output: '%s'", strings.TrimSpace(out))
 	
 	// Establecer permisos
