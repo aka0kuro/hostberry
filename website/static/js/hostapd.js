@@ -535,12 +535,17 @@
       }
     }
     
-    waitForHostBerry(() => {
+    waitForHostBerry(async () => {
       loadHostAPDStatus();
       loadAccessPoints();
       loadClients();
-      loadInterfaces();
-      loadHostAPDConfig(); // Cargar configuración existente
+      
+      // Cargar interfaces primero, luego la configuración
+      await loadInterfaces();
+      // Esperar un poco más para que el selector se actualice
+      setTimeout(() => {
+        loadHostAPDConfig(); // Cargar configuración existente
+      }, 300);
       
       // Configurar formulario
       const form = document.getElementById('hostapdConfigForm');
