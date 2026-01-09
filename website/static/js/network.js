@@ -855,6 +855,8 @@
         netTrafficHistory.download.length = 0;
         netTrafficHistory.upload.length = 0;
         if (netTrafficChart) netTrafficChart.update();
+        // Actualizar badge con la interfaz seleccionada
+        updateTrafficInterfaceBadge(selectedTrafficInterface);
         updateTrafficStats();
       });
     }
