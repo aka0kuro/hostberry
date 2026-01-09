@@ -129,6 +129,22 @@
     }
   }
 
+  // Actualizar badge de interfaz en el Network Traffic Chart
+  function updateTrafficInterfaceBadge(interfaceName) {
+    const badge = document.getElementById('net-traffic-interface-badge');
+    if (!badge) return;
+    
+    if (interfaceName && interfaceName !== '') {
+      badge.textContent = interfaceName;
+      badge.classList.remove('bg-secondary');
+      badge.classList.add('bg-primary');
+    } else {
+      badge.textContent = t('monitoring.network_auto', 'Auto');
+      badge.classList.remove('bg-primary');
+      badge.classList.add('bg-secondary');
+    }
+  }
+
   function displayInterfaces(interfaces) {
     const container = document.getElementById('interfacesContainer');
     if (!container) return;
