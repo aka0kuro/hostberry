@@ -1145,14 +1145,22 @@ EOF
             print_info "Backup de configuración de dnsmasq creado"
         fi
         # Verificar si ya tiene configuración de hostapd
-        if grep -q "interface=${HOSTAPD_INTERFACE}" "$DNSMASQ_CONFIG" 2>/dev/null; then
+        # En modo AP+STA, usar ap0 si existe, sino usar la interfaz física
+        DNSMASQ_INTERFACE="ap0"
+        if ! ip link show ap0 > /dev/null 2>&1; then
+            DNSMASQ_INTERFACE="$HOSTAPD_INTERFACE"
+        fi
+        
+        if grep -q "interface=${DNSMASQ_INTERFACE}" "$DNSMASQ_CONFIG" 2>/dev/null || \
+           grep -q "interface=${HOSTAPD_INTERFACE}" "$DNSMASQ_CONFIG" 2>/dev/null || \
+           grep -q "interface=ap0" "$DNSMASQ_CONFIG" 2>/dev/null; then
             print_info "Configuración de dnsmasq para HostAPD ya existe"
         else
-            print_info "Agregando configuración de dnsmasq para HostAPD..."
+            print_info "Agregando configuración de dnsmasq para HostAPD (modo AP+STA)..."
             cat >> "$DNSMASQ_CONFIG" <<EOF
 
-# Configuración para HostAPD (agregada por HostBerry)
-interface=${HOSTAPD_INTERFACE}
+# Configuración para HostAPD (agregada por HostBerry) - Modo AP+STA
+interface=${DNSMASQ_INTERFACE}
 dhcp-range=${HOSTAPD_DHCP_START},${HOSTAPD_DHCP_END},255.255.255.0,${HOSTAPD_LEASE_TIME}
 dhcp-option=3,${HOSTAPD_GATEWAY}
 dhcp-option=6,${HOSTAPD_GATEWAY}
@@ -1163,10 +1171,16 @@ EOF
         fi
     else
         # Crear archivo de configuración de dnsmasq desde cero
-        print_info "Creando archivo de configuración de dnsmasq..."
+        # En modo AP+STA, usar ap0 si existe
+        DNSMASQ_INTERFACE="ap0"
+        if ! ip link show ap0 > /dev/null 2>&1; then
+            DNSMASQ_INTERFACE="$HOSTAPD_INTERFACE"
+        fi
+        
+        print_info "Creando archivo de configuración de dnsmasq (modo AP+STA)..."
         cat > "$DNSMASQ_CONFIG" <<EOF
-# Configuración de dnsmasq para HostAPD (creada por HostBerry)
-interface=${HOSTAPD_INTERFACE}
+# Configuración de dnsmasq para HostAPD (creada por HostBerry) - Modo AP+STA
+interface=${DNSMASQ_INTERFACE}
 dhcp-range=${HOSTAPD_DHCP_START},${HOSTAPD_DHCP_END},255.255.255.0,${HOSTAPD_LEASE_TIME}
 dhcp-option=3,${HOSTAPD_GATEWAY}
 dhcp-option=6,${HOSTAPD_GATEWAY}
