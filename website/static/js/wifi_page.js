@@ -387,7 +387,7 @@
             const signalColor = signalPercent > 70 ? 'text-success' : (signalPercent > 40 ? 'text-warning' : 'text-danger');
             const security = net.security || net.encryption || 'none';
             const securityIcon = security === 'none' || security === 'Open' ? 'bi-unlock' : 'bi-lock';
-            const ssid = net.ssid || `Unnamed-${index}`;
+            const ssid = net.ssid || t('wifi.unnamed_network', 'Unnamed network') + ' ' + (index + 1);
             const escapedSsid = ssid.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             
             const card = document.createElement('div');
