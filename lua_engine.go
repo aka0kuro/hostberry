@@ -144,27 +144,7 @@ func (le *LuaEngine) Execute(scriptName string, params map[string]interface{}) (
 	if tbl, ok := resultTable.(*lua.LTable); ok {
 		tbl.ForEach(func(key lua.LValue, value lua.LValue) {
 			keyStr := key.String()
-			switch v := value.(type) {
-			case lua.LString:
-				result[keyStr] = string(v)
-			case lua.LNumber:
-				result[keyStr] = float64(v)
-			case lua.LBool:
-				result[keyStr] = bool(v)
-			case *lua.LTable:
-				// Verificar si es un array (tabla indexada numéricamente)
-				if isArray(v) {
-					// Convertir como array
-					array := convertLuaTableToArray(v)
-					result[keyStr] = array
-				} else {
-					// Convertir como mapa
-					subMap := convertLuaTableToMap(v)
-					result[keyStr] = subMap
-				}
-			default:
-				result[keyStr] = v.String()
-			}
+			result[keyStr] = convertLuaValue(value)
 		})
 	}
 
