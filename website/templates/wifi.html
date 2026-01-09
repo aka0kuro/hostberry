@@ -151,6 +151,56 @@
                 </div>
             </div>
         </div>
+
+        <!-- Connection Details -->
+        <div class="col-12 mb-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="bi bi-info-circle me-2"></i>
+                        {{ call .t "wifi.connection_details" "Connection Details" }}
+                    </h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="info-grid" id="connection-info">
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "wifi.status" "Status" }}</span>
+                            <span class="info-value" id="connection-status">
+                                <span class="spinning"><i class="bi bi-arrow-clockwise"></i></span> {{ call .t "common.loading" "Loading..." }}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "wifi.network_ssid" "SSID" }}</span>
+                            <span class="info-value" id="connection-ssid">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "wifi.network_signal" "Signal" }}</span>
+                            <span class="info-value" id="connection-signal">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "wifi.network_security" "Security" }}</span>
+                            <span class="info-value" id="connection-security">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "wifi.network_channel" "Channel" }}</span>
+                            <span class="info-value" id="connection-channel">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "wifi.ip_address" "IP Address" }}</span>
+                            <span class="info-value" id="connection-ip">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "wifi.mac_address" "MAC Address" }}</span>
+                            <span class="info-value" id="connection-mac">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{{ call .t "wifi.speed" "Speed" }}</span>
+                            <span class="info-value" id="connection-speed">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
