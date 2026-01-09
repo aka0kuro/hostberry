@@ -222,7 +222,7 @@
         showAlert('danger', data.error || t('wifi.unblock_error', 'Error unblocking WiFi'));
       }
     } catch (error) {
-      console.error('Error unblocking WiFi:', error);
+      console.error(t('wifi.unblock_error', 'Error unblocking WiFi') + ':', error);
       showAlert('danger', t('wifi.unblock_error', 'Error unblocking WiFi'));
     } finally {
       btn.disabled = false;
