@@ -606,6 +606,48 @@ body.light-theme .network-info-value {
     margin-bottom: 1rem;
 }
 
+/* Password input wrapper with toggle button */
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrapper .network-connect-form-input {
+    padding-right: 2.5rem;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    color: var(--hb-text-muted);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+    z-index: 10;
+}
+
+.password-toggle-btn:hover {
+    color: var(--hb-text-light);
+}
+
+body.light-theme .password-toggle-btn {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+body.light-theme .password-toggle-btn:hover {
+    color: #212529;
+}
+
+.password-toggle-btn i {
+    font-size: 1rem;
+}
+
 .network-connect-form-label {
     font-size: 0.875rem;
     font-weight: 500;
