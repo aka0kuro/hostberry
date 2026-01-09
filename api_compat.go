@@ -807,14 +807,36 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 			})
 		}
 		
+		// Verificar si el servicio está masked y desbloquearlo si es necesario
+		maskedCheck, _ := exec.Command("sh", "-c", "systemctl is-enabled hostapd 2>&1").CombinedOutput()
+		maskedStatus := strings.TrimSpace(string(maskedCheck))
+		if strings.Contains(maskedStatus, "masked") {
+			log.Printf("HostAPD service is masked, unmasking...")
+			executeCommand("sudo systemctl unmask hostapd 2>/dev/null || true")
+		}
+		
 		// Leer la configuración para obtener la interfaz y el gateway
 		configLines := strings.Split(string(configContent), "\n")
 		var interfaceName, gatewayIP string
 		for _, line := range configLines {
 			line = strings.TrimSpace(line)
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
 			if strings.HasPrefix(line, "interface=") {
 				interfaceName = strings.TrimPrefix(line, "interface=")
 			}
+		}
+		
+		// Verificar que tenemos al menos la interfaz configurada
+		if interfaceName == "" {
+			log.Printf("HostAPD configuration file missing interface setting: %s", configPath)
+			return c.Status(400).JSON(fiber.Map{
+				"error":         "HostAPD configuration file is missing required 'interface' setting. Please configure HostAPD first using the configuration form below.",
+				"success":       false,
+				"config_missing": true,
+				"config_path":   configPath,
+			})
 		}
 		
 		// Si tenemos la interfaz, verificar y configurar la IP antes de iniciar
