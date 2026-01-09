@@ -647,7 +647,10 @@
       
       const networkStats = computeNetworkRates(parsedData);
       
-      if (networkStats.interfaces && Array.isArray(networkStats.interfaces)) {
+      // Poblar selector de interfaces
+      if (parsedData.interfaces && Array.isArray(parsedData.interfaces) && parsedData.interfaces.length > 0) {
+        populateInterfaceSelects(parsedData.interfaces);
+      } else if (networkStats.interfaces && Array.isArray(networkStats.interfaces)) {
         populateInterfaceSelects(networkStats.interfaces);
       } else if (networkStatsRaw.interfaces && Array.isArray(networkStatsRaw.interfaces)) {
         populateInterfaceSelects(networkStatsRaw.interfaces);
