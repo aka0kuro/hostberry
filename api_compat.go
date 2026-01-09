@@ -807,8 +807,48 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 			})
 		}
 		
+		// Leer la configuración para obtener la interfaz y el gateway
+		configLines := strings.Split(string(configContent), "\n")
+		var interfaceName, gatewayIP string
+		for _, line := range configLines {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "interface=") {
+				interfaceName = strings.TrimPrefix(line, "interface=")
+			}
+		}
+		
+		// Si tenemos la interfaz, verificar y configurar la IP antes de iniciar
+		if interfaceName != "" {
+			// Intentar obtener el gateway de la configuración (si está en dnsmasq o en otro lugar)
+			// Por defecto usamos 192.168.4.1
+			gatewayIP = "192.168.4.1"
+			
+			// Verificar si la interfaz tiene una IP configurada
+			ipCheckCmd := fmt.Sprintf("ip addr show %s 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d/ -f1", interfaceName)
+			ipOut, _ := exec.Command("sh", "-c", ipCheckCmd).CombinedOutput()
+			currentIP := strings.TrimSpace(string(ipOut))
+			
+			if currentIP == "" {
+				// Configurar la IP en la interfaz
+				log.Printf("Configuring IP %s on interface %s", gatewayIP, interfaceName)
+				ipCmd := fmt.Sprintf("sudo ip addr add %s/24 dev %s 2>/dev/null || sudo ip addr replace %s/24 dev %s", gatewayIP, interfaceName, gatewayIP, interfaceName)
+				if out, err := executeCommand(ipCmd); err != nil {
+					log.Printf("Warning: Error setting IP on interface: %s", strings.TrimSpace(out))
+				}
+				
+				// Activar la interfaz
+				if out, err := executeCommand(fmt.Sprintf("sudo ip link set %s up", interfaceName)); err != nil {
+					log.Printf("Warning: Error bringing interface up: %s", strings.TrimSpace(out))
+				}
+			}
+		}
+		
 		enableCmd = "sudo systemctl enable hostapd 2>/dev/null || true"
 		executeCommand("sudo systemctl enable dnsmasq 2>/dev/null || true")
+		
+		// Recargar systemd para asegurar que los cambios en el override se apliquen
+		executeCommand("sudo systemctl daemon-reload 2>/dev/null || true")
+		
 		cmdStr = "sudo systemctl start hostapd"
 		// Iniciar dnsmasq después de hostapd
 		executeCommand("sudo systemctl start dnsmasq 2>/dev/null || true")
