@@ -62,22 +62,60 @@
     
     try {
       const resp = await HostBerry.apiRequest('/api/v1/system/network/interfaces');
-      if (resp && resp.ok) {
-        const data = await resp.json();
-        const interfaces = Array.isArray(data) ? data : (data.interfaces || data.data || []);
-        displayInterfaces(interfaces);
-        populateInterfaceSelects(interfaces);
+      if (!resp) {
+        throw new Error('No response from server');
+      }
+      
+      if (resp.ok) {
+        let data;
+        try {
+          data = await resp.json();
+        } catch (jsonError) {
+          console.error('Error parsing JSON:', jsonError);
+          if (container) {
+            container.innerHTML = '<p class="text-muted text-center">' + t('network.no_interfaces', 'No interfaces found') + '</p>';
+          }
+          return;
+        }
+        
+        // Manejar diferentes formatos de respuesta
+        let interfaces = [];
+        if (Array.isArray(data)) {
+          interfaces = data;
+        } else if (data.interfaces && Array.isArray(data.interfaces)) {
+          interfaces = data.interfaces;
+        } else if (data.data && Array.isArray(data.data)) {
+          interfaces = data.data;
+        } else if (data.success !== false && data.interfaces) {
+          interfaces = Array.isArray(data.interfaces) ? data.interfaces : [];
+        }
+        
+        if (interfaces.length > 0) {
+          displayInterfaces(interfaces);
+          populateInterfaceSelects(interfaces);
+        } else {
+          if (container) {
+            container.innerHTML = '<p class="text-muted text-center">' + t('network.no_interfaces', 'No interfaces found') + '</p>';
+          }
+        }
       } else {
-        const errorText = resp ? await resp.text().catch(() => '') : '';
-        console.error('Error loading interfaces:', errorText);
-        HostBerry.showAlert('danger', t('errors.loading_interfaces', 'Error loading interfaces'));
+        // Solo mostrar error si es un error real (500, etc), no si es 200 con datos vacíos
+        const status = resp.status;
+        if (status >= 500) {
+          const errorText = await resp.text().catch(() => '');
+          console.error('Server error loading interfaces:', status, errorText);
+          HostBerry.showAlert('danger', t('errors.loading_interfaces', 'Error loading interfaces'));
+        }
         if (container) {
           container.innerHTML = '<p class="text-muted text-center">' + t('network.no_interfaces', 'No interfaces found') + '</p>';
         }
       }
     } catch (e) {
       console.error('Exception loading interfaces:', e);
-      HostBerry.showAlert('danger', t('errors.network_error', 'Network connection error'));
+      // Solo mostrar notificación si es un error de red real, no un error de parsing
+      if (e.message && !e.message.includes('JSON')) {
+        HostBerry.showAlert('danger', t('errors.network_error', 'Network connection error'));
+      }
       if (container) {
         container.innerHTML = '<p class="text-muted text-center">' + t('network.no_interfaces', 'No interfaces found') + '</p>';
       }
