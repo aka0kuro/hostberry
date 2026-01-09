@@ -1031,6 +1031,8 @@
     "service_status": "Service Status",
     "active": "Active",
     "inactive": "Inactive",
+    "service_running_not_transmitting": "Running but not transmitting",
+    "check_diagnostics": "Service is running but WiFi network is not visible. Check diagnostics.",
     "active_access_points": "Active Access Points",
     "connected_clients": "Connected Clients",
     "bandwidth": "Bandwidth",
