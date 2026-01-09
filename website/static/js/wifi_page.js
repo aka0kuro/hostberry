@@ -42,6 +42,12 @@
       'error unblocking wifi': t('wifi.unblock_error', 'Error unblocking WiFi'),
       'error escaneando redes': t('wifi.scan_error', 'Error scanning WiFi networks'),
       'error scanning networks': t('wifi.scan_error', 'Error scanning WiFi networks'),
+      'disconnected from': t('wifi.disconnected', 'Disconnected from WiFi'),
+      'desconectado de': t('wifi.disconnected', 'Disconnected from WiFi'),
+      'connected to': t('wifi.connected_to', 'Connected to'),
+      'conectado a': t('wifi.connected_to', 'Connected to'),
+      'successfully': t('common.success', 'Successfully'),
+      'exitosamente': t('common.success', 'Successfully'),
     };
     
     // Buscar coincidencia exacta o parcial
