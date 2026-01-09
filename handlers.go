@@ -58,12 +58,15 @@ func loginAPIHandler(c *fiber.Ctx) error {
 	passwordChangeRequired := user.LoginCount == 1
 
 	// También setear cookie para permitir render protegido en rutas web (HttpOnly)
+	// Configurar expiración de la cookie igual a la del token
+	cookieExpiry := time.Duration(appConfig.Security.TokenExpiry) * time.Minute
 	c.Cookie(&fiber.Cookie{
 		Name:     "access_token",
 		Value:    token,
 		Path:     "/",
 		HTTPOnly: true,
 		SameSite: "Lax",
+		MaxAge:   int(cookieExpiry.Seconds()), // Expira al mismo tiempo que el token
 		// Secure: true, // si sirves por HTTPS
 	})
 
