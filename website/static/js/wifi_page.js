@@ -491,8 +491,15 @@
         if (tbody) {
           tbody.innerHTML = '';
           networks.forEach((net, index) => {
-            const signal = net.signal || net.rssi || 0;
-            const signalPercent = Math.min(100, Math.max(0, (parseInt(signal) + 100) * 2));
+            // La señal viene en dBm (negativa, típicamente entre -30 y -100)
+            let signal = parseInt(net.signal || net.rssi || 0);
+            // Si la señal es 0 o positiva, puede ser un error de parsing
+            if (signal > 0) {
+              signal = -signal; // Convertir a negativo si es positivo
+            }
+            // Calcular porcentaje: -30 dBm = 100%, -100 dBm = 0%
+            // Fórmula: ((signal + 100) / 70) * 100, limitado entre 0 y 100
+            const signalPercent = signal <= -100 ? 0 : (signal >= -30 ? 100 : Math.min(100, Math.max(0, ((signal + 100) / 70) * 100)));
             const signalColor = signalPercent > 70 ? 'text-success' : (signalPercent > 40 ? 'text-warning' : 'text-danger');
             const security = net.security || net.encryption || 'none';
             const securityIcon = security === 'none' || security === 'Open' ? 'bi-unlock' : 'bi-lock';
