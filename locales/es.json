@@ -790,7 +790,15 @@
     "service_restart_error": "Error reiniciando servicio WiFi",
     "status_error": "Error obteniendo estado de WiFi",
     "stored_error": "Error obteniendo redes guardadas",
-    "toggle_error": "Error cambiando estado de WiFi"
+    "toggle_error": "Error cambiando estado de WiFi",
+    "connection_status": "Conexión",
+    "wifi_status": "Estado WiFi",
+    "subtitle": "Gestiona tus conexiones de red inalámbrica",
+    "no_networks": "No se encontraron redes",
+    "open_network": "Red abierta",
+    "unknown": "Desconocido",
+    "unnamed_network": "Red sin nombre",
+    "connected": "Conectado"
   },
   "vpn": {
     "title": "VPN",
