@@ -252,17 +252,47 @@
 
   // Toggle HostAPD
   window.toggleHostAPD = async function() {
+    const btn = document.getElementById('toggle-hostapd-btn');
+    if (btn) {
+      btn.disabled = true;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="bi bi-arrow-clockwise spinning me-2"></i>' + t('common.loading', 'Loading...');
+    }
+    
     try {
+      console.log('Toggling HostAPD...');
       const resp = await HostBerry.apiRequest('/api/v1/hostapd/toggle', {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
+      console.log('HostAPD toggle response:', resp);
+      
       if (resp && resp.ok) {
-        const result = await resp.json();
+        let result;
+        try {
+          result = await resp.json();
+        } catch (jsonErr) {
+          console.error('Error parsing JSON response:', jsonErr);
+          const text = await resp.text().catch(() => '');
+          console.log('Response text:', text);
+          HostBerry.showAlert('warning', t('errors.unexpected_response', 'Unexpected response from server'));
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+          }
+          return;
+        }
+        
+        console.log('HostAPD toggle result:', result);
+        
         if (result.error) {
           HostBerry.showAlert('warning', translateError(result.error));
         } else {
-          HostBerry.showAlert('success', t('messages.operation_successful', 'Operation successful'));
+          const action = result.enabled ? t('hostapd.enabled', 'Enabled') : t('hostapd.disabled', 'Disabled');
+          HostBerry.showAlert('success', t('hostapd.hostapd_status_changed', 'HostAPD {status}').replace('{status}', action));
           setTimeout(() => {
             loadHostAPDStatus();
             loadAccessPoints();
@@ -270,12 +300,25 @@
           }, 1000);
         }
       } else {
-        const errorText = await resp.text().catch(() => '');
+        const status = resp ? resp.status : 'unknown';
+        console.error('HostAPD toggle failed with status:', status);
+        let errorText = '';
+        try {
+          errorText = await resp.text();
+        } catch (e) {
+          errorText = `HTTP ${status}`;
+        }
+        console.error('Error response:', errorText);
         HostBerry.showAlert('danger', translateError(errorText) || t('errors.operation_failed', 'Operation failed'));
       }
     } catch (e) {
       console.error('Error toggling HostAPD:', e);
-      HostBerry.showAlert('danger', t('errors.network_error', 'Network error'));
+      HostBerry.showAlert('danger', t('errors.network_error', 'Network error') + ': ' + (e.message || String(e)));
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        // El texto se actualizará automáticamente cuando loadHostAPDStatus() se ejecute
+      }
     }
   };
 
