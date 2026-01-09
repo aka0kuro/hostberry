@@ -1040,14 +1040,29 @@ server=8.8.8.8
 server=8.8.4.4
 `, req.Interface, req.DHCPRangeStart, req.DHCPRangeEnd, req.LeaseTime, req.Gateway, req.Gateway)
 	
-	dnsmasqContentEscaped := strings.ReplaceAll(dnsmasqContent, "'", "'\"'\"'")
-	cmdStr2 := fmt.Sprintf("echo '%s' | sudo tee %s > /dev/null", dnsmasqContentEscaped, dnsmasqConfigPath)
+	// Guardar configuración de dnsmasq usando un archivo temporal
+	tmpDnsmasqFile := "/tmp/dnsmasq.conf.tmp"
+	if err := os.WriteFile(tmpDnsmasqFile, []byte(dnsmasqContent), 0644); err != nil {
+		log.Printf("Error creating temporary dnsmasq config file: %v", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error":   fmt.Sprintf("Error creating temporary dnsmasq config file: %v", err),
+			"success": false,
+		})
+	}
+	
+	// Copiar archivo temporal a la ubicación final con sudo
+	cmdStr2 := fmt.Sprintf("sudo cp %s %s && sudo chmod 644 %s", tmpDnsmasqFile, dnsmasqConfigPath, dnsmasqConfigPath)
 	if out, err := executeCommand(cmdStr2); err != nil {
+		os.Remove(tmpDnsmasqFile) // Limpiar archivo temporal
+		log.Printf("Error copying dnsmasq config file: %s, output: %s", err, strings.TrimSpace(out))
 		return c.Status(500).JSON(fiber.Map{
 			"error":   fmt.Sprintf("Error saving dnsmasq configuration: %s", strings.TrimSpace(out)),
 			"success": false,
 		})
 	}
+	
+	// Limpiar archivo temporal
+	os.Remove(tmpDnsmasqFile)
 	
 	// 4. Configurar NAT con iptables
 	// Habilitar forwarding IP
