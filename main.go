@@ -557,8 +557,8 @@ func systemRestartHandler(c *fiber.Ctx) error {
 
 // detectWiFiInterface detecta automáticamente la interfaz WiFi
 func detectWiFiInterface() string {
-	// Intentar con nmcli primero (con sudo)
-	cmd := exec.Command("sh", "-c", "sudo nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
+	// Intentar con ip primero (sin sudo, solo lectura)
+	cmd := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}' | grep -E '^wlan|^wl' | head -1")
 	out, err := cmd.Output()
 	if err == nil {
 		iface := strings.TrimSpace(string(out))
