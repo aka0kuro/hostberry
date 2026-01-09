@@ -1042,9 +1042,14 @@ func systemServicesHandler(c *fiber.Ctx) error {
 	pgrepOut, _ := exec.Command("sh", "-c", "pgrep hostapd > /dev/null 2>&1 && echo active || echo inactive").CombinedOutput()
 	pgrepStatus := strings.TrimSpace(string(pgrepOut))
 	
-	// Luego verificar el estado de systemd
+	// Luego verificar el estado de systemd (running)
 	hostapdOut, _ := exec.Command("sh", "-c", "systemctl is-active hostapd 2>/dev/null || echo inactive").CombinedOutput()
 	hostapdStatus := strings.TrimSpace(string(hostapdOut))
+	
+	// Verificar si el servicio está habilitado para iniciar al arranque (enabled)
+	hostapdEnabledOut, _ := exec.Command("sh", "-c", "systemctl is-enabled hostapd 2>/dev/null || echo disabled").CombinedOutput()
+	hostapdEnabledStatus := strings.TrimSpace(string(hostapdEnabledOut))
+	hostapdEnabled := hostapdEnabledStatus == "enabled"
 	
 	// El servicio está activo si systemd dice "active" o si el proceso está corriendo
 	hostapdActive := hostapdStatus == "active" || pgrepStatus == "active"
@@ -1055,8 +1060,9 @@ func systemServicesHandler(c *fiber.Ctx) error {
 	}
 	
 	services["hostapd"] = map[string]interface{}{
-		"status": hostapdStatus,
-		"active": hostapdActive,
+		"status":  hostapdStatus,
+		"active":  hostapdActive,
+		"enabled": hostapdEnabled,
 	}
 	
 	// Verificar AdBlock (dnsmasq o pihole)
