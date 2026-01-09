@@ -774,11 +774,19 @@
             body: data
           });
           if (resp && resp.ok) {
-            HostBerry.showAlert('success', t('messages.config_saved', 'Configuration saved'));
+            const result = await resp.json();
+            if (result.success !== false) {
+              HostBerry.showAlert('success', result.message || t('messages.config_saved', 'Configuration saved'));
+            } else {
+              const message = result.message || result.error || t('errors.config_update_error', 'Error updating configuration');
+              HostBerry.showAlert('warning', message);
+            }
           } else {
-            HostBerry.showAlert('danger', t('errors.config_update_error', 'Error updating configuration'));
+            const errorText = await resp.text().catch(() => '');
+            HostBerry.showAlert('danger', t('errors.config_update_error', 'Error updating configuration') + (errorText ? ': ' + errorText : ''));
           }
         } catch (e) {
+          console.error('Error saving network config:', e);
           HostBerry.showAlert('danger', t('errors.network_error', 'Network error'));
         }
       });
