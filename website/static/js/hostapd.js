@@ -231,6 +231,21 @@
         
         html += '</tbody></table></div>';
         container.innerHTML = html;
+        
+        // Mostrar diagnósticos si algún AP está corriendo pero no transmite
+        const hasNotTransmitting = aps.some(ap => ap.service_running === true && ap.transmitting !== true);
+        if (hasNotTransmitting) {
+          const diagnosticsSection = document.getElementById('diagnosticsSection');
+          if (diagnosticsSection) {
+            diagnosticsSection.style.display = 'block';
+            loadDiagnostics();
+          }
+        } else {
+          const diagnosticsSection = document.getElementById('diagnosticsSection');
+          if (diagnosticsSection) {
+            diagnosticsSection.style.display = 'none';
+          }
+        }
       } else {
         const errorText = await resp.text().catch(() => '');
         container.innerHTML = `
