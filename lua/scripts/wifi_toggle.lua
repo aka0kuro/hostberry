@@ -1,67 +1,12 @@
 -- Script Lua para activar/desactivar WiFi
--- Usa nmcli, rfkill o ifconfig según disponibilidad
+-- Usa rfkill e ip, sin nmcli
 
 local result = {}
 local user = params.user or "unknown"
 
-log("INFO", "Cambiando estado de WiFi (usuario: " .. user .. ")")
+log("INFO", "Cambiando estado de WiFi (usuario: " .. user .. ") usando rfkill e ip")
 
--- Método 1: Intentar con nmcli (siempre con sudo)
-local nmcli_check = exec("sudo nmcli -t -f WIFI g 2>/dev/null")
-if nmcli_check and nmcli_check ~= "" then
-    local state = string.lower(string.gsub(nmcli_check, "%s+", ""))
-    local cmd
-    local was_enabled = false
-    
-    if string.find(state, "enabled") or string.find(state, "on") then
-        cmd = "sudo nmcli radio wifi off"
-        was_enabled = true
-    else
-        cmd = "sudo nmcli radio wifi on"
-        was_enabled = false
-    end
-    
-    local output, err = exec(cmd .. " 2>/dev/null")
-    if not err then
-        -- Si se activó WiFi, también activar la interfaz específica
-        if not was_enabled then
-            -- Esperar 1 segundo
-            os.execute("sleep 1")
-            
-            -- Detectar y activar la interfaz WiFi específica
-            local iface_cmd = "sudo nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1"
-            local iface_out = exec(iface_cmd)
-            if iface_out and iface_out ~= "" then
-                local iface = string.gsub(iface_out, "%s+", "")
-                if iface and iface ~= "" then
-                    -- Activar la interfaz específica
-                    exec("sudo nmcli device set " .. iface .. " managed yes 2>/dev/null")
-                    exec("sudo nmcli device connect " .. iface .. " 2>/dev/null")
-                    os.execute("sleep 1")
-                end
-            end
-            
-            -- Verificar que se activó
-            local verify_check = exec("sudo nmcli -t -f WIFI g 2>/dev/null")
-            if verify_check then
-                local verify_state = string.lower(string.gsub(verify_check, "%s+", ""))
-                if string.find(verify_state, "enabled") or string.find(verify_state, "on") then
-                    result.success = true
-                    result.message = "WiFi activado exitosamente usando nmcli con sudo"
-                    result.method = "nmcli"
-                    log("INFO", "WiFi activado exitosamente usando nmcli con sudo")
-                    return result
-                end
-            end
-        end
-        result.success = true
-        result.message = "WiFi toggle exitoso usando nmcli con sudo"
-        result.method = "nmcli"
-        log("INFO", "WiFi toggle exitoso usando nmcli con sudo")
-        return result
-    end
-end
-
+-- Método 1: Intentar con rfkill (siempre con sudo)
 local rfkill_check = exec("sudo rfkill list wifi 2>/dev/null | grep -i 'wifi' | head -1")
 if rfkill_check and rfkill_check ~= "" then
     local status_out = exec("sudo rfkill list wifi 2>/dev/null | grep -i 'soft blocked'")
