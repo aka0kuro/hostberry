@@ -585,7 +585,7 @@
         buttonElement.innerHTML = `<i class="bi bi-box-arrow-in-right me-2"></i>${t('wifi.connect', 'Connect')}`;
       }
     } catch (error) {
-      console.error('Error conectando:', error);
+      console.error(t('wifi.connect_error', 'Error connecting to WiFi') + ':', error);
       showAlert('danger', t('wifi.connect_error', 'Error connecting to WiFi'));
       buttonElement.disabled = false;
       buttonElement.innerHTML = `<i class="bi bi-box-arrow-in-right me-2"></i>${t('wifi.connect', 'Connect')}`;
