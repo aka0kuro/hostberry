@@ -865,11 +865,20 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 			}
 		}
 		
-		enableCmd = "sudo systemctl enable hostapd 2>/dev/null || true"
-		executeCommand("sudo systemctl enable dnsmasq 2>/dev/null || true")
+		// Asegurarse de que el servicio no esté masked antes de habilitarlo
+		executeCommand("sudo systemctl unmask hostapd 2>/dev/null || true")
+		executeCommand("sudo systemctl unmask dnsmasq 2>/dev/null || true")
 		
 		// Recargar systemd para asegurar que los cambios en el override se apliquen
 		executeCommand("sudo systemctl daemon-reload 2>/dev/null || true")
+		
+		// Habilitar servicios
+		enableCmd = "sudo systemctl enable hostapd 2>/dev/null || true"
+		executeCommand("sudo systemctl enable dnsmasq 2>/dev/null || true")
+		
+		// Verificar que el archivo de configuración existe y tiene contenido (systemd lo verifica)
+		// Asegurar permisos correctos
+		executeCommand(fmt.Sprintf("sudo chmod 644 %s 2>/dev/null || true", configPath))
 		
 		cmdStr = "sudo systemctl start hostapd"
 		// Iniciar dnsmasq después de hostapd
