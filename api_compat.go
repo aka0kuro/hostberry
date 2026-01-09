@@ -130,6 +130,11 @@ func networkConfigHandler(c *fiber.Ctx) error {
 			if out, err := executeCommand(cmd); err != nil {
 				errors = append(errors, fmt.Sprintf("Failed to set hostname: %v", err))
 			} else {
+				// Actualizar /etc/hosts para evitar el warning de sudo
+				// Obtener la IP local (127.0.0.1 o la IP de la interfaz principal)
+				hostsUpdateCmd := fmt.Sprintf("sed -i 's/^127.0.0.1.*/127.0.0.1 localhost %s/' /etc/hosts 2>/dev/null || echo '127.0.0.1 localhost %s' >> /etc/hosts 2>/dev/null", req.Hostname, req.Hostname)
+				executeCommand(hostsUpdateCmd) // Ignorar errores, puede no tener permisos
+				
 				applied = append(applied, fmt.Sprintf("Hostname set to %s", req.Hostname))
 				_ = out // Ignorar salida
 			}
