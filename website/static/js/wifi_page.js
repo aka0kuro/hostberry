@@ -396,7 +396,7 @@
                   <i class="bi bi-wifi"></i>
                 </div>
                 <div class="network-card-info">
-                  <div class="network-card-ssid">${ssid}${isConnected ? ' <span class="badge bg-success ms-2">' + t('wifi.connected', 'Connected') + '</span>' : ''}</div>
+                  <div class="network-card-ssid">${ssid}${connectedBadge}</div>
                   <div class="network-card-details">
                     <span class="network-card-detail-item">
                       <i class="bi bi-bar-chart me-1"></i> ${signal}dBm (${signalPercent}%)
