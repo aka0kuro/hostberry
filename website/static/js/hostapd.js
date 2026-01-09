@@ -47,8 +47,8 @@
       if (resp && resp.ok) {
         const data = await resp.json();
         const hostapd = data.services?.hostapd || {};
-        const enabled = hostapd.active || false;
-        const running = hostapd.status === 'active';
+        const enabled = hostapd.enabled === true || hostapd.enabled === 'enabled'; // Si está habilitado para iniciar al arranque
+        const running = hostapd.status === 'active' || hostapd.active === true; // Si está corriendo actualmente
         
         // Actualizar UI
         updateStatusUI(enabled, running);
