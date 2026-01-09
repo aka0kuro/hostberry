@@ -760,20 +760,28 @@ func hostapdClientsHandler(c *fiber.Ctx) error {
 }
 
 func hostapdToggleHandler(c *fiber.Ctx) error {
+	log.Printf("HostAPD toggle request received")
+	
 	// Verificar estado actual
 	hostapdOut, _ := exec.Command("sh", "-c", "systemctl is-active hostapd 2>/dev/null || pgrep hostapd > /dev/null && echo active || echo inactive").CombinedOutput()
 	hostapdStatus := strings.TrimSpace(string(hostapdOut))
 	isActive := hostapdStatus == "active"
 	
+	log.Printf("Current HostAPD status: %s (isActive: %v)", hostapdStatus, isActive)
+	
 	var cmdStr string
 	var enableCmd string
+	var action string
+	
 	if isActive {
 		// Detener hostapd y dnsmasq
+		action = "disable"
 		executeCommand("sudo systemctl stop dnsmasq 2>/dev/null || true")
 		cmdStr = "sudo systemctl stop hostapd"
 		enableCmd = "sudo systemctl disable hostapd 2>/dev/null || true"
 	} else {
 		// Habilitar y iniciar hostapd y dnsmasq
+		action = "enable"
 		enableCmd = "sudo systemctl enable hostapd 2>/dev/null || true"
 		executeCommand("sudo systemctl enable dnsmasq 2>/dev/null || true")
 		cmdStr = "sudo systemctl start hostapd"
@@ -781,26 +789,35 @@ func hostapdToggleHandler(c *fiber.Ctx) error {
 		executeCommand("sudo systemctl start dnsmasq 2>/dev/null || true")
 	}
 	
+	log.Printf("Action: %s, Command: %s", action, cmdStr)
+	
 	// Ejecutar comando de habilitación/deshabilitación
 	if enableCmd != "" {
 		if out, err := executeCommand(enableCmd); err != nil {
 			log.Printf("Warning: Error enabling/disabling hostapd: %s", strings.TrimSpace(out))
+			// No fallar aquí, continuar con el start/stop
+		} else {
+			log.Printf("Enable/disable command executed successfully: %s", strings.TrimSpace(out))
 		}
 	}
 	
 	// Ejecutar comando de inicio/detención
 	out, err := executeCommand(cmdStr)
 	if err != nil {
+		log.Printf("Error executing %s command: %s", action, strings.TrimSpace(out))
 		return c.Status(500).JSON(fiber.Map{
-			"error":  strings.TrimSpace(out),
+			"error":   fmt.Sprintf("Failed to %s hostapd: %s", action, strings.TrimSpace(out)),
 			"success": false,
 		})
 	}
+	
+	log.Printf("HostAPD %s successful. Output: %s", action, strings.TrimSpace(out))
 	
 	return c.JSON(fiber.Map{
 		"success": true,
 		"output":  strings.TrimSpace(out),
 		"enabled": !isActive,
+		"action":  action,
 	})
 }
 
