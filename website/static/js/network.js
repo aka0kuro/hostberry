@@ -755,7 +755,6 @@
   function initNetworkPage() {
     loadInterfaces();
     loadRoutingTable();
-    loadNetworkStatus();
     
     // Network Basic Config Form
     const basicConfigForm = document.getElementById('networkBasicConfigForm');
