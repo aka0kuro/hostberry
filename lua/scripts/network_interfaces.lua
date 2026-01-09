@@ -30,7 +30,7 @@ if interfaces_output and interfaces_output ~= "" then
         
         -- IP y máscara de red
         local ip_cmd = "ip addr show " .. iface .. " | grep 'inet ' | awk '{print $2}'"
-        local ip_output = exec(ip_cmd)
+        local ip_output, _ = exec(ip_cmd)
         if ip_output then
             -- Formato: "192.168.1.100/24"
             local ip_parts = {}
