@@ -329,6 +329,25 @@
         networks = data;
       }
       
+      // Filtrar redes inválidas (mensajes de error, etc.)
+      networks = networks.filter(net => {
+        const ssid = (net.ssid || '').trim();
+        // Filtrar redes con nombres inválidos
+        if (!ssid || ssid === '' || ssid === '--' || ssid === 'sudo' || 
+            ssid.toLowerCase().includes('read-only') || 
+            ssid.toLowerCase().includes('file system') ||
+            ssid.toLowerCase().includes('error') ||
+            ssid.toLowerCase().includes('permission')) {
+          return false;
+        }
+        // Filtrar si el signal es 0 y el SSID parece ser un error
+        const signal = parseInt(net.signal || net.rssi || 0);
+        if (signal === 0 && (ssid.length > 50 || ssid.includes(':'))) {
+          return false;
+        }
+        return true;
+      });
+      
       if (networks.length === 0) {
         if (emptyEl) emptyEl.style.display = 'block';
         if (tableEl) tableEl.style.display = 'none';
