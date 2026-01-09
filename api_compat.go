@@ -1046,38 +1046,83 @@ rsn_pairwise=CCMP
 	}
 	
 	// Copiar archivo temporal a la ubicación final con sudo
-	// Primero asegurar que el directorio existe
-	executeCommand("sudo mkdir -p /etc/hostapd 2>/dev/null || true")
-	executeCommand("sudo chmod 755 /etc/hostapd 2>/dev/null || true")
+	// Primero asegurar que el directorio existe y tiene permisos correctos
+	log.Printf("Ensuring /etc/hostapd directory exists...")
+	if out, err := executeCommand("sudo mkdir -p /etc/hostapd"); err != nil {
+		log.Printf("Warning: Error creating /etc/hostapd directory: %v, output: %s", err, out)
+	}
+	if out, err := executeCommand("sudo chmod 755 /etc/hostapd"); err != nil {
+		log.Printf("Warning: Error setting permissions on /etc/hostapd: %v, output: %s", err, out)
+	}
 	
+	// Verificar que el directorio existe y es accesible
+	if _, err := os.Stat("/etc/hostapd"); os.IsNotExist(err) {
+		log.Printf("Error: /etc/hostapd directory does not exist after creation attempt")
+		return c.Status(500).JSON(fiber.Map{
+			"error":   "Failed to create /etc/hostapd directory. Please run: sudo mkdir -p /etc/hostapd && sudo chmod 755 /etc/hostapd",
+			"success": false,
+		})
+	}
+	
+	// Intentar copiar usando un método más robusto
+	// Primero intentar con cp directo
 	cmdStr := fmt.Sprintf("sudo cp %s %s", tmpFile, configPath)
 	log.Printf("Executing: %s", cmdStr)
 	out, err := executeCommand(cmdStr)
 	if err != nil {
-		// Verificar si el archivo temporal todavía existe después del error
-		if _, statErr := os.Stat(tmpFile); os.IsNotExist(statErr) {
-			log.Printf("Temporary file was deleted after copy attempt")
-		}
-		errorMsg := strings.TrimSpace(out)
-		if errorMsg == "" {
-			errorMsg = err.Error()
-		}
-		log.Printf("Error copying config file: %v, output: '%s', errorMsg: '%s'", err, out, errorMsg)
-		// Si el error es "exit status X", intentar obtener más información
-		if strings.Contains(err.Error(), "exit status") {
-			// Verificar permisos del directorio destino
-			destDir := "/etc/hostapd"
-			if _, statErr := os.Stat(destDir); os.IsNotExist(statErr) {
-				errorMsg = fmt.Sprintf("Destination directory %s does not exist", destDir)
-			} else {
-				errorMsg = fmt.Sprintf("Failed to copy file (exit status error). Check permissions for %s", destDir)
+		log.Printf("First copy attempt failed: %v, output: '%s'", err, out)
+		
+		// Intentar método alternativo: leer el archivo temporal y escribirlo directamente
+		log.Printf("Attempting alternative method: reading temp file and writing directly...")
+		tempContent, readErr := os.ReadFile(tmpFile)
+		if readErr != nil {
+			log.Printf("Error reading temp file: %v", readErr)
+			errorMsg := strings.TrimSpace(out)
+			if errorMsg == "" {
+				errorMsg = err.Error()
 			}
+			return c.Status(500).JSON(fiber.Map{
+				"error":   fmt.Sprintf("Error saving hostapd configuration: %s", errorMsg),
+				"success": false,
+			})
 		}
-		// No eliminar el archivo temporal aquí, mantenerlo para depuración
-		return c.Status(500).JSON(fiber.Map{
-			"error":   fmt.Sprintf("Error saving hostapd configuration: %s", errorMsg),
-			"success": false,
-		})
+		
+		// Intentar escribir directamente usando un script temporal
+		scriptFile := "/tmp/write_hostapd_config.sh"
+		scriptContent := fmt.Sprintf("#!/bin/bash\ncat > %s <<'EOF'\n%sEOF\nchmod 644 %s\n", configPath, string(tempContent), configPath)
+		if writeErr := os.WriteFile(scriptFile, []byte(scriptContent), 0755); writeErr != nil {
+			log.Printf("Error creating write script: %v", writeErr)
+			errorMsg := strings.TrimSpace(out)
+			if errorMsg == "" {
+				errorMsg = err.Error()
+			}
+			return c.Status(500).JSON(fiber.Map{
+				"error":   fmt.Sprintf("Error saving hostapd configuration: %s", errorMsg),
+				"success": false,
+			})
+		}
+		
+		// Ejecutar el script con sudo
+		scriptCmd := fmt.Sprintf("sudo %s", scriptFile)
+		log.Printf("Executing script: %s", scriptCmd)
+		scriptOut, scriptErr := executeCommand(scriptCmd)
+		os.Remove(scriptFile) // Limpiar script temporal
+		
+		if scriptErr != nil {
+			log.Printf("Script method also failed: %v, output: '%s'", scriptErr, scriptOut)
+			errorMsg := strings.TrimSpace(out)
+			if errorMsg == "" {
+				errorMsg = err.Error()
+			}
+			return c.Status(500).JSON(fiber.Map{
+				"error":   fmt.Sprintf("Error saving hostapd configuration: %s. Please check sudo permissions for cp command.", errorMsg),
+				"success": false,
+			})
+		}
+		
+		log.Printf("Config file written successfully using script method")
+	} else {
+		log.Printf("File copied successfully using cp command, output: '%s'", strings.TrimSpace(out))
 	}
 	log.Printf("File copied successfully, output: '%s'", strings.TrimSpace(out))
 	
