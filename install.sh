@@ -1017,6 +1017,26 @@ EOF
         print_info "Permisos agregados para chmod: /bin/chmod"
     fi
     
+    # tee (para escribir archivos de configuración)
+    if command -v tee &> /dev/null; then
+        TEE_PATH=$(command -v tee)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $TEE_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para tee: $TEE_PATH"
+    elif [ -f "/usr/bin/tee" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/tee" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para tee: /usr/bin/tee"
+    fi
+    
+    # cat (para leer archivos y pasarlos a tee)
+    if command -v cat &> /dev/null; then
+        CAT_PATH=$(command -v cat)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $CAT_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para cat: $CAT_PATH"
+    elif [ -f "/bin/cat" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /bin/cat" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para cat: /bin/cat"
+    fi
+    
     # Crear directorio /etc/hostapd con permisos correctos
     print_info "Creando directorio /etc/hostapd..."
     if [ ! -d "/etc/hostapd" ]; then
