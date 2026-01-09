@@ -705,9 +705,27 @@ func vpnCertificatesGenerateHandler(c *fiber.Ctx) error {
 func hostapdAccessPointsHandler(c *fiber.Ctx) error {
 	var aps []fiber.Map
 	
-	// Verificar si hostapd está corriendo
-	hostapdOut, _ := exec.Command("sh", "-c", "systemctl is-active hostapd 2>/dev/null || pgrep hostapd > /dev/null && echo active || echo inactive").CombinedOutput()
-	hostapdStatus := strings.TrimSpace(string(hostapdOut))
+	// Verificar si hostapd está corriendo (múltiples métodos para mayor confiabilidad)
+	hostapdActive := false
+	hostapdStatus := "inactive"
+	
+	// Método 1: Verificar con systemctl
+	systemctlOut, _ := exec.Command("sh", "-c", "systemctl is-active hostapd 2>/dev/null").CombinedOutput()
+	systemctlStatus := strings.TrimSpace(string(systemctlOut))
+	if systemctlStatus == "active" {
+		hostapdActive = true
+		hostapdStatus = "active"
+	}
+	
+	// Método 2: Verificar si el proceso está corriendo
+	if !hostapdActive {
+		pgrepOut, _ := exec.Command("sh", "-c", "pgrep hostapd > /dev/null 2>&1 && echo active || echo inactive").CombinedOutput()
+		pgrepStatus := strings.TrimSpace(string(pgrepOut))
+		if pgrepStatus == "active" {
+			hostapdActive = true
+			hostapdStatus = "active"
+		}
+	}
 	
 	// Leer configuración de hostapd
 	configPath := "/etc/hostapd/hostapd.conf"
@@ -731,7 +749,7 @@ func hostapdAccessPointsHandler(c *fiber.Ctx) error {
 	}
 	
 	// Si hostapd está activo o hay configuración, mostrar el punto de acceso
-	if hostapdStatus == "active" || len(config) > 0 {
+	if hostapdActive || len(config) > 0 {
 		ssid := config["ssid"]
 		if ssid == "" {
 			ssid = "hostberry-ap" // Valor por defecto
