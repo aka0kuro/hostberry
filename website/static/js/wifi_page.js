@@ -259,7 +259,7 @@
         showAlert('danger', data.error || t('wifi.toggle_error', 'Error toggling switch'));
       }
     } catch (error) {
-      console.error('Error toggling software switch:', error);
+      console.error(t('wifi.toggle_error', 'Error toggling switch') + ':', error);
       showAlert('danger', t('wifi.toggle_error', 'Error toggling switch'));
     } finally {
       btn.disabled = false;
