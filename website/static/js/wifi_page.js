@@ -323,7 +323,7 @@
           data = JSON.parse(text);
         }
       } catch (parseError) {
-        console.error('Error parsing JSON response:', parseError);
+        console.error(t('common.error', 'Error') + ' parsing JSON:', parseError);
         data = { networks: [] };
       }
       
