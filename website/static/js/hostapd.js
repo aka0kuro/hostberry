@@ -71,31 +71,34 @@
     const toggleText = document.getElementById('toggle-hostapd-text');
     const container = document.getElementById('hostapdStatusContainer');
     
+    // Usar 'running' como el estado real del servicio (más confiable que 'enabled')
+    const isActuallyActive = running || enabled;
+    
     if (statusValue) {
-      statusValue.textContent = enabled ? t('hostapd.enabled', 'Enabled') : t('hostapd.disabled', 'Disabled');
-      statusValue.className = 'stat-value' + (enabled ? ' text-success' : ' text-danger');
+      statusValue.textContent = isActuallyActive ? t('hostapd.enabled', 'Enabled') : t('hostapd.disabled', 'Disabled');
+      statusValue.className = 'stat-value' + (isActuallyActive ? ' text-success' : ' text-danger');
     }
     
     if (statusBar) {
-      statusBar.style.width = enabled ? '100%' : '0%';
-      statusBar.className = 'stat-progress-bar' + (enabled ? ' bg-success' : ' bg-danger');
+      statusBar.style.width = isActuallyActive ? '100%' : '0%';
+      statusBar.className = 'stat-progress-bar' + (isActuallyActive ? ' bg-success' : ' bg-danger');
     }
     
     if (statusIcon) {
-      statusIcon.className = 'bi ' + (enabled ? 'bi-heart-pulse-fill text-success' : 'bi-heart-pulse text-danger');
+      statusIcon.className = 'bi ' + (isActuallyActive ? 'bi-heart-pulse-fill text-success' : 'bi-heart-pulse text-danger');
     }
     
     if (toggleBtn) {
-      toggleBtn.className = 'btn ' + (enabled ? 'btn-outline-danger' : 'btn-outline-success');
+      toggleBtn.className = 'btn ' + (isActuallyActive ? 'btn-outline-danger' : 'btn-outline-success');
       toggleBtn.disabled = false; // Asegurar que el botón esté habilitado
     }
     
     if (toggleText) {
-      toggleText.innerHTML = enabled ? t('hostapd.disable_hostapd', 'Disable HostAPD') : t('hostapd.enable_hostapd', 'Enable HostAPD');
+      toggleText.innerHTML = isActuallyActive ? t('hostapd.disable_hostapd', 'Disable HostAPD') : t('hostapd.enable_hostapd', 'Enable HostAPD');
     } else if (toggleBtn) {
       // Si no hay toggleText, actualizar el contenido del botón directamente
-      const icon = enabled ? 'bi-x-circle' : 'bi-router';
-      toggleBtn.innerHTML = '<i class="bi ' + icon + ' me-2"></i><span>' + (enabled ? t('hostapd.disable_hostapd', 'Disable HostAPD') : t('hostapd.enable_hostapd', 'Enable HostAPD')) + '</span>';
+      const icon = isActuallyActive ? 'bi-x-circle' : 'bi-router';
+      toggleBtn.innerHTML = '<i class="bi ' + icon + ' me-2"></i><span>' + (isActuallyActive ? t('hostapd.disable_hostapd', 'Disable HostAPD') : t('hostapd.enable_hostapd', 'Enable HostAPD')) + '</span>';
     }
     
     if (container) {
