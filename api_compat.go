@@ -818,11 +818,15 @@ func hostapdRestartHandler(c *fiber.Ctx) error {
 
 func hostapdConfigHandler(c *fiber.Ctx) error {
 	var req struct {
-		Interface string `json:"interface"`
-		SSID      string `json:"ssid"`
-		Password  string `json:"password"`
-		Channel   int    `json:"channel"`
-		Security  string `json:"security"`
+		Interface      string `json:"interface"`
+		SSID           string `json:"ssid"`
+		Password       string `json:"password"`
+		Channel        int    `json:"channel"`
+		Security       string `json:"security"`
+		Gateway        string `json:"gateway"`
+		DHCPRangeStart string `json:"dhcp_range_start"`
+		DHCPRangeEnd   string `json:"dhcp_range_end"`
+		LeaseTime      string `json:"lease_time"`
 	}
 	
 	if err := c.BodyParser(&req); err != nil {
@@ -840,12 +844,37 @@ func hostapdConfigHandler(c *fiber.Ctx) error {
 		})
 	}
 	
+	// Valores por defecto
+	if req.Gateway == "" {
+		req.Gateway = "192.168.4.1"
+	}
+	if req.DHCPRangeStart == "" {
+		req.DHCPRangeStart = "192.168.4.2"
+	}
+	if req.DHCPRangeEnd == "" {
+		req.DHCPRangeEnd = "192.168.4.254"
+	}
+	if req.LeaseTime == "" {
+		req.LeaseTime = "12h"
+	}
+	
 	// Validar security
 	if req.Security != "wpa2" && req.Security != "wpa3" && req.Security != "open" {
 		req.Security = "wpa2"
 	}
 	
-	// Generar configuración de hostapd
+	// 1. Configurar IP de la interfaz
+	ipCmd := fmt.Sprintf("sudo ip addr add %s/24 dev %s 2>/dev/null || sudo ip addr replace %s/24 dev %s", req.Gateway, req.Interface, req.Gateway, req.Interface)
+	if out, err := executeCommand(ipCmd); err != nil {
+		log.Printf("Warning: Error setting IP on interface: %s", strings.TrimSpace(out))
+	}
+	
+	// Activar interfaz
+	if out, err := executeCommand(fmt.Sprintf("sudo ip link set %s up", req.Interface)); err != nil {
+		log.Printf("Warning: Error bringing interface up: %s", strings.TrimSpace(out))
+	}
+	
+	// 2. Generar configuración de hostapd
 	configPath := "/etc/hostapd/hostapd.conf"
 	configContent := fmt.Sprintf(`interface=%s
 driver=nl80211
@@ -857,6 +886,12 @@ channel=%d
 	if req.Security == "open" {
 		configContent += "auth_algs=0\n"
 	} else if req.Security == "wpa2" {
+		if req.Password == "" {
+			return c.Status(400).JSON(fiber.Map{
+				"error":   "Password required for WPA2/WPA3",
+				"success": false,
+			})
+		}
 		configContent += fmt.Sprintf(`wpa=2
 wpa_passphrase=%s
 wpa_key_mgmt=WPA-PSK
@@ -864,6 +899,12 @@ wpa_pairwise=TKIP
 rsn_pairwise=CCMP
 `, req.Password)
 	} else if req.Security == "wpa3" {
+		if req.Password == "" {
+			return c.Status(400).JSON(fiber.Map{
+				"error":   "Password required for WPA2/WPA3",
+				"success": false,
+			})
+		}
 		configContent += fmt.Sprintf(`wpa=2
 wpa_passphrase=%s
 wpa_key_mgmt=WPA-PSK-SHA256
@@ -875,28 +916,80 @@ rsn_pairwise=CCMP
 	// Escapar comillas simples en el contenido para el comando shell
 	configContentEscaped := strings.ReplaceAll(configContent, "'", "'\"'\"'")
 	
-	// Guardar configuración (requiere sudo)
+	// Guardar configuración de hostapd
 	cmdStr := fmt.Sprintf("echo '%s' | sudo tee %s > /dev/null", configContentEscaped, configPath)
-	out, err := executeCommand(cmdStr)
-	if err != nil {
+	if out, err := executeCommand(cmdStr); err != nil {
 		return c.Status(500).JSON(fiber.Map{
-			"error":   fmt.Sprintf("Error saving configuration: %s", strings.TrimSpace(out)),
+			"error":   fmt.Sprintf("Error saving hostapd configuration: %s", strings.TrimSpace(out)),
 			"success": false,
 		})
 	}
 	
-	// Reiniciar hostapd para aplicar cambios
-	out2, err2 := executeCommand("sudo systemctl restart hostapd")
-	if err2 != nil {
+	// 3. Configurar dnsmasq para DHCP
+	dnsmasqConfigPath := "/etc/dnsmasq.conf"
+	// Hacer backup de configuración existente
+	executeCommand(fmt.Sprintf("sudo cp %s %s.backup 2>/dev/null || true", dnsmasqConfigPath, dnsmasqConfigPath))
+	
+	dnsmasqContent := fmt.Sprintf(`interface=%s
+dhcp-range=%s,%s,255.255.255.0,%s
+dhcp-option=3,%s
+dhcp-option=6,%s
+server=8.8.8.8
+server=8.8.4.4
+`, req.Interface, req.DHCPRangeStart, req.DHCPRangeEnd, req.LeaseTime, req.Gateway, req.Gateway)
+	
+	dnsmasqContentEscaped := strings.ReplaceAll(dnsmasqContent, "'", "'\"'\"'")
+	cmdStr2 := fmt.Sprintf("echo '%s' | sudo tee %s > /dev/null", dnsmasqContentEscaped, dnsmasqConfigPath)
+	if out, err := executeCommand(cmdStr2); err != nil {
 		return c.Status(500).JSON(fiber.Map{
-			"error":   fmt.Sprintf("Configuration saved but failed to restart: %s", strings.TrimSpace(out2)),
+			"error":   fmt.Sprintf("Error saving dnsmasq configuration: %s", strings.TrimSpace(out)),
+			"success": false,
+		})
+	}
+	
+	// 4. Configurar NAT con iptables
+	// Habilitar forwarding IP
+	executeCommand("echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward > /dev/null")
+	executeCommand("sudo sysctl -w net.ipv4.ip_forward=1 > /dev/null 2>&1")
+	
+	// Obtener interfaz principal (no la de hostapd)
+	mainInterface := "eth0"
+	if out, _ := executeCommand("ip route | grep default | awk '{print $5}' | head -1"); strings.TrimSpace(out) != "" {
+		mainInterface = strings.TrimSpace(out)
+	}
+	
+	// Configurar NAT (si hay interfaz principal)
+	if mainInterface != "" && mainInterface != req.Interface {
+		// Limpiar reglas antiguas
+		executeCommand(fmt.Sprintf("sudo iptables -t nat -D POSTROUTING -o %s -j MASQUERADE 2>/dev/null || true", mainInterface))
+		// Añadir nueva regla
+		executeCommand(fmt.Sprintf("sudo iptables -t nat -A POSTROUTING -o %s -j MASQUERADE", mainInterface))
+		// Permitir forwarding entre interfaces
+		executeCommand(fmt.Sprintf("sudo iptables -A FORWARD -i %s -o %s -j ACCEPT", req.Interface, mainInterface))
+		executeCommand(fmt.Sprintf("sudo iptables -A FORWARD -i %s -o %s -m state --state RELATED,ESTABLISHED -j ACCEPT", mainInterface, req.Interface))
+	}
+	
+	// 5. Habilitar y reiniciar servicios
+	// Habilitar hostapd para que inicie al arrancar
+	executeCommand("sudo systemctl enable hostapd 2>/dev/null || true")
+	executeCommand("sudo systemctl enable dnsmasq 2>/dev/null || true")
+	
+	// Reiniciar dnsmasq
+	if out, err := executeCommand("sudo systemctl restart dnsmasq"); err != nil {
+		log.Printf("Warning: Error restarting dnsmasq: %s", strings.TrimSpace(out))
+	}
+	
+	// Reiniciar hostapd
+	if out, err := executeCommand("sudo systemctl restart hostapd"); err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error":   fmt.Sprintf("Configuration saved but failed to restart hostapd: %s", strings.TrimSpace(out)),
 			"success": false,
 		})
 	}
 	
 	return c.JSON(fiber.Map{
 		"success": true,
-		"message": "Configuration saved and HostAPD restarted",
+		"message": "Configuration saved and services restarted",
 	})
 }
 
