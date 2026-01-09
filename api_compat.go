@@ -65,10 +65,14 @@ func systemBackupHandler(c *fiber.Ctx) error {
 func networkRoutingHandler(c *fiber.Ctx) error {
 	out, err := exec.Command("sh", "-c", "ip route 2>/dev/null").CombinedOutput()
 	if err != nil {
+		log.Printf("⚠️ Error ejecutando ip route: %v, output: %s", err, string(out))
 		return c.Status(500).JSON(fiber.Map{"error": strings.TrimSpace(string(out))})
 	}
 	var routes []fiber.Map
-	for _, line := range strings.Split(string(out), "\n") {
+	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+	log.Printf("🔍 Procesando %d líneas de routing table", len(lines))
+	
+	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
@@ -79,19 +83,39 @@ func networkRoutingHandler(c *fiber.Ctx) error {
 		}
 		route := fiber.Map{"raw": line}
 		route["destination"] = parts[0]
+		
+		// Parsear campos adicionales
 		for i := 0; i < len(parts)-1; i++ {
-			if parts[i] == "via" {
+			if parts[i] == "via" && i+1 < len(parts) {
 				route["gateway"] = parts[i+1]
 			}
-			if parts[i] == "dev" {
+			if parts[i] == "dev" && i+1 < len(parts) {
 				route["interface"] = parts[i+1]
 			}
-			if parts[i] == "metric" {
+			if parts[i] == "metric" && i+1 < len(parts) {
 				route["metric"] = parts[i+1]
 			}
 		}
+		
+		// Si no hay gateway, usar "*"
+		if _, hasGateway := route["gateway"]; !hasGateway {
+			route["gateway"] = "*"
+		}
+		
+		// Si no hay interfaz, usar "-"
+		if _, hasInterface := route["interface"]; !hasInterface {
+			route["interface"] = "-"
+		}
+		
+		// Si no hay metric, usar "0"
+		if _, hasMetric := route["metric"]; !hasMetric {
+			route["metric"] = "0"
+		}
+		
 		routes = append(routes, route)
 	}
+	
+	log.Printf("✅ Devolviendo %d rutas", len(routes))
 	return c.JSON(routes)
 }
 
