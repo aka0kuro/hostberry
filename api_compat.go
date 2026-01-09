@@ -1461,8 +1461,9 @@ server=8.8.4.4
 		})
 	}
 	
-	// Copiar archivo temporal a la ubicación final usando sudo sh -c
-	cmdStr2 := fmt.Sprintf("sudo sh -c 'cat %s > %s && chmod 644 %s'", tmpDnsmasqFile, dnsmasqConfigPath, dnsmasqConfigPath)
+	// Copiar archivo temporal a la ubicación final usando sudo cp
+	os.Chmod(tmpDnsmasqFile, 0644)
+	cmdStr2 := fmt.Sprintf("sudo cp %s %s && sudo chmod 644 %s", tmpDnsmasqFile, dnsmasqConfigPath, dnsmasqConfigPath)
 	if out, err := executeCommand(cmdStr2); err != nil {
 		os.Remove(tmpDnsmasqFile) // Limpiar archivo temporal
 		log.Printf("Error writing dnsmasq config file: %s, output: %s", err, strings.TrimSpace(out))
