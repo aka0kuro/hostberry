@@ -72,6 +72,66 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-12 col-sm-6 col-lg-3 mb-3 mb-md-4">
+            <div class="stat-card wifi-stat">
+                <div class="stat-icon">
+                    <i class="bi bi-wifi" id="stat-wifi-icon"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">{{ call .t "dashboard.wifi" "WiFi" }}</div>
+                    <div class="stat-value" id="stat-wifi">--</div>
+                    <div class="stat-progress">
+                        <div class="stat-progress-bar" id="stat-wifi-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3 mb-3 mb-md-4">
+            <div class="stat-card hostapd-stat">
+                <div class="stat-icon">
+                    <i class="bi bi-router" id="stat-hostapd-icon"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">{{ call .t "dashboard.hostapd" "HostAPD" }}</div>
+                    <div class="stat-value" id="stat-hostapd">--</div>
+                    <div class="stat-progress">
+                        <div class="stat-progress-bar" id="stat-hostapd-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3 mb-3 mb-md-4">
+            <div class="stat-card dnsmasq-stat">
+                <div class="stat-icon">
+                    <i class="bi bi-server" id="stat-dnsmasq-icon"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">{{ call .t "dashboard.dnsmasq" "DNSmasq" }}</div>
+                    <div class="stat-value" id="stat-dnsmasq">--</div>
+                    <div class="stat-progress">
+                        <div class="stat-progress-bar" id="stat-dnsmasq-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3 mb-3 mb-md-4">
+            <div class="stat-card network-stat">
+                <div class="stat-icon">
+                    <i class="bi bi-hdd-network" id="stat-network-icon"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">{{ call .t "dashboard.network" "Network" }}</div>
+                    <div class="stat-value" id="stat-network">--</div>
+                    <div class="stat-progress">
+                        <div class="stat-progress-bar" id="stat-network-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Main Content Grid -->
