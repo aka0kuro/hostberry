@@ -106,9 +106,17 @@ func executeCommand(cmd string) (string, error) {
 	cmdObj := execCommand(cmd)
 	
 	// Configurar variables de entorno para evitar logs de sudo en sistemas read-only
+	// También configurar HOSTNAME para evitar el warning de "unable to resolve host"
+	hostname := os.Getenv("HOSTNAME")
+	if hostname == "" {
+		if h, err := exec.Command("hostname").Output(); err == nil {
+			hostname = strings.TrimSpace(string(h))
+		}
+	}
 	cmdObj.Env = append(os.Environ(),
 		"SUDO_ASKPASS=/bin/false",
 		"SUDO_LOG_FILE=", // Deshabilitar log de sudo
+		"HOSTNAME="+hostname, // Establecer HOSTNAME para evitar warnings
 	)
 	
 	out, err := cmdObj.CombinedOutput()
