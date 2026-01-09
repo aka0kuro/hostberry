@@ -784,7 +784,15 @@
     "service_restart_error": "Error restarting WiFi service",
     "status_error": "Error getting WiFi status",
     "stored_error": "Error getting stored networks",
-    "toggle_error": "Error toggling WiFi"
+    "toggle_error": "Error toggling WiFi",
+    "connection_status": "Connection",
+    "wifi_status": "WiFi Status",
+    "subtitle": "Manage your wireless network connections",
+    "no_networks": "No networks found",
+    "open_network": "Open network",
+    "unknown": "Unknown",
+    "unnamed_network": "Unnamed network",
+    "connected": "Connected"
   },
   "vpn": {
     "title": "VPN",
