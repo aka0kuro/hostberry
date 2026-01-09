@@ -65,7 +65,8 @@
     "critical": "Crítico",
     "app_description": "HostBerry - Sistema de gestión de red para Raspberry Pi",
     "change_theme": "Cambiar tema",
-    "show_password": "Mostrar contraseña"
+    "show_password": "Mostrar contraseña",
+    "hide_password": "Ocultar contraseña"
   },
   "time": {
     "days_hours": "{days} días, {hours} horas",
