@@ -703,22 +703,80 @@ func vpnCertificatesGenerateHandler(c *fiber.Ctx) error {
 // ---------- HostAPD ----------
 
 func hostapdAccessPointsHandler(c *fiber.Ctx) error {
-	// Intentar leer configuración de hostapd
-	// Por ahora, devolver un array vacío o intentar leer desde /etc/hostapd/
 	var aps []fiber.Map
 	
 	// Verificar si hostapd está corriendo
 	hostapdOut, _ := exec.Command("sh", "-c", "systemctl is-active hostapd 2>/dev/null || pgrep hostapd > /dev/null && echo active || echo inactive").CombinedOutput()
 	hostapdStatus := strings.TrimSpace(string(hostapdOut))
 	
-	if hostapdStatus == "active" {
-		// Intentar leer configuración desde hostapd
-		// Por ahora, devolver un punto de acceso genérico si está activo
+	// Leer configuración de hostapd
+	configPath := "/etc/hostapd/hostapd.conf"
+	config := make(map[string]string)
+	
+	if configContent, err := os.ReadFile(configPath); err == nil {
+		// Parsear configuración
+		lines := strings.Split(string(configContent), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+			parts := strings.SplitN(line, "=", 2)
+			if len(parts) == 2 {
+				key := strings.TrimSpace(parts[0])
+				value := strings.TrimSpace(parts[1])
+				config[key] = value
+			}
+		}
+	}
+	
+	// Si hostapd está activo o hay configuración, mostrar el punto de acceso
+	if hostapdStatus == "active" || len(config) > 0 {
+		ssid := config["ssid"]
+		if ssid == "" {
+			ssid = "hostberry-ap" // Valor por defecto
+		}
+		
+		interfaceName := config["interface"]
+		if interfaceName == "" {
+			interfaceName = "wlan0" // Valor por defecto
+		}
+		
+		channel := config["channel"]
+		if channel == "" {
+			channel = "6" // Valor por defecto
+		}
+		
+		// Determinar seguridad
+		security := "WPA2"
+		if config["auth_algs"] == "0" {
+			security = "Open"
+		} else if strings.Contains(config["wpa_key_mgmt"], "SHA256") {
+			security = "WPA3"
+		} else if config["wpa"] == "2" {
+			security = "WPA2"
+		}
+		
+		// Obtener número de clientes conectados
+		clientsCount := 0
+		if hostapdStatus == "active" {
+			// Intentar obtener clientes usando hostapd_cli
+			cliOut, err := exec.Command("sh", "-c", fmt.Sprintf("hostapd_cli -i %s all_sta 2>/dev/null | grep -c '^sta=' || echo 0", interfaceName)).CombinedOutput()
+			if err == nil {
+				if count, err := strconvAtoiSafe(strings.TrimSpace(string(cliOut))); err == nil {
+					clientsCount = count
+				}
+			}
+		}
+		
 		aps = append(aps, fiber.Map{
-			"name":         "hostapd",
-			"ssid":         "HostBerry-AP",
-			"enabled":      true,
-			"clients_count": 0,
+			"name":          interfaceName,
+			"ssid":          ssid,
+			"interface":     interfaceName,
+			"channel":       channel,
+			"security":      security,
+			"enabled":       hostapdStatus == "active",
+			"clients_count": clientsCount,
 		})
 	}
 	
