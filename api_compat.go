@@ -1710,14 +1710,18 @@ server=8.8.4.4
 	}
 	
 	// Configurar NAT (si hay interfaz principal)
-	if mainInterface != "" && mainInterface != req.Interface {
-		// Limpiar reglas antiguas
+	// En modo AP+STA, ap0 es la interfaz del AP y mainInterface puede ser eth0 o wlan0 (si está conectado como STA)
+	if mainInterface != "" && mainInterface != apInterface {
+		// Limpiar reglas antiguas para evitar duplicados
 		executeCommand(fmt.Sprintf("sudo iptables -t nat -D POSTROUTING -o %s -j MASQUERADE 2>/dev/null || true", mainInterface))
-		// Añadir nueva regla
+		executeCommand(fmt.Sprintf("sudo iptables -D FORWARD -i %s -o %s -j ACCEPT 2>/dev/null || true", apInterface, mainInterface))
+		executeCommand(fmt.Sprintf("sudo iptables -D FORWARD -i %s -o %s -m state --state RELATED,ESTABLISHED -j ACCEPT 2>/dev/null || true", mainInterface, apInterface))
+		
+		// Añadir nueva regla NAT
 		executeCommand(fmt.Sprintf("sudo iptables -t nat -A POSTROUTING -o %s -j MASQUERADE", mainInterface))
-		// Permitir forwarding entre interfaces
-		executeCommand(fmt.Sprintf("sudo iptables -A FORWARD -i %s -o %s -j ACCEPT", req.Interface, mainInterface))
-		executeCommand(fmt.Sprintf("sudo iptables -A FORWARD -i %s -o %s -m state --state RELATED,ESTABLISHED -j ACCEPT", mainInterface, req.Interface))
+		// Permitir forwarding entre ap0 y la interfaz principal
+		executeCommand(fmt.Sprintf("sudo iptables -A FORWARD -i %s -o %s -j ACCEPT", apInterface, mainInterface))
+		executeCommand(fmt.Sprintf("sudo iptables -A FORWARD -i %s -o %s -m state --state RELATED,ESTABLISHED -j ACCEPT", mainInterface, apInterface))
 	}
 	
 	// 5. Configurar systemd para usar el archivo de configuración
