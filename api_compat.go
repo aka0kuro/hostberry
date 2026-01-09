@@ -759,7 +759,7 @@ func hostapdAccessPointsHandler(c *fiber.Ctx) error {
 		
 		// Obtener número de clientes conectados
 		clientsCount := 0
-		if hostapdStatus == "active" {
+		if hostapdActive {
 			// Intentar obtener clientes usando hostapd_cli
 			cliOut, err := exec.Command("sh", "-c", fmt.Sprintf("hostapd_cli -i %s all_sta 2>/dev/null | grep -c '^sta=' || echo 0", interfaceName)).CombinedOutput()
 			if err == nil {
@@ -775,7 +775,9 @@ func hostapdAccessPointsHandler(c *fiber.Ctx) error {
 			"interface":     interfaceName,
 			"channel":       channel,
 			"security":      security,
-			"enabled":       hostapdStatus == "active",
+			"enabled":       hostapdActive, // Usar la variable booleana directamente
+			"active":        hostapdActive, // Agregar también 'active' para compatibilidad
+			"status":        hostapdStatus,  // Agregar 'status' para más información
 			"clients_count": clientsCount,
 		})
 	}
