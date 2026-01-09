@@ -293,7 +293,7 @@
         try {
           errorText = await resp.text();
         } catch (e) {
-          console.error('No se pudo leer el texto de error:', e);
+          console.error(t('common.error', 'Error') + ':', e);
         }
         
         if (loadingEl) loadingEl.style.display = 'none';
