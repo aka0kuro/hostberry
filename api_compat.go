@@ -330,28 +330,19 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 		}
 	}
 
-	// Método 3: Intentar con iwconfig/ifconfig
-	// Primero intentar detectar interfaz con nmcli
-	ifaceCmd := execCommand("nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
-	ifaceOut, ifaceErr := ifaceCmd.Output()
+	// Método 2: Intentar con ip/ifconfig (sin nmcli)
+	// Detectar interfaz usando ip
 	var iface string
-	if ifaceErr == nil {
-		iface = strings.TrimSpace(string(ifaceOut))
+	ipOut, ipErr := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}' | grep -E '^wlan|^wl' | head -1").Output()
+	if ipErr == nil {
+		iface = strings.TrimSpace(string(ipOut))
 	}
 	
-	// Si no se encontró con nmcli, intentar con iwconfig
+	// Si no se encontró con ip, intentar con iwconfig
 	if iface == "" {
 		iwOut, iwErr := execCommand("iwconfig 2>/dev/null | grep -i 'wlan' | head -1 | awk '{print $1}'").CombinedOutput()
 		if iwErr == nil {
 			iface = strings.TrimSpace(string(iwOut))
-		}
-	}
-	
-	// Si no se encontró, intentar con ip link (sin sudo, solo lectura)
-	if iface == "" {
-		ipOut, ipErr := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}' | grep -E '^wlan|^wl' | head -1").Output()
-		if ipErr == nil {
-			iface = strings.TrimSpace(string(ipOut))
 		}
 	}
 	
