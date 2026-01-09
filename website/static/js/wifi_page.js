@@ -193,7 +193,7 @@
         showAlert('danger', data.error || t('wifi.toggle_error', 'Error toggling WiFi'));
       }
     } catch (error) {
-      console.error('Error toggling WiFi:', error);
+      console.error(t('wifi.toggle_error', 'Error toggling WiFi') + ':', error);
       showAlert('danger', t('wifi.toggle_error', 'Error toggling WiFi'));
     } finally {
       btn.disabled = false;
