@@ -988,7 +988,18 @@ server=8.8.4.4
 		executeCommand(fmt.Sprintf("sudo iptables -A FORWARD -i %s -o %s -m state --state RELATED,ESTABLISHED -j ACCEPT", mainInterface, req.Interface))
 	}
 	
-	// 5. Habilitar y reiniciar servicios
+	// 5. Configurar systemd para usar el archivo de configuración
+	// Crear archivo de servicio override si no existe
+	overrideDir := "/etc/systemd/system/hostapd.service.d"
+	executeCommand(fmt.Sprintf("sudo mkdir -p %s 2>/dev/null || true", overrideDir))
+	overrideContent := fmt.Sprintf(`[Service]
+ExecStart=
+ExecStart=/usr/sbin/hostapd -B %s
+`, configPath)
+	overrideContentEscaped := strings.ReplaceAll(overrideContent, "'", "'\"'\"'")
+	executeCommand(fmt.Sprintf("echo '%s' | sudo tee %s/override.conf > /dev/null", overrideContentEscaped, overrideDir))
+	executeCommand("sudo systemctl daemon-reload")
+	
 	// Habilitar hostapd para que inicie al arrancar
 	executeCommand("sudo systemctl enable hostapd 2>/dev/null || true")
 	executeCommand("sudo systemctl enable dnsmasq 2>/dev/null || true")
