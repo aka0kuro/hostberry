@@ -214,7 +214,6 @@ body.light-theme .dashboard-card-title {
 .dashboard-card-body {
     padding: 1.5rem;
     flex: 1;
-    min-height: 150px;
     display: flex;
     flex-direction: column;
 }
@@ -226,30 +225,19 @@ body.light-theme .dashboard-card-body {
 /* Asegurar que los estados vacíos no hagan la tarjeta más grande */
 #networks-empty,
 #networks-loading {
-    min-height: 150px;
-    max-height: 250px;
+    flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     padding: 2rem 1rem;
+    min-height: 150px;
 }
 
 /* Asegurar que el contenedor de redes tenga altura consistente */
 #networks-table-container {
+    flex: 1;
     min-height: auto;
-}
-
-/* Asegurar que todas las tarjetas tengan el mismo tamaño mínimo */
-.wifi-page .dashboard-card {
-    min-height: 200px;
-}
-
-/* Cuando el body solo tiene estados vacíos, mantener altura consistente */
-.dashboard-card-body:only-child,
-.dashboard-card-body > #networks-empty:only-child,
-.dashboard-card-body > #networks-loading:only-child {
-    min-height: 150px;
 }
 
 /* WiFi Controls */
