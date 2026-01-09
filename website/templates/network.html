@@ -343,6 +343,7 @@
 <script src="/static/js/network.js"></script>
 
 <style>
+/* Network Page - Usando estética del Dashboard */
 .network-page {
     padding: 0;
     color: var(--hb-text-light);
@@ -351,204 +352,63 @@
     margin: 0 auto;
 }
 
-.dashboard-header {
-    margin-bottom: 2rem;
-    padding: 1.5rem 0;
-    text-align: center;
-}
-
-.header-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-    flex-direction: column;
-}
-
-.dashboard-title {
-    font-size: 2rem;
-    font-weight: 600;
-    margin: 0;
-    color: var(--hb-text-light);
-    display: flex;
-    align-items: center;
-}
-
-body.light-theme .dashboard-title {
-    color: var(--hb-primary);
-}
-
-.dashboard-subtitle {
-    color: var(--hb-text-muted);
-    margin: 0.5rem 0 0 0;
-    font-size: 1rem;
-}
-
-body.light-theme .dashboard-subtitle {
-    color: rgba(0, 0, 0, 0.7);
-}
-
-.stat-card {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+/* Stat Cards - Efecto Cristal tipo Dashboard */
+.network-page .stat-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
     padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     gap: 1rem;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    color: var(--hb-text-light);
-    width: 100%;
+    position: relative;
+    overflow: hidden;
     min-height: 120px;
 }
 
-.stat-card:hover {
-    background: rgba(255, 255, 255, 0.08);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+.network-page .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.3), 
+        transparent);
+    animation: shimmer 3s infinite;
 }
 
-body.light-theme .stat-card {
+.network-page .stat-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, 
+        transparent 30%, 
+        rgba(255, 255, 255, 0.05) 50%, 
+        transparent 70%);
+    animation: glassShine 8s infinite;
+}
+
+.network-page .stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+body.light-theme .network-page .stat-card {
     background: rgba(255, 255, 255, 0.95) !important;
     border: 1px solid rgba(0, 0, 0, 0.1) !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
-    color: #212529;
-    backdrop-filter: blur(20px);
-}
-
-.stat-icon {
-    font-size: 2.5rem;
-    opacity: 0.8;
-}
-
-.stat-content {
-    flex: 1;
-}
-
-.stat-label {
-    font-size: 0.875rem;
-    color: var(--hb-text-muted);
-    margin-bottom: 0.5rem;
-}
-
-body.light-theme .stat-label {
-    color: rgba(0, 0, 0, 0.6);
-}
-
-.stat-value {
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: var(--hb-text-light);
-    margin-bottom: 0.5rem;
-}
-
-body.light-theme .stat-value {
-    color: #212529;
-}
-
-.stat-progress {
-    height: 4px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-body.light-theme .stat-progress {
-    background: rgba(0, 0, 0, 0.1);
-}
-
-.stat-progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--hb-primary), var(--hb-primary-dark));
-    transition: width 0.3s ease;
-}
-
-.dashboard-card {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    overflow: hidden;
-    backdrop-filter: blur(10px);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    color: var(--hb-text-light);
-}
-
-body.light-theme .dashboard-card {
-    background: rgba(255, 255, 255, 0.95) !important;
-    border: 1px solid rgba(0, 0, 0, 0.1) !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
-    color: #212529;
-    backdrop-filter: blur(20px);
-}
-
-.dashboard-card-header {
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-body.light-theme .dashboard-card-header {
-    background: rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.dashboard-card-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    margin: 0;
-    color: var(--hb-text-light);
-    display: flex;
-    align-items: center;
-}
-
-body.light-theme .dashboard-card-title {
-    color: var(--hb-primary);
-    font-weight: 600;
-}
-
-.dashboard-card-body {
-    padding: 1.5rem;
-    flex: 1;
-}
-
-body.light-theme .dashboard-card-body {
-    color: #212529;
-}
-
-.info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-}
-
-.info-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.info-label {
-    font-size: 0.875rem;
-    color: var(--hb-text-muted);
-}
-
-body.light-theme .info-label {
-    color: rgba(0, 0, 0, 0.6);
-}
-
-.info-value {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--hb-text-light);
-}
-
-body.light-theme .info-value {
     color: #212529;
 }
 
@@ -626,92 +486,48 @@ body.light-theme .status-text {
     to { transform: rotate(360deg); }
 }
 
-body.light-theme .table {
-    color: #212529;
+@keyframes shimmer {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.8; }
 }
 
-body.light-theme .table thead th {
-    color: var(--hb-primary);
-    font-weight: 600;
-}
-
-body.light-theme .table-hover tbody tr:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-}
-
-body.light-theme .btn-outline-light {
-    border-color: rgba(0, 0, 0, 0.2);
-    color: #212529;
-}
-
-body.light-theme .btn-outline-light:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-    color: #212529;
-}
-
-body.light-theme .form-label {
-    color: #212529;
-    font-weight: 500;
-}
-
-body.light-theme .form-select,
-body.light-theme .form-control {
-    background-color: rgba(0, 0, 0, 0.05);
-    border-color: rgba(0, 0, 0, 0.1);
-    color: #212529;
-}
-
-body.light-theme .form-select:focus,
-body.light-theme .form-control:focus {
-    background-color: rgba(0, 0, 0, 0.05);
-    border-color: var(--hb-primary);
-    color: #212529;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-body.light-theme .form-text {
-    color: rgba(0, 0, 0, 0.6);
-}
-
-body.light-theme .form-check-label {
-    color: #212529;
+@keyframes glassShine {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
 }
 
 /* Responsive */
 @media (max-width: 991px) {
-    .stat-card {
+    .network-page .stat-card {
         padding: 1.25rem;
         min-height: 100px;
     }
     
-    .stat-icon {
+    .network-page .stat-icon {
         font-size: 2rem;
     }
     
-    .stat-value {
+    .network-page .stat-value {
         font-size: 1.5rem;
-    }
-    
-    .info-grid {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     }
 }
 
 @media (max-width: 768px) {
-    .stat-card {
+    .network-page .stat-card {
         padding: 1rem;
         min-height: 90px;
     }
     
-    .stat-icon {
+    .network-page .stat-icon {
         font-size: 1.75rem;
     }
     
-    .stat-value {
+    .network-page .stat-value {
         font-size: 1.25rem;
     }
     
-    .stat-label {
+    .network-page .stat-label {
         font-size: 0.8rem;
     }
 }
