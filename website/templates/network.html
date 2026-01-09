@@ -87,18 +87,18 @@
         </div>
 
         <!-- Network Traffic Chart -->
-        <div class="col-12 col-lg-4">
+        <div class="col-12 col-lg-6">
             <div class="dashboard-card">
                 <div class="dashboard-card-header">
                     <h5 class="dashboard-card-title">
                         <i class="bi bi-graph-up me-2"></i>
                         {{ call .t "monitoring.network_chart" "Network Traffic" }}
                     </h5>
-                    <select class="form-select form-select-sm" id="net-traffic-interface-select" style="max-width: 150px;">
+                    <select class="form-select form-select-sm" id="net-traffic-interface-select" style="max-width: 200px;">
                         <option value="">{{ call .t "monitoring.network_auto" "Auto" }}</option>
                     </select>
                 </div>
-                <div class="dashboard-card-body" style="position: relative; height: 250px;">
+                <div class="dashboard-card-body" style="position: relative; height: 400px; min-height: 400px;">
                     <canvas id="net-traffic-chart"></canvas>
                     <div id="chart-loading" class="text-center" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
                         <div class="spinning mb-2"><i class="bi bi-arrow-clockwise"></i></div>
