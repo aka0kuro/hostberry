@@ -172,9 +172,19 @@
       const speedEl = document.getElementById('connection-speed');
       
     if (statusEl) {
-      statusEl.textContent = data.connected 
+      const connected = data.connected || false;
+      const statusText = connected 
         ? t('wifi.connected', 'Connected') 
         : t('wifi.disconnected', 'Disconnected');
+      statusEl.textContent = statusText;
+      // Agregar clase para texto desconectado
+      if (!connected) {
+        statusEl.classList.add('text-disconnected');
+        statusEl.setAttribute('data-status', 'disconnected');
+      } else {
+        statusEl.classList.remove('text-disconnected');
+        statusEl.removeAttribute('data-status');
+      }
     }
     if (ssidEl) ssidEl.textContent = data.ssid || '--';
     
