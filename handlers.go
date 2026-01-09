@@ -367,8 +367,19 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 		if err != nil {
 			log.Printf("⚠️ Error ejecutando Lua script: %v", err)
 			// Continuar con fallback
-		} else {
-			return c.JSON(result)
+		} else if result != nil {
+			// Asegurar que el resultado tenga el formato correcto
+			if interfaces, ok := result["interfaces"]; ok {
+				// Si ya tiene interfaces, devolverlo tal cual
+				return c.JSON(result)
+			} else {
+				// Si no tiene interfaces, crear un array vacío
+				return c.JSON(fiber.Map{
+					"interfaces": []interface{}{},
+					"success":   true,
+					"count":     0,
+				})
+			}
 		}
 	}
 
