@@ -363,7 +363,7 @@
             <div class="text-center py-5">
               <i class="bi bi-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
               <p class="mt-3">${t('errors.scan_failed', 'Scan failed')}</p>
-              <p class="text-muted small">${errorText || t('errors.unknown_error', 'Unknown error')}</p>
+              <p class="text-muted small">${translateError(errorText) || t('errors.unknown_error', 'Unknown error')}</p>
               <button class="btn btn-primary mt-3" onclick="scanNetworks()">
                 <i class="bi bi-arrow-clockwise me-2"></i>${t('common.retry', 'Retry')}
               </button>
