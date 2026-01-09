@@ -51,7 +51,8 @@ if interfaces_output and interfaces_output ~= "" then
         
         -- MAC
         local mac_cmd = "cat /sys/class/net/" .. iface .. "/address 2>/dev/null"
-        interface_info.mac = exec(mac_cmd) or "N/A"
+        local mac_output, _ = exec(mac_cmd)
+        interface_info.mac = (mac_output and mac_output:match("^%s*(.-)%s*$")) or "N/A"
         
         -- Gateway (para la interfaz activa)
         if interface_info.connected and interface_info.ip ~= "N/A" then
