@@ -1031,7 +1031,13 @@
     "restart_not_implemented": "HostAPD restart not implemented",
     "config_not_implemented": "HostAPD config not implemented",
     "error_loading_aps": "Error loading access points",
-    "error_loading_clients": "Error loading clients"
+    "error_loading_clients": "Error loading clients",
+    "gateway": "Gateway (Router)",
+    "gateway_help": "IP address for the access point gateway",
+    "dhcp_range_start": "DHCP Range Start",
+    "dhcp_range_end": "DHCP Range End",
+    "lease_time": "Lease Time",
+    "lease_time_help": "Example: 12h, 30m, 1d"
   },
   "settings": {
     "title": "Settings",
