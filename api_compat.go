@@ -1999,7 +1999,64 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 }
 
 func wifiLegacyStoredNetworksHandler(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "networks": []fiber.Map{}, "last_connected": []string{}})
+	// Leer redes guardadas desde wpa_supplicant
+	var networks []fiber.Map
+	var lastConnected []string
+	
+	// Intentar leer desde wpa_supplicant usando wpa_cli
+	interfaceName := "wlan0"
+	
+	// Listar redes guardadas
+	listCmd := exec.Command("sh", "-c", fmt.Sprintf("sudo wpa_cli -i %s list_networks 2>/dev/null", interfaceName))
+	listOut, err := listCmd.CombinedOutput()
+	
+	if err == nil && len(listOut) > 0 {
+		lines := strings.Split(string(listOut), "\n")
+		for i, line := range lines {
+			if i == 0 || strings.TrimSpace(line) == "" {
+				continue // Saltar encabezado y líneas vacías
+			}
+			
+			fields := strings.Fields(line)
+			if len(fields) >= 2 {
+				networkID := fields[0]
+				ssid := fields[1]
+				
+				if ssid != "" && ssid != "--" {
+					// Obtener más información de la red
+					statusCmd := exec.Command("sh", "-c", fmt.Sprintf("sudo wpa_cli -i %s get_network %s ssid 2>/dev/null", interfaceName, networkID))
+					statusOut, _ := statusCmd.CombinedOutput()
+					
+					// Limpiar SSID (puede venir con comillas)
+					ssid = strings.Trim(ssid, "\"")
+					
+					network := fiber.Map{
+						"id":     networkID,
+						"ssid":   ssid,
+						"status": "saved",
+					}
+					
+					// Verificar si está habilitada
+					enabledCmd := exec.Command("sh", "-c", fmt.Sprintf("sudo wpa_cli -i %s get_network %s disabled 2>/dev/null", interfaceName, networkID))
+					enabledOut, _ := enabledCmd.CombinedOutput()
+					if strings.TrimSpace(string(enabledOut)) == "0" {
+						network["enabled"] = true
+						lastConnected = append(lastConnected, ssid)
+					} else {
+						network["enabled"] = false
+					}
+					
+					networks = append(networks, network)
+				}
+			}
+		}
+	}
+	
+	return c.JSON(fiber.Map{
+		"success":        true,
+		"networks":       networks,
+		"last_connected": lastConnected,
+	})
 }
 
 func wifiLegacyAutoconnectHandler(c *fiber.Ctx) error {
