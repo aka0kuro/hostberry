@@ -1021,6 +1021,8 @@
     "subtitle": "Gestiona tu punto de acceso inalámbrico",
     "status": "Estado",
     "enable_hostapd": "Habilitar HostAPD",
+    "stop_hostapd": "Detener HostAPD",
+    "click_start": "Haz clic en el botón \"Iniciar Servicio\" arriba para iniciar el servicio",
     "disable_hostapd": "Deshabilitar HostAPD",
     "restart_hostapd": "Reiniciar HostAPD",
     "interface": "Interfaz",
