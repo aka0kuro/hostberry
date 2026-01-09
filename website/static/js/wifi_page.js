@@ -650,7 +650,8 @@
     buttonElement.innerHTML = `<i class="bi bi-arrow-clockwise spinning me-2"></i>${t('wifi.disconnecting', 'Disconnecting...')}`;
     
     try {
-      const resp = await apiRequest('/api/v1/wifi/disconnect', { method: 'POST' });
+      // Usar endpoint legacy /api/wifi/disconnect
+      const resp = await apiRequest('/api/wifi/disconnect', { method: 'POST' });
       const data = await resp.json();
       
       if (resp.ok && data.success) {
