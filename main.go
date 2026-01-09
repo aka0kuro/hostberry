@@ -838,12 +838,14 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 	
 	iwCmd := execCommand(fmt.Sprintf("iw dev %s scan 2>&1", interfaceName))
 	iwOut, iwErr := iwCmd.CombinedOutput()
-	if iwErr == nil && len(iwOut) > 0 {
+		if iwErr == nil && len(iwOut) > 0 {
 		lines := strings.Split(string(iwOut), "\n")
 		currentNetwork := make(map[string]interface{})
 		for _, line := range lines {
 			line = strings.TrimSpace(line)
-			if strings.Contains(line, "SSID:") {
+			// Detectar inicio de nuevo BSS (nueva red)
+			if strings.HasPrefix(line, "BSS ") {
+				// Guardar red anterior si existe
 				if ssid, ok := currentNetwork["ssid"].(string); ok && ssid != "" {
 					networks = append(networks, fiber.Map{
 						"ssid":     currentNetwork["ssid"],
@@ -852,7 +854,13 @@ func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 						"channel":  currentNetwork["channel"],
 					})
 				}
-				// Guardar red anterior si existe
+				// Iniciar nueva red
+				currentNetwork = make(map[string]interface{})
+				currentNetwork["security"] = "Open"  // Por defecto Open, se actualizará si se detecta seguridad
+				currentNetwork["signal"] = 0
+				currentNetwork["channel"] = ""
+			} else if strings.HasPrefix(line, "SSID:") {
+				// Si encontramos SSID sin BSS previo, guardar red anterior
 				if ssid, ok := currentNetwork["ssid"].(string); ok && ssid != "" {
 					networks = append(networks, fiber.Map{
 						"ssid":     currentNetwork["ssid"],
