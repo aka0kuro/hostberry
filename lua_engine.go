@@ -155,21 +155,28 @@ func (le *LuaEngine) Execute(scriptName string, params map[string]interface{}) (
 func isArray(tbl *lua.LTable) bool {
 	maxNumericKey := 0
 	hasStringKeys := false
+	hasNumericKeys := false
+	
 	tbl.ForEach(func(key lua.LValue, value lua.LValue) {
 		if numKey, ok := key.(lua.LNumber); ok {
-			if int(numKey) > maxNumericKey {
-				maxNumericKey = int(numKey)
+			hasNumericKeys = true
+			keyInt := int(numKey)
+			if keyInt > maxNumericKey {
+				maxNumericKey = keyInt
 			}
 		} else {
 			hasStringKeys = true
 		}
 	})
+	
 	// Si tiene claves de string, no es un array puro
 	if hasStringKeys {
 		return false
 	}
-	// Si el máximo índice numérico es igual al número de elementos, es un array
-	return maxNumericKey > 0
+	
+	// Si tiene claves numéricas y al menos una, tratarlo como array
+	// (Lua usa índices base 1, así que si hay al menos índice 1, es un array)
+	return hasNumericKeys && maxNumericKey > 0
 }
 
 // convertLuaTableToArray convierte una tabla Lua a un array de Go
