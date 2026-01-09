@@ -2023,10 +2023,6 @@ func wifiLegacyStoredNetworksHandler(c *fiber.Ctx) error {
 				ssid := fields[1]
 				
 				if ssid != "" && ssid != "--" {
-					// Obtener más información de la red
-					statusCmd := exec.Command("sh", "-c", fmt.Sprintf("sudo wpa_cli -i %s get_network %s ssid 2>/dev/null", interfaceName, networkID))
-					statusOut, _ := statusCmd.CombinedOutput()
-					
 					// Limpiar SSID (puede venir con comillas)
 					ssid = strings.Trim(ssid, "\"")
 					
