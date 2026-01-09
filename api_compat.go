@@ -2142,33 +2142,7 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 			}
 		}
 		
-		// Método 3: Fallback a nmcli si NetworkManager está corriendo
-		if connectionInfo["signal"] == nil {
-			if out, _ := exec.Command("pgrep", "NetworkManager").Output(); len(out) > 0 {
-				signalOut, _ := execCommand("nmcli -t -f ACTIVE,SIGNAL dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
-				if signalStr := strings.TrimSpace(string(signalOut)); signalStr != "" {
-					connectionInfo["signal"] = signalStr
-				}
-			}
-		}
-		
-		if connectionInfo["security"] == nil {
-			if out, _ := exec.Command("pgrep", "NetworkManager").Output(); len(out) > 0 {
-				securityOut, _ := execCommand("nmcli -t -f ACTIVE,SECURITY dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
-				if securityStr := strings.TrimSpace(string(securityOut)); securityStr != "" {
-					connectionInfo["security"] = securityStr
-				}
-			}
-		}
-		
-		if connectionInfo["channel"] == nil {
-			if out, _ := exec.Command("pgrep", "NetworkManager").Output(); len(out) > 0 {
-				channelOut, _ := execCommand("nmcli -t -f ACTIVE,CHAN dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
-				if channelStr := strings.TrimSpace(string(channelOut)); channelStr != "" {
-					connectionInfo["channel"] = channelStr
-				}
-			}
-		}
+		// No usar nmcli - solo wpa_cli e iw
 		
 		// Obtener IP address de la interfaz WiFi
 		if iface != "" {
