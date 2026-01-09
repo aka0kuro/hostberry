@@ -315,7 +315,7 @@
         }
         await loadConnectionStatus();
             } else {
-        showAlert('danger', data.error || t('wifi.toggle_error', 'Error toggling switch'));
+        showAlert('danger', translateError(data.error) || t('wifi.toggle_error', 'Error toggling switch'));
       }
     } catch (error) {
       console.error(t('wifi.toggle_error', 'Error toggling switch') + ':', error);
