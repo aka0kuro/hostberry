@@ -1031,18 +1031,35 @@ rsn_pairwise=CCMP
 	
 	cmdStr := fmt.Sprintf("sudo cp %s %s", tmpFile, configPath)
 	log.Printf("Executing: %s", cmdStr)
-	if out, err := executeCommand(cmdStr); err != nil {
+	out, err := executeCommand(cmdStr)
+	if err != nil {
 		os.Remove(tmpFile) // Limpiar archivo temporal
-		log.Printf("Error copying config file: %v, output: %s", err, strings.TrimSpace(out))
 		errorMsg := strings.TrimSpace(out)
 		if errorMsg == "" {
 			errorMsg = err.Error()
+		}
+		log.Printf("Error copying config file: %v, output: '%s', errorMsg: '%s'", err, out, errorMsg)
+		// Si el error es "exit status X", intentar obtener más información
+		if strings.Contains(err.Error(), "exit status") {
+			// Verificar si el archivo temporal existe
+			if _, statErr := os.Stat(tmpFile); os.IsNotExist(statErr) {
+				errorMsg = "Temporary file was deleted before copy"
+			} else {
+				// Verificar permisos del directorio destino
+				destDir := "/etc/hostapd"
+				if _, statErr := os.Stat(destDir); os.IsNotExist(statErr) {
+					errorMsg = fmt.Sprintf("Destination directory %s does not exist", destDir)
+				} else {
+					errorMsg = fmt.Sprintf("Failed to copy file (exit status error). Check permissions for %s", destDir)
+				}
+			}
 		}
 		return c.Status(500).JSON(fiber.Map{
 			"error":   fmt.Sprintf("Error saving hostapd configuration: %s", errorMsg),
 			"success": false,
 		})
 	}
+	log.Printf("File copied successfully, output: '%s'", strings.TrimSpace(out))
 	
 	// Establecer permisos
 	chmodCmd := fmt.Sprintf("sudo chmod 644 %s", configPath)
