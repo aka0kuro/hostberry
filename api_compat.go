@@ -2128,39 +2128,101 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 			}
 		}
 		
-		// Método 2: Si wpa_cli no funcionó, usar iw para obtener información
-		if connectionInfo["signal"] == nil || connectionInfo["channel"] == nil {
+		// Método 2: Si wpa_cli no funcionó o falta información, usar iw para obtener información
+		if connectionInfo["signal"] == nil || connectionInfo["channel"] == nil || connectionInfo["security"] == nil {
+			log.Printf("Getting additional info from iw for interface %s", iface)
 			iwLinkCmd := exec.Command("sh", "-c", fmt.Sprintf("iw dev %s link 2>/dev/null", iface))
 			iwLinkOut, iwErr := iwLinkCmd.CombinedOutput()
 			if iwErr == nil && len(iwLinkOut) > 0 {
 				iwLink := string(iwLinkOut)
+				log.Printf("iw link output: %s", iwLink)
 				for _, line := range strings.Split(iwLink, "\n") {
 					line = strings.TrimSpace(line)
-					if strings.Contains(line, "signal:") {
+					// Obtener señal
+					if connectionInfo["signal"] == nil && strings.Contains(line, "signal:") {
+						// Formato: "signal: -45 dBm" o "signal: -45"
 						parts := strings.Fields(line)
 						for i, part := range parts {
 							if part == "signal:" && i+1 < len(parts) {
-								if signalStr := parts[i+1]; signalStr != "" {
+								signalStr := strings.TrimSpace(parts[i+1])
+								// Remover "dBm" si está presente
+								signalStr = strings.TrimSuffix(signalStr, "dBm")
+								signalStr = strings.TrimSpace(signalStr)
+								if signalStr != "" {
 									connectionInfo["signal"] = signalStr
+									log.Printf("Found signal: %s", signalStr)
 								}
 								break
 							}
 						}
-					} else if strings.Contains(line, "freq:") {
+					}
+					// Obtener frecuencia/canal
+					if connectionInfo["channel"] == nil && strings.Contains(line, "freq:") {
 						parts := strings.Fields(line)
 						for i, part := range parts {
 							if part == "freq:" && i+1 < len(parts) {
-								if freq, err := strconv.Atoi(parts[i+1]); err == nil {
+								freqStr := parts[i+1]
+								if freq, err := strconv.Atoi(freqStr); err == nil {
 									// Convertir frecuencia a canal
 									if freq >= 2412 && freq <= 2484 {
 										channel := (freq-2412)/5 + 1
 										connectionInfo["channel"] = strconv.Itoa(channel)
+										log.Printf("Found channel: %d (from freq %d)", channel, freq)
 									} else if freq >= 5000 && freq <= 5825 {
 										channel := (freq - 5000) / 5
 										connectionInfo["channel"] = strconv.Itoa(channel)
+										log.Printf("Found channel: %d (from freq %d)", channel, freq)
 									}
 								}
 								break
+							}
+						}
+					}
+					// Obtener seguridad desde iw (si no se obtuvo de wpa_cli)
+					if connectionInfo["security"] == nil && strings.Contains(line, "WPA") {
+						if strings.Contains(line, "WPA3") || strings.Contains(line, "SAE") {
+							connectionInfo["security"] = "WPA3"
+						} else if strings.Contains(line, "WPA2") || strings.Contains(line, "WPA") {
+							connectionInfo["security"] = "WPA2"
+						}
+					}
+				}
+			} else {
+				log.Printf("iw link command failed or returned empty: %v, output: %s", iwErr, string(iwLinkOut))
+			}
+		}
+		
+		// Si aún falta información, intentar con iwconfig como último recurso
+		if connectionInfo["signal"] == nil || connectionInfo["channel"] == nil {
+			log.Printf("Trying iwconfig as last resort for interface %s", iface)
+			iwconfigCmd := exec.Command("sh", "-c", fmt.Sprintf("iwconfig %s 2>/dev/null", iface))
+			iwconfigOut, iwconfigErr := iwconfigCmd.CombinedOutput()
+			if iwconfigErr == nil && len(iwconfigOut) > 0 {
+				iwconfigStr := string(iwconfigOut)
+				// Buscar señal (formato: "Signal level=-45 dBm")
+				if connectionInfo["signal"] == nil {
+					if strings.Contains(iwconfigStr, "Signal level=") {
+						parts := strings.Split(iwconfigStr, "Signal level=")
+						if len(parts) > 1 {
+							signalPart := strings.Fields(parts[1])[0]
+							signalStr := strings.TrimSpace(signalPart)
+							if signalStr != "" {
+								connectionInfo["signal"] = signalStr
+								log.Printf("Found signal from iwconfig: %s", signalStr)
+							}
+						}
+					}
+				}
+				// Buscar canal (formato: "Channel:6")
+				if connectionInfo["channel"] == nil {
+					if strings.Contains(iwconfigStr, "Channel:") {
+						parts := strings.Split(iwconfigStr, "Channel:")
+						if len(parts) > 1 {
+							channelPart := strings.Fields(parts[1])[0]
+							channelStr := strings.TrimSpace(channelPart)
+							if channelStr != "" {
+								connectionInfo["channel"] = channelStr
+								log.Printf("Found channel from iwconfig: %s", channelStr)
 							}
 						}
 					}
