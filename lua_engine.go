@@ -152,12 +152,16 @@ func (le *LuaEngine) Execute(scriptName string, params map[string]interface{}) (
 			case lua.LBool:
 				result[keyStr] = bool(v)
 			case *lua.LTable:
-				// Convertir tabla anidada
-				subMap := make(map[string]interface{})
-				v.ForEach(func(k lua.LValue, val lua.LValue) {
-					subMap[k.String()] = val.String()
-				})
-				result[keyStr] = subMap
+				// Verificar si es un array (tabla indexada numéricamente)
+				if isArray(v) {
+					// Convertir como array
+					array := convertLuaTableToArray(v)
+					result[keyStr] = array
+				} else {
+					// Convertir como mapa
+					subMap := convertLuaTableToMap(v)
+					result[keyStr] = subMap
+				}
 			default:
 				result[keyStr] = v.String()
 			}
