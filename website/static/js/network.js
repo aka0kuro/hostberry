@@ -711,6 +711,14 @@
         if (!parsedData) {
           console.warn('Failed to parse /proc/net/dev');
           parsedData = networkStatsRaw;
+        } else if (selectedTrafficInterface) {
+          // Log para depuración cuando se selecciona una interfaz específica
+          console.log(`Parsed data for ${selectedTrafficInterface}:`, {
+            interface: parsedData.interface,
+            bytes_recv: parsedData.bytes_recv,
+            bytes_sent: parsedData.bytes_sent,
+            found: parsedData.interface === selectedTrafficInterface
+          });
         }
       }
       
