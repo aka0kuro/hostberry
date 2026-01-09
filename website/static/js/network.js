@@ -517,6 +517,105 @@
     }
   }
 
+  // Parse /proc/net/dev format
+  function parseProcNetDev(raw, interfaceName) {
+    if (!raw || typeof raw !== 'string') {
+      return null;
+    }
+    
+    const lines = raw.split('\n');
+    let bytesRecv = 0;
+    let bytesSent = 0;
+    let packetsRecv = 0;
+    let packetsSent = 0;
+    let errors = 0;
+    let drop = 0;
+    let foundInterface = null;
+    const interfaces = [];
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('Inter-') || trimmed.startsWith(' face')) {
+        continue;
+      }
+      
+      // Formato: eth0: 12345 67890 123 456 789 012 345 678 901 234 567 890
+      // Campos: name, bytes_recv, packets_recv, errs_recv, drop_recv, bytes_sent, packets_sent, errs_sent, drop_sent
+      const parts = trimmed.split(/\s+/);
+      if (parts.length < 10) continue;
+      
+      const ifaceName = parts[0].replace(':', '');
+      if (!ifaceName || ifaceName === 'lo') continue;
+      
+      const recvBytes = parseInt(parts[1]) || 0;
+      const recvPackets = parseInt(parts[2]) || 0;
+      const recvErrs = parseInt(parts[3]) || 0;
+      const recvDrop = parseInt(parts[4]) || 0;
+      const sentBytes = parseInt(parts[9]) || 0;
+      const sentPackets = parseInt(parts[10]) || 0;
+      const sentErrs = parseInt(parts[11]) || 0;
+      const sentDrop = parseInt(parts[12]) || 0;
+      
+      interfaces.push(ifaceName);
+      
+      // Si se especificó una interfaz, solo usar esa
+      if (interfaceName && ifaceName === interfaceName) {
+        foundInterface = ifaceName;
+        bytesRecv = recvBytes;
+        bytesSent = sentBytes;
+        packetsRecv = recvPackets;
+        packetsSent = sentPackets;
+        errors = recvErrs + sentErrs;
+        drop = recvDrop + sentDrop;
+        break;
+      } else if (!interfaceName) {
+        // Si no se especificó interfaz, usar la primera no-loopback con tráfico
+        if ((recvBytes > 0 || sentBytes > 0) && !foundInterface) {
+          foundInterface = ifaceName;
+          bytesRecv = recvBytes;
+          bytesSent = sentBytes;
+          packetsRecv = recvPackets;
+          packetsSent = sentPackets;
+          errors = recvErrs + sentErrs;
+          drop = recvDrop + sentDrop;
+        }
+      }
+    }
+    
+    // Si no se encontró ninguna interfaz con tráfico, usar la primera disponible
+    if (!foundInterface && interfaces.length > 0) {
+      foundInterface = interfaces[0];
+      // Necesitamos leer los datos de nuevo para esta interfaz
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('Inter-') || trimmed.startsWith(' face')) continue;
+        const parts = trimmed.split(/\s+/);
+        if (parts.length < 10) continue;
+        const ifaceName = parts[0].replace(':', '');
+        if (ifaceName === foundInterface) {
+          bytesRecv = parseInt(parts[1]) || 0;
+          bytesSent = parseInt(parts[9]) || 0;
+          packetsRecv = parseInt(parts[2]) || 0;
+          packetsSent = parseInt(parts[10]) || 0;
+          errors = (parseInt(parts[3]) || 0) + (parseInt(parts[11]) || 0);
+          drop = (parseInt(parts[4]) || 0) + (parseInt(parts[12]) || 0);
+          break;
+        }
+      }
+    }
+    
+    return {
+      bytes_recv: bytesRecv,
+      bytes_sent: bytesSent,
+      packets_recv: packetsRecv,
+      packets_sent: packetsSent,
+      errors: errors,
+      drop: drop,
+      interface: foundInterface || '',
+      interfaces: interfaces
+    };
+  }
+
   window.updateTrafficStats = async function() {
     try {
       let url = '/api/v1/system/network';
@@ -536,7 +635,17 @@
         throw new Error('Invalid network stats response');
       }
       
-      const networkStats = computeNetworkRates(networkStatsRaw);
+      // Si la respuesta tiene "raw", parsearla
+      let parsedData = networkStatsRaw;
+      if (networkStatsRaw.raw && typeof networkStatsRaw.raw === 'string') {
+        parsedData = parseProcNetDev(networkStatsRaw.raw, selectedTrafficInterface);
+        if (!parsedData) {
+          console.warn('Failed to parse /proc/net/dev');
+          parsedData = networkStatsRaw;
+        }
+      }
+      
+      const networkStats = computeNetworkRates(parsedData);
       
       if (networkStats.interfaces && Array.isArray(networkStats.interfaces)) {
         populateInterfaceSelects(networkStats.interfaces);
