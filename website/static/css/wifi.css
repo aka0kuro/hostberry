@@ -627,16 +627,24 @@ body.light-theme .network-info-value {
     border: none;
     color: var(--hb-text-muted);
     cursor: pointer;
-    padding: 0.25rem 0.5rem;
+    padding: 0.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.2s ease;
+    transition: all 0.2s ease;
     z-index: 10;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 4px;
 }
 
 .password-toggle-btn:hover {
     color: var(--hb-text-light);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.password-toggle-btn:active {
+    transform: scale(0.95);
 }
 
 body.light-theme .password-toggle-btn {
@@ -645,10 +653,13 @@ body.light-theme .password-toggle-btn {
 
 body.light-theme .password-toggle-btn:hover {
     color: #212529;
+    background: rgba(0, 0, 0, 0.05);
 }
 
 .password-toggle-btn i {
-    font-size: 1rem;
+    font-size: 1.1rem;
+    display: block;
+    line-height: 1;
 }
 
 .network-connect-form-label {
