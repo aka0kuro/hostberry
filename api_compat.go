@@ -1038,6 +1038,110 @@ func hostapdRestartHandler(c *fiber.Ctx) error {
 	})
 }
 
+func hostapdGetConfigHandler(c *fiber.Ctx) error {
+	configPath := "/etc/hostapd/hostapd.conf"
+	
+	// Verificar si el archivo existe
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		return c.JSON(fiber.Map{
+			"success": false,
+			"error":   "Configuration file not found",
+			"config":  nil,
+		})
+	}
+	
+	// Leer el archivo de configuración
+	configContent, err := os.ReadFile(configPath)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"success": false,
+			"error":   fmt.Sprintf("Error reading config file: %v", err),
+			"config":  nil,
+		})
+	}
+	
+	// Parsear la configuración
+	config := make(map[string]string)
+	lines := strings.Split(string(configContent), "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
+			config[key] = value
+		}
+	}
+	
+	// Extraer valores relevantes
+	result := fiber.Map{
+		"success": true,
+		"config": fiber.Map{
+			"interface": config["interface"],
+			"ssid":      config["ssid"],
+			"channel":   config["channel"],
+			"password":  "", // No devolver la contraseña por seguridad
+		},
+	}
+	
+	// Determinar el tipo de seguridad
+	if config["auth_algs"] == "0" {
+		result["config"].(fiber.Map)["security"] = "open"
+	} else if strings.Contains(config["wpa_key_mgmt"], "SHA256") {
+		result["config"].(fiber.Map)["security"] = "wpa3"
+	} else if config["wpa"] == "2" {
+		result["config"].(fiber.Map)["security"] = "wpa2"
+	} else {
+		result["config"].(fiber.Map)["security"] = "wpa2" // Por defecto
+	}
+	
+	// Leer configuración de dnsmasq para obtener gateway y DHCP range
+	dnsmasqPath := "/etc/dnsmasq.conf"
+	if dnsmasqContent, err := os.ReadFile(dnsmasqPath); err == nil {
+		dnsmasqLines := strings.Split(string(dnsmasqContent), "\n")
+		for _, line := range dnsmasqLines {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "dhcp-option=3,") {
+				gateway := strings.TrimPrefix(line, "dhcp-option=3,")
+				result["config"].(fiber.Map)["gateway"] = gateway
+			} else if strings.HasPrefix(line, "dhcp-range=") {
+				rangeStr := strings.TrimPrefix(line, "dhcp-range=")
+				parts := strings.Split(rangeStr, ",")
+				if len(parts) >= 2 {
+					result["config"].(fiber.Map)["dhcp_range_start"] = parts[0]
+					result["config"].(fiber.Map)["dhcp_range_end"] = parts[1]
+					if len(parts) >= 4 {
+						result["config"].(fiber.Map)["lease_time"] = parts[3]
+					}
+				}
+			}
+		}
+	}
+	
+	// Valores por defecto si no se encontraron
+	configMap := result["config"].(fiber.Map)
+	if configMap["gateway"] == nil || configMap["gateway"] == "" {
+		configMap["gateway"] = "192.168.4.1"
+	}
+	if configMap["dhcp_range_start"] == nil || configMap["dhcp_range_start"] == "" {
+		configMap["dhcp_range_start"] = "192.168.4.2"
+	}
+	if configMap["dhcp_range_end"] == nil || configMap["dhcp_range_end"] == "" {
+		configMap["dhcp_range_end"] = "192.168.4.254"
+	}
+	if configMap["lease_time"] == nil || configMap["lease_time"] == "" {
+		configMap["lease_time"] = "12h"
+	}
+	if configMap["channel"] == nil || configMap["channel"] == "" {
+		configMap["channel"] = "6"
+	}
+	
+	return c.JSON(result)
+}
+
 func hostapdConfigHandler(c *fiber.Ctx) error {
 	var req struct {
 		Interface      string `json:"interface"`
