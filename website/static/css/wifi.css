@@ -392,19 +392,13 @@ body.light-theme .info-value {
 /* Networks Container */
 .networks-cards-container {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 1rem;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
     padding: 0;
     margin: 0;
-}
-
-@media (max-width: 768px) {
-    .networks-cards-container {
-        grid-template-columns: 1fr;
-    }
 }
 
 .network-card {
