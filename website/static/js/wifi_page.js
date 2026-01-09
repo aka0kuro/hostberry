@@ -689,24 +689,6 @@
     const wrapper = button.closest('.password-input-wrapper');
     if (!wrapper) {
       console.warn("togglePasswordVisibility: password-input-wrapper not found");
-      // Fallback: buscar el input anterior o siguiente
-      let input = button.previousElementSibling;
-      if (!input || (input.type !== 'password' && input.type !== 'text')) {
-        input = button.nextElementSibling;
-      }
-      if (input && (input.type === 'password' || input.type === 'text')) {
-        if (input.type === 'password') {
-          input.type = 'text';
-          button.innerHTML = '<i class="bi bi-eye-slash"></i>';
-          button.setAttribute('title', t('common.hide_password', 'Hide password'));
-        } else {
-          input.type = 'password';
-          button.innerHTML = '<i class="bi bi-eye"></i>';
-          button.setAttribute('title', t('common.show_password', 'Show password'));
-        }
-      } else {
-        console.warn("togglePasswordVisibility: input not found");
-      }
       return;
     }
     
@@ -720,20 +702,36 @@
       input = wrapper.querySelector('input');
     }
     
-    if (input) {
-      if (input.type === 'password') {
-        input.type = 'text';
-        button.innerHTML = '<i class="bi bi-eye-slash"></i>';
-        button.setAttribute('title', t('common.hide_password', 'Hide password'));
-      } else if (input.type === 'text') {
-        input.type = 'password';
-        button.innerHTML = '<i class="bi bi-eye"></i>';
-        button.setAttribute('title', t('common.show_password', 'Show password'));
-      }
-    } else {
+    if (!input) {
       console.warn("togglePasswordVisibility: input not found in wrapper", wrapper);
+      return;
+    }
+    
+    // Obtener el icono dentro del botón
+    const icon = button.querySelector('i');
+    
+    // Cambiar el tipo de input y el icono
+    if (input.type === 'password') {
+      input.type = 'text';
+      if (icon) {
+        icon.className = 'bi bi-eye-slash';
+      } else {
+        button.innerHTML = '<i class="bi bi-eye-slash"></i>';
+      }
+      button.setAttribute('title', t('common.hide_password', 'Hide password'));
+    } else if (input.type === 'text') {
+      input.type = 'password';
+      if (icon) {
+        icon.className = 'bi bi-eye';
+      } else {
+        button.innerHTML = '<i class="bi bi-eye"></i>';
+      }
+      button.setAttribute('title', t('common.show_password', 'Show password'));
     }
   }
+  
+  // Hacer la función global para que pueda ser llamada desde onclick
+  window.togglePasswordVisibility = togglePasswordVisibility;
 
   // Enviar conexión
   async function submitConnect(ssid, security, buttonElement) {
