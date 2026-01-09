@@ -102,6 +102,123 @@
         text.textContent = statusText;
     };
 
+    const updateServiceStatCard = (serviceName, isActive) => {
+        const valueEl = document.getElementById('stat-' + serviceName);
+        const barEl = document.getElementById('stat-' + serviceName + '-bar');
+        const iconEl = document.getElementById('stat-' + serviceName + '-icon');
+        
+        if (valueEl) {
+            valueEl.textContent = isActive ? t('common.active', 'Active') : t('common.inactive', 'Inactive');
+            valueEl.className = 'stat-value' + (isActive ? ' text-success' : ' text-danger');
+        }
+        
+        if (barEl) {
+            barEl.style.width = isActive ? '100%' : '0%';
+            barEl.className = 'stat-progress-bar' + (isActive ? ' bg-success' : ' bg-danger');
+        }
+        
+        if (iconEl) {
+            const iconMap = {
+                'wifi': isActive ? 'bi-wifi-fill' : 'bi-wifi-off',
+                'hostapd': 'bi-router',
+                'dnsmasq': 'bi-server',
+                'network': 'bi-hdd-network'
+            };
+            const iconClass = iconMap[serviceName] || 'bi-circle';
+            iconEl.className = 'bi ' + iconClass + (isActive ? ' text-success' : ' text-danger');
+        }
+    };
+
+    async function loadServiceStatus() {
+        try {
+            const apiRequestFn = window.HostBerry && window.HostBerry.apiRequest 
+                ? window.HostBerry.apiRequest 
+                : async function(url) {
+                    const token = localStorage.getItem('access_token');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) {
+                        headers['Authorization'] = 'Bearer ' + token;
+                    }
+                    return fetch(url, { headers: headers });
+                };
+            
+            // Cargar estado de servicios
+            const servicesResp = await apiRequestFn('/api/v1/system/services');
+            if (servicesResp && servicesResp.ok) {
+                const servicesData = await servicesResp.json();
+                const services = servicesData.services || {};
+                
+                // HostAPD
+                if (services.hostapd) {
+                    const hostapd = services.hostapd;
+                    const isActive = hostapd.active === true || hostapd.status === 'active';
+                    updateServiceStatCard('hostapd', isActive);
+                } else {
+                    updateServiceStatCard('hostapd', false);
+                }
+                
+                // dnsmasq (verificar si está activo como servicio)
+                if (services.adblock && services.adblock.type === 'dnsmasq') {
+                    const dnsmasqActive = services.adblock.active === true;
+                    updateServiceStatCard('dnsmasq', dnsmasqActive);
+                } else {
+                    // Verificar directamente el servicio dnsmasq
+                    try {
+                        const dnsmasqCheck = await apiRequestFn('/api/v1/system/services');
+                        if (dnsmasqCheck && dnsmasqCheck.ok) {
+                            const dnsmasqData = await dnsmasqCheck.json();
+                            const dnsmasqServiceActive = dnsmasqData.services && dnsmasqData.services.adblock && dnsmasqData.services.adblock.type === 'dnsmasq' && dnsmasqData.services.adblock.active;
+                            updateServiceStatCard('dnsmasq', dnsmasqServiceActive);
+                        } else {
+                            updateServiceStatCard('dnsmasq', false);
+                        }
+                    } catch (e) {
+                        updateServiceStatCard('dnsmasq', false);
+                    }
+                }
+            } else {
+                updateServiceStatCard('hostapd', false);
+                updateServiceStatCard('dnsmasq', false);
+            }
+            
+            // Cargar estado de WiFi
+            try {
+                const wifiResp = await apiRequestFn('/api/v1/wifi/status');
+                if (wifiResp && wifiResp.ok) {
+                    const wifiData = await wifiResp.json();
+                    const wifiEnabled = wifiData.enabled === true || wifiData.wifi_enabled === true;
+                    updateServiceStatCard('wifi', wifiEnabled);
+                } else {
+                    updateServiceStatCard('wifi', false);
+                }
+            } catch (e) {
+                console.error('Error loading WiFi status:', e);
+                updateServiceStatCard('wifi', false);
+            }
+            
+            // Cargar estado de Red (verificar interfaces activas)
+            try {
+                const networkResp = await apiRequestFn('/api/v1/network/interfaces');
+                if (networkResp && networkResp.ok) {
+                    const networkData = await networkResp.json();
+                    const interfaces = Array.isArray(networkData) ? networkData : (networkData.interfaces || []);
+                    const hasActiveInterface = interfaces.some(iface => {
+                        const status = (iface.status || iface.state || '').toLowerCase();
+                        return status === 'up' || status === 'connected' || status === 'running';
+                    });
+                    updateServiceStatCard('network', hasActiveInterface);
+                } else {
+                    updateServiceStatCard('network', false);
+                }
+            } catch (e) {
+                console.error('Error loading network status:', e);
+                updateServiceStatCard('network', false);
+            }
+        } catch (error) {
+            console.error('Error loading service status:', error);
+        }
+    }
+
     async function loadServices() {
         try {
             const apiRequestFn = window.HostBerry && window.HostBerry.apiRequest 
