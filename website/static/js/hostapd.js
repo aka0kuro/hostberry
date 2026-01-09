@@ -118,6 +118,14 @@
               ${running ? t('hostapd.running', 'Running') : t('hostapd.stopped', 'Stopped')}
             </span>
           </div>
+          ${!running && !enabled ? `
+          <div class="info-item">
+            <span class="info-label text-muted small">${t('hostapd.tip', 'Tip')}</span>
+            <span class="info-value text-muted small">
+              ${t('hostapd.click_enable', 'Click "Enable HostAPD" to start the service')}
+            </span>
+          </div>
+          ` : ''}
         </div>
       `;
     }
