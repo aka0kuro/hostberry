@@ -1394,23 +1394,24 @@ rsn_pairwise=CCMP
 		})
 	}
 	
-	// Copiar archivo temporal a la ubicación final usando cat + tee (más confiable que cp)
-	cmdStr := fmt.Sprintf("cat %s | sudo tee %s > /dev/null", tmpFile, configPath)
+	// Copiar archivo temporal a la ubicación final usando sudo sh -c con redirección
+	// Este método es más confiable porque ejecuta todo dentro de un shell con sudo
+	cmdStr := fmt.Sprintf("sudo sh -c 'cat %s > %s'", tmpFile, configPath)
 	log.Printf("Executing: %s", cmdStr)
 	out, err := executeCommand(cmdStr)
 	if err != nil {
-		log.Printf("Error writing config file with tee: %v, output: '%s'", err, out)
+		log.Printf("Error writing config file: %v, output: '%s'", err, out)
 		os.Remove(tmpFile) // Limpiar archivo temporal
 		errorMsg := strings.TrimSpace(out)
 		if errorMsg == "" {
 			errorMsg = err.Error()
 		}
 		return c.Status(500).JSON(fiber.Map{
-			"error":   fmt.Sprintf("Error saving hostapd configuration: %s. Please check sudo permissions for tee command.", errorMsg),
+			"error":   fmt.Sprintf("Error saving hostapd configuration: %s. Please check sudo permissions.", errorMsg),
 			"success": false,
 		})
 	}
-	log.Printf("File written successfully using tee command, output: '%s'", strings.TrimSpace(out))
+	log.Printf("File written successfully, output: '%s'", strings.TrimSpace(out))
 	
 	// Establecer permisos
 	chmodCmd := fmt.Sprintf("sudo chmod 644 %s", configPath)
