@@ -1928,23 +1928,8 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 		softBlocked = true
 		enabled = false
 	} else {
-		// Si no está bloqueado, verificar explícitamente si está habilitado
-		// Re-verificar con nmcli para asegurar el estado
-		wifiCheck2 := execCommand("nmcli -t -f WIFI g 2>/dev/null")
-		wifiOut2, err2 := wifiCheck2.Output()
-		if err2 == nil {
-			// Filtrar mensajes de error de sudo
-			wifiState2 := strings.ToLower(strings.TrimSpace(filterSudoErrors(wifiOut2)))
-			if strings.Contains(wifiState2, "enabled") || strings.Contains(wifiState2, "on") {
-				enabled = true
-			} else if strings.Contains(wifiState2, "disabled") || strings.Contains(wifiState2, "off") {
-				enabled = false
-			}
-		}
-	}
-	
-	// Si nmcli no está disponible y rfkill no muestra bloqueo, verificar con iwconfig
-	if !enabled && !hardBlocked && !softBlocked {
+		// Si no está bloqueado, verificar explícitamente si está habilitado usando iwconfig/ip
+		// Verificar con iwconfig si la interfaz está activa
 		iwOut, _ := execCommand("iwconfig 2>/dev/null | grep -i 'wlan' | head -1").CombinedOutput()
 		// Filtrar mensajes de error de sudo
 		cleanIwOut := filterSudoErrors(iwOut)
@@ -1954,19 +1939,14 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 			// Filtrar también la salida de iwStatus
 			cleanIwStatus := filterSudoErrors(iwStatus)
 			if len(cleanIwStatus) == 0 {
-				// No está "unassociated", verificar también con nmcli
-				wifiCheck3 := execCommand("nmcli -t -f WIFI g 2>/dev/null")
-				wifiOut3, err3 := wifiCheck3.Output()
-				if err3 == nil {
-					// Filtrar mensajes de error de sudo
-					wifiState3 := strings.ToLower(strings.TrimSpace(filterSudoErrors(wifiOut3)))
-					if strings.Contains(wifiState3, "enabled") || strings.Contains(wifiState3, "on") {
-						enabled = true
-					}
-				} else {
-					// Si nmcli no funciona, asumir habilitado si no está unassociated
-					enabled = true
-				}
+				// No está "unassociated", asumir habilitado
+				enabled = true
+			}
+		} else {
+			// Verificar con ip si la interfaz está UP
+			ipCheck := exec.Command("sh", "-c", "ip link show | grep -E '^[0-9]+: wlan' | grep -i 'state UP'")
+			if ipOut, err := ipCheck.Output(); err == nil && len(ipOut) > 0 {
+				enabled = true
 			}
 		}
 	}
