@@ -1998,49 +1998,156 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 			"ssid": ssid,
 		}
 		
-		// Obtener señal (signal strength)
-		signalOut, _ := execCommand("nmcli -t -f ACTIVE,SIGNAL dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
-		if signalStr := strings.TrimSpace(string(signalOut)); signalStr != "" {
-			connectionInfo["signal"] = signalStr
+		// Detectar interfaz WiFi (wlan0 por defecto)
+		iface := "wlan0"
+		// Intentar obtener desde nmcli si está disponible
+		ifaceCmd := execCommand("nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
+		if ifaceOut, err := ifaceCmd.Output(); err == nil {
+			if ifaceStr := strings.TrimSpace(string(ifaceOut)); ifaceStr != "" {
+				iface = ifaceStr
+			}
+		} else {
+			// Fallback: buscar wlan* con ip
+			ipIfaceCmd := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}' | grep -E '^wlan|^wl' | head -1")
+			if ipIfaceOut, err := ipIfaceCmd.Output(); err == nil {
+				if ipIfaceStr := strings.TrimSpace(string(ipIfaceOut)); ipIfaceStr != "" {
+					iface = ipIfaceStr
+				}
+			}
 		}
 		
-		// Obtener seguridad
-		securityOut, _ := execCommand("nmcli -t -f ACTIVE,SECURITY dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
-		if securityStr := strings.TrimSpace(string(securityOut)); securityStr != "" {
-			connectionInfo["security"] = securityStr
+		// Obtener señal, seguridad y canal usando wpa_cli o iw
+		// Método 1: Intentar con wpa_cli (si está usando wpa_supplicant)
+		wpaStatusCmd := exec.Command("sh", "-c", fmt.Sprintf("sudo wpa_cli -i %s status 2>/dev/null", iface))
+		wpaStatusOut, wpaErr := wpaStatusCmd.CombinedOutput()
+		if wpaErr == nil && len(wpaStatusOut) > 0 {
+			wpaStatus := string(wpaStatusOut)
+			// Parsear salida de wpa_cli status
+			for _, line := range strings.Split(wpaStatus, "\n") {
+				line = strings.TrimSpace(line)
+				if strings.HasPrefix(line, "signal=") {
+					signalStr := strings.TrimPrefix(line, "signal=")
+					if signalStr != "" {
+						connectionInfo["signal"] = signalStr
+					}
+				} else if strings.HasPrefix(line, "key_mgmt=") {
+					keyMgmt := strings.TrimPrefix(line, "key_mgmt=")
+					if keyMgmt != "" {
+						if strings.Contains(keyMgmt, "WPA2") || strings.Contains(keyMgmt, "WPA-PSK") {
+							connectionInfo["security"] = "WPA2"
+						} else if strings.Contains(keyMgmt, "WPA3") || strings.Contains(keyMgmt, "SAE") {
+							connectionInfo["security"] = "WPA3"
+						} else if strings.Contains(keyMgmt, "NONE") {
+							connectionInfo["security"] = "Open"
+						} else {
+							connectionInfo["security"] = keyMgmt
+						}
+					}
+				} else if strings.HasPrefix(line, "freq=") {
+					freqStr := strings.TrimPrefix(line, "freq=")
+					if freq, err := strconv.Atoi(freqStr); err == nil {
+						// Convertir frecuencia a canal
+						if freq >= 2412 && freq <= 2484 {
+							channel := (freq-2412)/5 + 1
+							connectionInfo["channel"] = strconv.Itoa(channel)
+						} else if freq >= 5000 && freq <= 5825 {
+							channel := (freq - 5000) / 5
+							connectionInfo["channel"] = strconv.Itoa(channel)
+						}
+					}
+				}
+			}
 		}
 		
-		// Obtener canal
-		channelOut, _ := execCommand("nmcli -t -f ACTIVE,CHAN dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
-		if channelStr := strings.TrimSpace(string(channelOut)); channelStr != "" {
-			connectionInfo["channel"] = channelStr
+		// Método 2: Si wpa_cli no funcionó, usar iw para obtener información
+		if connectionInfo["signal"] == nil || connectionInfo["channel"] == nil {
+			iwLinkCmd := exec.Command("sh", "-c", fmt.Sprintf("iw dev %s link 2>/dev/null", iface))
+			iwLinkOut, iwErr := iwLinkCmd.CombinedOutput()
+			if iwErr == nil && len(iwLinkOut) > 0 {
+				iwLink := string(iwLinkOut)
+				for _, line := range strings.Split(iwLink, "\n") {
+					line = strings.TrimSpace(line)
+					if strings.Contains(line, "signal:") {
+						parts := strings.Fields(line)
+						for i, part := range parts {
+							if part == "signal:" && i+1 < len(parts) {
+								if signalStr := parts[i+1]; signalStr != "" {
+									connectionInfo["signal"] = signalStr
+								}
+								break
+							}
+						}
+					} else if strings.Contains(line, "freq:") {
+						parts := strings.Fields(line)
+						for i, part := range parts {
+							if part == "freq:" && i+1 < len(parts) {
+								if freq, err := strconv.Atoi(parts[i+1]); err == nil {
+									// Convertir frecuencia a canal
+									if freq >= 2412 && freq <= 2484 {
+										channel := (freq-2412)/5 + 1
+										connectionInfo["channel"] = strconv.Itoa(channel)
+									} else if freq >= 5000 && freq <= 5825 {
+										channel := (freq - 5000) / 5
+										connectionInfo["channel"] = strconv.Itoa(channel)
+									}
+								}
+								break
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		// Método 3: Fallback a nmcli si NetworkManager está corriendo
+		if connectionInfo["signal"] == nil {
+			if out, _ := exec.Command("pgrep", "NetworkManager").Output(); len(out) > 0 {
+				signalOut, _ := execCommand("nmcli -t -f ACTIVE,SIGNAL dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
+				if signalStr := strings.TrimSpace(string(signalOut)); signalStr != "" {
+					connectionInfo["signal"] = signalStr
+				}
+			}
+		}
+		
+		if connectionInfo["security"] == nil {
+			if out, _ := exec.Command("pgrep", "NetworkManager").Output(); len(out) > 0 {
+				securityOut, _ := execCommand("nmcli -t -f ACTIVE,SECURITY dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
+				if securityStr := strings.TrimSpace(string(securityOut)); securityStr != "" {
+					connectionInfo["security"] = securityStr
+				}
+			}
+		}
+		
+		if connectionInfo["channel"] == nil {
+			if out, _ := exec.Command("pgrep", "NetworkManager").Output(); len(out) > 0 {
+				channelOut, _ := execCommand("nmcli -t -f ACTIVE,CHAN dev wifi 2>/dev/null | grep '^yes:' | head -1 | cut -d: -f2").CombinedOutput()
+				if channelStr := strings.TrimSpace(string(channelOut)); channelStr != "" {
+					connectionInfo["channel"] = channelStr
+				}
+			}
 		}
 		
 		// Obtener IP address de la interfaz WiFi
-		ifaceCmd := execCommand("nmcli -t -f DEVICE,TYPE dev status 2>/dev/null | grep wifi | head -1 | cut -d: -f1")
-		if ifaceOut, err := ifaceCmd.Output(); err == nil {
-			iface := strings.TrimSpace(string(ifaceOut))
-			if iface != "" {
-				// Obtener IP
-				ipCmd := exec.Command("sh", "-c", fmt.Sprintf("ip addr show %s 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d/ -f1 | head -1", iface))
-				ipOut, _ := ipCmd.Output()
-				if ipStr := strings.TrimSpace(string(ipOut)); ipStr != "" {
-					connectionInfo["ip"] = ipStr
-				}
-				
-				// Obtener MAC
-				macCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/address 2>/dev/null", iface))
-				macOut, _ := macCmd.Output()
-				if macStr := strings.TrimSpace(string(macOut)); macStr != "" {
-					connectionInfo["mac"] = macStr
-				}
-				
-				// Obtener velocidad
-				speedCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/speed 2>/dev/null", iface))
-				speedOut, _ := speedCmd.Output()
-				if speedStr := strings.TrimSpace(string(speedOut)); speedStr != "" && speedStr != "-1" {
-					connectionInfo["speed"] = speedStr + " Mbps"
-				}
+		if iface != "" {
+			// Obtener IP
+			ipCmd := exec.Command("sh", "-c", fmt.Sprintf("ip addr show %s 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d/ -f1 | head -1", iface))
+			ipOut, _ := ipCmd.Output()
+			if ipStr := strings.TrimSpace(string(ipOut)); ipStr != "" {
+				connectionInfo["ip"] = ipStr
+			}
+			
+			// Obtener MAC
+			macCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/address 2>/dev/null", iface))
+			macOut, _ := macCmd.Output()
+			if macStr := strings.TrimSpace(string(macOut)); macStr != "" {
+				connectionInfo["mac"] = macStr
+			}
+			
+			// Obtener velocidad
+			speedCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/speed 2>/dev/null", iface))
+			speedOut, _ := speedCmd.Output()
+			if speedStr := strings.TrimSpace(string(speedOut)); speedStr != "" && speedStr != "-1" {
+				connectionInfo["speed"] = speedStr + " Mbps"
 			}
 		}
 	}
