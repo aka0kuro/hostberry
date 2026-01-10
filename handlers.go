@@ -514,7 +514,7 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 		
 		// Si la interfaz está "up" pero no tiene IP, podría estar esperando DHCP
 		// En ese caso, mostrar un mensaje más descriptivo
-		if (iface["state"] == "up" || iface["state"] == "connected") && (iface["ip"] == "N/A" || iface["ip"] == "") {
+		if (iface["state"] == "up" || iface["state"] == "connected" || iface["state"] == "connecting") && (iface["ip"] == "N/A" || iface["ip"] == "") {
 			// Verificar si hay un proceso DHCP corriendo
 			dhcpCheck := exec.Command("sh", "-c", fmt.Sprintf("ps aux | grep -E '[d]hclient|udhcpc' | grep %s", ifaceName))
 			if dhcpOut, err := dhcpCheck.Output(); err == nil {
@@ -522,6 +522,42 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 				if dhcpLine != "" {
 					iface["ip"] = "Obtaining IP..."
 				}
+			}
+		}
+		
+		// Para interfaces WiFi, verificar el estado real de conexión
+		if strings.HasPrefix(ifaceName, "wlan") {
+			// Si wpa_supplicant dice COMPLETED pero no hay IP, aún no está completamente conectado
+			if wpaState, hasWpaState := iface["wpa_state"]; hasWpaState && wpaState == "COMPLETED" {
+				if iface["ip"] == "N/A" || iface["ip"] == "" || iface["ip"] == "Obtaining IP..." {
+					// wpa_supplicant conectado pero sin IP aún
+					iface["connected"] = false
+					iface["state"] = "connecting"
+				} else {
+					// Realmente conectado con IP
+					iface["connected"] = true
+					iface["state"] = "connected"
+				}
+			} else if wpaState, hasWpaState := iface["wpa_state"]; hasWpaState && (wpaState == "ASSOCIATING" || wpaState == "ASSOCIATED" || wpaState == "4WAY_HANDSHAKE" || wpaState == "GROUP_HANDSHAKE") {
+				// En proceso de conexión
+				iface["connected"] = false
+				iface["state"] = "connecting"
+			} else {
+				// No conectado
+				iface["connected"] = false
+				if iface["state"] != "down" {
+					iface["state"] = "down"
+				}
+			}
+		} else {
+			// Para interfaces no WiFi, usar el estado del sistema
+			if iface["ip"] != "N/A" && iface["ip"] != "" && iface["ip"] != "Obtaining IP..." {
+				iface["connected"] = true
+				if iface["state"] == "up" {
+					iface["state"] = "connected"
+				}
+			} else {
+				iface["connected"] = false
 			}
 		}
 
