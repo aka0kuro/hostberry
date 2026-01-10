@@ -147,19 +147,23 @@ if not network_exists then
         
         -- Configurar SSID
         local set_ssid_cmd = wpa_cli_cmd .. " set_network " .. network_id .. " ssid '\"" .. ssid .. "\"'"
-        exec(set_ssid_cmd)
+        local ssid_result = exec(set_ssid_cmd)
+        log("INFO", "SSID set result: " .. (ssid_result or "none"))
         
         -- Configurar seguridad
         if password and password ~= "" then
             -- WPA/WPA2
             local set_psk_cmd = wpa_cli_cmd .. " set_network " .. network_id .. " psk '\"" .. password .. "\"'"
-            exec(set_psk_cmd)
+            local psk_result = exec(set_psk_cmd)
+            log("INFO", "PSK set result: " .. (psk_result or "none"))
             local set_key_mgmt_cmd = wpa_cli_cmd .. " set_network " .. network_id .. " key_mgmt WPA-PSK"
-            exec(set_key_mgmt_cmd)
+            local key_mgmt_result = exec(set_key_mgmt_cmd)
+            log("INFO", "Key management set result: " .. (key_mgmt_result or "none"))
         else
             -- Red abierta
             local set_key_mgmt_cmd = wpa_cli_cmd .. " set_network " .. network_id .. " key_mgmt NONE"
-            exec(set_key_mgmt_cmd)
+            local key_mgmt_result = exec(set_key_mgmt_cmd)
+            log("INFO", "Key management (NONE) set result: " .. (key_mgmt_result or "none"))
         end
         
         -- Habilitar la red
