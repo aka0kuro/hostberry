@@ -879,7 +879,7 @@ func wireguardConfigHandler(c *fiber.Ctx) error {
 	userID := user.ID
 
 	if luaEngine != nil {
-		result, err := luaEngine.Execute("wireguard_config.lua", fiber.Map{
+		result := configureWireGuard(req.Config, user.Username)
 			"config": req.Config,
 			"user":   user.Username,
 		})
