@@ -529,11 +529,39 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 			result["warning"] = "Conectado pero sin IP asignada aún"
 		}
 	} else {
+		// Extraer información de error más detallada
+		errorMsg := fmt.Sprintf("No se pudo establecer la conexión después de %d intentos", maxAttempts)
+		
+		// Intentar obtener más información del estado
+		re := regexp.MustCompile(`wpa_state=([^\r\n]+)`)
+		matches := re.FindStringSubmatch(statusOutput)
+		if len(matches) > 1 {
+			state := strings.TrimSpace(matches[1])
+			if state == "DISCONNECTED" {
+				errorMsg = "La conexión se desconectó. Verifica que la red esté disponible y la contraseña sea correcta."
+			} else if state == "4WAY_HANDSHAKE" || state == "GROUP_HANDSHAKE" {
+				errorMsg = "Error durante el handshake de autenticación. Verifica la contraseña."
+			} else if state == "ASSOCIATING" || state == "ASSOCIATED" {
+				errorMsg = "No se pudo completar la asociación con la red. Verifica que la red esté disponible."
+			} else if state != "" {
+				errorMsg = fmt.Sprintf("Estado: %s. No se pudo completar la conexión.", state)
+			}
+		}
+
+		// Verificar si hay mensajes de error específicos
+		if strings.Contains(statusOutput, "WRONG_KEY") {
+			errorMsg = "Contraseña incorrecta"
+		} else if strings.Contains(statusOutput, "AUTH_FAIL") {
+			errorMsg = "Error de autenticación. Verifica la contraseña."
+		} else if strings.Contains(statusOutput, "TIMEOUT") {
+			errorMsg = "Timeout esperando respuesta de la red. Verifica que la red esté disponible."
+		}
+
 		result["success"] = false
-		result["error"] = fmt.Sprintf("No se pudo establecer la conexión después de %d intentos", maxAttempts)
+		result["error"] = errorMsg
 		result["message"] = fmt.Sprintf("Error conectando a %s", ssid)
 		result["output"] = statusOutput
-		log.Printf("ERROR: Error conectando WiFi: %s - Estado: %s", ssid, statusOutput)
+		log.Printf("❌ ERROR: Error conectando WiFi: %s - Estado final: %s", ssid, statusOutput)
 	}
 
 	return result
