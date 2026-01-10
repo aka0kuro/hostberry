@@ -366,13 +366,28 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 		log.Printf("wpa_supplicant ya está corriendo con PID: %s", strings.TrimSpace(string(wpaPid)))
 		time.Sleep(1 * time.Second) // Dar tiempo para que el socket esté listo
 		
-		// Asegurar permisos del socket si existe
+		// Asegurar permisos del socket si existe (múltiples ubicaciones posibles)
 		socketPath1 := fmt.Sprintf("/var/run/wpa_supplicant/%s", interfaceName)
 		socketPath2 := fmt.Sprintf("/run/wpa_supplicant/%s", interfaceName)
+		
+		log.Printf("Ajustando permisos de sockets para %s...", interfaceName)
+		// Ajustar permisos de sockets específicos
 		executeCommand(fmt.Sprintf("sudo chmod 660 %s 2>/dev/null || true", socketPath1))
 		executeCommand(fmt.Sprintf("sudo chmod 660 %s 2>/dev/null || true", socketPath2))
 		executeCommand(fmt.Sprintf("sudo chgrp netdev %s 2>/dev/null || sudo chgrp hostberry %s 2>/dev/null || true", socketPath1, socketPath1))
 		executeCommand(fmt.Sprintf("sudo chgrp netdev %s 2>/dev/null || sudo chgrp hostberry %s 2>/dev/null || true", socketPath2, socketPath2))
+		
+		// Ajustar permisos de todos los sockets en el directorio (por si hay múltiples interfaces)
+		executeCommand("sudo chmod 660 /var/run/wpa_supplicant/* 2>/dev/null || true")
+		executeCommand("sudo chmod 660 /run/wpa_supplicant/* 2>/dev/null || true")
+		executeCommand("sudo chgrp netdev /var/run/wpa_supplicant/* 2>/dev/null || sudo chgrp hostberry /var/run/wpa_supplicant/* 2>/dev/null || true")
+		executeCommand("sudo chgrp netdev /run/wpa_supplicant/* 2>/dev/null || sudo chgrp hostberry /run/wpa_supplicant/* 2>/dev/null || true")
+		
+		// Asegurar que el directorio también tenga permisos correctos
+		executeCommand("sudo chmod 775 /var/run/wpa_supplicant 2>/dev/null || true")
+		executeCommand("sudo chmod 775 /run/wpa_supplicant 2>/dev/null || true")
+		executeCommand("sudo chgrp netdev /var/run/wpa_supplicant 2>/dev/null || sudo chgrp hostberry /var/run/wpa_supplicant 2>/dev/null || true")
+		executeCommand("sudo chgrp netdev /run/wpa_supplicant 2>/dev/null || sudo chgrp hostberry /run/wpa_supplicant 2>/dev/null || true")
 	}
 
 	// Usar wpa_cli para agregar la red
