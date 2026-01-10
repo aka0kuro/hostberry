@@ -1815,8 +1815,12 @@ RUN+="/bin/ip link set ap0 address %s"
 				log.Printf("Trying alternative method 2: using iw phy without sudo...")
 				
 				// Método alternativo 2: intentar sin sudo (puede funcionar si el usuario tiene permisos)
-				createApCmd3 := fmt.Sprintf("iw phy %s interface add %s type __ap", phyName, apInterface)
+				createApCmd3 := fmt.Sprintf("iw phy %s interface add %s type __ap 2>&1", phyName, apInterface)
+				log.Printf("Executing: %s", createApCmd3)
 				createOut3, createErr3 := executeCommand(createApCmd3)
+				if createOut3 != "" {
+					log.Printf("Method 2 output: %s", strings.TrimSpace(createOut3))
+				}
 				
 				if createErr3 != nil {
 					log.Printf("Error with alternative method 2: %s", strings.TrimSpace(createOut3))
