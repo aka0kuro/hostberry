@@ -630,7 +630,7 @@ func wifiConnectHandler(c *fiber.Ctx) error {
 		country = c.Query("country", DefaultCountryCode)
 	}
 	if country == "" {
-		country = "US" // Valor por defecto final
+		country = DefaultCountryCode
 	}
 	
 	interfaceName := DefaultWiFiInterface
