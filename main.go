@@ -140,7 +140,7 @@ func loadConfig() error {
 			},
 			Security: SecurityConfig{
 				JWTSecret:    "change-me-in-production",
-				TokenExpiry:  1440, // 24 horas
+				TokenExpiry:  60, // 1 hora
 				BcryptCost:   10,
 				RateLimitRPS: 10,
 			},
