@@ -1584,6 +1584,7 @@ func hostapdConfigHandler(c *fiber.Ctx) error {
 		DHCPRangeStart string `json:"dhcp_range_start"`
 		DHCPRangeEnd   string `json:"dhcp_range_end"`
 		LeaseTime      string `json:"lease_time"`
+		Country        string `json:"country"`
 	}
 	
 	if err := c.BodyParser(&req); err != nil {
