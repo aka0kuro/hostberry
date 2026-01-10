@@ -74,15 +74,7 @@ func main() {
 		log.Fatalf("Error cargando configuración: %v", err)
 	}
 
-	// Inicializar motor Lua
-	if appConfig.Lua.Enabled {
-		var err error
-		luaEngine, err = NewLuaEngine(appConfig.Lua.ScriptsPath)
-		if err != nil {
-			log.Fatalf("Error inicializando Lua: %v", err)
-		}
-		defer luaEngine.Close()
-	}
+	// Lua ya no se usa - todo está en Go ahora
 
 	// Inicializar i18n
 	if err := InitI18n("locales"); err != nil {
