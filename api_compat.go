@@ -2195,7 +2195,9 @@ dhcp-option=6,%s
 	executeCommand(fmt.Sprintf("sudo mkdir -p %s 2>/dev/null || true", overrideDir))
 	overrideContent := fmt.Sprintf(`[Service]
 ExecStart=
-ExecStart=/usr/sbin/hostapd -B %s
+ExecStart=/usr/sbin/hostapd -B -P /run/hostapd.pid %s
+PIDFile=/run/hostapd.pid
+Type=forking
 `, configPath)
 	// Guardar override usando un archivo temporal
 	tmpOverrideFile := "/tmp/hostapd-override.conf.tmp"
