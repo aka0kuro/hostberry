@@ -2598,16 +2598,33 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 					keyMgmt := strings.TrimPrefix(line, "key_mgmt=")
 					keyMgmt = strings.TrimSpace(keyMgmt)
 					if keyMgmt != "" {
-						if strings.Contains(keyMgmt, "WPA2") || strings.Contains(keyMgmt, "WPA-PSK") {
-							connectionInfo["security"] = "WPA2"
-						} else if strings.Contains(keyMgmt, "WPA3") || strings.Contains(keyMgmt, "SAE") {
+						keyMgmtUpper := strings.ToUpper(keyMgmt)
+						if strings.Contains(keyMgmtUpper, "WPA3") || strings.Contains(keyMgmtUpper, "SAE") {
 							connectionInfo["security"] = "WPA3"
-						} else if strings.Contains(keyMgmt, "NONE") {
+						} else if strings.Contains(keyMgmtUpper, "WPA2") || strings.Contains(keyMgmtUpper, "WPA-PSK") || strings.Contains(keyMgmtUpper, "WPA") {
+							connectionInfo["security"] = "WPA2"
+						} else if strings.Contains(keyMgmtUpper, "NONE") || keyMgmtUpper == "" {
 							connectionInfo["security"] = "Open"
 						} else {
-							connectionInfo["security"] = keyMgmt
+							// Intentar inferir desde el formato
+							if strings.Contains(keyMgmtUpper, "PSK") {
+								connectionInfo["security"] = "WPA2"
+							} else {
+								connectionInfo["security"] = keyMgmt
+							}
 						}
-						log.Printf("Found security from wpa_cli: %s", connectionInfo["security"])
+						log.Printf("Found security from wpa_cli: %s (key_mgmt=%s)", connectionInfo["security"], keyMgmt)
+					}
+				} else if strings.HasPrefix(line, "wpa=") {
+					// wpa=2 significa WPA2, wpa=1 significa WPA
+					wpaStr := strings.TrimPrefix(line, "wpa=")
+					wpaStr = strings.TrimSpace(wpaStr)
+					if wpaStr == "2" && (connectionInfo["security"] == nil || connectionInfo["security"] == "") {
+						connectionInfo["security"] = "WPA2"
+						log.Printf("Found security from wpa_cli wpa field: WPA2")
+					} else if wpaStr == "1" && (connectionInfo["security"] == nil || connectionInfo["security"] == "") {
+						connectionInfo["security"] = "WPA"
+						log.Printf("Found security from wpa_cli wpa field: WPA")
 					}
 				} else if strings.HasPrefix(line, "freq=") {
 					freqStr := strings.TrimPrefix(line, "freq=")
