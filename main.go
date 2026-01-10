@@ -915,7 +915,8 @@ func securityMiddleware(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-func getSystemStats() fiber.Map {
+// getSystemStats está ahora en system_handlers.go
+/*func getSystemStats() fiber.Map {
 	stats := fiber.Map{
 		"cpu_usage":      0.0,
 		"memory_usage":   0.0,
