@@ -2183,16 +2183,21 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 		wpaStatusOut, wpaErr := wpaStatusCmd.CombinedOutput()
 		if wpaErr == nil && len(wpaStatusOut) > 0 {
 			wpaStatus := string(wpaStatusOut)
+			log.Printf("wpa_cli status output for %s: %s", iface, wpaStatus)
 			// Parsear salida de wpa_cli status
 			for _, line := range strings.Split(wpaStatus, "\n") {
 				line = strings.TrimSpace(line)
 				if strings.HasPrefix(line, "signal=") {
 					signalStr := strings.TrimPrefix(line, "signal=")
-					if signalStr != "" {
+					signalStr = strings.TrimSpace(signalStr)
+					if signalStr != "" && signalStr != "0" {
+						// wpa_cli puede devolver la señal como número negativo o positivo
 						connectionInfo["signal"] = signalStr
+						log.Printf("Found signal from wpa_cli: %s", signalStr)
 					}
 				} else if strings.HasPrefix(line, "key_mgmt=") {
 					keyMgmt := strings.TrimPrefix(line, "key_mgmt=")
+					keyMgmt = strings.TrimSpace(keyMgmt)
 					if keyMgmt != "" {
 						if strings.Contains(keyMgmt, "WPA2") || strings.Contains(keyMgmt, "WPA-PSK") {
 							connectionInfo["security"] = "WPA2"
@@ -2203,21 +2208,31 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 						} else {
 							connectionInfo["security"] = keyMgmt
 						}
+						log.Printf("Found security from wpa_cli: %s", connectionInfo["security"])
 					}
 				} else if strings.HasPrefix(line, "freq=") {
 					freqStr := strings.TrimPrefix(line, "freq=")
-					if freq, err := strconv.Atoi(freqStr); err == nil {
+					freqStr = strings.TrimSpace(freqStr)
+					if freq, err := strconv.Atoi(freqStr); err == nil && freq > 0 {
 						// Convertir frecuencia a canal
+						var channel int
 						if freq >= 2412 && freq <= 2484 {
-							channel := (freq-2412)/5 + 1
-							connectionInfo["channel"] = strconv.Itoa(channel)
+							channel = (freq-2412)/5 + 1
 						} else if freq >= 5000 && freq <= 5825 {
-							channel := (freq - 5000) / 5
+							channel = (freq - 5000) / 5
+						} else if freq >= 5955 && freq <= 7115 {
+							// 6 GHz band
+							channel = (freq - 5955) / 5
+						}
+						if channel > 0 {
 							connectionInfo["channel"] = strconv.Itoa(channel)
+							log.Printf("Found channel from wpa_cli: %d (from freq %d)", channel, freq)
 						}
 					}
 				}
 			}
+		} else {
+			log.Printf("wpa_cli failed or returned empty for %s: %v", iface, wpaErr)
 		}
 		
 		// Método 2: Si wpa_cli no funcionó o falta información, usar iw para obtener información
