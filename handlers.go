@@ -541,6 +541,7 @@ func wifiConnectHandler(c *fiber.Ctx) error {
 	var req struct {
 		SSID     string `json:"ssid"`
 		Password string `json:"password"`
+		Country  string `json:"country"`
 	}
 
 	if err := c.BodyParser(&req); err != nil {
