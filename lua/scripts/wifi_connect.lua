@@ -184,9 +184,13 @@ local select_cmd = wpa_cli_cmd .. " select_network " .. network_id
 exec(select_cmd)
 
 -- Esperar un momento para que se establezca la conexión
-os.execute("sleep 3")
+os.execute("sleep 5")
 
 -- Verificar el estado de la conexión
+-- Intentar reconectar si no está conectado
+local reconnect_cmd = wpa_cli_cmd .. " reconnect"
+exec(reconnect_cmd)
+os.execute("sleep 3")
 local status_cmd = wpa_cli_cmd .. " status"
 local status_output = exec(status_cmd)
 local connected = false
