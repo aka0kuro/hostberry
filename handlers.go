@@ -331,22 +331,18 @@ func systemShutdownHandler(c *fiber.Ctx) error {
 	user := c.Locals("user").(*User)
 	userID := user.ID
 
-	if luaEngine != nil {
-		result, err := luaEngine.Execute("system_shutdown.lua", fiber.Map{
-			"user": user.Username,
-		})
-		if err != nil {
-			InsertLog("ERROR", "Error en shutdown: "+err.Error(), "system", &userID)
-			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
-		}
-
+	result := systemShutdown(user.Username)
+	if success, ok := result["success"].(bool); ok && success {
 		InsertLog("INFO", "Sistema apagado por: "+user.Username, "system", &userID)
 		return c.JSON(result)
 	}
 
-	return c.Status(500).JSON(fiber.Map{
-		"error": "Lua engine no disponible",
-	})
+	if err, ok := result["error"].(string); ok {
+		InsertLog("ERROR", "Error apagando sistema: "+err, "system", &userID)
+		return c.Status(500).JSON(fiber.Map{"error": err})
+	}
+
+	return c.Status(500).JSON(fiber.Map{"error": "Error desconocido"})
 }
 
 // Handlers de red
