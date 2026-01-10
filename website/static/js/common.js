@@ -278,6 +278,9 @@
     const token = localStorage.getItem('access_token');
     if(!token) return;
     
+    let consecutiveErrors = 0;
+    const maxConsecutiveErrors = 3; // Permitir hasta 3 errores consecutivos antes de cerrar sesión
+    
     // Verificar token periódicamente para detectar expiración antes de que ocurra
     // Verificar cada 15 minutos (si el token expira en 24 horas, esto es seguro)
     setInterval(async function(){
@@ -294,13 +297,49 @@
         });
         
         if(resp && resp.status === 401){
-          // Token expirado, redirigir a login
-          console.warn('Token expirado, redirigiendo a login...');
-          localStorage.removeItem('access_token');
-          window.location.href = '/login?error=session_expired';
+          // Verificar que realmente es un error de autenticación y no de red
+          try {
+            const errorData = await resp.json().catch(() => ({}));
+            const errorMsg = (errorData.error || '').toLowerCase();
+            // Solo cerrar sesión si es un error real de token/autenticación
+            if(errorMsg.includes('token') || errorMsg.includes('expirado') || 
+               errorMsg.includes('expired') || errorMsg.includes('invalid') ||
+               errorMsg.includes('autorizado') || errorMsg.includes('authorized')){
+              consecutiveErrors++;
+              if(consecutiveErrors >= maxConsecutiveErrors){
+                console.warn('Token expirado después de múltiples intentos, redirigiendo a login...');
+                localStorage.removeItem('access_token');
+                window.location.href = '/login?error=session_expired';
+              }
+            } else {
+              // Resetear contador si no es un error de autenticación real
+              consecutiveErrors = 0;
+            }
+          } catch(_e) {
+            // Si no se puede parsear, podría ser un error de red - no cerrar sesión
+            consecutiveErrors = 0;
+          }
+        } else if(resp && resp.ok){
+          // Token válido, resetear contador de errores
+          consecutiveErrors = 0;
         }
-      }catch(_e){
-        // Ignorar errores de red, no hacer nada
+      }catch(e){
+        // Ignorar errores de red - no cerrar sesión por problemas de conectividad
+        // Solo incrementar contador si es un error que no sea de red
+        if(e.message && !e.message.includes('Failed to fetch') && 
+           !e.message.includes('NetworkError') &&
+           !e.message.includes('ERR_INTERNET_DISCONNECTED') &&
+           !e.message.includes('ERR_NETWORK_CHANGED')){
+          consecutiveErrors++;
+          if(consecutiveErrors >= maxConsecutiveErrors){
+            console.warn('Múltiples errores consecutivos, verificando sesión...');
+            // Intentar una última verificación antes de cerrar
+            consecutiveErrors = 0; // Resetear para dar otra oportunidad
+          }
+        } else {
+          // Es un error de red, resetear contador
+          consecutiveErrors = 0;
+        }
       }
     }, 15 * 60 * 1000); // Cada 15 minutos
   }
