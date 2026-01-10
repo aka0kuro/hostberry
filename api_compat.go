@@ -2236,28 +2236,37 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 		}
 		
 		// Método 2: Si wpa_cli no funcionó o falta información, usar iw para obtener información
-		if connectionInfo["signal"] == nil || connectionInfo["channel"] == nil || connectionInfo["security"] == nil {
+		if connectionInfo["signal"] == nil || connectionInfo["signal"] == "" || connectionInfo["signal"] == "0" ||
+			connectionInfo["channel"] == nil || connectionInfo["channel"] == "" ||
+			connectionInfo["security"] == nil || connectionInfo["security"] == "" {
 			log.Printf("Getting additional info from iw for interface %s", iface)
-			iwLinkCmd := exec.Command("sh", "-c", fmt.Sprintf("iw dev %s link 2>/dev/null", iface))
+			// Intentar con sudo primero
+			iwLinkCmd := exec.Command("sh", "-c", fmt.Sprintf("sudo iw dev %s link 2>/dev/null", iface))
 			iwLinkOut, iwErr := iwLinkCmd.CombinedOutput()
+			if iwErr != nil || len(iwLinkOut) == 0 {
+				// Si falla con sudo, intentar sin sudo
+				iwLinkCmd = exec.Command("sh", "-c", fmt.Sprintf("iw dev %s link 2>/dev/null", iface))
+				iwLinkOut, iwErr = iwLinkCmd.CombinedOutput()
+			}
 			if iwErr == nil && len(iwLinkOut) > 0 {
 				iwLink := string(iwLinkOut)
-				log.Printf("iw link output: %s", iwLink)
+				log.Printf("iw link output for %s: %s", iface, iwLink)
 				for _, line := range strings.Split(iwLink, "\n") {
 					line = strings.TrimSpace(line)
 					// Obtener señal
-					if connectionInfo["signal"] == nil && strings.Contains(line, "signal:") {
-						// Formato: "signal: -45 dBm" o "signal: -45"
+					if (connectionInfo["signal"] == nil || connectionInfo["signal"] == "" || connectionInfo["signal"] == "0") && strings.Contains(line, "signal:") {
+						// Formato: "signal: -45 dBm" o "signal: -45" o "Signal: -45 dBm"
 						parts := strings.Fields(line)
 						for i, part := range parts {
-							if part == "signal:" && i+1 < len(parts) {
+							if (part == "signal:" || part == "Signal:") && i+1 < len(parts) {
 								signalStr := strings.TrimSpace(parts[i+1])
 								// Remover "dBm" si está presente
 								signalStr = strings.TrimSuffix(signalStr, "dBm")
 								signalStr = strings.TrimSpace(signalStr)
-								if signalStr != "" {
+								// Verificar que no sea 0 o vacío
+								if signalStr != "" && signalStr != "0" {
 									connectionInfo["signal"] = signalStr
-									log.Printf("Found signal: %s", signalStr)
+									log.Printf("Found signal from iw: %s", signalStr)
 								}
 								break
 							}
