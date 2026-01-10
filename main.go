@@ -546,10 +546,10 @@ func wifiInterfacesHandler(c *fiber.Ctx) error {
 		}
 	}
 
-	// Si no hay interfaces, agregar wlan0 como opción por defecto
+	// Si no hay interfaces, agregar interfaz por defecto como opción
 	if len(interfaces) == 0 {
 		interfaces = append(interfaces, fiber.Map{
-			"name":  "wlan0",
+			"name":  DefaultWiFiInterface,
 			"type":  "wifi",
 			"state": "unknown",
 		})
