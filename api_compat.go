@@ -394,8 +394,7 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": errorMsg})
 	}
 	
-	// Fallback si hay un error - ya no se usa Lua, pero mantener compatibilidad
-	// El código de fallback está más abajo
+	// Fallback si hay un error
 
 	// Fallback: Intentar métodos directos usando rfkill e ip (sin nmcli)
 	// Método 1: Usar rfkill para habilitar/deshabilitar WiFi
