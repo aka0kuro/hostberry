@@ -2625,7 +2625,9 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 						}
 						if channel > 0 {
 							connectionInfo["channel"] = strconv.Itoa(channel)
-							log.Printf("Found channel from wpa_cli: %d (from freq %d)", channel, freq)
+							log.Printf("Found channel from wpa_cli: %d (from freq %d MHz)", channel, freq)
+						} else {
+							log.Printf("Could not convert freq %d to channel", freq)
 						}
 					}
 				}
