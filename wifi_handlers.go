@@ -391,7 +391,11 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 			executeCommand(fmt.Sprintf("sudo chgrp netdev %s 2>/dev/null || sudo chgrp hostberry %s 2>/dev/null || true", socketPath2, socketPath2))
 			// También ajustar permisos de todos los sockets en el directorio
 			executeCommand("sudo chmod 660 /var/run/wpa_supplicant/* 2>/dev/null || true")
+			executeCommand("sudo chmod 660 /run/wpa_supplicant/* 2>/dev/null || true")
 			executeCommand("sudo chgrp netdev /var/run/wpa_supplicant/* 2>/dev/null || sudo chgrp hostberry /var/run/wpa_supplicant/* 2>/dev/null || true")
+			executeCommand("sudo chgrp netdev /run/wpa_supplicant/* 2>/dev/null || sudo chgrp hostberry /run/wpa_supplicant/* 2>/dev/null || true")
+			executeCommand("sudo chown root:netdev /var/run/wpa_supplicant/* 2>/dev/null || sudo chown root:hostberry /var/run/wpa_supplicant/* 2>/dev/null || true")
+			executeCommand("sudo chown root:netdev /run/wpa_supplicant/* 2>/dev/null || sudo chown root:hostberry /run/wpa_supplicant/* 2>/dev/null || true")
 		}
 
 		// Verificar que wpa_supplicant se inició
