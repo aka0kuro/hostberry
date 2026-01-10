@@ -344,7 +344,7 @@ func networkStatusHandler(c *fiber.Ctx) error {
 
 func networkInterfacesHandler(c *fiber.Ctx) error {
 	if luaEngine != nil {
-		result, err := luaEngine.Execute("network_interfaces.lua", nil)
+		result := getNetworkInterfaces()
 		if err != nil {
 			log.Printf("⚠️ Error ejecutando Lua script: %v", err)
 			// Continuar con fallback
