@@ -2214,7 +2214,6 @@ Type=forking
 		}
 		os.Remove(tmpOverrideFile)
 	}
-	executeCommand("sudo systemctl daemon-reload")
 	
 	// 5.5. Crear scripts de gestión basados en ap_sta_config.sh
 	// Script para limpiar /var/run/hostapd/ap0 si está colgado (manage-ap0-iface.sh)
@@ -2223,9 +2222,20 @@ Type=forking
 # in our case, it cannot start when /var/run/hostapd/ap0 exist
 # so we have to delete it
 echo 'Check if hostapd.service is hang cause ap0 exist...'
-hostapd_is_running=$(service hostapd status | grep -c "Active: active (running)")
+hostapd_is_running=$(systemctl is-active hostapd 2>/dev/null | grep -c "active")
 if test 1 -ne "${hostapd_is_running}"; then
     rm -rf /var/run/hostapd/ap0 || echo "ap0 interface does not exist, the failure is elsewhere"
+    # También limpiar el PID file si existe
+    rm -f /run/hostapd.pid || true
+fi
+# Asegurar que ap0 existe antes de iniciar hostapd
+if ! ip link show ap0 > /dev/null 2>&1; then
+    # Intentar crear ap0 si no existe
+    phy=$(iw dev wlan0 info 2>/dev/null | grep wiphy | awk '{print $2}')
+    if [ -n "$phy" ]; then
+        iw phy $phy interface add ap0 type __ap 2>/dev/null || true
+        sleep 1
+    fi
 fi
 `
 	manageAp0Path := "/bin/manage-ap0-iface.sh"
@@ -2235,6 +2245,30 @@ fi
 		os.Remove(tmpManageAp0)
 		log.Printf("Created manage-ap0-iface.sh script")
 	}
+	
+	// Actualizar el override de systemd para incluir el pre-start y mejorar la configuración
+	overridePath := fmt.Sprintf("%s/override.conf", overrideDir)
+	overrideContentWithPreStart := fmt.Sprintf(`[Service]
+ExecStart=
+ExecStartPre=/bin/manage-ap0-iface.sh
+ExecStart=/usr/sbin/hostapd -B -P /run/hostapd.pid %s
+PIDFile=/run/hostapd.pid
+Type=forking
+TimeoutStartSec=30
+TimeoutStopSec=10
+`, configPath)
+	tmpOverrideFile2 := "/tmp/hostapd-override.conf.tmp"
+	if err := os.WriteFile(tmpOverrideFile2, []byte(overrideContentWithPreStart), 0644); err == nil {
+		cmdStr4 := fmt.Sprintf("sudo cp %s %s && sudo chmod 644 %s", tmpOverrideFile2, overridePath, overridePath)
+		if out, err := executeCommand(cmdStr4); err != nil {
+			log.Printf("Warning: Error updating override file with pre-start: %s, output: %s", err, strings.TrimSpace(out))
+		} else {
+			log.Printf("Override file updated with pre-start script and PID file configuration")
+		}
+		os.Remove(tmpOverrideFile2)
+	}
+	
+	executeCommand("sudo systemctl daemon-reload")
 	
 	// Script para reiniciar interfaces WiFi (rpi-wifi.sh)
 	// Calcular rango de red para ap0 (basado en gateway) - reutilizar variable ya declarada
