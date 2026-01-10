@@ -423,6 +423,31 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 		if stateOut, err := stateCmd.Output(); err == nil {
 			iface["state"] = strings.TrimSpace(string(stateOut))
 		}
+		
+		// Para interfaces WiFi (wlan*), verificar también el estado de wpa_supplicant
+		if strings.HasPrefix(ifaceName, "wlan") {
+			// Verificar si wpa_supplicant reporta conexión
+			wpaStatusCmd := exec.Command("sh", "-c", fmt.Sprintf("sudo wpa_cli -i %s status 2>/dev/null | grep 'wpa_state=' | cut -d= -f2", ifaceName))
+			if wpaStateOut, err := wpaStatusCmd.Output(); err == nil {
+				wpaState := strings.TrimSpace(string(wpaStateOut))
+				if wpaState == "COMPLETED" {
+					// Si wpa_supplicant dice COMPLETED, verificar que tenga IP
+					// (esto se verificará más adelante cuando se obtenga la IP)
+					iface["wpa_state"] = "COMPLETED"
+				} else if wpaState == "ASSOCIATING" || wpaState == "ASSOCIATED" || wpaState == "4WAY_HANDSHAKE" || wpaState == "GROUP_HANDSHAKE" {
+					// En proceso de conexión
+					iface["wpa_state"] = wpaState
+					iface["state"] = "connecting"
+				} else {
+					// No conectado
+					iface["wpa_state"] = wpaState
+					if iface["state"] == "up" {
+						// Si la interfaz está "up" pero wpa_supplicant no está conectado, es "down"
+						iface["state"] = "down"
+					}
+				}
+			}
+		}
 
 		// Obtener IP y máscara de red
 		// Método 1: ip addr show (más confiable) - intentar con y sin sudo
