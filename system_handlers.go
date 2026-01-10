@@ -267,7 +267,7 @@ func systemRestart(user string) map[string]interface{} {
 		if !found {
 			// Último recurso: reboot directo
 			restartCmd = "reboot"
-			if out3, err3 := executeCommand(restartCmd); err3 != nil {
+			if _, err3 := executeCommand(restartCmd); err3 != nil {
 				result["success"] = false
 				result["error"] = err3.Error()
 				result["message"] = "Error al ejecutar comando de reinicio"
@@ -276,7 +276,7 @@ func systemRestart(user string) map[string]interface{} {
 			}
 			result["success"] = true
 			result["message"] = "Sistema se reiniciará en breve"
-			result["output"] = strings.TrimSpace(out3)
+			result["output"] = ""
 			return result
 		}
 		result["success"] = false
