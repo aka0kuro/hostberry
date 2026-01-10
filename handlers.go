@@ -1092,7 +1092,7 @@ func getSystemInfo() fiber.Map {
 		info["processor"] = strings.TrimSpace(processor)
 	} else {
 		// Fallback: intentar con lscpu
-		if lscpu, err := executeCommand("lscpu | grep 'Model name' | cut -d ':' -f 2 | sed 's/^[[:space:]]*//'"); err == nil && lscpu != "" {
+		if lscpu, err := executeCommand("lscpu | grep Model | cut -d: -f2"); err == nil && lscpu != "" {
 			info["processor"] = strings.TrimSpace(lscpu)
 		} else {
 			// Fallback: usar architecture como indicador
