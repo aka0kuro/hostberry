@@ -16,8 +16,26 @@ end
 
 log("INFO", "Conectando a WiFi: " .. ssid .. " (usuario: " .. user .. ") usando wpa_supplicant")
 
--- Detener NetworkManager si está corriendo para evitar conflictos
-exec("sudo systemctl stop NetworkManager 2>/dev/null || true")
+-- Verificar si NetworkManager está gestionando la conexión activa
+-- Si es así, NO detenerlo para evitar perder la sesión web
+local nm_active = exec("nmcli -t -f STATE general status 2>/dev/null | head -1")
+local nm_connected = false
+if nm_active then
+    local state = string.gsub(nm_active, "%s+", "")
+    if state == "connected" or state == "connecting" then
+        nm_connected = true
+        log("INFO", "NetworkManager está gestionando una conexión activa, no se detendrá para preservar la sesión")
+    end
+end
+
+-- Solo detener NetworkManager si NO está gestionando una conexión activa
+-- Esto evita perder la sesión web cuando el usuario está conectado
+if not nm_connected then
+    log("INFO", "Deteniendo NetworkManager para evitar conflictos con wpa_supplicant")
+    exec("sudo systemctl stop NetworkManager 2>/dev/null || true")
+else
+    log("INFO", "NetworkManager permanece activo para mantener la conexión actual")
+end
 
 -- Asegurar que la interfaz esté en modo managed (no AP) para poder conectarse
 -- Si está en modo AP, cambiarla a managed temporalmente
