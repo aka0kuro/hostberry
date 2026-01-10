@@ -2583,10 +2583,15 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 							// Asegurar que sea negativo (dBm siempre es negativo)
 							if signalInt > 0 {
 								signalInt = -signalInt
-								signalStr = strconv.Itoa(signalInt)
 							}
-							connectionInfo["signal"] = signalStr
-							log.Printf("Found signal from wpa_cli: %s dBm", signalStr)
+							// Validar rango razonable de señal (-30 a -100 dBm)
+							if signalInt >= -100 && signalInt <= -30 {
+								signalStr = strconv.Itoa(signalInt)
+								connectionInfo["signal"] = signalStr
+								log.Printf("Found signal from wpa_cli: %s dBm", signalStr)
+							} else {
+								log.Printf("Signal out of range from wpa_cli: %d dBm (ignoring)", signalInt)
+							}
 						}
 					}
 				} else if strings.HasPrefix(line, "key_mgmt=") {
