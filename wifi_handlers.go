@@ -320,10 +320,28 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 					executeCommand(fmt.Sprintf("sudo chmod 660 %s 2>/dev/null || true", socketPath1))
 					executeCommand(fmt.Sprintf("sudo chgrp netdev %s 2>/dev/null || sudo chgrp hostberry %s 2>/dev/null || true", socketPath1, socketPath1))
 					// Verificar que los permisos se aplicaron correctamente
-					time.Sleep(200 * time.Millisecond)
-					socketReady = true
-					log.Printf("Permisos del socket ajustados en: %s", socketPath1)
-					break
+					time.Sleep(300 * time.Millisecond)
+					// Verificar con wpa_cli ping
+					pingTest := exec.Command("sh", "-c", fmt.Sprintf("sudo wpa_cli -i %s ping 2>&1 | grep -q PONG && echo 'ok' || echo 'fail'", interfaceName))
+					if pingOut, _ := pingTest.Output(); strings.Contains(string(pingOut), "ok") {
+						socketReady = true
+						log.Printf("✅ Socket configurado correctamente y wpa_cli responde")
+						break
+					} else {
+						log.Printf("⚠️  Socket existe pero wpa_cli no responde, reintentando ajuste de permisos...")
+						// Reintentar ajuste de permisos con chown también
+						executeCommand(fmt.Sprintf("sudo chmod 660 %s 2>/dev/null || true", socketPath1))
+						executeCommand(fmt.Sprintf("sudo chgrp netdev %s 2>/dev/null || sudo chgrp hostberry %s 2>/dev/null || true", socketPath1, socketPath1))
+						executeCommand(fmt.Sprintf("sudo chown root:netdev %s 2>/dev/null || sudo chown root:hostberry %s 2>/dev/null || true", socketPath1, socketPath1))
+						time.Sleep(200 * time.Millisecond)
+						// Verificar nuevamente
+						pingTest2 := exec.Command("sh", "-c", fmt.Sprintf("sudo wpa_cli -i %s ping 2>&1 | grep -q PONG && echo 'ok' || echo 'fail'", interfaceName))
+						if pingOut2, _ := pingTest2.Output(); strings.Contains(string(pingOut2), "ok") {
+							socketReady = true
+							log.Printf("✅ Socket configurado correctamente después del segundo intento")
+							break
+						}
+					}
 				} else if socketOut2, _ := socketCheck2.Output(); strings.Contains(string(socketOut2), "exists") {
 					// Socket encontrado, ajustar permisos inmediatamente
 					log.Printf("Socket encontrado en: %s, ajustando permisos...", socketPath2)
