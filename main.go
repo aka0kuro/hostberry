@@ -512,18 +512,8 @@ func detectWiFiInterface() string {
 		}
 	}
 
-	// Fallback: buscar interfaces wlan*
-	cmd2 := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}' | grep -E '^wlan|^wl' | head -1")
-	out2, err2 := cmd2.Output()
-	if err2 == nil {
-		iface := strings.TrimSpace(string(out2))
-		if iface != "" {
-			return iface
-		}
-	}
-
-	// Último fallback: wlan0
-	return "wlan0"
+	// Último fallback: usar interfaz por defecto
+	return DefaultWiFiInterface
 }
 
 // wifiInterfacesHandler devuelve las interfaces WiFi disponibles
