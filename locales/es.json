@@ -805,7 +805,6 @@
     "connected": "Conectado",
     "enable_wifi": "Habilitar WiFi",
     "disable_wifi": "Deshabilitar WiFi",
-    "lua_engine_unavailable": "Motor Lua no disponible",
     "wifi_not_enabled": "WiFi no está habilitado",
     "enable_wifi_first": "Por favor, habilita WiFi primero",
     "no_networks_found": "No se encontraron redes WiFi",
