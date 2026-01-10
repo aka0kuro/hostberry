@@ -425,7 +425,7 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 		}
 
 		// Obtener IP y máscara de red
-		// Método 1: ip addr show (más confiable)
+		// Método 1: ip addr show (más confiable) - intentar con y sin sudo
 		ipCmd := exec.Command("sh", "-c", fmt.Sprintf("ip addr show %s 2>/dev/null | grep 'inet ' | awk '{print $2}' | head -1", ifaceName))
 		if ipOut, err := ipCmd.Output(); err == nil {
 			ipLine := strings.TrimSpace(string(ipOut))
@@ -435,6 +435,21 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 				iface["ip"] = parts[0]
 				if len(parts) > 1 {
 					iface["netmask"] = parts[1]
+				}
+			}
+		}
+		
+		// Si no se obtuvo IP, intentar con sudo
+		if (iface["ip"] == "N/A" || iface["ip"] == "") {
+			ipCmdSudo := exec.Command("sh", "-c", fmt.Sprintf("sudo ip addr show %s 2>/dev/null | grep 'inet ' | awk '{print $2}' | head -1", ifaceName))
+			if ipOutSudo, err := ipCmdSudo.Output(); err == nil {
+				ipLineSudo := strings.TrimSpace(string(ipOutSudo))
+				if ipLineSudo != "" {
+					parts := strings.Split(ipLineSudo, "/")
+					iface["ip"] = parts[0]
+					if len(parts) > 1 {
+						iface["netmask"] = parts[1]
+					}
 				}
 			}
 		}
@@ -468,6 +483,19 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 							iface["ip"] = checkIP
 						}
 					}
+				}
+			}
+		}
+		
+		// Si la interfaz está "up" pero no tiene IP, podría estar esperando DHCP
+		// En ese caso, mostrar un mensaje más descriptivo
+		if (iface["state"] == "up" || iface["state"] == "connected") && (iface["ip"] == "N/A" || iface["ip"] == "") {
+			// Verificar si hay un proceso DHCP corriendo
+			dhcpCheck := exec.Command("sh", "-c", fmt.Sprintf("ps aux | grep -E '[d]hclient|udhcpc' | grep %s", ifaceName))
+			if dhcpOut, err := dhcpCheck.Output(); err == nil {
+				dhcpLine := strings.TrimSpace(string(dhcpOut))
+				if dhcpLine != "" {
+					iface["ip"] = "Obtaining IP..."
 				}
 			}
 		}
