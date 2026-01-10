@@ -761,7 +761,8 @@
             gateway: fd.get('gateway') || '192.168.4.1',
             dhcp_range_start: fd.get('dhcp_range_start') || '192.168.4.2',
             dhcp_range_end: fd.get('dhcp_range_end') || '192.168.4.254',
-            lease_time: fd.get('lease_time') || '12h'
+            lease_time: fd.get('lease_time') || '12h',
+            country: fd.get('country') || 'US'
           };
           
           // Validar campos requeridos
