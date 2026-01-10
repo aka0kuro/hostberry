@@ -1615,6 +1615,15 @@ func hostapdConfigHandler(c *fiber.Ctx) error {
 	if req.LeaseTime == "" {
 		req.LeaseTime = "12h"
 	}
+	if req.Country == "" {
+		req.Country = "US" // Valor por defecto
+	}
+	
+	// Validar country code (debe ser 2 letras mayúsculas)
+	if len(req.Country) != 2 {
+		req.Country = "US"
+	}
+	req.Country = strings.ToUpper(req.Country)
 	
 	// Validar security
 	if req.Security != "wpa2" && req.Security != "wpa3" && req.Security != "open" {
