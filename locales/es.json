@@ -809,7 +809,6 @@
     "enable_wifi_first": "Por favor, habilita WiFi primero",
     "no_networks_found": "No se encontraron redes WiFi",
     "check_wifi_enabled": "Asegúrate de que WiFi esté habilitado",
-    "lua_script_error": "Error ejecutando script Lua",
     "script_not_found": "Script no encontrado"
   },
   "vpn": {
