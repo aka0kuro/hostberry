@@ -100,8 +100,47 @@ install_dependencies() {
     
     # Instalar hostapd y herramientas relacionadas
     print_info "Instalando hostapd, wpa_supplicant y herramientas WiFi..."
-    apt-get install -y hostapd dnsmasq iptables wpa_supplicant || print_warning "Algunos paquetes de hostapd/wpa_supplicant no se pudieron instalar"
-    print_success "Paquetes de hostapd y wpa_supplicant instalados"
+    
+    # Instalar paquetes individualmente para identificar fallos específicos
+    local failed_packages=()
+    local installed_packages=()
+    
+    # Lista de paquetes WiFi
+    local wifi_packages=("hostapd" "dnsmasq" "iptables" "wpa_supplicant")
+    
+    for package in "${wifi_packages[@]}"; do
+        if dpkg -l | grep -q "^ii.*${package} "; then
+            print_info "  ✓ ${package} ya está instalado"
+            installed_packages+=("${package}")
+        else
+            print_info "  Instalando ${package}..."
+            if apt-get install -y "${package}" 2>&1 | grep -q "E:"; then
+                print_warning "  ✗ No se pudo instalar ${package}"
+                failed_packages+=("${package}")
+            else
+                print_success "  ✓ ${package} instalado correctamente"
+                installed_packages+=("${package}")
+            fi
+        fi
+    done
+    
+    # Verificar instalación final
+    local missing_critical=()
+    for package in "${wifi_packages[@]}"; do
+        if ! command -v "${package}" &> /dev/null && ! dpkg -l | grep -q "^ii.*${package} "; then
+            missing_critical+=("${package}")
+        fi
+    done
+    
+    if [ ${#failed_packages[@]} -gt 0 ]; then
+        print_warning "Los siguientes paquetes no se pudieron instalar: ${failed_packages[*]}"
+        if [ ${#missing_critical[@]} -gt 0 ]; then
+            print_warning "Paquetes críticos faltantes: ${missing_critical[*]}"
+            print_info "Puedes intentar instalarlos manualmente con: sudo apt-get install -y ${missing_critical[*]}"
+        fi
+    else
+        print_success "Todos los paquetes WiFi instalados correctamente"
+    fi
     
     # Verificar si Go está instalado
     if ! command -v go &> /dev/null; then
