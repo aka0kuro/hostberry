@@ -205,6 +205,17 @@ func getNetworkInterfaces() map[string]interface{} {
 		} else {
 			iface["connected"] = false
 		}
+		} else {
+			// Para interfaces no WiFi
+			if iface["ip"] != "N/A" && iface["ip"] != "" && iface["ip"] != "Obtaining IP..." {
+				iface["connected"] = true
+				if iface["state"] == "up" {
+					iface["state"] = "connected"
+				}
+			} else {
+				iface["connected"] = false
+			}
+		}
 
 		// Obtener MAC
 		macCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/address 2>/dev/null", ifaceName))
