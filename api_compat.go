@@ -2381,6 +2381,19 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 			}
 		}
 		
+		// Establecer valores por defecto si no se encontró información
+		if connectionInfo["signal"] == nil || connectionInfo["signal"] == "" || connectionInfo["signal"] == "0" {
+			log.Printf("Warning: Could not determine signal strength for %s", iface)
+		}
+		if connectionInfo["channel"] == nil || connectionInfo["channel"] == "" {
+			log.Printf("Warning: Could not determine channel for %s", iface)
+		}
+		if connectionInfo["security"] == nil || connectionInfo["security"] == "" {
+			// Si no se encontró seguridad, intentar inferir desde wpa_supplicant config
+			log.Printf("Warning: Could not determine security for %s, defaulting to WPA2", iface)
+			connectionInfo["security"] = "WPA2" // Valor por defecto común
+		}
+		
 		// No usar nmcli - solo wpa_cli e iw
 		
 		// Obtener IP address de la interfaz WiFi
