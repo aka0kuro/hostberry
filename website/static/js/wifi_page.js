@@ -743,12 +743,19 @@
     buttonElement.innerHTML = `<i class="bi bi-arrow-clockwise spinning me-2"></i>${t('wifi.connecting', 'Connecting...')}`;
       
       try {
+        // Obtener país desde el selector
+        const countrySelect = document.getElementById('wifi-country');
+        const country = countrySelect ? countrySelect.value || 'US' : 'US';
+        
         const resp = await apiRequest('/api/v1/wifi/connect', {
           method: 'POST',
           body: { 
             ssid: ssid, 
           password: password,
           security: security
+        },
+        headers: {
+          'Country': country
         }
       });
         
