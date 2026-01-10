@@ -1698,7 +1698,40 @@ func hostapdConfigHandler(c *fiber.Ctx) error {
 	
 	log.Printf("Detected phy name: %s for interface %s", phyName, phyInterface)
 	
-	log.Printf("Using phy: %s for virtual interface creation from %s", phyName, phyInterface)
+	// Obtener MAC address de la interfaz física para la regla udev
+	macAddress := ""
+	macCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/address 2>/dev/null", phyInterface))
+	if macOut, err := macCmd.Output(); err == nil {
+		macAddress = strings.TrimSpace(string(macOut))
+	}
+	if macAddress == "" {
+		log.Printf("Warning: Could not get MAC address for %s", phyInterface)
+		macAddress = "00:00:00:00:00:00" // Valor por defecto
+	}
+	
+	log.Printf("Using phy: %s (MAC: %s) for virtual interface creation from %s", phyName, macAddress, phyInterface)
+	
+	// 2.5. Crear regla udev para crear ap0 automáticamente (basado en el script ap_sta_config.sh)
+	if apInterface == "ap0" {
+		log.Printf("Creating udev rule for automatic ap0 interface creation")
+		udevRuleContent := fmt.Sprintf(`SUBSYSTEM=="ieee80211", ACTION=="add|change", ATTR{macaddress}=="%s", KERNEL=="%s", \
+RUN+="/sbin/iw phy %s interface add ap0 type __ap", \
+RUN+="/bin/ip link set ap0 address %s"
+`, macAddress, phyName, phyName, macAddress)
+		
+		udevRulePath := "/etc/udev/rules.d/70-persistent-net.rules"
+		tmpUdevFile := "/tmp/70-persistent-net.rules.tmp"
+		if err := os.WriteFile(tmpUdevFile, []byte(udevRuleContent), 0644); err == nil {
+			executeCommand(fmt.Sprintf("sudo cp %s %s && sudo chmod 644 %s", tmpUdevFile, udevRulePath, udevRulePath))
+			os.Remove(tmpUdevFile)
+			log.Printf("Created udev rule for automatic ap0 creation")
+			// Recargar reglas udev
+			executeCommand("sudo udevadm control --reload-rules 2>/dev/null || true")
+			executeCommand("sudo udevadm trigger 2>/dev/null || true")
+		} else {
+			log.Printf("Warning: Could not create udev rule: %v", err)
+		}
+	}
 	
 	// 3. Verificar si la interfaz ap0 ya existe
 	checkApCmd := fmt.Sprintf("ip link show %s 2>/dev/null", apInterface)
