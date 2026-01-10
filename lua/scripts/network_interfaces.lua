@@ -26,7 +26,28 @@ if interfaces_output and interfaces_output ~= "" then
         local state_cmd = "cat /sys/class/net/" .. iface .. "/operstate 2>/dev/null"
         local state_output, _ = exec(state_cmd)
         interface_info.state = (state_output and state_output:match("^%s*(.-)%s*$")) or "unknown"
-        interface_info.connected = (interface_info.state == "up")
+        interface_info.connected = false
+        
+        -- Para interfaces WiFi (wlan*), verificar también el estado de wpa_supplicant
+        if string.find(iface, "^wlan") then
+            -- Verificar si wpa_supplicant reporta conexión
+            local wpa_state_cmd = "sudo wpa_cli -i " .. iface .. " status 2>/dev/null | grep 'wpa_state=' | cut -d= -f2"
+            local wpa_state_output, _ = exec(wpa_state_cmd)
+            if wpa_state_output and wpa_state_output ~= "" then
+                local wpa_state = wpa_state_output:match("^%s*(.-)%s*$")
+                interface_info.wpa_state = wpa_state
+                if wpa_state == "COMPLETED" then
+                    -- wpa_supplicant dice COMPLETED, pero necesitamos verificar IP más adelante
+                    interface_info.state = "up"
+                elseif wpa_state == "ASSOCIATING" or wpa_state == "ASSOCIATED" or wpa_state == "4WAY_HANDSHAKE" or wpa_state == "GROUP_HANDSHAKE" then
+                    -- En proceso de conexión
+                    interface_info.state = "connecting"
+                else
+                    -- No conectado
+                    interface_info.state = "down"
+                end
+            end
+        end
         
         -- IP y máscara de red
         -- Método 1: ip addr show (más confiable) - intentar sin sudo primero
