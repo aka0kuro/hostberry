@@ -345,6 +345,14 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 		// wpa_supplicant ya está corriendo, verificar que el socket esté disponible
 		log.Printf("wpa_supplicant ya está corriendo con PID: %s", strings.TrimSpace(string(wpaPid)))
 		time.Sleep(1 * time.Second) // Dar tiempo para que el socket esté listo
+		
+		// Asegurar permisos del socket si existe
+		socketPath1 := fmt.Sprintf("/var/run/wpa_supplicant/%s", interfaceName)
+		socketPath2 := fmt.Sprintf("/run/wpa_supplicant/%s", interfaceName)
+		executeCommand(fmt.Sprintf("sudo chmod 660 %s 2>/dev/null || true", socketPath1))
+		executeCommand(fmt.Sprintf("sudo chmod 660 %s 2>/dev/null || true", socketPath2))
+		executeCommand(fmt.Sprintf("sudo chgrp netdev %s 2>/dev/null || sudo chgrp hostberry %s 2>/dev/null || true", socketPath1, socketPath1))
+		executeCommand(fmt.Sprintf("sudo chgrp netdev %s 2>/dev/null || sudo chgrp hostberry %s 2>/dev/null || true", socketPath2, socketPath2))
 	}
 
 	// Usar wpa_cli para agregar la red
