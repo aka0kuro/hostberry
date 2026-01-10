@@ -1704,24 +1704,66 @@ func hostapdConfigHandler(c *fiber.Ctx) error {
 		
 		// Crear interfaz virtual ap0 en modo AP usando phy
 		log.Printf("Creating virtual interface %s using phy %s...", apInterface, phyName)
+		
+		// Primero verificar que el phy existe y soporta AP mode
+		phyCheckCmd := fmt.Sprintf("iw phy %s info 2>/dev/null | grep -i 'AP'", phyName)
+		phyCheckOut, _ := executeCommand(phyCheckCmd)
+		if strings.TrimSpace(phyCheckOut) == "" {
+			log.Printf("Warning: phy %s may not support AP mode, but attempting anyway", phyName)
+		}
+		
 		createApCmd := fmt.Sprintf("sudo iw phy %s interface add %s type __ap", phyName, apInterface)
 		createOut, createErr := executeCommand(createApCmd)
 		
 		if createErr != nil {
 			log.Printf("Error creating virtual interface %s with phy %s: %s", apInterface, phyName, strings.TrimSpace(createOut))
-			log.Printf("Trying alternative method: using interface %s directly...", phyInterface)
+			log.Printf("Trying alternative method 1: using interface %s directly...", phyInterface)
 			
-			// Método alternativo: usar el nombre de la interfaz directamente
+			// Método alternativo 1: usar el nombre de la interfaz directamente
 			createApCmd2 := fmt.Sprintf("sudo iw dev %s interface add %s type __ap", phyInterface, apInterface)
 			createOut2, createErr2 := executeCommand(createApCmd2)
 			
 			if createErr2 != nil {
-				log.Printf("Error creating virtual interface with alternative method: %s", strings.TrimSpace(createOut2))
-				// Si falla, usar la interfaz física directamente (modo no concurrente)
-				apInterface = phyInterface
-				log.Printf("Falling back to using physical interface %s directly (non-concurrent mode)", apInterface)
+				log.Printf("Error with alternative method 1: %s", strings.TrimSpace(createOut2))
+				log.Printf("Trying alternative method 2: using iw phy without sudo...")
+				
+				// Método alternativo 2: intentar sin sudo (puede funcionar si el usuario tiene permisos)
+				createApCmd3 := fmt.Sprintf("iw phy %s interface add %s type __ap", phyName, apInterface)
+				createOut3, createErr3 := executeCommand(createApCmd3)
+				
+				if createErr3 != nil {
+					log.Printf("Error with alternative method 2: %s", strings.TrimSpace(createOut3))
+					log.Printf("Trying alternative method 3: using mac80211_hwsim if available...")
+					
+					// Método alternativo 3: verificar si hay otro phy disponible
+					phyListCmd := "iw phy 2>/dev/null | grep 'Wiphy' | awk '{print $2}' | head -1"
+					phyListOut, _ := executeCommand(phyListCmd)
+					altPhyName := strings.TrimSpace(phyListOut)
+					if altPhyName != "" && altPhyName != phyName {
+						log.Printf("Trying with alternative phy: %s", altPhyName)
+						createApCmd4 := fmt.Sprintf("sudo iw phy %s interface add %s type __ap", altPhyName, apInterface)
+						createOut4, createErr4 := executeCommand(createApCmd4)
+						if createErr4 == nil {
+							log.Printf("Successfully created interface %s using alternative phy %s", apInterface, altPhyName)
+							apExists = true
+							phyName = altPhyName // Actualizar phyName para uso posterior
+						} else {
+							log.Printf("Error with alternative phy: %s", strings.TrimSpace(createOut4))
+							// Si todo falla, usar la interfaz física directamente (modo no concurrente)
+							apInterface = phyInterface
+							log.Printf("Falling back to using physical interface %s directly (non-concurrent mode)", apInterface)
+						}
+					} else {
+						// Si todo falla, usar la interfaz física directamente (modo no concurrente)
+						apInterface = phyInterface
+						log.Printf("Falling back to using physical interface %s directly (non-concurrent mode)", apInterface)
+					}
+				} else {
+					log.Printf("Successfully created interface %s using method 2 (without sudo)", apInterface)
+					apExists = true
+				}
 			} else {
-				log.Printf("Successfully created interface %s using alternative method (from %s)", apInterface, phyInterface)
+				log.Printf("Successfully created interface %s using alternative method 1 (from %s)", apInterface, phyInterface)
 				apExists = true
 			}
 		} else {
