@@ -973,6 +973,12 @@ EOF
         WPA_CLI_PATH=$(command -v wpa_cli)
         echo "$USER_NAME ALL=(ALL) NOPASSWD: $WPA_CLI_PATH" >> "/etc/sudoers.d/hostberry"
         print_info "Permisos agregados para wpa_cli: $WPA_CLI_PATH"
+    elif [ -f "/usr/sbin/wpa_cli" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /usr/sbin/wpa_cli" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para wpa_cli: /usr/sbin/wpa_cli"
+    elif [ -f "/sbin/wpa_cli" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /sbin/wpa_cli" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para wpa_cli: /sbin/wpa_cli"
     fi
     
     # Agregar permisos para systemctl con wpa_supplicant
