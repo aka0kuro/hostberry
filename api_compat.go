@@ -2155,9 +2155,10 @@ fi
 	}
 	
 	// Script para reiniciar interfaces WiFi (rpi-wifi.sh)
-	apIPBegin := req.Gateway
+	// Calcular rango de red para ap0 (basado en gateway) - reutilizar variable ya declarada
+	apIPBeginForScript := req.Gateway
 	if lastDot := strings.LastIndex(req.Gateway, "."); lastDot > 0 {
-		apIPBegin = req.Gateway[:lastDot]
+		apIPBeginForScript = req.Gateway[:lastDot]
 	}
 	rpiWifiScript := fmt.Sprintf(`#!/bin/bash
 echo 'Starting Wifi AP and STA client...'
