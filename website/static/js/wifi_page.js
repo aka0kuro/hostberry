@@ -142,20 +142,41 @@
     // Signal
     if (signalValue && signalBar) {
       // Buscar signal en connection_info primero, luego en data directamente
-      let signal = 0;
+      let signal = null;
       if (data.connection_info && data.connection_info.signal) {
-        signal = parseInt(data.connection_info.signal) || 0;
+        const signalStr = String(data.connection_info.signal).trim();
+        if (signalStr && signalStr !== "null" && signalStr !== "0" && signalStr !== "") {
+          const signalNum = parseInt(signalStr, 10);
+          if (!isNaN(signalNum) && signalNum !== 0) {
+            signal = signalNum;
+          }
+        }
       } else if (data.signal) {
-        signal = parseInt(data.signal) || 0;
+        const signalStr = String(data.signal).trim();
+        if (signalStr && signalStr !== "null" && signalStr !== "0" && signalStr !== "") {
+          const signalNum = parseInt(signalStr, 10);
+          if (!isNaN(signalNum) && signalNum !== 0) {
+            signal = signalNum;
+          }
+        }
       }
       // Si la señal es positiva, convertir a negativa (error de parsing)
-      if (signal > 0) {
+      if (signal !== null && signal > 0) {
         signal = -signal;
       }
       // Calcular porcentaje: -30 dBm = 100%, -100 dBm = 0%
-      const signalPercentRaw = signal <= -100 ? 0 : (signal >= -30 ? 100 : Math.min(100, Math.max(0, ((signal + 100) / 70) * 100)));
-      const signalPercent = Math.round(signalPercentRaw); // Redondear a número entero
-      signalValue.textContent = signal < 0 ? signal + 'dBm' : '--';
+      let signalPercent = 0;
+      if (signal !== null && signal !== 0 && !isNaN(signal)) {
+        const signalPercentRaw = signal <= -100 ? 0 : (signal >= -30 ? 100 : Math.min(100, Math.max(0, ((signal + 100) / 70) * 100)));
+        signalPercent = Math.round(signalPercentRaw); // Redondear a número entero
+      }
+      if (signalValue) {
+        if (signal !== null && signal !== 0 && !isNaN(signal) && signal < 0) {
+          signalValue.textContent = signal + 'dBm';
+        } else {
+          signalValue.textContent = '--';
+        }
+      }
       signalBar.style.width = signalPercent + '%';
     }
 
