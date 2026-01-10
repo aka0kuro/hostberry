@@ -145,10 +145,6 @@ func loadConfig() error {
 				BcryptCost:   10,
 				RateLimitRPS: 10,
 			},
-			Lua: LuaConfig{
-				ScriptsPath: "lua/scripts",
-				Enabled:     true,
-			},
 		}
 		return nil
 	}
