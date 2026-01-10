@@ -699,24 +699,18 @@ func vpnConnectHandler(c *fiber.Ctx) error {
 	user := c.Locals("user").(*User)
 	userID := user.ID
 
-	if luaEngine != nil {
-		result, err := luaEngine.Execute("vpn_connect.lua", fiber.Map{
-			"config": req.Config,
-			"type":   req.Type,
-			"user":   user.Username,
-		})
-		if err != nil {
-			InsertLog("ERROR", "Error conectando VPN: "+err.Error(), "vpn", &userID)
-			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
-		}
-
-		InsertLog("INFO", "VPN conectado: "+req.Type, "vpn", &userID)
+	result := connectVPN(req.Config, req.Type, user.Username)
+	if success, ok := result["success"].(bool); ok && success {
+		InsertLog("INFO", fmt.Sprintf("VPN conectado: %s (usuario: %s)", req.Type, user.Username), "vpn", &userID)
 		return c.JSON(result)
 	}
 
-	return c.Status(500).JSON(fiber.Map{
-		"error": "Lua engine no disponible",
-	})
+	if errorMsg, ok := result["error"].(string); ok {
+		InsertLog("ERROR", fmt.Sprintf("Error conectando VPN: %s (usuario: %s)", errorMsg, user.Username), "vpn", &userID)
+		return c.Status(500).JSON(fiber.Map{"error": errorMsg})
+	}
+
+	return c.Status(500).JSON(fiber.Map{"error": "Error desconocido"})
 }
 
 // Handlers de WireGuard
