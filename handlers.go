@@ -724,13 +724,21 @@ func wireguardInterfacesHandler(c *fiber.Ctx) error {
 	// Intentar obtener interfaces via wg (más directo que Lua para estructura)
 	out, err := exec.Command("wg", "show", "interfaces").CombinedOutput()
 	if err != nil {
-		// fallback a Lua status
-		if luaEngine != nil {
-			result, err2 := luaEngine.Execute("wireguard_status.lua", nil)
-			if err2 != nil {
-				return c.Status(500).JSON(fiber.Map{"error": string(out)})
+		// fallback a función Go
+		result := getWireGuardStatus()
+		if interfaces, ok := result["interfaces"].([]map[string]interface{}); ok && len(interfaces) > 0 {
+			var resp []fiber.Map
+			for _, iface := range interfaces {
+				if name, ok := iface["name"].(string); ok {
+					resp = append(resp, fiber.Map{
+						"name":        name,
+						"status":      "up",
+						"address":     "",
+						"peers_count": 0,
+					})
+				}
 			}
-			_ = result
+			return c.JSON(resp)
 		}
 		return c.Status(500).JSON(fiber.Map{"error": strings.TrimSpace(string(out))})
 	}
