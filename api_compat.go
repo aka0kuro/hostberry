@@ -358,16 +358,10 @@ func networkConfigHandler(c *fiber.Ctx) error {
 // ---------- WiFi ----------
 
 func wifiNetworksHandler(c *fiber.Ctx) error {
-	if luaEngine == nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Lua engine no disponible"})
-	}
-	result, err := luaEngine.Execute("wifi_scan.lua", nil)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
-	}
-	// wifi_scan.lua retorna { networks: [...] }
-	if v, ok := result["networks"]; ok {
-		return c.JSON(v)
+	interfaceName := c.Query("interface", "wlan0")
+	result := scanWiFiNetworks(interfaceName)
+	if networks, ok := result["networks"]; ok {
+		return c.JSON(networks)
 	}
 	return c.JSON([]fiber.Map{})
 }
