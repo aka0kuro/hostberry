@@ -42,9 +42,7 @@ func healthCheckHandler(c *fiber.Ctx) error {
 		response.Status = "degraded"
 	}
 
-	// Verificar motor Lua
 	// Lua ya no se usa - todo está en Go ahora
-	response.Services["lua_engine"] = "deprecated"
 
 	// Verificar i18n
 	if i18nManager != nil {
