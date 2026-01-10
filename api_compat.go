@@ -2312,21 +2312,52 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 			}
 		}
 		
-		// Si aún falta información, intentar con iwconfig como último recurso
-		if connectionInfo["signal"] == nil || connectionInfo["channel"] == nil {
+		// Método 3: Intentar con /proc/net/wireless para señal
+		if connectionInfo["signal"] == nil || connectionInfo["signal"] == "" || connectionInfo["signal"] == "0" {
+			log.Printf("Trying /proc/net/wireless for signal on %s", iface)
+			wirelessCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /proc/net/wireless 2>/dev/null | grep %s", iface))
+			wirelessOut, wirelessErr := wirelessCmd.Output()
+			if wirelessErr == nil && len(wirelessOut) > 0 {
+				wirelessLine := strings.TrimSpace(string(wirelessOut))
+				log.Printf("/proc/net/wireless output: %s", wirelessLine)
+				// Formato: "wlan0: 0000 123. 456. 0.000 0.000 0 0 0 0 0 0"
+				// Campo 3 es signal level (multiplicado por 10, negativo)
+				parts := strings.Fields(wirelessLine)
+				if len(parts) >= 3 {
+					if signalLevel, err := strconv.Atoi(strings.TrimSuffix(parts[2], ".")); err == nil && signalLevel > 0 {
+						// Convertir de formato /proc/net/wireless (multiplicado por 10) a dBm
+						signalDbm := signalLevel / 10
+						// El valor en /proc/net/wireless es positivo pero representa dBm negativo
+						// Por ejemplo, 45 significa -45 dBm
+						if signalDbm > 0 {
+							connectionInfo["signal"] = fmt.Sprintf("-%d", signalDbm)
+							log.Printf("Found signal from /proc/net/wireless: -%d dBm", signalDbm)
+						}
+					}
+				}
+			}
+		}
+		
+		// Método 4: Intentar con iwconfig como último recurso
+		if (connectionInfo["signal"] == nil || connectionInfo["signal"] == "" || connectionInfo["signal"] == "0") ||
+			(connectionInfo["channel"] == nil || connectionInfo["channel"] == "") {
 			log.Printf("Trying iwconfig as last resort for interface %s", iface)
 			iwconfigCmd := exec.Command("sh", "-c", fmt.Sprintf("iwconfig %s 2>/dev/null", iface))
 			iwconfigOut, iwconfigErr := iwconfigCmd.CombinedOutput()
 			if iwconfigErr == nil && len(iwconfigOut) > 0 {
 				iwconfigStr := string(iwconfigOut)
+				log.Printf("iwconfig output: %s", iwconfigStr)
 				// Buscar señal (formato: "Signal level=-45 dBm")
-				if connectionInfo["signal"] == nil {
+				if connectionInfo["signal"] == nil || connectionInfo["signal"] == "" || connectionInfo["signal"] == "0" {
 					if strings.Contains(iwconfigStr, "Signal level=") {
 						parts := strings.Split(iwconfigStr, "Signal level=")
 						if len(parts) > 1 {
 							signalPart := strings.Fields(parts[1])[0]
 							signalStr := strings.TrimSpace(signalPart)
-							if signalStr != "" {
+							// Remover "dBm" si está presente
+							signalStr = strings.TrimSuffix(signalStr, "dBm")
+							signalStr = strings.TrimSpace(signalStr)
+							if signalStr != "" && signalStr != "0" {
 								connectionInfo["signal"] = signalStr
 								log.Printf("Found signal from iwconfig: %s", signalStr)
 							}
@@ -2334,7 +2365,7 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 					}
 				}
 				// Buscar canal (formato: "Channel:6")
-				if connectionInfo["channel"] == nil {
+				if connectionInfo["channel"] == nil || connectionInfo["channel"] == "" {
 					if strings.Contains(iwconfigStr, "Channel:") {
 						parts := strings.Split(iwconfigStr, "Channel:")
 						if len(parts) > 1 {
