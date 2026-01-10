@@ -582,10 +582,16 @@
       }
       
       // Formato: eth0: 12345 67890 123 456 789 012 345 678 901 234 567 890
+      // O también puede ser: wlan0:    12345    67890    123    456    789    012    345    678    901    234    567    890
       // Campos: name, bytes_recv, packets_recv, errs_recv, drop_recv, bytes_sent, packets_sent, errs_sent, drop_sent
-      const parts = trimmed.split(/\s+/);
-      if (parts.length < 10) continue;
+      // Usar split con regex para manejar múltiples espacios
+      const parts = trimmed.split(/\s+/).filter(p => p.length > 0);
+      if (parts.length < 10) {
+        console.warn('Line has insufficient parts:', trimmed, 'parts:', parts.length);
+        continue;
+      }
       
+      // El primer elemento es el nombre de la interfaz con dos puntos
       const ifaceName = parts[0].replace(':', '').trim();
       // Filtrar interfaces inválidas
       if (!ifaceName || 
@@ -597,14 +603,26 @@
         continue;
       }
       
-      const recvBytes = parseInt(parts[1]) || 0;
-      const recvPackets = parseInt(parts[2]) || 0;
-      const recvErrs = parseInt(parts[3]) || 0;
-      const recvDrop = parseInt(parts[4]) || 0;
-      const sentBytes = parseInt(parts[9]) || 0;
-      const sentPackets = parseInt(parts[10]) || 0;
-      const sentErrs = parseInt(parts[11]) || 0;
-      const sentDrop = parseInt(parts[12]) || 0;
+      // Los campos están en posiciones específicas después del nombre
+      // parts[0] = nombre, parts[1-8] = receive stats, parts[9-16] = transmit stats
+      const recvBytes = parseInt(parts[1], 10) || 0;
+      const recvPackets = parseInt(parts[2], 10) || 0;
+      const recvErrs = parseInt(parts[3], 10) || 0;
+      const recvDrop = parseInt(parts[4], 10) || 0;
+      const sentBytes = parseInt(parts[9], 10) || 0;
+      const sentPackets = parseInt(parts[10], 10) || 0;
+      const sentErrs = parseInt(parts[11], 10) || 0;
+      const sentDrop = parseInt(parts[12], 10) || 0;
+      
+      // Log de depuración para wlan0
+      if (ifaceName === 'wlan0' || (interfaceName && ifaceName === interfaceName)) {
+        console.log(`Parsing interface ${ifaceName}:`, {
+          parts: parts.length,
+          recvBytes,
+          sentBytes,
+          line: trimmed.substring(0, 100)
+        });
+      }
       
       interfaces.push(ifaceName);
       
