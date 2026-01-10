@@ -349,7 +349,7 @@ func systemShutdown(user string) map[string]interface{} {
 
 	result["success"] = true
 	result["message"] = "Sistema se apagará en breve"
-	result["output"] = strings.TrimSpace(out)
+	result["output"] = ""
 	log.Printf("INFO: Comando de apagado ejecutado exitosamente")
 	return result
 }
