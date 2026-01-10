@@ -2172,7 +2172,7 @@ echo 'Starting Wifi AP and STA client...'
 echo 'WPA Supplicant reconfigure in 5sec...'
 /usr/bin/sleep 5
 wpa_cli -i %s reconfigure 2>/dev/null || true
-`, phyInterface, apInterface, apInterface, phyInterface, apIPBegin, apIPBegin, phyInterface)
+`, phyInterface, apInterface, apInterface, phyInterface, apIPBeginForScript, apIPBeginForScript, phyInterface)
 	rpiWifiPath := "/bin/rpi-wifi.sh"
 	tmpRpiWifi := "/tmp/rpi-wifi.sh.tmp"
 	if err := os.WriteFile(tmpRpiWifi, []byte(rpiWifiScript), 0755); err == nil {
