@@ -212,8 +212,7 @@ func createApp() *fiber.App {
 		MaxAge:           3600,
 	}))
 
-	// Middleware de seguridad
-	app.Use(securityMiddleware)
+	// Middleware de seguridad se aplica a rutas específicas con requireAuth
 
 	// Middleware de logging
 	app.Use(loggingMiddleware)
