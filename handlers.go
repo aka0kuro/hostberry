@@ -343,31 +343,14 @@ func networkStatusHandler(c *fiber.Ctx) error {
 }
 
 func networkInterfacesHandler(c *fiber.Ctx) error {
-	if luaEngine != nil {
-		result := getNetworkInterfaces()
-		if err != nil {
-			log.Printf("⚠️ Error ejecutando Lua script: %v", err)
-			// Continuar con fallback
-		} else if result != nil {
-			// Asegurar que el resultado tenga el formato correcto
-			if interfaces, ok := result["interfaces"]; ok {
-				// Verificar si interfaces es un array y tiene elementos
-				if interfacesArray, ok := interfaces.([]interface{}); ok && len(interfacesArray) > 0 {
-					log.Printf("✅ Lua script devolvió %d interfaces", len(interfacesArray))
-					return c.JSON(result)
-				} else if interfacesArray, ok := interfaces.([]map[string]interface{}); ok && len(interfacesArray) > 0 {
-					log.Printf("✅ Lua script devolvió %d interfaces", len(interfacesArray))
-					return c.JSON(result)
-				} else {
-					log.Printf("⚠️ Lua script devolvió interfaces vacías, usando fallback")
-					// Continuar con fallback si está vacío
-				}
-			} else {
-				log.Printf("⚠️ Lua script no devolvió campo 'interfaces', usando fallback")
-				// Continuar con fallback
+	// Usar función Go en lugar de Lua
+	result := getNetworkInterfaces()
+	if result != nil {
+		if interfaces, ok := result["interfaces"]; ok {
+			if interfacesArray, ok := interfaces.([]map[string]interface{}); ok && len(interfacesArray) > 0 {
+				log.Printf("✅ Función Go devolvió %d interfaces", len(interfacesArray))
+				return c.JSON(result)
 			}
-		} else {
-			log.Printf("⚠️ Lua script devolvió nil, usando fallback")
 		}
 	}
 
