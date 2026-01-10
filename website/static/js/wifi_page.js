@@ -18,8 +18,6 @@
     
     // Mapeo de mensajes de error comunes del backend
     const errorMap = {
-      'lua engine no disponible': t('wifi.lua_engine_unavailable', 'Lua engine not available'),
-      'lua engine not available': t('wifi.lua_engine_unavailable', 'Lua engine not available'),
       'wifi no está habilitado': t('wifi.wifi_not_enabled', 'WiFi is not enabled'),
       'wifi is not enabled': t('wifi.wifi_not_enabled', 'WiFi is not enabled'),
       'por favor, habilita wifi primero': t('wifi.enable_wifi_first', 'Please enable WiFi first'),
