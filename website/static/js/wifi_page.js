@@ -554,7 +554,7 @@
                   <div class="network-card-ssid">${ssid}${connectedBadge}</div>
                   <div class="network-card-details">
                     <span class="network-card-detail-item">
-                      <i class="bi bi-bar-chart me-1"></i> ${signal}dBm (${signalPercent}%)
+                      <i class="bi bi-bar-chart me-1"></i> ${signal !== null && signal !== 0 ? signal + 'dBm (' + signalPercent + '%)' : '--'}
                     </span>
                     <span class="network-card-detail-item">
                       <i class="bi ${securityIcon} me-1"></i> ${security.toUpperCase()}
