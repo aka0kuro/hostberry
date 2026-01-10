@@ -829,84 +829,14 @@
   // Load Network Basic Configuration
   async function loadNetworkConfig() {
     try {
-      // Obtener hostname desde system/info
-      const infoResp = await HostBerry.apiRequest('/api/v1/system/info');
-      let hostname = '';
-      if (infoResp && infoResp.ok) {
-        const info = await infoResp.json().catch(() => ({}));
-        hostname = info.hostname || '';
+      // Obtener configuración actual desde el endpoint
+      const configResp = await HostBerry.apiRequest('/api/v1/network/config');
+      if (!configResp || !configResp.ok) {
+        console.warn('No se pudo obtener la configuración de red');
+        return;
       }
       
-      // Obtener gateway desde las interfaces
-      let gateway = '';
-      const interfacesResp = await HostBerry.apiRequest('/api/v1/network/interfaces');
-      if (interfacesResp && interfacesResp.ok) {
-        const interfacesData = await interfacesResp.json().catch(() => ({}));
-        let interfaces = [];
-        if (Array.isArray(interfacesData)) {
-          interfaces = interfacesData;
-        } else if (interfacesData.interfaces && Array.isArray(interfacesData.interfaces)) {
-          interfaces = interfacesData.interfaces;
-        } else if (interfacesData.data && Array.isArray(interfacesData.data)) {
-          interfaces = interfacesData.data;
-        }
-        
-        // Buscar la primera interfaz activa con gateway
-        for (const iface of interfaces) {
-          if (iface && iface.gateway && iface.gateway !== 'N/A' && iface.gateway !== '') {
-            gateway = iface.gateway;
-            break;
-          }
-        }
-        
-        // Si no hay gateway en interfaces, intentar obtenerlo desde la tabla de rutas
-        if (!gateway) {
-          const routingResp = await HostBerry.apiRequest('/api/v1/network/routing');
-          if (routingResp && routingResp.ok) {
-            const routingData = await routingResp.json().catch(() => ({}));
-            let routes = [];
-            if (Array.isArray(routingData)) {
-              routes = routingData;
-            } else if (routingData.routes && Array.isArray(routingData.routes)) {
-              routes = routingData.routes;
-            } else if (routingData.data && Array.isArray(routingData.data)) {
-              routes = routingData.data;
-            }
-            
-            // Buscar la ruta por defecto (destination 0.0.0.0)
-            for (const route of routes) {
-              if (route && (route.destination === '0.0.0.0' || route.destination === 'default') && route.gateway && route.gateway !== '*' && route.gateway !== '') {
-                gateway = route.gateway;
-                break;
-              }
-            }
-          }
-        }
-      }
-      
-      // Obtener DNS desde resolv.conf o systemd-resolved
-      let dns1 = '';
-      let dns2 = '';
-      try {
-        // Intentar obtener DNS desde systemd-resolved
-        const dnsResp = await HostBerry.apiRequest('/api/v1/system/info');
-        if (dnsResp && dnsResp.ok) {
-          const dnsInfo = await dnsResp.json().catch(() => ({}));
-          // Si el endpoint devuelve DNS, usarlos
-          if (dnsInfo.dns && Array.isArray(dnsInfo.dns) && dnsInfo.dns.length > 0) {
-            dns1 = dnsInfo.dns[0] || '';
-            dns2 = dnsInfo.dns[1] || '';
-          } else if (dnsInfo.dns1) {
-            dns1 = dnsInfo.dns1;
-            dns2 = dnsInfo.dns2 || '';
-          }
-        }
-      } catch (e) {
-        console.warn('Error obteniendo DNS:', e);
-      }
-      
-      // Si no se obtuvieron DNS, intentar leer desde resolv.conf usando un endpoint especial
-      // Por ahora, dejamos DNS vacío si no se puede obtener
+      const config = await configResp.json().catch(() => ({}));
       
       // Actualizar campos del formulario
       const hostnameInput = document.getElementById('hostname');
@@ -914,26 +844,26 @@
       const dns1Input = document.getElementById('dns1');
       const dns2Input = document.getElementById('dns2');
       
-      if (hostnameInput && hostname) {
-        hostnameInput.value = hostname;
+      if (hostnameInput && config.hostname) {
+        hostnameInput.value = config.hostname;
       }
-      if (gatewayInput && gateway) {
-        gatewayInput.value = gateway;
+      if (gatewayInput && config.gateway) {
+        gatewayInput.value = config.gateway;
       }
-      if (dns1Input && dns1) {
-        dns1Input.value = dns1;
+      if (dns1Input && config.dns1) {
+        dns1Input.value = config.dns1;
       }
-      if (dns2Input && dns2) {
-        dns2Input.value = dns2;
+      if (dns2Input && config.dns2) {
+        dns2Input.value = config.dns2;
       }
       
       // Actualizar preset de DNS si coincide con alguno conocido
-      if (dns1 && dns2) {
+      if (config.dns1 && config.dns2) {
         const presetSelect = document.getElementById('dns-preset');
         if (presetSelect) {
           let matchedPreset = 'custom';
           for (const [presetKey, presetValue] of Object.entries(dnsPresets)) {
-            if (presetValue.primary === dns1 && presetValue.secondary === dns2) {
+            if (presetValue.primary === config.dns1 && presetValue.secondary === config.dns2) {
               matchedPreset = presetKey;
               break;
             }
