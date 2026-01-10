@@ -43,11 +43,8 @@ func healthCheckHandler(c *fiber.Ctx) error {
 	}
 
 	// Verificar motor Lua
-	if luaEngine != nil {
-		response.Services["lua_engine"] = "healthy"
-	} else {
-		response.Services["lua_engine"] = "disabled"
-	}
+	// Lua ya no se usa - todo está en Go ahora
+	response.Services["lua_engine"] = "deprecated"
 
 	// Verificar i18n
 	if i18nManager != nil {
