@@ -752,10 +752,8 @@
           body: { 
             ssid: ssid, 
           password: password,
-          security: security
-        },
-        headers: {
-          'Country': country
+          security: security,
+          country: country
         }
       });
         
