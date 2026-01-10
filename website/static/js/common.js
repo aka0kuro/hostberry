@@ -190,28 +190,51 @@
     const resp = await fetch(url, opts);
       if(resp.status === 401 && !url.includes('/auth/login')){
         // Auto logout on unauthorized
-        // Pero NO redirigir inmediatamente si es una operación de WiFi que puede causar pérdida temporal de conexión
-        // Esperar un momento para ver si la conexión se restablece
-        if(url.includes('/wifi/connect')){
-          console.warn('401 durante conexión WiFi - puede ser pérdida temporal de conexión');
+        // Pero NO redirigir inmediatamente si es una operación que puede causar pérdida temporal de conexión
+        // o si es un error de red (no un error real de autenticación)
+        const isNetworkOperation = url.includes('/wifi/connect') || 
+                                   url.includes('/network/') || 
+                                   url.includes('/system/network');
+        
+        if(isNetworkOperation){
+          console.warn('401 durante operación de red - puede ser pérdida temporal de conexión');
           // No redirigir inmediatamente, dejar que el código de manejo de errores lo haga
           // después de verificar si es un error real o temporal
         } else {
-          localStorage.removeItem('access_token');
-          window.location.href = '/login?error=session_expired';
+          // Solo cerrar sesión si NO es un error de red y es un 401 real
+          // Verificar que realmente es un error de autenticación y no un error de red
+          try {
+            const errorData = await resp.clone().json().catch(() => ({}));
+            const errorMsg = errorData.error || '';
+            // Si el mensaje indica que es un error de token/autenticación real, cerrar sesión
+            if(errorMsg.includes('token') || errorMsg.includes('Token') || 
+               errorMsg.includes('autorizado') || errorMsg.includes('authorized') ||
+               errorMsg.includes('expirado') || errorMsg.includes('expired')){
+              localStorage.removeItem('access_token');
+              window.location.href = '/login?error=session_expired';
+            }
+          } catch(_e) {
+            // Si no se puede parsear el error, asumir que es un error de autenticación real
+            localStorage.removeItem('access_token');
+            window.location.href = '/login?error=session_expired';
+          }
         }
       }
     return resp;
     } catch (e) {
       console.error('API Request failed:', e);
-      // Si es un error de red durante conexión WiFi, no es necesariamente un error de autenticación
-      if(url.includes('/wifi/connect') && (e.message && (
+      // Si es un error de red, NO cerrar la sesión - podría ser temporal
+      const isNetworkError = e.message && (
         e.message.includes('Failed to fetch') ||
         e.message.includes('NetworkError') ||
         e.message.includes('ERR_INTERNET_DISCONNECTED') ||
-        e.message.includes('ERR_NETWORK_CHANGED')
-      ))){
-        // Es un error de red, no de autenticación - lanzar el error para que el código de WiFi lo maneje
+        e.message.includes('ERR_NETWORK_CHANGED') ||
+        e.message.includes('Network request failed')
+      );
+      
+      if(isNetworkError){
+        // Es un error de red, no de autenticación - lanzar el error para que el código lo maneje
+        // NO cerrar la sesión por errores de red
         throw e;
       }
       throw e;
