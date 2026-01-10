@@ -19,6 +19,15 @@ if interfaces_output and interfaces_output ~= "" then
             goto continue
         end
         
+        -- Verificar que la interfaz realmente existe (incluyendo ap0)
+        -- Esto asegura que interfaces virtuales como ap0 se muestren
+        local iface_check_cmd = "ip link show " .. iface .. " 2>/dev/null"
+        local iface_check_output, iface_check_error = exec(iface_check_cmd)
+        if iface_check_error or not iface_check_output or iface_check_output == "" then
+            log("WARNING", "Interface " .. iface .. " no existe o no es accesible, saltando")
+            goto continue
+        end
+        
         local interface_info = {}
         interface_info.name = iface
         
