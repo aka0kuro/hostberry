@@ -186,18 +186,35 @@ exec(select_cmd)
 -- Esperar un momento para que se establezca la conexión
 os.execute("sleep 5")
 
--- Verificar el estado de la conexión
--- Intentar reconectar si no está conectado
-local reconnect_cmd = wpa_cli_cmd .. " reconnect"
-exec(reconnect_cmd)
-os.execute("sleep 3")
-local status_cmd = wpa_cli_cmd .. " status"
-local status_output = exec(status_cmd)
+-- Verificar el estado de la conexión (con múltiples intentos)
 local connected = false
+local status_output = ""
+local max_attempts = 5
+local attempt = 0
 
-if status_output then
-    if string.find(status_output, "wpa_state=COMPLETED") or string.find(status_output, "ssid=" .. ssid) then
-        connected = true
+while attempt < max_attempts and not connected do
+    os.execute("sleep 2")
+    local status_cmd = wpa_cli_cmd .. " status"
+    status_output = exec(status_cmd) or ""
+    
+    if status_output then
+        -- Verificar que realmente esté conectado
+        if string.find(status_output, "wpa_state=COMPLETED") then
+            -- Verificar que el SSID coincida
+            local ssid_match = string.find(status_output, "ssid=" .. ssid, 1, true)
+            if ssid_match then
+                connected = true
+                log("INFO", "WiFi conectado exitosamente: " .. ssid .. " (intento " .. (attempt + 1) .. ")")
+                break
+            end
+        end
+    end
+    
+    attempt = attempt + 1
+    if attempt < max_attempts then
+        log("INFO", "Esperando conexión... (intento " .. attempt .. "/" .. max_attempts .. ")")
+        -- Intentar reconectar
+        exec(wpa_cli_cmd .. " reconnect")
     end
 end
 
@@ -206,11 +223,23 @@ if connected then
     result.message = "Conectado a " .. ssid
     result.output = status_output or ""
     log("INFO", "WiFi conectado exitosamente: " .. ssid)
+    
+    -- Esperar un momento más para que se establezca la IP
+    os.execute("sleep 2")
+    
+    -- Verificar que se obtuvo una IP
+    local ip_check = exec("ip addr show " .. interface .. " 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d/ -f1 | head -1")
+    if ip_check and ip_check ~= "" then
+        log("INFO", "IP obtenida: " .. ip_check)
+    else
+        log("WARNING", "Conectado pero sin IP aún, puede tardar unos segundos más")
+    end
 else
     result.success = false
-    result.error = "No se pudo establecer la conexión"
+    result.error = "No se pudo establecer la conexión después de " .. max_attempts .. " intentos"
     result.message = "Error conectando a " .. ssid
-    log("ERROR", "Error conectando WiFi: " .. ssid)
+    result.output = status_output or ""
+    log("ERROR", "Error conectando WiFi: " .. ssid .. " - Estado: " .. (status_output or "sin respuesta"))
 end
 
 return result
