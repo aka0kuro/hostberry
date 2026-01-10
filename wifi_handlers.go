@@ -259,8 +259,10 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 		if _, err := os.Stat(wpaConfig); os.IsNotExist(err) {
 			wpaConfig = "/etc/wpa_supplicant/wpa_supplicant.conf"
 			if _, err := os.Stat(wpaConfig); os.IsNotExist(err) {
-				defaultConfig := fmt.Sprintf("ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=%s\n", country)
+				// Crear configuración con grupo netdev y permisos del socket
+				defaultConfig := fmt.Sprintf("ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nctrl_interface_group=netdev\nupdate_config=1\ncountry=%s\n", country)
 				os.WriteFile(wpaConfig, []byte(defaultConfig), 0600)
+				log.Printf("Archivo de configuración wpa_supplicant creado con GROUP=netdev")
 			} else {
 				// Actualizar country en el archivo existente
 				configContent, _ := os.ReadFile(wpaConfig)
