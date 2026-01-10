@@ -497,7 +497,7 @@ install_files() {
     
     # Verificar que estamos en el directorio correcto con todos los archivos
     local missing_files=0
-    for item in "website" "lua" "locales" "main.go" "go.mod"; do
+    for item in "website" "locales" "main.go" "go.mod"; do
         if [ ! -e "${SCRIPT_DIR}/${item}" ]; then
             print_warning "No se encontró '${item}' en ${SCRIPT_DIR}"
             missing_files=$((missing_files + 1))
