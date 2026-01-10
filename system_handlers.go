@@ -305,7 +305,7 @@ func systemShutdown(user string) map[string]interface{} {
 
 	// Intentar con systemctl primero
 	shutdownCmd := "systemctl poweroff"
-	if out, err := executeCommand(shutdownCmd); err != nil {
+	if _, err := executeCommand(shutdownCmd); err != nil {
 		log.Printf("WARN: systemctl poweroff falló, intentando con shutdown: %v", err)
 		// Intentar con shutdown
 		shutdownPaths := []string{"/usr/sbin/shutdown", "/sbin/shutdown", "shutdown"}
