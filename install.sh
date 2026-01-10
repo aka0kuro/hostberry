@@ -614,7 +614,7 @@ database:
 
 security:
   jwt_secret: "$(openssl rand -hex 32)"
-  token_expiry: 1440
+  token_expiry: 60
   bcrypt_cost: 10
   rate_limit_rps: 10
 EOF
