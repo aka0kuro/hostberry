@@ -37,8 +37,39 @@ if interfaces_output and interfaces_output ~= "" then
         -- Estado
         local state_cmd = "cat /sys/class/net/" .. iface .. "/operstate 2>/dev/null"
         local state_output, _ = exec(state_cmd)
-        interface_info.state = (state_output and state_output:match("^%s*(.-)%s*$")) or "unknown"
+        local state = (state_output and state_output:match("^%s*(.-)%s*$")) or "unknown"
+        if state == "" then
+            -- Si operstate está vacío, verificar con ip link show
+            local ip_state_cmd = "ip link show " .. iface .. " 2>/dev/null | grep -o 'state [A-Z]*' | awk '{print $2}'"
+            local ip_state_output, _ = exec(ip_state_cmd)
+            if ip_state_output and ip_state_output ~= "" then
+                state = ip_state_output:match("^%s*(.-)%s*$") or "unknown"
+            end
+        end
+        interface_info.state = state
         interface_info.connected = false
+        
+        -- Para ap0, asegurar que se muestre incluso si está down
+        if iface == "ap0" then
+            log("INFO", "Interfaz ap0 encontrada, estado: " .. state)
+            -- Verificar si ap0 está activa, si no, intentar activarla
+            if state == "down" or state == "unknown" then
+                log("WARNING", "ap0 está down, intentando activarla...")
+                local activate_cmd = "sudo ip link set ap0 up 2>/dev/null"
+                exec(activate_cmd)
+                os.execute("sleep 0.5")
+                -- Verificar estado nuevamente
+                local state_cmd2 = "cat /sys/class/net/ap0/operstate 2>/dev/null"
+                local state_output2, _ = exec(state_cmd2)
+                if state_output2 and state_output2 ~= "" then
+                    local new_state = state_output2:match("^%s*(.-)%s*$")
+                    if new_state and new_state ~= "" then
+                        interface_info.state = new_state
+                        log("INFO", "ap0 activada, nuevo estado: " .. new_state)
+                    end
+                end
+            end
+        end
         
         -- Para interfaces WiFi (wlan*), verificar también el estado de wpa_supplicant
         if string.find(iface, "^wlan") then
