@@ -425,7 +425,8 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 		}
 
 		// Obtener IP y máscara de red
-		ipCmd := exec.Command("sh", "-c", fmt.Sprintf("ip addr show %s | grep 'inet ' | awk '{print $2}'", ifaceName))
+		// Método 1: ip addr show (más confiable)
+		ipCmd := exec.Command("sh", "-c", fmt.Sprintf("ip addr show %s 2>/dev/null | grep 'inet ' | awk '{print $2}' | head -1", ifaceName))
 		if ipOut, err := ipCmd.Output(); err == nil {
 			ipLine := strings.TrimSpace(string(ipOut))
 			if ipLine != "" {
@@ -434,6 +435,39 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 				iface["ip"] = parts[0]
 				if len(parts) > 1 {
 					iface["netmask"] = parts[1]
+				}
+			}
+		}
+		
+		// Si no se obtuvo IP con el método anterior, intentar método alternativo
+		if iface["ip"] == "N/A" || iface["ip"] == "" {
+			// Método 2: ifconfig (fallback)
+			ifconfigCmd := exec.Command("sh", "-c", fmt.Sprintf("ifconfig %s 2>/dev/null | grep 'inet ' | awk '{print $2}' | head -1", ifaceName))
+			if ifconfigOut, err := ifconfigCmd.Output(); err == nil {
+				ifconfigLine := strings.TrimSpace(string(ifconfigOut))
+				if ifconfigLine != "" {
+					// Limpiar cualquier prefijo (ej: "addr:192.168.1.1" -> "192.168.1.1")
+					ifconfigLine = strings.TrimPrefix(ifconfigLine, "addr:")
+					iface["ip"] = ifconfigLine
+				}
+			}
+		}
+		
+		// Si aún no hay IP, intentar obtener desde hostname -I filtrando por interfaz
+		if iface["ip"] == "N/A" || iface["ip"] == "" {
+			// Método 3: hostname -I y verificar qué IP pertenece a esta interfaz
+			hostnameCmd := exec.Command("sh", "-c", "hostname -I 2>/dev/null | awk '{print $1}'")
+			if hostnameOut, err := hostnameCmd.Output(); err == nil {
+				hostnameIP := strings.TrimSpace(string(hostnameOut))
+				if hostnameIP != "" {
+					// Verificar si esta IP está en la interfaz
+					checkCmd := exec.Command("sh", "-c", fmt.Sprintf("ip addr show %s 2>/dev/null | grep -q '%s' && echo '%s'", ifaceName, hostnameIP, hostnameIP))
+					if checkOut, err := checkCmd.Output(); err == nil {
+						checkIP := strings.TrimSpace(string(checkOut))
+						if checkIP != "" {
+							iface["ip"] = checkIP
+						}
+					}
 				}
 			}
 		}
