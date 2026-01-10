@@ -232,43 +232,123 @@ func getSystemStats() map[string]interface{} {
 }
 
 // systemRestart reinicia el sistema (reemplaza system_restart.lua)
-func systemRestart(delay int) map[string]interface{} {
+func systemRestart(user string) map[string]interface{} {
 	result := make(map[string]interface{})
 
-	if delay < 0 {
-		delay = 0
+	if user == "" {
+		user = "unknown"
 	}
 
-	// Ejecutar comando de reinicio
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("sleep %d && sudo reboot", delay))
-	if err := cmd.Start(); err != nil {
+	log.Printf("INFO: Reinicio del sistema solicitado por: %s", user)
+
+	// Intentar con systemctl primero
+	restartCmd := "systemctl reboot"
+	if out, err := executeCommand(restartCmd); err != nil {
+		log.Printf("WARN: systemctl reboot falló, intentando con shutdown: %v", err)
+		// Intentar con shutdown
+		shutdownPaths := []string{"/usr/sbin/shutdown", "/sbin/shutdown", "shutdown"}
+		found := false
+		for _, path := range shutdownPaths {
+			testCmd := fmt.Sprintf("command -v %s 2>/dev/null", path)
+			if testOut, testErr := executeCommand(testCmd); testErr == nil && strings.TrimSpace(testOut) != "" {
+				restartCmd = fmt.Sprintf("%s -r +1", path)
+				if out2, err2 := executeCommand(restartCmd); err2 == nil {
+					result["success"] = true
+					result["message"] = "Sistema se reiniciará en 1 minuto"
+					result["output"] = strings.TrimSpace(out2)
+					log.Printf("INFO: Comando de reinicio ejecutado exitosamente")
+					return result
+				}
+				found = true
+				break
+			}
+		}
+		if !found {
+			// Último recurso: reboot directo
+			restartCmd = "reboot"
+			if out3, err3 := executeCommand(restartCmd); err3 != nil {
+				result["success"] = false
+				result["error"] = err3.Error()
+				result["message"] = "Error al ejecutar comando de reinicio"
+				log.Printf("ERROR: Error reiniciando sistema: %v", err3)
+				return result
+			}
+			result["success"] = true
+			result["message"] = "Sistema se reiniciará en breve"
+			result["output"] = strings.TrimSpace(out3)
+			return result
+		}
 		result["success"] = false
 		result["error"] = err.Error()
+		result["message"] = "Error al ejecutar comando de reinicio"
+		log.Printf("ERROR: Error reiniciando sistema: %v", err)
 		return result
 	}
 
 	result["success"] = true
-	result["message"] = fmt.Sprintf("Sistema se reiniciará en %d segundos", delay)
+	result["message"] = "Sistema se reiniciará en breve"
+	result["output"] = strings.TrimSpace(out)
+	log.Printf("INFO: Comando de reinicio ejecutado exitosamente")
 	return result
 }
 
 // systemShutdown apaga el sistema (reemplaza system_shutdown.lua)
-func systemShutdown(delay int) map[string]interface{} {
+func systemShutdown(user string) map[string]interface{} {
 	result := make(map[string]interface{})
 
-	if delay < 0 {
-		delay = 0
+	if user == "" {
+		user = "unknown"
 	}
 
-	// Ejecutar comando de apagado
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("sleep %d && sudo shutdown -h now", delay))
-	if err := cmd.Start(); err != nil {
+	log.Printf("INFO: Apagado del sistema solicitado por: %s", user)
+
+	// Intentar con systemctl primero
+	shutdownCmd := "systemctl poweroff"
+	if out, err := executeCommand(shutdownCmd); err != nil {
+		log.Printf("WARN: systemctl poweroff falló, intentando con shutdown: %v", err)
+		// Intentar con shutdown
+		shutdownPaths := []string{"/usr/sbin/shutdown", "/sbin/shutdown", "shutdown"}
+		found := false
+		for _, path := range shutdownPaths {
+			testCmd := fmt.Sprintf("command -v %s 2>/dev/null", path)
+			if testOut, testErr := executeCommand(testCmd); testErr == nil && strings.TrimSpace(testOut) != "" {
+				shutdownCmd = fmt.Sprintf("%s -h +1", path)
+				if out2, err2 := executeCommand(shutdownCmd); err2 == nil {
+					result["success"] = true
+					result["message"] = "Sistema se apagará en 1 minuto"
+					result["output"] = strings.TrimSpace(out2)
+					log.Printf("INFO: Comando de apagado ejecutado exitosamente")
+					return result
+				}
+				found = true
+				break
+			}
+		}
+		if !found {
+			// Último recurso: poweroff directo
+			shutdownCmd = "poweroff"
+			if out3, err3 := executeCommand(shutdownCmd); err3 != nil {
+				result["success"] = false
+				result["error"] = err3.Error()
+				result["message"] = "Error al ejecutar comando de apagado"
+				log.Printf("ERROR: Error apagando sistema: %v", err3)
+				return result
+			}
+			result["success"] = true
+			result["message"] = "Sistema se apagará en breve"
+			result["output"] = strings.TrimSpace(out3)
+			return result
+		}
 		result["success"] = false
 		result["error"] = err.Error()
+		result["message"] = "Error al ejecutar comando de apagado"
+		log.Printf("ERROR: Error apagando sistema: %v", err)
 		return result
 	}
 
 	result["success"] = true
-	result["message"] = fmt.Sprintf("Sistema se apagará en %d segundos", delay)
+	result["message"] = "Sistema se apagará en breve"
+	result["output"] = strings.TrimSpace(out)
+	log.Printf("INFO: Comando de apagado ejecutado exitosamente")
 	return result
 }
