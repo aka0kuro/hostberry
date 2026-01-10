@@ -1087,7 +1087,7 @@ func getSystemInfo() fiber.Map {
 	}
 	
 	// Obtener procesador - intentar múltiples métodos
-	processorCmd := "cat /proc/cpuinfo | grep -m1 model | cut -d : -f 2 | sed s/^[[:space:]]*//"
+	processorCmd := "cat /proc/cpuinfo | grep -m1 model | cut -d: -f2"
 	if processor, err := executeCommand(processorCmd); err == nil && processor != "" && processor != "unknown" {
 		info["processor"] = strings.TrimSpace(processor)
 	} else {
