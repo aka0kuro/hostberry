@@ -2306,12 +2306,52 @@ wpa_cli -i %s reconfigure 2>/dev/null || true
 		log.Printf("Warning: Error restarting dnsmasq: %s", strings.TrimSpace(out))
 	}
 	
+	// Verificar que ap0 existe antes de reiniciar hostapd
+	if apInterface == "ap0" {
+		ap0CheckCmd := "ip link show ap0 2>/dev/null"
+		ap0CheckOut, ap0CheckErr := executeCommand(ap0CheckCmd)
+		if ap0CheckErr != nil || strings.TrimSpace(ap0CheckOut) == "" {
+			log.Printf("Warning: ap0 interface does not exist, attempting to create it before starting hostapd")
+			// Intentar crear ap0 una vez más
+			createAp0Cmd := fmt.Sprintf("sudo iw phy %s interface add ap0 type __ap 2>&1", phyName)
+			createAp0Out, _ := executeCommand(createAp0Cmd)
+			if createAp0Out != "" {
+				log.Printf("ap0 creation attempt: %s", strings.TrimSpace(createAp0Out))
+			}
+			time.Sleep(1 * time.Second)
+			// Verificar nuevamente
+			ap0CheckOut2, _ := executeCommand(ap0CheckCmd)
+			if strings.TrimSpace(ap0CheckOut2) == "" {
+				log.Printf("ERROR: ap0 interface still does not exist after creation attempt")
+				return c.Status(500).JSON(fiber.Map{
+					"error":   "Failed to create ap0 interface. Please check WiFi hardware and drivers.",
+					"success": false,
+				})
+			}
+		}
+	}
+	
+	// Limpiar archivos colgados antes de reiniciar
+	executeCommand("sudo rm -rf /var/run/hostapd/ap0 2>/dev/null || true")
+	executeCommand("sudo rm -f /run/hostapd.pid 2>/dev/null || true")
+	
 	// Reiniciar hostapd
 	if out, err := executeCommand("sudo systemctl restart hostapd"); err != nil {
 		return c.Status(500).JSON(fiber.Map{
 			"error":   fmt.Sprintf("Configuration saved but failed to restart hostapd: %s", strings.TrimSpace(out)),
 			"success": false,
 		})
+	}
+	
+	// Esperar un momento y verificar que hostapd se inició correctamente
+	time.Sleep(2 * time.Second)
+	hostapdStatusCmd := "systemctl is-active hostapd 2>/dev/null"
+	hostapdStatusOut, _ := executeCommand(hostapdStatusCmd)
+	if strings.TrimSpace(hostapdStatusOut) != "active" {
+		log.Printf("Warning: hostapd service may not be active after restart. Status: %s", strings.TrimSpace(hostapdStatusOut))
+		// Verificar si el proceso está corriendo
+		pgrepOut, _ := executeCommand("pgrep hostapd 2>/dev/null && echo 'running' || echo 'not running'")
+		log.Printf("hostapd process check: %s", strings.TrimSpace(pgrepOut))
 	}
 	
 	return c.JSON(fiber.Map{
