@@ -26,8 +26,6 @@
       'no wifi networks found': t('wifi.no_networks_found', 'No WiFi networks found'),
       'verifica que wifi esté habilitado': t('wifi.check_wifi_enabled', 'Make sure WiFi is enabled'),
       'make sure wifi is enabled': t('wifi.check_wifi_enabled', 'Make sure WiFi is enabled'),
-      'error ejecutando script lua': t('wifi.lua_script_error', 'Error executing Lua script'),
-      'error executing lua script': t('wifi.lua_script_error', 'Error executing Lua script'),
       'script no encontrado': t('wifi.script_not_found', 'Script not found'),
       'script not found': t('wifi.script_not_found', 'Script not found'),
       'error conectando a wifi': t('wifi.connect_error', 'Error connecting to WiFi'),
