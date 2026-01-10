@@ -588,7 +588,8 @@ func wifiScanHandler(c *fiber.Ctx) error {
 	return c.JSON([]fiber.Map{})
 }
 
-// wifiScanFallback escanea WiFi usando comandos del sistema directamente
+// wifiScanFallback eliminada - no se usa, la funcionalidad está en wifiScanHandler y scanWiFiNetworks
+/*
 func wifiScanFallback(c *fiber.Ctx, interfaceName string) error {
 	var networks []fiber.Map
 
