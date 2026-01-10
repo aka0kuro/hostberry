@@ -68,8 +68,6 @@ type LuaConfig struct {
 }
 
 var appConfig Config
-var luaEngine *LuaEngine
-
 func main() {
 	// Cargar configuración
 	if err := loadConfig(); err != nil {
