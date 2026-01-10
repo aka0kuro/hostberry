@@ -152,10 +152,15 @@ if #result.networks == 0 then
                     -- Remover espacios y convertir a número
                     signal = string.gsub(signal, "%s+", "")
                     local signalNum = tonumber(signal)
-                    if signalNum then
+                    if signalNum and signalNum ~= 0 then
+                        -- Asegurar que sea negativo (dBm siempre es negativo)
+                        if signalNum > 0 then
+                            signalNum = -signalNum
+                        end
                         current_network.signal = math.floor(signalNum + 0.5)  -- Redondear
                     else
-                        current_network.signal = 0
+                        -- Si no se puede parsear o es 0, no establecer señal (dejar nil)
+                        current_network.signal = nil
                     end
                 end
             elseif string.find(line, "freq:") then
