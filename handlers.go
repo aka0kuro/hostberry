@@ -627,7 +627,7 @@ func wifiConnectHandler(c *fiber.Ctx) error {
 	// Obtener país desde el request body o query (si está disponible)
 	country := req.Country
 	if country == "" {
-		country = c.Query("country", "US") // Por defecto US si no se especifica
+		country = c.Query("country", DefaultCountryCode)
 	}
 	if country == "" {
 		country = "US" // Valor por defecto final
