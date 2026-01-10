@@ -7,6 +7,7 @@ local ssid = params.ssid or ""
 local password = params.password or ""
 local user = params.user or "unknown"
 local interface = params.interface or "wlan0"
+local country = params.country or "US"
 
 if ssid == "" then
     result.success = false
