@@ -125,7 +125,7 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 		interfaceName = DefaultWiFiInterface
 	}
 	if country == "" {
-		country = "US"
+		country = DefaultCountryCode
 	}
 	if user == "" {
 		user = "unknown"
