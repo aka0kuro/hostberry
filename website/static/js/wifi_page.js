@@ -499,14 +499,28 @@
           networks.forEach((net, index) => {
             // La señal viene en dBm (negativa, típicamente entre -30 y -100)
             let signal = parseInt(net.signal || net.rssi || 0);
-            // Si la señal es 0 o positiva, puede ser un error de parsing
-            if (signal > 0) {
-              signal = -signal; // Convertir a negativo si es positivo
+            
+            // Si la señal es 0, puede ser un error de parsing - no mostrar porcentaje
+            if (signal === 0 || signal === null || signal === undefined) {
+              signal = null; // No mostrar señal si es 0 o inválida
+            } else {
+              // Si la señal es positiva, puede ser un error de parsing
+              if (signal > 0) {
+                signal = -signal; // Convertir a negativo si es positivo
+              }
+              // Asegurar que esté en el rango válido
+              if (signal > -30) signal = -30; // Límite superior
+              if (signal < -100) signal = -100; // Límite inferior
             }
-            // Calcular porcentaje: -30 dBm = 100%, -100 dBm = 0%
-            // Fórmula: ((signal + 100) / 70) * 100, limitado entre 0 y 100
-            const signalPercentRaw = signal <= -100 ? 0 : (signal >= -30 ? 100 : Math.min(100, Math.max(0, ((signal + 100) / 70) * 100)));
-            const signalPercent = Math.round(signalPercentRaw); // Redondear a número entero
+            
+            // Calcular porcentaje solo si hay señal válida
+            let signalPercent = 0;
+            if (signal !== null && signal !== 0) {
+              // Calcular porcentaje: -30 dBm = 100%, -100 dBm = 0%
+              // Fórmula: ((signal + 100) / 70) * 100, limitado entre 0 y 100
+              const signalPercentRaw = signal <= -100 ? 0 : (signal >= -30 ? 100 : Math.min(100, Math.max(0, ((signal + 100) / 70) * 100)));
+              signalPercent = Math.round(signalPercentRaw); // Redondear a número entero
+            }
             const signalColor = signalPercent > 70 ? 'text-success' : (signalPercent > 40 ? 'text-warning' : 'text-danger');
             const security = net.security || net.encryption || 'none';
             const securityIcon = security === 'none' || security === 'Open' ? 'bi-unlock' : 'bi-lock';
