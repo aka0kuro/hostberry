@@ -312,6 +312,9 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 				} else if socketOut2, _ := socketCheck2.Output(); strings.Contains(string(socketOut2), "exists") {
 					socketReady = true
 					log.Printf("Socket encontrado en: %s", socketPath2)
+					// Asegurar permisos del socket
+					executeCommand(fmt.Sprintf("sudo chmod 660 %s 2>/dev/null || true", socketPath2))
+					executeCommand(fmt.Sprintf("sudo chgrp netdev %s 2>/dev/null || sudo chgrp hostberry %s 2>/dev/null || true", socketPath2, socketPath2))
 					break
 				} else {
 					// Intentar verificar con wpa_cli ping
