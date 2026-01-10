@@ -452,12 +452,22 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 		executeCommand("sudo chmod 660 /run/wpa_supplicant/* 2>/dev/null || true")
 		executeCommand("sudo chgrp netdev /var/run/wpa_supplicant/* 2>/dev/null || sudo chgrp hostberry /var/run/wpa_supplicant/* 2>/dev/null || true")
 		executeCommand("sudo chgrp netdev /run/wpa_supplicant/* 2>/dev/null || sudo chgrp hostberry /run/wpa_supplicant/* 2>/dev/null || true")
+		executeCommand("sudo chown root:netdev /var/run/wpa_supplicant/* 2>/dev/null || sudo chown root:hostberry /var/run/wpa_supplicant/* 2>/dev/null || true")
+		executeCommand("sudo chown root:netdev /run/wpa_supplicant/* 2>/dev/null || sudo chown root:hostberry /run/wpa_supplicant/* 2>/dev/null || true")
 		
 		// Asegurar que el directorio también tenga permisos correctos
 		executeCommand("sudo chmod 775 /var/run/wpa_supplicant 2>/dev/null || true")
 		executeCommand("sudo chmod 775 /run/wpa_supplicant 2>/dev/null || true")
 		executeCommand("sudo chgrp netdev /var/run/wpa_supplicant 2>/dev/null || sudo chgrp hostberry /var/run/wpa_supplicant 2>/dev/null || true")
 		executeCommand("sudo chgrp netdev /run/wpa_supplicant 2>/dev/null || sudo chgrp hostberry /run/wpa_supplicant 2>/dev/null || true")
+		
+		// Verificar que wpa_cli puede comunicarse después de ajustar permisos
+		pingTest := exec.Command("sh", "-c", fmt.Sprintf("sudo wpa_cli -i %s ping 2>&1 | grep -q PONG && echo 'ok' || echo 'fail'", interfaceName))
+		if pingOut, _ := pingTest.Output(); strings.Contains(string(pingOut), "ok") {
+			log.Printf("✅ wpa_cli puede comunicarse después de ajustar permisos")
+		} else {
+			log.Printf("⚠️  wpa_cli aún no puede comunicarse, puede requerir reiniciar wpa_supplicant")
+		}
 	}
 
 	// Usar wpa_cli para agregar la red
