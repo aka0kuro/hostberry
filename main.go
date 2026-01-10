@@ -73,7 +73,6 @@ func main() {
 		log.Fatalf("Error cargando configuración: %v", err)
 	}
 
-	// Lua ya no se usa - todo está en Go ahora
 
 	// Inicializar i18n
 	if err := InitI18n("locales"); err != nil {
