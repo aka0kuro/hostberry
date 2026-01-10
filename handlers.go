@@ -1128,6 +1128,7 @@ func getSystemInfo() fiber.Map {
 	
 	return info
 }
+*/
 
 // systemServicesHandler devuelve el estado de los servicios principales del proyecto
 func systemServicesHandler(c *fiber.Ctx) error {
