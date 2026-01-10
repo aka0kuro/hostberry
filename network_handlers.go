@@ -202,41 +202,40 @@ func getNetworkInterfaces() map[string]interface{} {
 				if iface["state"] == "up" {
 					iface["state"] = "connected"
 				}
-			} else {
-				iface["connected"] = false
+		} else {
+			iface["connected"] = false
+		}
+
+		// Obtener MAC
+		macCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/address 2>/dev/null", ifaceName))
+		if macOut, err := macCmd.Output(); err == nil {
+			mac := strings.TrimSpace(string(macOut))
+			if mac != "" {
+				iface["mac"] = mac
 			}
 		}
 
-	// Obtener MAC
-	macCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/address 2>/dev/null", ifaceName))
-	if macOut, err := macCmd.Output(); err == nil {
-		mac := strings.TrimSpace(string(macOut))
-		if mac != "" {
-			iface["mac"] = mac
-		}
-	}
-
-	// Obtener gateway
-	if iface["connected"] == true && iface["ip"] != "N/A" {
-		gatewayCmd := exec.Command("sh", "-c", fmt.Sprintf("ip route | grep %s | grep default | awk '{print $3}' | head -1", ifaceName))
-		if gatewayOut, err := gatewayCmd.Output(); err == nil {
-			gateway := strings.TrimSpace(string(gatewayOut))
-			if gateway != "" {
-				iface["gateway"] = gateway
-			}
-		}
-		if iface["gateway"] == nil || iface["gateway"] == "" {
-			defaultGatewayCmd := exec.Command("sh", "-c", "ip route | grep default | awk '{print $3}' | head -1")
-			if defaultGatewayOut, err := defaultGatewayCmd.Output(); err == nil {
-				defaultGateway := strings.TrimSpace(string(defaultGatewayOut))
-				if defaultGateway != "" {
-					iface["gateway"] = defaultGateway
+		// Obtener gateway
+		if iface["connected"] == true && iface["ip"] != "N/A" {
+			gatewayCmd := exec.Command("sh", "-c", fmt.Sprintf("ip route | grep %s | grep default | awk '{print $3}' | head -1", ifaceName))
+			if gatewayOut, err := gatewayCmd.Output(); err == nil {
+				gateway := strings.TrimSpace(string(gatewayOut))
+				if gateway != "" {
+					iface["gateway"] = gateway
 				}
 			}
+			if iface["gateway"] == nil || iface["gateway"] == "" {
+				defaultGatewayCmd := exec.Command("sh", "-c", "ip route | grep default | awk '{print $3}' | head -1")
+				if defaultGatewayOut, err := defaultGatewayCmd.Output(); err == nil {
+					defaultGateway := strings.TrimSpace(string(defaultGatewayOut))
+					if defaultGateway != "" {
+						iface["gateway"] = defaultGateway
+					}
+				}
+			}
+		} else {
+			iface["gateway"] = "N/A"
 		}
-	} else {
-		iface["gateway"] = "N/A"
-	}
 
 		interfaces = append(interfaces, iface)
 	}
