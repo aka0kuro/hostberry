@@ -64,9 +64,30 @@ if not wpa_pid or wpa_pid == "" then
         wpa_config = "/etc/wpa_supplicant/wpa_supplicant.conf"
         -- Si tampoco existe el archivo genérico, crearlo
         if not file_exists(wpa_config) then
-            local default_config = "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=US\n"
+            local default_config = "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=" .. country .. "\n"
             write_file(wpa_config, default_config)
             exec("sudo chmod 600 " .. wpa_config)
+        else
+            -- Actualizar country en el archivo existente si es necesario
+            local config_content = read_file(wpa_config)
+            if config_content then
+                -- Verificar si ya tiene country configurado
+                if not string.find(config_content, "country=") then
+                    -- Agregar country al final del archivo
+                    local updated_config = config_content .. "\ncountry=" .. country .. "\n"
+                    write_file(wpa_config, updated_config)
+                    exec("sudo chmod 600 " .. wpa_config)
+                    log("INFO", "Added country code " .. country .. " to wpa_supplicant config")
+                else
+                    -- Actualizar country existente
+                    local updated_config = string.gsub(config_content, "country=[A-Z][A-Z]", "country=" .. country)
+                    if updated_config ~= config_content then
+                        write_file(wpa_config, updated_config)
+                        exec("sudo chmod 600 " .. wpa_config)
+                        log("INFO", "Updated country code to " .. country .. " in wpa_supplicant config")
+                    end
+                end
+            end
         end
     end
     
