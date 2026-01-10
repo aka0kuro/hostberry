@@ -276,13 +276,49 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 			}
 		}
 
+		// Asegurar que el directorio del socket existe
+		executeCommand("sudo mkdir -p /var/run/wpa_supplicant 2>/dev/null || true")
+		executeCommand("sudo chmod 755 /var/run/wpa_supplicant 2>/dev/null || true")
+		
 		// Limpiar el socket de control anterior
 		executeCommand(fmt.Sprintf("sudo rm -rf /var/run/wpa_supplicant/%s 2>/dev/null || true", interfaceName))
+		executeCommand(fmt.Sprintf("sudo rm -rf /run/wpa_supplicant/%s 2>/dev/null || true", interfaceName))
 
 		startCmd := fmt.Sprintf("sudo wpa_supplicant -B -i %s -c %s -D nl80211,wext", interfaceName, wpaConfig)
 		startOut, _ := executeCommand(startCmd)
 		log.Printf("wpa_supplicant start output: %s", strings.TrimSpace(startOut))
-		time.Sleep(3 * time.Second)
+		
+		// Esperar más tiempo y verificar que el socket se haya creado
+		socketReady := false
+		for waitAttempt := 0; waitAttempt < 10; waitAttempt++ {
+			time.Sleep(500 * time.Millisecond)
+			// Verificar que wpa_supplicant esté corriendo
+			wpaPid, _ = exec.Command("sh", "-c", fmt.Sprintf("pgrep -f 'wpa_supplicant.*%s'", interfaceName)).Output()
+			if strings.TrimSpace(string(wpaPid)) != "" {
+				// Verificar que el socket esté disponible
+				socketPath1 := fmt.Sprintf("/var/run/wpa_supplicant/%s", interfaceName)
+				socketPath2 := fmt.Sprintf("/run/wpa_supplicant/%s", interfaceName)
+				socketCheck1 := exec.Command("sh", "-c", fmt.Sprintf("test -S %s && echo 'exists' || echo 'not'", socketPath1))
+				socketCheck2 := exec.Command("sh", "-c", fmt.Sprintf("test -S %s && echo 'exists' || echo 'not'", socketPath2))
+				if socketOut1, _ := socketCheck1.Output(); strings.Contains(string(socketOut1), "exists") {
+					socketReady = true
+					log.Printf("Socket encontrado en: %s", socketPath1)
+					break
+				} else if socketOut2, _ := socketCheck2.Output(); strings.Contains(string(socketOut2), "exists") {
+					socketReady = true
+					log.Printf("Socket encontrado en: %s", socketPath2)
+					break
+				} else {
+					// Intentar verificar con wpa_cli ping
+					pingTest := exec.Command("sh", "-c", fmt.Sprintf("sudo wpa_cli -i %s ping 2>&1 | grep -q PONG && echo 'ok' || echo 'fail'", interfaceName))
+					if pingOut, _ := pingTest.Output(); strings.Contains(string(pingOut), "ok") {
+						socketReady = true
+						log.Printf("wpa_cli responde correctamente")
+						break
+					}
+				}
+			}
+		}
 
 		// Verificar que wpa_supplicant se inició
 		wpaPid, _ = exec.Command("sh", "-c", fmt.Sprintf("pgrep -f 'wpa_supplicant.*%s'", interfaceName)).Output()
@@ -293,7 +329,14 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 			return result
 		} else {
 			log.Printf("wpa_supplicant iniciado correctamente con PID: %s", strings.TrimSpace(string(wpaPid)))
+			if !socketReady {
+				log.Printf("WARNING: Socket de control puede no estar listo, pero continuando...")
+			}
 		}
+	} else {
+		// wpa_supplicant ya está corriendo, verificar que el socket esté disponible
+		log.Printf("wpa_supplicant ya está corriendo con PID: %s", strings.TrimSpace(string(wpaPid)))
+		time.Sleep(1 * time.Second) // Dar tiempo para que el socket esté listo
 	}
 
 	// Usar wpa_cli para agregar la red
