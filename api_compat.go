@@ -1827,13 +1827,24 @@ RUN+="/bin/ip link set ap0 address %s"
 					log.Printf("Trying alternative method 3: using mac80211_hwsim if available...")
 					
 					// Método alternativo 3: verificar si hay otro phy disponible
-					phyListCmd := "iw phy 2>/dev/null | grep 'Wiphy' | awk '{print $2}' | head -1"
+					phyListCmd := "iw phy 2>/dev/null | grep 'Wiphy' | awk '{print $2}'"
 					phyListOut, _ := executeCommand(phyListCmd)
+					log.Printf("Available phys: %s", strings.TrimSpace(phyListOut))
 					altPhyName := strings.TrimSpace(phyListOut)
 					if altPhyName != "" && altPhyName != phyName {
-						log.Printf("Trying with alternative phy: %s", altPhyName)
-						createApCmd4 := fmt.Sprintf("sudo iw phy %s interface add %s type __ap", altPhyName, apInterface)
-						createOut4, createErr4 := executeCommand(createApCmd4)
+						// Tomar el primer phy disponible
+						phyLines := strings.Split(altPhyName, "\n")
+						if len(phyLines) > 0 {
+							altPhyName = strings.TrimSpace(phyLines[0])
+						}
+						if altPhyName != "" && altPhyName != phyName {
+							log.Printf("Trying with alternative phy: %s", altPhyName)
+							createApCmd4 := fmt.Sprintf("sudo iw phy %s interface add %s type __ap 2>&1", altPhyName, apInterface)
+							log.Printf("Executing: %s", createApCmd4)
+							createOut4, createErr4 := executeCommand(createApCmd4)
+							if createOut4 != "" {
+								log.Printf("Method 3 output: %s", strings.TrimSpace(createOut4))
+							}
 						if createErr4 == nil {
 							log.Printf("Successfully created interface %s using alternative phy %s", apInterface, altPhyName)
 							apExists = true
