@@ -65,8 +65,16 @@ os.execute("sleep 1")
 exec("sudo ip link set " .. interface .. " up 2>/dev/null")
 os.execute("sleep 2")
 
--- Asegurar que wpa_supplicant esté corriendo
+-- Detener cualquier instancia de wpa_supplicant existente para reiniciar limpiamente
 local wpa_pid = exec("pgrep -f 'wpa_supplicant.*" .. interface .. "'")
+if wpa_pid and wpa_pid ~= "" then
+    log("INFO", "Deteniendo wpa_supplicant existente para reiniciar limpiamente")
+    exec("sudo pkill -f 'wpa_supplicant.*" .. interface .. "' 2>/dev/null || true")
+    os.execute("sleep 2")
+end
+
+-- Asegurar que wpa_supplicant esté corriendo
+wpa_pid = exec("pgrep -f 'wpa_supplicant.*" .. interface .. "'")
 if not wpa_pid or wpa_pid == "" then
     log("INFO", "Iniciando wpa_supplicant en interfaz " .. interface)
     -- Iniciar wpa_supplicant si no está corriendo
@@ -103,9 +111,24 @@ if not wpa_pid or wpa_pid == "" then
         end
     end
     
-    local start_cmd = "sudo wpa_supplicant -B -i " .. interface .. " -c " .. wpa_config
-    exec(start_cmd)
-    os.execute("sleep 2") -- Esperar a que wpa_supplicant inicie
+    -- Limpiar el socket de control anterior si existe
+    exec("sudo rm -rf /var/run/wpa_supplicant/" .. interface .. " 2>/dev/null || true")
+    
+    local start_cmd = "sudo wpa_supplicant -B -i " .. interface .. " -c " .. wpa_config .. " -D nl80211,wext"
+    local start_output = exec(start_cmd)
+    log("INFO", "wpa_supplicant start output: " .. (start_output or "none"))
+    os.execute("sleep 3") -- Esperar a que wpa_supplicant inicie
+    
+    -- Verificar que wpa_supplicant se inició correctamente
+    wpa_pid = exec("pgrep -f 'wpa_supplicant.*" .. interface .. "'")
+    if not wpa_pid or wpa_pid == "" then
+        log("ERROR", "wpa_supplicant no se inició correctamente")
+        result.success = false
+        result.error = "No se pudo iniciar wpa_supplicant"
+        return result
+    else
+        log("INFO", "wpa_supplicant iniciado correctamente con PID: " .. wpa_pid)
+    end
 end
 
 -- Usar wpa_cli para agregar la red a la configuración
