@@ -114,12 +114,18 @@ install_dependencies() {
             installed_packages+=("${package}")
         else
             print_info "  Instalando ${package}..."
-            if apt-get install -y "${package}" 2>&1 | grep -q "E:"; then
+            if apt-get install -y "${package}" > /dev/null 2>&1; then
+                # Verificar que realmente se instaló
+                if dpkg -l | grep -q "^ii.*${package} " || command -v "${package}" &> /dev/null; then
+                    print_success "  ✓ ${package} instalado correctamente"
+                    installed_packages+=("${package}")
+                else
+                    print_warning "  ✗ ${package} no se instaló correctamente"
+                    failed_packages+=("${package}")
+                fi
+            else
                 print_warning "  ✗ No se pudo instalar ${package}"
                 failed_packages+=("${package}")
-            else
-                print_success "  ✓ ${package} instalado correctamente"
-                installed_packages+=("${package}")
             fi
         fi
     done
