@@ -264,17 +264,32 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 				os.WriteFile(wpaConfig, []byte(defaultConfig), 0600)
 				log.Printf("Archivo de configuración wpa_supplicant creado con GROUP=netdev")
 			} else {
-				// Actualizar country en el archivo existente
+				// Actualizar country y asegurar que GROUP=netdev esté presente
 				configContent, _ := os.ReadFile(wpaConfig)
 				configStr := string(configContent)
+				
+				// Asegurar que GROUP=netdev esté presente
+				if !strings.Contains(configStr, "GROUP=netdev") && !strings.Contains(configStr, "GROUP=hostberry") {
+					// Agregar GROUP=netdev si no está presente
+					if strings.Contains(configStr, "ctrl_interface=") {
+						// Reemplazar ctrl_interface existente para agregar GROUP
+						re := regexp.MustCompile(`ctrl_interface=DIR=([^\n]+)`)
+						configStr = re.ReplaceAllString(configStr, "ctrl_interface=DIR=$1 GROUP=netdev")
+					} else {
+						configStr = fmt.Sprintf("ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nctrl_interface_group=netdev\n%s", configStr)
+					}
+				}
+				
+				// Actualizar country
 				if !strings.Contains(configStr, "country=") {
 					configStr += fmt.Sprintf("\ncountry=%s\n", country)
-					os.WriteFile(wpaConfig, []byte(configStr), 0600)
 				} else {
 					re := regexp.MustCompile(`country=[A-Z][A-Z]`)
 					configStr = re.ReplaceAllString(configStr, fmt.Sprintf("country=%s", country))
-					os.WriteFile(wpaConfig, []byte(configStr), 0600)
 				}
+				
+				os.WriteFile(wpaConfig, []byte(configStr), 0600)
+				log.Printf("Archivo de configuración wpa_supplicant actualizado con GROUP=netdev")
 			}
 		}
 
