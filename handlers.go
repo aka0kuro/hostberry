@@ -351,17 +351,8 @@ func systemShutdownHandler(c *fiber.Ctx) error {
 
 // Handlers de red
 func networkStatusHandler(c *fiber.Ctx) error {
-	if luaEngine != nil {
-		result, err := luaEngine.Execute("network_status.lua", nil)
-		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
-		}
-		return c.JSON(result)
-	}
-
-	return c.Status(500).JSON(fiber.Map{
-		"error": "Lua engine no disponible",
-	})
+	result := getNetworkStatus()
+	return c.JSON(result)
 }
 
 func networkInterfacesHandler(c *fiber.Ctx) error {
