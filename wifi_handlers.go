@@ -17,7 +17,7 @@ func scanWiFiNetworks(interfaceName string) map[string]interface{} {
 	networks := []map[string]interface{}{}
 
 	if interfaceName == "" {
-		interfaceName = "wlan0"
+		interfaceName = DefaultWiFiInterface
 	}
 
 	// Asegurar que la interfaz esté activa
@@ -122,7 +122,7 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 	}
 
 	if interfaceName == "" {
-		interfaceName = "wlan0"
+		interfaceName = DefaultWiFiInterface
 	}
 	if country == "" {
 		country = "US"
@@ -410,7 +410,7 @@ func toggleWiFi(interfaceName string, enable bool) map[string]interface{} {
 	result := make(map[string]interface{})
 
 	if interfaceName == "" {
-		interfaceName = "wlan0"
+		interfaceName = DefaultWiFiInterface
 	}
 
 	if enable {
