@@ -752,6 +752,19 @@
         }
       });
         
+        // Si la respuesta es 401, puede ser que se perdió la conexión durante el proceso
+        if (resp.status === 401) {
+          showAlert('warning', t('wifi.connect_session_lost', 'Session lost during connection. This may happen if the network connection was interrupted. Please log in again and check if the WiFi connection was successful.'));
+          // Esperar un momento antes de redirigir para dar tiempo a que el usuario vea el mensaje
+          setTimeout(() => {
+            localStorage.removeItem('access_token');
+            window.location.href = '/login?error=session_expired';
+          }, 3000);
+          buttonElement.disabled = false;
+          buttonElement.innerHTML = `<i class="bi bi-box-arrow-in-right me-2"></i>${t('wifi.connect', 'Connect')}`;
+          return;
+        }
+        
         const data = await resp.json();
         
       if (resp.ok && data.success) {
