@@ -1025,6 +1025,45 @@ EOF
         print_info "Permisos agregados para ip: /sbin/ip"
     fi
     
+    # Agregar permisos para pkill (para detener procesos wpa_supplicant)
+    if command -v pkill &> /dev/null; then
+        PKILL_PATH=$(command -v pkill)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $PKILL_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para pkill: $PKILL_PATH"
+    elif [ -f "/usr/bin/pkill" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/pkill" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para pkill: /usr/bin/pkill"
+    fi
+    
+    # Agregar permisos para pgrep (para verificar procesos)
+    if command -v pgrep &> /dev/null; then
+        PGREP_PATH=$(command -v pgrep)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $PGREP_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para pgrep: $PGREP_PATH"
+    elif [ -f "/usr/bin/pgrep" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/pgrep" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para pgrep: /usr/bin/pgrep"
+    fi
+    
+    # Agregar permisos para dhclient y udhcpc (para obtener IP)
+    if command -v dhclient &> /dev/null; then
+        DHCPCLIENT_PATH=$(command -v dhclient)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $DHCPCLIENT_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para dhclient: $DHCPCLIENT_PATH"
+    elif [ -f "/usr/sbin/dhclient" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /usr/sbin/dhclient" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para dhclient: /usr/sbin/dhclient"
+    fi
+    
+    if command -v udhcpc &> /dev/null; then
+        UDHCPC_PATH=$(command -v udhcpc)
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: $UDHCPC_PATH" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para udhcpc: $UDHCPC_PATH"
+    elif [ -f "/usr/sbin/udhcpc" ]; then
+        echo "$USER_NAME ALL=(ALL) NOPASSWD: /usr/sbin/udhcpc" >> "/etc/sudoers.d/hostberry"
+        print_info "Permisos agregados para udhcpc: /usr/sbin/udhcpc"
+    fi
+    
     # Agregar permisos para sysctl (habilitar IP forwarding)
     if command -v sysctl &> /dev/null; then
         SYSCTL_PATH=$(command -v sysctl)
