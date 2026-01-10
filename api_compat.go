@@ -2692,11 +2692,13 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 						}
 					}
 					// Obtener seguridad desde iw (si no se obtuvo de wpa_cli)
-					if connectionInfo["security"] == nil && strings.Contains(line, "WPA") {
+					if connectionInfo["security"] == nil || connectionInfo["security"] == "" {
 						if strings.Contains(line, "WPA3") || strings.Contains(line, "SAE") {
 							connectionInfo["security"] = "WPA3"
+							log.Printf("Found security from iw: WPA3")
 						} else if strings.Contains(line, "WPA2") || strings.Contains(line, "WPA") {
 							connectionInfo["security"] = "WPA2"
+							log.Printf("Found security from iw: WPA2")
 						}
 					}
 				}
