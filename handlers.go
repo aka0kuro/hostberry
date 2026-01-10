@@ -432,7 +432,49 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 		// Obtener estado
 		stateCmd := exec.Command("sh", "-c", fmt.Sprintf("cat /sys/class/net/%s/operstate 2>/dev/null", ifaceName))
 		if stateOut, err := stateCmd.Output(); err == nil {
-			iface["state"] = strings.TrimSpace(string(stateOut))
+			state := strings.TrimSpace(string(stateOut))
+			if state == "" {
+				// Si operstate está vacío, verificar con ip link show
+				ipStateCmd := exec.Command("sh", "-c", fmt.Sprintf("ip link show %s 2>/dev/null | grep -o 'state [A-Z]*' | awk '{print $2}'", ifaceName))
+				if ipStateOut, ipStateErr := ipStateCmd.Output(); ipStateErr == nil {
+					state = strings.TrimSpace(string(ipStateOut))
+				}
+				if state == "" {
+					state = "unknown"
+				}
+			}
+			iface["state"] = state
+		} else {
+			// Si no se puede leer operstate, intentar con ip link show
+			ipStateCmd := exec.Command("sh", "-c", fmt.Sprintf("ip link show %s 2>/dev/null | grep -o 'state [A-Z]*' | awk '{print $2}'", ifaceName))
+			if ipStateOut, ipStateErr := ipStateCmd.Output(); ipStateErr == nil {
+				state := strings.TrimSpace(string(ipStateOut))
+				if state != "" {
+					iface["state"] = state
+				}
+			}
+		}
+		
+		// Para ap0, asegurar que se muestre incluso si está down
+		if ifaceName == "ap0" {
+			log.Printf("📡 Interfaz ap0 encontrada, estado: %s", iface["state"])
+			// Verificar si ap0 está activa, si no, intentar activarla
+			if iface["state"] == "down" || iface["state"] == "unknown" {
+				log.Printf("⚠️ ap0 está down, intentando activarla...")
+				activateCmd := exec.Command("sh", "-c", "sudo ip link set ap0 up 2>/dev/null")
+				if activateErr := activateCmd.Run(); activateErr == nil {
+					time.Sleep(500 * time.Millisecond)
+					// Verificar estado nuevamente
+					stateCmd2 := exec.Command("sh", "-c", "cat /sys/class/net/ap0/operstate 2>/dev/null")
+					if stateOut2, err2 := stateCmd2.Output(); err2 == nil {
+						newState := strings.TrimSpace(string(stateOut2))
+						if newState != "" {
+							iface["state"] = newState
+							log.Printf("✅ ap0 activada, nuevo estado: %s", newState)
+						}
+					}
+				}
+			}
 		}
 		
 		// Para interfaces WiFi (wlan*), verificar también el estado de wpa_supplicant
