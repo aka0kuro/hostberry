@@ -2069,10 +2069,14 @@ dhcp-option=6,%s
 	// Limpiar archivo temporal
 	os.Remove(tmpDnsmasqFile)
 	
-	// 4. Configurar NAT con iptables
-	// Habilitar forwarding IP
+	// 4. Configurar NAT con iptables (mejorado basado en ap_sta_config.sh)
+	// Habilitar forwarding IP de forma persistente
 	executeCommand("echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward > /dev/null")
 	executeCommand("sudo sysctl -w net.ipv4.ip_forward=1 > /dev/null 2>&1")
+	
+	// Hacer que el forwarding sea persistente en /etc/sysctl.conf
+	sysctlCheckCmd := "grep -q '^net.ipv4.ip_forward=1' /etc/sysctl.conf || echo 'net.ipv4.ip_forward=1' | sudo tee -a /etc/sysctl.conf > /dev/null"
+	executeCommand(sysctlCheckCmd)
 	
 	// Obtener interfaz principal (no la de hostapd)
 	mainInterface := "eth0"
@@ -2080,15 +2084,25 @@ dhcp-option=6,%s
 		mainInterface = strings.TrimSpace(out)
 	}
 	
+	// Calcular rango de red para ap0 (basado en gateway)
+	apIPBegin := req.Gateway
+	if lastDot := strings.LastIndex(req.Gateway, "."); lastDot > 0 {
+		apIPBegin = req.Gateway[:lastDot]
+	}
+	
 	// Configurar NAT (si hay interfaz principal)
 	// En modo AP+STA, ap0 es la interfaz del AP y mainInterface puede ser eth0 o wlan0 (si está conectado como STA)
 	if mainInterface != "" && mainInterface != apInterface {
 		// Limpiar reglas antiguas para evitar duplicados
+		executeCommand(fmt.Sprintf("sudo iptables -t nat -D POSTROUTING -s %s.0/24 ! -d %s.0/24 -j MASQUERADE 2>/dev/null || true", apIPBegin, apIPBegin))
 		executeCommand(fmt.Sprintf("sudo iptables -t nat -D POSTROUTING -o %s -j MASQUERADE 2>/dev/null || true", mainInterface))
 		executeCommand(fmt.Sprintf("sudo iptables -D FORWARD -i %s -o %s -j ACCEPT 2>/dev/null || true", apInterface, mainInterface))
 		executeCommand(fmt.Sprintf("sudo iptables -D FORWARD -i %s -o %s -m state --state RELATED,ESTABLISHED -j ACCEPT 2>/dev/null || true", mainInterface, apInterface))
 		
-		// Añadir nueva regla NAT
+		// Añadir nueva regla NAT (usando el formato del script ap_sta_config.sh)
+		// Esta regla es más específica: solo hace NAT para tráfico que sale de la red ap0
+		executeCommand(fmt.Sprintf("sudo iptables -t nat -A POSTROUTING -s %s.0/24 ! -d %s.0/24 -j MASQUERADE", apIPBegin, apIPBegin))
+		// También mantener la regla genérica como fallback
 		executeCommand(fmt.Sprintf("sudo iptables -t nat -A POSTROUTING -o %s -j MASQUERADE", mainInterface))
 		// Permitir forwarding entre ap0 y la interfaz principal
 		executeCommand(fmt.Sprintf("sudo iptables -A FORWARD -i %s -o %s -j ACCEPT", apInterface, mainInterface))
