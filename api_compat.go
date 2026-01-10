@@ -2777,9 +2777,13 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 		// Establecer valores por defecto si no se encontró información
 		if connectionInfo["signal"] == nil || connectionInfo["signal"] == "" || connectionInfo["signal"] == "0" {
 			log.Printf("Warning: Could not determine signal strength for %s", iface)
+			// No establecer signal si no se encontró, dejar que el frontend muestre "--"
+			delete(connectionInfo, "signal")
 		}
 		if connectionInfo["channel"] == nil || connectionInfo["channel"] == "" {
 			log.Printf("Warning: Could not determine channel for %s", iface)
+			// No establecer channel si no se encontró, dejar que el frontend muestre "--"
+			delete(connectionInfo, "channel")
 		}
 		if connectionInfo["security"] == nil || connectionInfo["security"] == "" {
 			// Si no se encontró seguridad, intentar inferir desde wpa_supplicant config
