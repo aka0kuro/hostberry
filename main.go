@@ -600,9 +600,8 @@ func wifiScanHandler(c *fiber.Ctx) error {
 		return c.JSON(networks)
 	}
 	return c.JSON([]fiber.Map{})
-
-	// Código antiguo (ya no se usa):
-	/*if luaEngine != nil {
+	/* Código antiguo (ya no se usa):
+	if luaEngine != nil {
 		result, err := luaEngine.Execute("wifi_scan.lua", fiber.Map{
 			"interface": interfaceName,
 		})
