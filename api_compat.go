@@ -2440,9 +2440,33 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 		}
 	}
 	
-	// Obtener información detallada de la conexión si está conectado
-	var connectionInfo fiber.Map = nil
+	// Verificar realmente si está conectado - no solo si tiene SSID
+	// Debe tener wpa_state=COMPLETED Y una IP asignada
+	reallyConnected := false
 	if connected && ssid != "" {
+		// Verificar que realmente tenga una IP (no solo que wpa_cli diga COMPLETED)
+		ipCheckCmd := exec.Command("sh", "-c", fmt.Sprintf("ip addr show %s 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d/ -f1 | head -1", iface))
+		ipOut, ipErr := ipCheckCmd.Output()
+		if ipErr == nil {
+			ip := strings.TrimSpace(string(ipOut))
+			if ip != "" && ip != "N/A" {
+				reallyConnected = true
+				log.Printf("WiFi realmente conectado: SSID=%s, IP=%s", ssid, ip)
+			} else {
+				log.Printf("WiFi tiene SSID pero no IP: SSID=%s, IP=%s", ssid, ip)
+				// Verificar si está obteniendo IP
+				dhcpCheck := exec.Command("sh", "-c", fmt.Sprintf("ps aux | grep -E '[d]hclient|udhcpc' | grep %s", iface))
+				if dhcpOut, _ := dhcpCheck.Output(); len(dhcpOut) > 0 {
+					log.Printf("WiFi está obteniendo IP (DHCP en proceso)")
+					reallyConnected = false // Aún no está completamente conectado
+				}
+			}
+		}
+	}
+	
+	// Obtener información detallada de la conexión si está realmente conectado
+	var connectionInfo fiber.Map = nil
+	if reallyConnected && ssid != "" {
 		connectionInfo = fiber.Map{
 			"ssid": ssid,
 		}
