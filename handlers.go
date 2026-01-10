@@ -917,22 +917,18 @@ func adblockEnableHandler(c *fiber.Ctx) error {
 	user := c.Locals("user").(*User)
 	userID := user.ID
 
-	if luaEngine != nil {
-		result, err := luaEngine.Execute("adblock_enable.lua", fiber.Map{
-			"user": user.Username,
-		})
-		if err != nil {
-			InsertLog("ERROR", "Error habilitando AdBlock: "+err.Error(), "adblock", &userID)
-			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
-		}
-
-		InsertLog("INFO", "AdBlock habilitado", "adblock", &userID)
+	result := enableAdBlock(user.Username)
+	if success, ok := result["success"].(bool); ok && success {
+		InsertLog("INFO", fmt.Sprintf("AdBlock habilitado (usuario: %s)", user.Username), "adblock", &userID)
 		return c.JSON(result)
 	}
 
-	return c.Status(500).JSON(fiber.Map{
-		"error": "Lua engine no disponible",
-	})
+	if errorMsg, ok := result["error"].(string); ok {
+		InsertLog("ERROR", fmt.Sprintf("Error habilitando AdBlock: %s (usuario: %s)", errorMsg, user.Username), "adblock", &userID)
+		return c.Status(500).JSON(fiber.Map{"error": errorMsg})
+	}
+
+	return c.Status(500).JSON(fiber.Map{"error": "Error desconocido"})
 }
 
 func adblockDisableHandler(c *fiber.Ctx) error {
