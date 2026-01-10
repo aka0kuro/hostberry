@@ -405,6 +405,7 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 	}
 
 	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+	log.Printf("📡 Interfaces encontradas: %v", lines)
 	for _, ifaceName := range lines {
 		ifaceName = strings.TrimSpace(ifaceName)
 		if ifaceName == "" || ifaceName == "lo" {
@@ -418,6 +419,8 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 			log.Printf("⚠️ Interface %s no existe o no es accesible, saltando", ifaceName)
 			continue
 		}
+		
+		log.Printf("✅ Procesando interfaz: %s", ifaceName)
 
 		iface := map[string]interface{}{
 			"name": ifaceName,
