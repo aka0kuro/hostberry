@@ -447,6 +447,15 @@
             </div>
           `;
         }
+        // Manejar error 401 (sesión expirada)
+        if (resp.status === 401) {
+          showAlert('warning', t('auth.session_expired', 'Session expired. Please log in again.'));
+          setTimeout(() => {
+            localStorage.removeItem('access_token');
+            window.location.href = '/login?error=session_expired';
+          }, 2000);
+          return;
+        }
         throw new Error(t('wifi.scan_error', 'Error scanning WiFi networks') + ': HTTP ' + resp.status);
       }
       
