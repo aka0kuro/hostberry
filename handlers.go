@@ -637,14 +637,8 @@ func wifiConnectHandler(c *fiber.Ctx) error {
 		country = "US" // Valor por defecto final
 	}
 	
-	interfaceName := req.Interface
-	if interfaceName == "" {
-		interfaceName = "wlan0"
-	}
-	country := req.Country
-	if country == "" {
-		country = "US"
-	}
+	interfaceName := "wlan0" // Por defecto
+	// country ya está definido arriba
 
 	result := connectWiFi(req.SSID, req.Password, interfaceName, country, user.Username)
 
