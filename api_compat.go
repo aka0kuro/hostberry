@@ -1845,17 +1845,17 @@ RUN+="/bin/ip link set ap0 address %s"
 							if createOut4 != "" {
 								log.Printf("Method 3 output: %s", strings.TrimSpace(createOut4))
 							}
-						if createErr4 == nil {
-							log.Printf("Successfully created interface %s using alternative phy %s", apInterface, altPhyName)
-							apExists = true
-							phyName = altPhyName // Actualizar phyName para uso posterior
+							if createErr4 == nil {
+								log.Printf("Successfully created interface %s using alternative phy %s", apInterface, altPhyName)
+								apExists = true
+								phyName = altPhyName // Actualizar phyName para uso posterior
+							} else {
+								log.Printf("Error with alternative phy: %s", strings.TrimSpace(createOut4))
+								// Si todo falla, usar la interfaz física directamente (modo no concurrente)
+								apInterface = phyInterface
+								log.Printf("Falling back to using physical interface %s directly (non-concurrent mode)", apInterface)
+							}
 						} else {
-							log.Printf("Error with alternative phy: %s", strings.TrimSpace(createOut4))
-							// Si todo falla, usar la interfaz física directamente (modo no concurrente)
-							apInterface = phyInterface
-							log.Printf("Falling back to using physical interface %s directly (non-concurrent mode)", apInterface)
-						}
-					} else {
 						// Si todo falla, usar la interfaz física directamente (modo no concurrente)
 						apInterface = phyInterface
 						log.Printf("Falling back to using physical interface %s directly (non-concurrent mode)", apInterface)
