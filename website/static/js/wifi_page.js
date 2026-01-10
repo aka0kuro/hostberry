@@ -767,7 +767,22 @@
       }
     } catch (error) {
       console.error(t('wifi.connect_error', 'Error connecting to WiFi') + ':', error);
-      showAlert('danger', t('wifi.connect_error', 'Error connecting to WiFi'));
+      
+      // Verificar si es un error de red (posible pérdida de conexión temporal)
+      const isNetworkError = error.message && (
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('NetworkError') ||
+        error.message.includes('network') ||
+        error.message.includes('ERR_INTERNET_DISCONNECTED') ||
+        error.message.includes('ERR_NETWORK_CHANGED')
+      );
+      
+      if (isNetworkError) {
+        showAlert('warning', t('wifi.connect_network_error', 'Network connection lost during WiFi setup. Please check your connection and try again.'));
+      } else {
+        showAlert('danger', translateError(error.message) || t('wifi.connect_error', 'Error connecting to WiFi'));
+      }
+      
       buttonElement.disabled = false;
       buttonElement.innerHTML = `<i class="bi bi-box-arrow-in-right me-2"></i>${t('wifi.connect', 'Connect')}`;
     }
