@@ -593,25 +593,67 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 	enableResult, _ := executeCommand(enableCmd)
 	log.Printf("enable_network result: %s", strings.TrimSpace(enableResult))
 
-	// Verificar que wpa_cli esté respondiendo (con múltiples intentos)
+	// Verificar que wpa_cli esté respondiendo (con múltiples intentos y métodos alternativos)
 	pingSuccess := false
-	for pingAttempt := 0; pingAttempt < 5; pingAttempt++ {
+	socketPathForPing := socketPath // Usar la ruta del socket encontrada anteriormente
+	
+	for pingAttempt := 0; pingAttempt < 8; pingAttempt++ {
+		// Intentar con el comando configurado
 		pingCmd := fmt.Sprintf("%s ping", wpaCliCmd)
 		pingOut, _ := executeCommand(pingCmd)
 		if strings.Contains(pingOut, "PONG") {
 			pingSuccess = true
-			log.Printf("wpa_cli responde correctamente (intento %d)", pingAttempt+1)
+			log.Printf("✅ wpa_cli responde correctamente (intento %d)", pingAttempt+1)
 			break
 		} else {
-			log.Printf("wpa_cli no responde (intento %d/5): %s", pingAttempt+1, strings.TrimSpace(pingOut))
-			if pingAttempt < 4 {
+			log.Printf("⚠️  wpa_cli no responde (intento %d/8): %s", pingAttempt+1, strings.TrimSpace(pingOut))
+			
+			// Si falla, intentar métodos alternativos
+			if pingAttempt == 2 && socketPathForPing != "" {
+				// Intentar con socket directo usando -p
+				log.Printf("Intentando método alternativo: wpa_cli -p %s...", socketPathForPing)
+				altCmd := fmt.Sprintf("sudo wpa_cli -p %s ping", socketPathForPing)
+				if altOut, _ := executeCommand(altCmd); strings.Contains(altOut, "PONG") {
+					pingSuccess = true
+					wpaCliCmd = fmt.Sprintf("sudo wpa_cli -p %s", socketPathForPing)
+					log.Printf("✅ Método alternativo con -p funcionó")
+					break
+				}
+			}
+			
+			if pingAttempt == 4 {
+				// Intentar con -i interfaceName como último recurso
+				log.Printf("Intentando método alternativo: wpa_cli -i %s...", interfaceName)
+				altCmd := fmt.Sprintf("sudo wpa_cli -i %s ping", interfaceName)
+				if altOut, _ := executeCommand(altCmd); strings.Contains(altOut, "PONG") {
+					pingSuccess = true
+					wpaCliCmd = fmt.Sprintf("sudo wpa_cli -i %s", interfaceName)
+					log.Printf("✅ Método alternativo con -i funcionó")
+					break
+				}
+			}
+			
+			// Ajustar permisos del socket nuevamente antes del siguiente intento
+			if socketPathForPing != "" {
+				executeCommand(fmt.Sprintf("sudo chmod 666 %s 2>/dev/null || true", socketPathForPing))
+				executeCommand(fmt.Sprintf("sudo chgrp netdev %s 2>/dev/null || sudo chgrp hostberry %s 2>/dev/null || true", socketPathForPing, socketPathForPing))
+				executeCommand(fmt.Sprintf("sudo chown root:netdev %s 2>/dev/null || sudo chown root:hostberry %s 2>/dev/null || true", socketPathForPing, socketPathForPing))
+			} else {
+				// Ajustar todos los sockets posibles
+				executeCommand("sudo chmod 666 /var/run/wpa_supplicant/* 2>/dev/null || true")
+				executeCommand("sudo chmod 666 /run/wpa_supplicant/* 2>/dev/null || true")
+				executeCommand("sudo chgrp netdev /var/run/wpa_supplicant/* 2>/dev/null || sudo chgrp hostberry /var/run/wpa_supplicant/* 2>/dev/null || true")
+				executeCommand("sudo chown root:netdev /var/run/wpa_supplicant/* 2>/dev/null || sudo chown root:hostberry /var/run/wpa_supplicant/* 2>/dev/null || true")
+			}
+			
+			if pingAttempt < 7 {
 				time.Sleep(1 * time.Second)
 			}
 		}
 	}
 	
 	if !pingSuccess {
-		log.Printf("ERROR: wpa_cli no está respondiendo después de 5 intentos")
+		log.Printf("❌ ERROR: wpa_cli no está respondiendo después de 8 intentos")
 		// Intentar diagnosticar el problema
 		wpaPidCheck, _ := exec.Command("sh", "-c", fmt.Sprintf("pgrep -f 'wpa_supplicant.*%s'", interfaceName)).Output()
 		if strings.TrimSpace(string(wpaPidCheck)) == "" {
@@ -620,10 +662,14 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 			return result
 		} else {
 			// wpa_supplicant está corriendo pero wpa_cli no responde
-			// Puede ser un problema de permisos o socket
+			// Intentar reiniciar wpa_supplicant como último recurso
 			log.Printf("wpa_supplicant está corriendo (PID: %s) pero wpa_cli no responde", strings.TrimSpace(string(wpaPidCheck)))
+			log.Printf("Intentando reiniciar wpa_supplicant para corregir el socket...")
+			executeCommand(fmt.Sprintf("sudo pkill -f 'wpa_supplicant.*%s' 2>/dev/null || true", interfaceName))
+			time.Sleep(2 * time.Second)
+			// El código continuará y reiniciará wpa_supplicant en la siguiente iteración
 			result["success"] = false
-			result["error"] = "wpa_cli no puede comunicarse con wpa_supplicant. Verifica permisos del socket de control."
+			result["error"] = "wpa_cli no puede comunicarse con wpa_supplicant. Se intentará reiniciar wpa_supplicant. Por favor, intenta nuevamente."
 			return result
 		}
 	}
