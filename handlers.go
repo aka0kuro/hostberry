@@ -654,25 +654,28 @@ func wifiConnectHandler(c *fiber.Ctx) error {
 		country = "US" // Valor por defecto final
 	}
 	
-	if luaEngine != nil {
-		result, err := luaEngine.Execute("wifi_connect.lua", fiber.Map{
-			"ssid":     req.SSID,
-			"password": req.Password,
-			"user":     user.Username,
-			"country":  country,
-		})
-		if err != nil {
-			InsertLog("ERROR", "Error conectando WiFi: "+err.Error(), "wifi", &userID)
-			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
-		}
+	interfaceName := req.Interface
+	if interfaceName == "" {
+		interfaceName = "wlan0"
+	}
+	country := req.Country
+	if country == "" {
+		country = "US"
+	}
 
-		InsertLog("INFO", "WiFi conectado: "+req.SSID, "wifi", &userID)
+	result := connectWiFi(req.SSID, req.Password, interfaceName, country, user.Username)
+
+	if success, ok := result["success"].(bool); ok && success {
+		InsertLog("INFO", fmt.Sprintf("WiFi conectado: %s (usuario: %s)", req.SSID, user.Username), "wifi", &userID)
 		return c.JSON(result)
 	}
 
-	return c.Status(500).JSON(fiber.Map{
-		"error": "Lua engine no disponible",
-	})
+	if errorMsg, ok := result["error"].(string); ok {
+		InsertLog("ERROR", fmt.Sprintf("Error conectando WiFi: %s (usuario: %s)", errorMsg, user.Username), "wifi", &userID)
+		return c.Status(500).JSON(fiber.Map{"error": errorMsg})
+	}
+
+	return c.Status(500).JSON(fiber.Map{"error": "Error desconocido"})
 }
 
 // Handlers de VPN
