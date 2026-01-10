@@ -587,8 +587,10 @@ func wifiScanHandler(c *fiber.Ctx) error {
 	if interfaceName == "" {
 		interfaceName = detectWiFiInterface()
 	}
+	if interfaceName == "" {
+		interfaceName = "wlan0"
+	}
 
-	interfaceName := c.Query("interface", "wlan0")
 	result := scanWiFiNetworks(interfaceName)
 	if networks, ok := result["networks"]; ok {
 		return c.JSON(networks)
