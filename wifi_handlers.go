@@ -482,19 +482,36 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 	if socketOut1, _ := socketCheck1.Output(); strings.Contains(string(socketOut1), "exists") {
 		socketPath = socketPath1
 		log.Printf("Socket encontrado en: %s", socketPath)
+		// Ajustar permisos inmediatamente
+		executeCommand(fmt.Sprintf("sudo chmod 666 %s 2>/dev/null || true", socketPath))
+		executeCommand(fmt.Sprintf("sudo chgrp netdev %s 2>/dev/null || sudo chgrp hostberry %s 2>/dev/null || true", socketPath, socketPath))
+		executeCommand(fmt.Sprintf("sudo chown root:netdev %s 2>/dev/null || sudo chown root:hostberry %s 2>/dev/null || true", socketPath, socketPath))
 	} else if socketOut2, _ := socketCheck2.Output(); strings.Contains(string(socketOut2), "exists") {
 		socketPath = socketPath2
 		log.Printf("Socket encontrado en: %s", socketPath)
+		// Ajustar permisos inmediatamente
+		executeCommand(fmt.Sprintf("sudo chmod 666 %s 2>/dev/null || true", socketPath))
+		executeCommand(fmt.Sprintf("sudo chgrp netdev %s 2>/dev/null || sudo chgrp hostberry %s 2>/dev/null || true", socketPath, socketPath))
+		executeCommand(fmt.Sprintf("sudo chown root:netdev %s 2>/dev/null || sudo chown root:hostberry %s 2>/dev/null || true", socketPath, socketPath))
 	} else {
 		// Si no encontramos el socket específico, buscar cualquier socket de wpa_supplicant
 		findSocketCmd := exec.Command("sh", "-c", "find /var/run/wpa_supplicant /run/wpa_supplicant -type s -name '*' 2>/dev/null | head -1")
 		if findOut, _ := findSocketCmd.Output(); len(findOut) > 0 {
 			socketPath = strings.TrimSpace(string(findOut))
 			log.Printf("Socket encontrado mediante búsqueda: %s", socketPath)
+			// Ajustar permisos inmediatamente
+			executeCommand(fmt.Sprintf("sudo chmod 666 %s 2>/dev/null || true", socketPath))
+			executeCommand(fmt.Sprintf("sudo chgrp netdev %s 2>/dev/null || sudo chgrp hostberry %s 2>/dev/null || true", socketPath, socketPath))
+			executeCommand(fmt.Sprintf("sudo chown root:netdev %s 2>/dev/null || sudo chown root:hostberry %s 2>/dev/null || true", socketPath, socketPath))
 		} else {
 			// Fallback: usar -i interfaceName (puede funcionar si wpa_cli encuentra el socket automáticamente)
 			log.Printf("No se encontró socket específico, usando -i %s", interfaceName)
 			socketPath = "" // Vacío significa usar -i
+			// Ajustar permisos de todos los sockets posibles como medida preventiva
+			executeCommand("sudo chmod 666 /var/run/wpa_supplicant/* 2>/dev/null || true")
+			executeCommand("sudo chmod 666 /run/wpa_supplicant/* 2>/dev/null || true")
+			executeCommand("sudo chgrp netdev /var/run/wpa_supplicant/* 2>/dev/null || sudo chgrp hostberry /var/run/wpa_supplicant/* 2>/dev/null || true")
+			executeCommand("sudo chown root:netdev /var/run/wpa_supplicant/* 2>/dev/null || sudo chown root:hostberry /var/run/wpa_supplicant/* 2>/dev/null || true")
 		}
 	}
 	
