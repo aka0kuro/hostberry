@@ -2120,6 +2120,52 @@ ExecStart=/usr/sbin/hostapd -B %s
 	}
 	executeCommand("sudo systemctl daemon-reload")
 	
+	// 5.5. Crear scripts de gestión basados en ap_sta_config.sh
+	// Script para limpiar /var/run/hostapd/ap0 si está colgado (manage-ap0-iface.sh)
+	manageAp0Script := `#!/bin/bash
+# check if hostapd service success to start or not
+# in our case, it cannot start when /var/run/hostapd/ap0 exist
+# so we have to delete it
+echo 'Check if hostapd.service is hang cause ap0 exist...'
+hostapd_is_running=$(service hostapd status | grep -c "Active: active (running)")
+if test 1 -ne "${hostapd_is_running}"; then
+    rm -rf /var/run/hostapd/ap0 || echo "ap0 interface does not exist, the failure is elsewhere"
+fi
+`
+	manageAp0Path := "/bin/manage-ap0-iface.sh"
+	tmpManageAp0 := "/tmp/manage-ap0-iface.sh.tmp"
+	if err := os.WriteFile(tmpManageAp0, []byte(manageAp0Script), 0755); err == nil {
+		executeCommand(fmt.Sprintf("sudo cp %s %s && sudo chmod +x %s", tmpManageAp0, manageAp0Path, manageAp0Path))
+		os.Remove(tmpManageAp0)
+		log.Printf("Created manage-ap0-iface.sh script")
+	}
+	
+	// Script para reiniciar interfaces WiFi (rpi-wifi.sh)
+	apIPBegin := req.Gateway
+	if lastDot := strings.LastIndex(req.Gateway, "."); lastDot > 0 {
+		apIPBegin = req.Gateway[:lastDot]
+	}
+	rpiWifiScript := fmt.Sprintf(`#!/bin/bash
+echo 'Starting Wifi AP and STA client...'
+/usr/sbin/ifdown --force %s 2>/dev/null || true
+/usr/sbin/ifdown --force %s 2>/dev/null || true
+/usr/sbin/ifup --force %s 2>/dev/null || true
+/usr/sbin/ifup --force %s 2>/dev/null || true
+/usr/sbin/sysctl -w net.ipv4.ip_forward=1 > /dev/null 2>&1
+/usr/sbin/iptables -t nat -A POSTROUTING -s %s.0/24 ! -d %s.0/24 -j MASQUERADE 2>/dev/null || true
+/usr/bin/systemctl restart dnsmasq 2>/dev/null || true
+echo 'WPA Supplicant reconfigure in 5sec...'
+/usr/bin/sleep 5
+wpa_cli -i %s reconfigure 2>/dev/null || true
+`, phyInterface, apInterface, apInterface, phyInterface, apIPBegin, apIPBegin, phyInterface)
+	rpiWifiPath := "/bin/rpi-wifi.sh"
+	tmpRpiWifi := "/tmp/rpi-wifi.sh.tmp"
+	if err := os.WriteFile(tmpRpiWifi, []byte(rpiWifiScript), 0755); err == nil {
+		executeCommand(fmt.Sprintf("sudo cp %s %s && sudo chmod +x %s", tmpRpiWifi, rpiWifiPath, rpiWifiPath))
+		os.Remove(tmpRpiWifi)
+		log.Printf("Created rpi-wifi.sh script")
+	}
+	
 	// Habilitar hostapd para que inicie al arrancar
 	executeCommand("sudo systemctl enable hostapd 2>/dev/null || true")
 	executeCommand("sudo systemctl enable dnsmasq 2>/dev/null || true")
