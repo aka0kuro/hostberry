@@ -1758,15 +1758,44 @@ RUN+="/bin/ip link set ap0 address %s"
 		// Crear interfaz virtual ap0 en modo AP usando phy
 		log.Printf("Creating virtual interface %s using phy %s...", apInterface, phyName)
 		
-		// Primero verificar que el phy existe y soporta AP mode
+		// Primero verificar que el phy existe
+		phyExistsCmd := fmt.Sprintf("iw phy %s info 2>/dev/null", phyName)
+		phyExistsOut, phyExistsErr := executeCommand(phyExistsCmd)
+		if phyExistsErr != nil || strings.TrimSpace(phyExistsOut) == "" {
+			log.Printf("Warning: phy %s may not exist, output: %s", phyName, strings.TrimSpace(phyExistsOut))
+		} else {
+			log.Printf("phy %s exists and is accessible", phyName)
+		}
+		
+		// Verificar que el phy soporta AP mode
 		phyCheckCmd := fmt.Sprintf("iw phy %s info 2>/dev/null | grep -i 'AP'", phyName)
 		phyCheckOut, _ := executeCommand(phyCheckCmd)
 		if strings.TrimSpace(phyCheckOut) == "" {
 			log.Printf("Warning: phy %s may not support AP mode, but attempting anyway", phyName)
+		} else {
+			log.Printf("phy %s supports AP mode: %s", phyName, strings.TrimSpace(phyCheckOut))
 		}
 		
-		createApCmd := fmt.Sprintf("sudo iw phy %s interface add %s type __ap", phyName, apInterface)
+		// Verificar que la interfaz física no esté en modo AP (debe estar en managed)
+		iwInfoCmd := fmt.Sprintf("iw dev %s info 2>/dev/null", phyInterface)
+		iwInfoOut, _ := executeCommand(iwInfoCmd)
+		if strings.Contains(iwInfoOut, "type AP") {
+			log.Printf("Warning: Physical interface %s is in AP mode, changing to managed first", phyInterface)
+			executeCommand(fmt.Sprintf("sudo iw dev %s set type managed 2>/dev/null", phyInterface))
+			time.Sleep(1 * time.Second)
+		}
+		
+		// Asegurar que la interfaz física esté activa
+		executeCommand(fmt.Sprintf("sudo ip link set %s up 2>/dev/null || true", phyInterface))
+		time.Sleep(500 * time.Millisecond)
+		
+		// Intentar crear la interfaz con logging detallado
+		createApCmd := fmt.Sprintf("sudo iw phy %s interface add %s type __ap 2>&1", phyName, apInterface)
+		log.Printf("Executing: %s", createApCmd)
 		createOut, createErr := executeCommand(createApCmd)
+		if createOut != "" {
+			log.Printf("Command output: %s", strings.TrimSpace(createOut))
+		}
 		
 		if createErr != nil {
 			log.Printf("Error creating virtual interface %s with phy %s: %s", apInterface, phyName, strings.TrimSpace(createOut))
