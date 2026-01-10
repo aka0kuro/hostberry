@@ -935,22 +935,18 @@ func adblockDisableHandler(c *fiber.Ctx) error {
 	user := c.Locals("user").(*User)
 	userID := user.ID
 
-	if luaEngine != nil {
-		result, err := luaEngine.Execute("adblock_disable.lua", fiber.Map{
-			"user": user.Username,
-		})
-		if err != nil {
-			InsertLog("ERROR", "Error deshabilitando AdBlock: "+err.Error(), "adblock", &userID)
-			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
-		}
-
-		InsertLog("INFO", "AdBlock deshabilitado", "adblock", &userID)
+	result := disableAdBlock(user.Username)
+	if success, ok := result["success"].(bool); ok && success {
+		InsertLog("INFO", fmt.Sprintf("AdBlock deshabilitado (usuario: %s)", user.Username), "adblock", &userID)
 		return c.JSON(result)
 	}
 
-	return c.Status(500).JSON(fiber.Map{
-		"error": "Lua engine no disponible",
-	})
+	if errorMsg, ok := result["error"].(string); ok {
+		InsertLog("ERROR", fmt.Sprintf("Error deshabilitando AdBlock: %s (usuario: %s)", errorMsg, user.Username), "adblock", &userID)
+		return c.Status(500).JSON(fiber.Map{"error": errorMsg})
+	}
+
+	return c.Status(500).JSON(fiber.Map{"error": "Error desconocido"})
 }
 
 // Handler de logs del sistema
