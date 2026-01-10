@@ -2827,14 +2827,49 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 			}
 		}
 		
+		// Intentar obtener señal y canal usando iw dev <iface> station dump como último recurso
+		if (connectionInfo["signal"] == nil || connectionInfo["signal"] == "" || connectionInfo["signal"] == "0") ||
+			(connectionInfo["channel"] == nil || connectionInfo["channel"] == "") {
+			log.Printf("Trying iw dev %s station dump as additional method", iface)
+			iwStationCmd := exec.Command("sh", "-c", fmt.Sprintf("sudo iw dev %s station dump 2>/dev/null", iface))
+			iwStationOut, iwStationErr := iwStationCmd.CombinedOutput()
+			if iwStationErr == nil && len(iwStationOut) > 0 {
+				iwStationStr := string(iwStationOut)
+				log.Printf("iw station dump output: %s", iwStationStr)
+				// Buscar señal en station dump
+				if (connectionInfo["signal"] == nil || connectionInfo["signal"] == "" || connectionInfo["signal"] == "0") {
+					lines := strings.Split(iwStationStr, "\n")
+					for _, line := range lines {
+						line = strings.TrimSpace(line)
+						if strings.Contains(strings.ToLower(line), "signal") {
+							re := regexp.MustCompile(`-?\d+`)
+							matches := re.FindAllString(line, -1)
+							for _, match := range matches {
+								if signalInt, err := strconv.Atoi(match); err == nil {
+									if signalInt > 0 {
+										signalInt = -signalInt
+									}
+									if signalInt >= -100 && signalInt <= -30 {
+										connectionInfo["signal"] = strconv.Itoa(signalInt)
+										log.Printf("Found signal from iw station dump: %d dBm", signalInt)
+										break
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
 		// Establecer valores por defecto si no se encontró información
 		if connectionInfo["signal"] == nil || connectionInfo["signal"] == "" || connectionInfo["signal"] == "0" {
-			log.Printf("Warning: Could not determine signal strength for %s", iface)
+			log.Printf("Warning: Could not determine signal strength for %s after all methods", iface)
 			// No establecer signal si no se encontró, dejar que el frontend muestre "--"
 			delete(connectionInfo, "signal")
 		}
 		if connectionInfo["channel"] == nil || connectionInfo["channel"] == "" {
-			log.Printf("Warning: Could not determine channel for %s", iface)
+			log.Printf("Warning: Could not determine channel for %s after all methods", iface)
 			// No establecer channel si no se encontró, dejar que el frontend muestre "--"
 			delete(connectionInfo, "channel")
 		}
