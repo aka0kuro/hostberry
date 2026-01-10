@@ -29,7 +29,7 @@ if interfaces_output and interfaces_output ~= "" then
         interface_info.connected = (interface_info.state == "up")
         
         -- IP y máscara de red
-        -- Método 1: ip addr show (más confiable)
+        -- Método 1: ip addr show (más confiable) - intentar sin sudo primero
         local ip_cmd = "ip addr show " .. iface .. " 2>/dev/null | grep 'inet ' | awk '{print $2}' | head -1"
         local ip_output, _ = exec(ip_cmd)
         if ip_output and ip_output ~= "" then
@@ -50,7 +50,25 @@ if interfaces_output and interfaces_output ~= "" then
             interface_info.ip = "N/A"
         end
         
-        -- Si no se obtuvo IP, intentar método alternativo
+        -- Si no se obtuvo IP, intentar con sudo
+        if interface_info.ip == "N/A" or interface_info.ip == "" then
+            local ip_cmd_sudo = "sudo ip addr show " .. iface .. " 2>/dev/null | grep 'inet ' | awk '{print $2}' | head -1"
+            local ip_output_sudo, _ = exec(ip_cmd_sudo)
+            if ip_output_sudo and ip_output_sudo ~= "" then
+                local ip_parts_sudo = {}
+                for part in ip_output_sudo:gmatch("[^/]+") do
+                    table.insert(ip_parts_sudo, part)
+                end
+                if #ip_parts_sudo > 0 then
+                    interface_info.ip = ip_parts_sudo[1]:match("^%s*(.-)%s*$") or "N/A"
+                    if #ip_parts_sudo > 1 then
+                        interface_info.netmask = ip_parts_sudo[2]:match("^%s*(.-)%s*$") or "N/A"
+                    end
+                end
+            end
+        end
+        
+        -- Si no se obtuvo IP con el método anterior, intentar método alternativo
         if interface_info.ip == "N/A" or interface_info.ip == "" then
             -- Método 2: ifconfig (fallback)
             local ifconfig_cmd = "ifconfig " .. iface .. " 2>/dev/null | grep 'inet ' | awk '{print $2}' | head -1"
@@ -83,6 +101,16 @@ if interfaces_output and interfaces_output ~= "" then
                         end
                     end
                 end
+            end
+        end
+        
+        -- Si la interfaz está "up" pero no tiene IP, podría estar esperando DHCP
+        if (interface_info.state == "up" or interface_info.connected) and (interface_info.ip == "N/A" or interface_info.ip == "") then
+            -- Verificar si hay un proceso DHCP corriendo
+            local dhcp_cmd = "ps aux | grep -E '[d]hclient|udhcpc' | grep " .. iface
+            local dhcp_output, _ = exec(dhcp_cmd)
+            if dhcp_output and dhcp_output ~= "" then
+                interface_info.ip = "Obtaining IP..."
             end
         end
         
