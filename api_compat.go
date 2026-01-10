@@ -1632,30 +1632,51 @@ func hostapdConfigHandler(c *fiber.Ctx) error {
 	time.Sleep(500 * time.Millisecond)
 	
 	// 2. Obtener el nombre del phy de la interfaz física
-	// Método 1: Desde iw dev info
-	phyCmd := fmt.Sprintf("iw dev %s info 2>/dev/null | grep 'wiphy' | awk '{print $2}'", phyInterface)
-	phyOut, _ := executeCommand(phyCmd)
-	phyName := strings.TrimSpace(phyOut)
+	// Método 1: Desde /sys/class/net (más confiable)
+	phyName := ""
+	phyCmd2 := fmt.Sprintf("cat /sys/class/net/%s/phy80211/name 2>/dev/null", phyInterface)
+	phyOut2, _ := executeCommand(phyCmd2)
+	phyName = strings.TrimSpace(phyOut2)
 	
-	// Método 2: Desde /sys/class/net
+	// Método 2: Desde iw dev info
 	if phyName == "" {
-		phyCmd2 := fmt.Sprintf("cat /sys/class/net/%s/phy80211/name 2>/dev/null", phyInterface)
-		phyOut2, _ := executeCommand(phyCmd2)
-		phyName = strings.TrimSpace(phyOut2)
+		phyCmd := fmt.Sprintf("iw dev %s info 2>/dev/null | grep 'wiphy' | awk '{print $2}'", phyInterface)
+		phyOut, _ := executeCommand(phyCmd)
+		phyName = strings.TrimSpace(phyOut)
 	}
 	
-	// Método 3: Desde iw list
+	// Método 3: Desde iw phy (listar todos los phy y encontrar el que tiene esta interfaz)
 	if phyName == "" {
-		phyCmd3 := "iw list 2>/dev/null | grep -A 1 'Wiphy' | tail -1 | awk '{print $2}'"
+		phyCmd3 := fmt.Sprintf("iw phy | grep -B 5 '%s' | grep 'Wiphy' | awk '{print $2}' | head -1", phyInterface)
 		phyOut3, _ := executeCommand(phyCmd3)
 		phyName = strings.TrimSpace(phyOut3)
 	}
 	
-	// Método 4: Valor por defecto
+	// Método 4: Desde iw list (último recurso)
+	if phyName == "" {
+		phyCmd4 := "iw list 2>/dev/null | grep 'Wiphy' | head -1 | awk '{print $2}'"
+		phyOut4, _ := executeCommand(phyCmd4)
+		phyName = strings.TrimSpace(phyOut4)
+	}
+	
+	// Método 5: Intentar detectar desde el número de la interfaz
+	if phyName == "" {
+		// Si la interfaz es wlan0, wlan1, etc., intentar phy0, phy1, etc.
+		if strings.HasPrefix(phyInterface, "wlan") {
+			if numStr := strings.TrimPrefix(phyInterface, "wlan"); numStr != "" {
+				phyName = "phy" + numStr
+				log.Printf("Trying phy name based on interface number: %s", phyName)
+			}
+		}
+	}
+	
+	// Método 6: Valor por defecto
 	if phyName == "" {
 		phyName = "phy0"
 		log.Printf("Warning: Could not detect phy name, using default: %s", phyName)
 	}
+	
+	log.Printf("Detected phy name: %s for interface %s", phyName, phyInterface)
 	
 	log.Printf("Using phy: %s for virtual interface creation from %s", phyName, phyInterface)
 	
