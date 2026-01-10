@@ -1791,14 +1791,35 @@ func hostapdConfigHandler(c *fiber.Ctx) error {
 			apExists = true
 		}
 		
-		// Verificar que la interfaz se creó correctamente
+		// Verificar que la interfaz se creó correctamente (con retry)
 		if apExists && apInterface == "ap0" {
-			verifyCmd := fmt.Sprintf("ip link show %s", apInterface)
-			verifyOut, verifyErr := executeCommand(verifyCmd)
-			if verifyErr == nil && strings.TrimSpace(verifyOut) != "" {
-				log.Printf("Interface %s verified successfully: %s", apInterface, strings.TrimSpace(verifyOut))
-			} else {
-				log.Printf("Warning: Interface %s was created but verification failed", apInterface)
+			// Esperar un momento para que el sistema registre la interfaz
+			time.Sleep(1 * time.Second)
+			
+			// Intentar verificar varias veces
+			verified := false
+			for i := 0; i < 3; i++ {
+				verifyCmd := fmt.Sprintf("ip link show %s 2>/dev/null", apInterface)
+				verifyOut, verifyErr := executeCommand(verifyCmd)
+				if verifyErr == nil && strings.TrimSpace(verifyOut) != "" {
+					log.Printf("Interface %s verified successfully (attempt %d): %s", apInterface, i+1, strings.TrimSpace(verifyOut))
+					verified = true
+					break
+				}
+				if i < 2 {
+					time.Sleep(500 * time.Millisecond)
+				}
+			}
+			
+			if !verified {
+				log.Printf("Warning: Interface %s was created but verification failed after retries", apInterface)
+				// Intentar verificar con ls /sys/class/net
+				lsCmd := fmt.Sprintf("ls /sys/class/net/ | grep -q '^%s$' && echo 'exists'", apInterface)
+				lsOut, _ := executeCommand(lsCmd)
+				if strings.TrimSpace(lsOut) == "exists" {
+					log.Printf("Interface %s exists in /sys/class/net, but ip link show failed", apInterface)
+					verified = true
+				}
 			}
 		}
 	}
