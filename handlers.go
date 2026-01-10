@@ -900,7 +900,7 @@ func wireguardConfigHandler(c *fiber.Ctx) error {
 // Handlers de AdBlock
 func adblockStatusHandler(c *fiber.Ctx) error {
 	if luaEngine != nil {
-		result, err := luaEngine.Execute("adblock_status.lua", nil)
+		result := getAdBlockStatus()
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 		}
