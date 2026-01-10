@@ -217,25 +217,32 @@
     
     // Buscar signal en connection_info primero
     let signal = null;
-    if (data.connection_info && data.connection_info.signal) {
-      const signalStr = String(data.connection_info.signal).trim();
-      if (signalStr && signalStr !== "null" && signalStr !== "0" && signalStr !== "") {
-        const signalNum = parseInt(signalStr, 10);
-        if (!isNaN(signalNum) && signalNum !== 0) {
-          signal = signalNum;
+    if (data.connection_info && data.connection_info.signal !== null && data.connection_info.signal !== undefined) {
+      const signalValue = data.connection_info.signal;
+      // Verificar que no sea null, undefined, o la cadena "null"
+      if (signalValue !== null && signalValue !== undefined && signalValue !== "null") {
+        const signalStr = String(signalValue).trim();
+        if (signalStr && signalStr !== "null" && signalStr !== "0" && signalStr !== "" && signalStr !== "undefined") {
+          const signalNum = parseInt(signalStr, 10);
+          if (!isNaN(signalNum) && signalNum !== 0) {
+            signal = signalNum;
+          }
         }
       }
-    } else if (data.signal) {
-      const signalStr = String(data.signal).trim();
-      if (signalStr && signalStr !== "null" && signalStr !== "0" && signalStr !== "") {
-        const signalNum = parseInt(signalStr, 10);
-        if (!isNaN(signalNum) && signalNum !== 0) {
-          signal = signalNum;
+    } else if (data.signal !== null && data.signal !== undefined && data.signal !== "null") {
+      const signalValue = data.signal;
+      if (signalValue !== null && signalValue !== undefined) {
+        const signalStr = String(signalValue).trim();
+        if (signalStr && signalStr !== "null" && signalStr !== "0" && signalStr !== "" && signalStr !== "undefined") {
+          const signalNum = parseInt(signalStr, 10);
+          if (!isNaN(signalNum) && signalNum !== 0) {
+            signal = signalNum;
+          }
         }
       }
     }
     if (signalEl) {
-      if (signal !== null && signal !== 0 && !isNaN(signal)) {
+      if (signal !== null && signal !== undefined && signal !== 0 && !isNaN(signal)) {
         signalEl.textContent = signal + 'dBm';
       } else {
         signalEl.textContent = '--';
