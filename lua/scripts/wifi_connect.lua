@@ -279,20 +279,42 @@ while attempt < max_attempts and not connected do
 end
 
 if connected then
-    result.success = true
-    result.message = "Conectado a " .. ssid
-    result.output = status_output or ""
-    log("INFO", "WiFi conectado exitosamente: " .. ssid)
+    -- Esperar más tiempo para que se establezca la IP (DHCP puede tardar)
+    log("INFO", "wpa_supplicant reporta conexión, esperando IP...")
+    local ip_obtained = false
+    local ip_wait_attempts = 10
+    local ip_wait = 0
     
-    -- Esperar un momento más para que se establezca la IP
-    os.execute("sleep 2")
+    while ip_wait < ip_wait_attempts and not ip_obtained do
+        os.execute("sleep 2")
+        local ip_check = exec("ip addr show " .. interface .. " 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d/ -f1 | head -1")
+        if ip_check and ip_check ~= "" and ip_check ~= "N/A" then
+            ip_obtained = true
+            log("INFO", "IP obtenida: " .. ip_check)
+            result.success = true
+            result.message = "Conectado a " .. ssid .. " (IP: " .. ip_check .. ")"
+            result.output = status_output or ""
+            result.ip = ip_check
+            log("INFO", "WiFi conectado exitosamente: " .. ssid .. " con IP " .. ip_check)
+        else
+            ip_wait = ip_wait + 1
+            log("INFO", "Esperando IP... (intento " .. ip_wait .. "/" .. ip_wait_attempts .. ")")
+            -- Verificar si hay un proceso DHCP corriendo
+            local dhcp_check = exec("ps aux | grep -E '[d]hclient|udhcpc' | grep " .. interface)
+            if not dhcp_check or dhcp_check == "" then
+                -- No hay DHCP corriendo, intentar iniciarlo manualmente
+                log("INFO", "No hay DHCP corriendo, intentando obtener IP...")
+                exec("sudo dhclient -v " .. interface .. " 2>/dev/null || sudo udhcpc -i " .. interface .. " 2>/dev/null || true")
+            end
+        end
+    end
     
-    -- Verificar que se obtuvo una IP
-    local ip_check = exec("ip addr show " .. interface .. " 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d/ -f1 | head -1")
-    if ip_check and ip_check ~= "" then
-        log("INFO", "IP obtenida: " .. ip_check)
-    else
-        log("WARNING", "Conectado pero sin IP aún, puede tardar unos segundos más")
+    if not ip_obtained then
+        log("WARNING", "Conectado a WiFi pero sin IP después de " .. (ip_wait_attempts * 2) .. " segundos")
+        result.success = true  -- wpa_supplicant está conectado
+        result.message = "Conectado a " .. ssid .. " (obteniendo IP...)"
+        result.output = status_output or ""
+        result.warning = "Conectado pero sin IP asignada aún"
     end
 else
     result.success = false
