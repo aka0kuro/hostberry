@@ -425,14 +425,39 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 	enableResult, _ := executeCommand(enableCmd)
 	log.Printf("enable_network result: %s", strings.TrimSpace(enableResult))
 
-	// Verificar que wpa_cli esté respondiendo
-	pingCmd := fmt.Sprintf("%s ping", wpaCliCmd)
-	pingOut, _ := executeCommand(pingCmd)
-	if !strings.Contains(pingOut, "PONG") {
-		log.Printf("ERROR: wpa_cli no está respondiendo")
-		result["success"] = false
-		result["error"] = "wpa_cli no está respondiendo. Verifica que wpa_supplicant esté corriendo."
-		return result
+	// Verificar que wpa_cli esté respondiendo (con múltiples intentos)
+	pingSuccess := false
+	for pingAttempt := 0; pingAttempt < 5; pingAttempt++ {
+		pingCmd := fmt.Sprintf("%s ping", wpaCliCmd)
+		pingOut, _ := executeCommand(pingCmd)
+		if strings.Contains(pingOut, "PONG") {
+			pingSuccess = true
+			log.Printf("wpa_cli responde correctamente (intento %d)", pingAttempt+1)
+			break
+		} else {
+			log.Printf("wpa_cli no responde (intento %d/5): %s", pingAttempt+1, strings.TrimSpace(pingOut))
+			if pingAttempt < 4 {
+				time.Sleep(1 * time.Second)
+			}
+		}
+	}
+	
+	if !pingSuccess {
+		log.Printf("ERROR: wpa_cli no está respondiendo después de 5 intentos")
+		// Intentar diagnosticar el problema
+		wpaPidCheck, _ := exec.Command("sh", "-c", fmt.Sprintf("pgrep -f 'wpa_supplicant.*%s'", interfaceName)).Output()
+		if strings.TrimSpace(string(wpaPidCheck)) == "" {
+			result["success"] = false
+			result["error"] = "wpa_supplicant no está corriendo. Por favor, reinicia el servicio WiFi."
+			return result
+		} else {
+			// wpa_supplicant está corriendo pero wpa_cli no responde
+			// Puede ser un problema de permisos o socket
+			log.Printf("wpa_supplicant está corriendo (PID: %s) pero wpa_cli no responde", strings.TrimSpace(string(wpaPidCheck)))
+			result["success"] = false
+			result["error"] = "wpa_cli no puede comunicarse con wpa_supplicant. Verifica permisos del socket de control."
+			return result
+		}
 	}
 
 	// Reconectar explícitamente
