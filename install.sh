@@ -516,7 +516,7 @@ install_files() {
 
     mkdir -p "$LOG_DIR"
     mkdir -p "$DATA_DIR"
-    mkdir -p "${INSTALL_DIR}/lua/scripts"
+    # Lua ya no se usa - todo está en Go ahora
     mkdir -p "${INSTALL_DIR}/locales"
     mkdir -p "${INSTALL_DIR}/website/static"
     mkdir -p "${INSTALL_DIR}/website/templates"
