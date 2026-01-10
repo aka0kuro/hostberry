@@ -85,7 +85,7 @@ func executeCommand(cmd string) (string, error) {
 	}
 	
 	if !allowed {
-		return "", exec.ErrNotFound // Devolver error para que Lua/handlers lo reporten
+		return "", exec.ErrNotFound // Devolver error para que handlers lo reporten
 	}
 	
 	// Si el comando no necesita sudo y no se especificó sudo, ejecutar directamente
