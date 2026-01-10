@@ -1861,6 +1861,10 @@ RUN+="/bin/ip link set ap0 address %s"
 							log.Printf("Falling back to using physical interface %s directly (non-concurrent mode)", apInterface)
 						}
 					} else {
+						// Si todo falla, usar la interfaz física directamente (modo no concurrente)
+						apInterface = phyInterface
+						log.Printf("Falling back to using physical interface %s directly (non-concurrent mode)", apInterface)
+					}
 				} else {
 					log.Printf("Successfully created interface %s using method 2 (without sudo)", apInterface)
 					apExists = true
