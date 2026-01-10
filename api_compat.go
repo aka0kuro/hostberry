@@ -2997,14 +2997,12 @@ func wifiLegacyAutoconnectHandler(c *fiber.Ctx) error {
 
 func wifiLegacyScanHandler(c *fiber.Ctx) error {
 	// Reusar el scan Lua
-	if luaEngine == nil {
-		return c.JSON(fiber.Map{"success": true, "networks": []fiber.Map{}})
+	interfaceName := c.Query("interface", "wlan0")
+	result := scanWiFiNetworks(interfaceName)
+	if networks, ok := result["networks"]; ok {
+		return c.JSON(fiber.Map{"success": true, "networks": networks})
 	}
-	result, err := luaEngine.Execute("wifi_scan.lua", nil)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
-	}
-	return c.JSON(fiber.Map{"success": true, "networks": result["networks"]})
+	return c.JSON(fiber.Map{"success": true, "networks": []fiber.Map{}})
 }
 
 func wifiLegacyDisconnectHandler(c *fiber.Ctx) error {
