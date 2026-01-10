@@ -799,7 +799,6 @@
     "connected": "Connected",
     "enable_wifi": "Enable WiFi",
     "disable_wifi": "Disable WiFi",
-    "lua_engine_unavailable": "Lua engine not available",
     "wifi_not_enabled": "WiFi is not enabled",
     "enable_wifi_first": "Please enable WiFi first",
     "no_networks_found": "No WiFi networks found",
