@@ -218,7 +218,7 @@ download_project() {
     if [ "$MODE" = "update" ]; then
         # Verificar si estamos en un repositorio git válido con todos los archivos necesarios
         local has_all_files=true
-        for item in "website" "lua" "locales" "main.go" "go.mod"; do
+        for item in "website" "locales" "main.go" "go.mod"; do
             if [ ! -e "${SCRIPT_DIR}/${item}" ]; then
                 has_all_files=false
                 break
