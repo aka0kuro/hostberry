@@ -66,6 +66,10 @@ func GenerateToken(user *User) (string, error) {
 
 // ValidateToken valida un token JWT
 func ValidateToken(tokenString string) (*Claims, error) {
+	if tokenString == "" {
+		return nil, errors.New("token vacío")
+	}
+	
 	claims := &Claims{}
 	
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
@@ -76,11 +80,28 @@ func ValidateToken(tokenString string) (*Claims, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		// Verificar si es un error de expiración específico
+		if ve, ok := err.(*jwt.ValidationError); ok {
+			if ve.Errors&jwt.ValidationErrorExpired != 0 {
+				return nil, errors.New("token expirado")
+			}
+			if ve.Errors&jwt.ValidationErrorNotValidYet != 0 {
+				return nil, errors.New("token aún no válido")
+			}
+			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+				return nil, errors.New("token malformado")
+			}
+		}
+		return nil, fmt.Errorf("error validando token: %v", err)
 	}
 
 	if !token.Valid {
 		return nil, errors.New("token inválido")
+	}
+
+	// Verificar que el token no esté expirado (doble verificación)
+	if claims.ExpiresAt != nil && claims.ExpiresAt.Time.Before(time.Now()) {
+		return nil, errors.New("token expirado")
 	}
 
 	return claims, nil
