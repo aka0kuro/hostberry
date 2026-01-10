@@ -17,7 +17,7 @@ database:
 
 security:
   jwt_secret: "cambiar-este-secreto-en-produccion-usar-secretos-seguros"
-  token_expiry: 1440  # minutos (24 horas)
+  token_expiry: 60  # minutos (1 hora)
   bcrypt_cost: 10
   rate_limit_rps: 10
 
