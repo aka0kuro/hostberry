@@ -276,9 +276,11 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 			}
 		}
 
-		// Asegurar que el directorio del socket existe
+		// Asegurar que el directorio del socket existe con permisos y grupo correctos
 		executeCommand("sudo mkdir -p /var/run/wpa_supplicant 2>/dev/null || true")
-		executeCommand("sudo chmod 755 /var/run/wpa_supplicant 2>/dev/null || true")
+		executeCommand("sudo chmod 775 /var/run/wpa_supplicant 2>/dev/null || true")
+		// Asegurar que el grupo sea netdev (necesario para wpa_cli)
+		executeCommand("sudo chgrp netdev /var/run/wpa_supplicant 2>/dev/null || sudo chgrp hostberry /var/run/wpa_supplicant 2>/dev/null || true")
 		
 		// Limpiar el socket de control anterior
 		executeCommand(fmt.Sprintf("sudo rm -rf /var/run/wpa_supplicant/%s 2>/dev/null || true", interfaceName))
