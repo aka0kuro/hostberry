@@ -254,7 +254,21 @@
     if (securityEl) securityEl.textContent = security;
     
     // Buscar channel en connection_info primero
-    const channel = (data.connection_info && data.connection_info.channel) || data.channel || '--';
+    let channel = '--';
+    if (data.connection_info && data.connection_info.channel !== null && data.connection_info.channel !== undefined) {
+      const channelValue = data.connection_info.channel;
+      if (channelValue !== null && channelValue !== undefined && channelValue !== "null" && channelValue !== "") {
+        channel = String(channelValue).trim();
+        if (channel === "null" || channel === "undefined" || channel === "") {
+          channel = '--';
+        }
+      }
+    } else if (data.channel !== null && data.channel !== undefined && data.channel !== "null" && data.channel !== "") {
+      channel = String(data.channel).trim();
+      if (channel === "null" || channel === "undefined" || channel === "") {
+        channel = '--';
+      }
+    }
     if (channelEl) channelEl.textContent = channel;
     
     // Buscar ip en connection_info primero
