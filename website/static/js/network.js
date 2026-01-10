@@ -732,18 +732,26 @@
       // Si la respuesta tiene "raw", parsearla
       let parsedData = networkStatsRaw;
       if (networkStatsRaw.raw && typeof networkStatsRaw.raw === 'string') {
+        console.log(`Parsing /proc/net/dev for interface: ${selectedTrafficInterface || 'auto'}`);
         parsedData = parseProcNetDev(networkStatsRaw.raw, selectedTrafficInterface);
         if (!parsedData) {
           console.warn('Failed to parse /proc/net/dev');
           parsedData = networkStatsRaw;
         } else if (selectedTrafficInterface) {
           // Log para depuración cuando se selecciona una interfaz específica
-          console.log(`Parsed data for ${selectedTrafficInterface}:`, {
+          console.log(`✓ Parsed data for ${selectedTrafficInterface}:`, {
             interface: parsedData.interface,
             bytes_recv: parsedData.bytes_recv,
             bytes_sent: parsedData.bytes_sent,
-            found: parsedData.interface === selectedTrafficInterface
+            found: parsedData.interface === selectedTrafficInterface,
+            hasData: (parsedData.bytes_recv > 0 || parsedData.bytes_sent > 0)
           });
+          
+          // Si la interfaz fue encontrada pero tiene 0 bytes, podría ser que realmente no hay tráfico
+          if (parsedData.interface === selectedTrafficInterface && 
+              parsedData.bytes_recv === 0 && parsedData.bytes_sent === 0) {
+            console.warn(`⚠ Interface ${selectedTrafficInterface} found but has 0 traffic. This might be normal if there's no network activity.`);
+          }
         }
       }
       
