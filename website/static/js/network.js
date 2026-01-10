@@ -332,6 +332,7 @@
 
   function computeNetworkRates(current) {
     if (!current || typeof current !== 'object') {
+      console.warn('computeNetworkRates: invalid current data', current);
       return {
         download_speed: 0.0,
         upload_speed: 0.0,
@@ -344,6 +345,18 @@
     
     const bytesRecv = typeof current.bytes_recv === 'number' && !isNaN(current.bytes_recv) ? current.bytes_recv : 0;
     const bytesSent = typeof current.bytes_sent === 'number' && !isNaN(current.bytes_sent) ? current.bytes_sent : 0;
+    
+    // Log de depuración para wlan0
+    if (selectedTrafficInterface === 'wlan0' || current.interface === 'wlan0') {
+      console.log('computeNetworkRates for wlan0:', {
+        bytesRecv,
+        bytesSent,
+        interface: current.interface,
+        selectedInterface: selectedTrafficInterface,
+        hasSnapshot: !!lastTrafficSnapshot,
+        snapshotInterface: lastTrafficSnapshot?.interface
+      });
+    }
     
     if (lastTrafficSnapshot && current.interface && lastTrafficSnapshot.interface && current.interface !== lastTrafficSnapshot.interface) {
       lastTrafficSnapshot = null;
