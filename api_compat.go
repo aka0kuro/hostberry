@@ -1822,7 +1822,8 @@ driver=nl80211
 ssid=%s
 hw_mode=g
 channel=%d
-`, apInterface, req.SSID, req.Channel)
+country_code=%s
+`, apInterface, req.SSID, req.Channel, req.Country)
 	
 	if req.Security == "open" {
 		configContent += "auth_algs=0\n"
