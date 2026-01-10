@@ -1616,7 +1616,7 @@ func hostapdConfigHandler(c *fiber.Ctx) error {
 		req.LeaseTime = "12h"
 	}
 	if req.Country == "" {
-		req.Country = "US" // Valor por defecto
+		req.Country = DefaultCountryCode
 	}
 	
 	// Validar country code (debe ser 2 letras mayúsculas)
