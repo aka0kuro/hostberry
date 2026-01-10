@@ -328,7 +328,7 @@ func systemShutdown(user string) map[string]interface{} {
 		if !found {
 			// Último recurso: poweroff directo
 			shutdownCmd = "poweroff"
-			if out3, err3 := executeCommand(shutdownCmd); err3 != nil {
+			if _, err3 := executeCommand(shutdownCmd); err3 != nil {
 				result["success"] = false
 				result["error"] = err3.Error()
 				result["message"] = "Error al ejecutar comando de apagado"
@@ -337,7 +337,7 @@ func systemShutdown(user string) map[string]interface{} {
 			}
 			result["success"] = true
 			result["message"] = "Sistema se apagará en breve"
-			result["output"] = strings.TrimSpace(out3)
+			result["output"] = ""
 			return result
 		}
 		result["success"] = false
