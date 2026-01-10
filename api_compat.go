@@ -2397,8 +2397,16 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 					signalStr = strings.TrimSpace(signalStr)
 					if signalStr != "" && signalStr != "0" {
 						// wpa_cli puede devolver la señal como número negativo o positivo
-						connectionInfo["signal"] = signalStr
-						log.Printf("Found signal from wpa_cli: %s", signalStr)
+						// Convertir a entero para verificar que sea válido
+						if signalInt, err := strconv.Atoi(signalStr); err == nil && signalInt != 0 {
+							// Asegurar que sea negativo (dBm siempre es negativo)
+							if signalInt > 0 {
+								signalInt = -signalInt
+								signalStr = strconv.Itoa(signalInt)
+							}
+							connectionInfo["signal"] = signalStr
+							log.Printf("Found signal from wpa_cli: %s dBm", signalStr)
+						}
 					}
 				} else if strings.HasPrefix(line, "key_mgmt=") {
 					keyMgmt := strings.TrimPrefix(line, "key_mgmt=")
