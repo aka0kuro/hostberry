@@ -64,7 +64,7 @@ func enableAdBlock(user string) map[string]interface{} {
 
 	// Intentar iniciar dnsmasq
 	dnsmasqCmd := "sudo systemctl start dnsmasq"
-	if out, err := executeCommand(dnsmasqCmd); err != nil {
+	if _, err := executeCommand(dnsmasqCmd); err != nil {
 		// Intentar con pihole
 		piholeCmd := "sudo systemctl start pihole-FTL"
 		if out2, err2 := executeCommand(piholeCmd); err2 != nil {
