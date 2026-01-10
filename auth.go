@@ -80,19 +80,16 @@ func ValidateToken(tokenString string) (*Claims, error) {
 	})
 
 	if err != nil {
-		// En jwt/v5, los errores son diferentes - verificar el tipo de error
-		if errors.Is(err, jwt.ErrTokenExpired) {
+		// En jwt/v5, los errores son diferentes - verificar el mensaje de error
+		errMsg := strings.ToLower(err.Error())
+		if strings.Contains(errMsg, "expired") || strings.Contains(errMsg, "token is expired") {
 			return nil, errors.New("token expirado")
 		}
-		if errors.Is(err, jwt.ErrTokenNotValidYet) {
+		if strings.Contains(errMsg, "not valid yet") || strings.Contains(errMsg, "token is not valid yet") {
 			return nil, errors.New("token aún no válido")
 		}
-		if errors.Is(err, jwt.ErrTokenMalformed) {
+		if strings.Contains(errMsg, "malformed") || strings.Contains(errMsg, "token is malformed") {
 			return nil, errors.New("token malformado")
-		}
-		// Verificar si es un error de validación genérico
-		if err.Error() == "token is expired" {
-			return nil, errors.New("token expirado")
 		}
 		return nil, fmt.Errorf("error validando token: %v", err)
 	}
