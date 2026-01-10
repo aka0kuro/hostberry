@@ -288,7 +288,7 @@ func systemRestart(user string) map[string]interface{} {
 
 	result["success"] = true
 	result["message"] = "Sistema se reiniciará en breve"
-	result["output"] = strings.TrimSpace(out)
+	result["output"] = ""
 	log.Printf("INFO: Comando de reinicio ejecutado exitosamente")
 	return result
 }
