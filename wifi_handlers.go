@@ -382,40 +382,108 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 	enableResult, _ := executeCommand(enableCmd)
 	log.Printf("enable_network result: %s", strings.TrimSpace(enableResult))
 
-	// Reconectar explícitamente
-	executeCommand(fmt.Sprintf("%s reconnect", wpaCliCmd))
-	time.Sleep(3 * time.Second)
+	// Verificar que wpa_cli esté respondiendo
+	pingCmd := fmt.Sprintf("%s ping", wpaCliCmd)
+	pingOut, _ := executeCommand(pingCmd)
+	if !strings.Contains(pingOut, "PONG") {
+		log.Printf("ERROR: wpa_cli no está respondiendo")
+		result["success"] = false
+		result["error"] = "wpa_cli no está respondiendo. Verifica que wpa_supplicant esté corriendo."
+		return result
+	}
 
-	// Verificar el estado de la conexión (con múltiples intentos)
+	// Reconectar explícitamente
+	reconnectOut, _ := executeCommand(fmt.Sprintf("%s reconnect", wpaCliCmd))
+	log.Printf("reconnect result: %s", strings.TrimSpace(reconnectOut))
+	time.Sleep(2 * time.Second)
+
+	// Verificar el estado de la conexión (con múltiples intentos mejorados)
 	connected := false
 	statusOutput := ""
-	maxAttempts := 8
+	maxAttempts := 15 // Aumentado de 8 a 15
+	lastState := ""
+	authFailures := 0
 
 	for attempt := 0; attempt < maxAttempts && !connected; attempt++ {
-		time.Sleep(3 * time.Second)
+		time.Sleep(2 * time.Second) // Reducido de 3 a 2 segundos para más intentos
 		statusCmd := fmt.Sprintf("%s status", wpaCliCmd)
 		statusOutput, _ = executeCommand(statusCmd)
-		log.Printf("Connection status (attempt %d): %s", attempt+1, strings.TrimSpace(statusOutput))
+		statusStr := strings.TrimSpace(statusOutput)
+		log.Printf("Connection status (attempt %d/%d): %s", attempt+1, maxAttempts, statusStr)
 
-		if strings.Contains(statusOutput, "wpa_state=COMPLETED") {
-			if strings.Contains(statusOutput, fmt.Sprintf("ssid=%s", ssid)) {
-				connected = true
-				log.Printf("WiFi conectado exitosamente: %s (intento %d)", ssid, attempt+1)
-				break
-			} else {
-				log.Printf("wpa_state=COMPLETED pero SSID no coincide")
-			}
-		} else {
-			// Extraer wpa_state para debugging
-			re := regexp.MustCompile(`wpa_state=([^\r\n]+)`)
-			matches := re.FindStringSubmatch(statusOutput)
-			if len(matches) > 1 {
-				log.Printf("Estado wpa_state: %s", matches[1])
+		// Extraer wpa_state
+		re := regexp.MustCompile(`wpa_state=([^\r\n]+)`)
+		matches := re.FindStringSubmatch(statusOutput)
+		currentState := ""
+		if len(matches) > 1 {
+			currentState = strings.TrimSpace(matches[1])
+		}
+
+		// Detectar errores de autenticación
+		if strings.Contains(statusOutput, "WRONG_KEY") || 
+		   strings.Contains(statusOutput, "AUTH_FAIL") ||
+		   strings.Contains(statusOutput, "4WAY_HANDSHAKE_TIMEOUT") {
+			authFailures++
+			log.Printf("ERROR: Fallo de autenticación detectado (intento %d)", authFailures)
+			if authFailures >= 3 {
+				result["success"] = false
+				result["error"] = "Contraseña incorrecta o red no compatible"
+				result["message"] = fmt.Sprintf("Error de autenticación conectando a %s", ssid)
+				result["output"] = statusOutput
+				return result
 			}
 		}
 
-		if attempt < maxAttempts-1 && !connected {
-			log.Printf("Esperando conexión... (intento %d/%d)", attempt+1, maxAttempts)
+		// Verificar si está conectado
+		if strings.Contains(statusOutput, "wpa_state=COMPLETED") {
+			// Verificar que el SSID coincida
+			if strings.Contains(statusOutput, fmt.Sprintf("ssid=%s", ssid)) {
+				connected = true
+				log.Printf("✅ WiFi conectado exitosamente: %s (intento %d)", ssid, attempt+1)
+				break
+			} else {
+				// Extraer SSID actual
+				ssidRe := regexp.MustCompile(`ssid=([^\r\n]+)`)
+				ssidMatches := ssidRe.FindStringSubmatch(statusOutput)
+				if len(ssidMatches) > 1 {
+					log.Printf("⚠️  wpa_state=COMPLETED pero SSID no coincide. Conectado a: %s, esperado: %s", 
+						strings.TrimSpace(ssidMatches[1]), ssid)
+				} else {
+					log.Printf("⚠️  wpa_state=COMPLETED pero no se pudo extraer SSID")
+				}
+			}
+		} else if currentState != "" {
+			// Log de progreso
+			if currentState != lastState {
+				log.Printf("Estado cambiado: %s -> %s", lastState, currentState)
+				lastState = currentState
+			}
+
+			// Estados intermedios que indican progreso
+			if currentState == "ASSOCIATING" || currentState == "ASSOCIATED" || 
+			   currentState == "4WAY_HANDSHAKE" || currentState == "GROUP_HANDSHAKE" {
+				log.Printf("Progreso de conexión: %s", currentState)
+			}
+
+			// Estados de error
+			if currentState == "DISCONNECTED" || currentState == "INACTIVE" {
+				if attempt < maxAttempts-1 {
+					log.Printf("Reintentando conexión... (estado: %s)", currentState)
+					// Deshabilitar y volver a habilitar la red
+					executeCommand(fmt.Sprintf("%s disable_network %s", wpaCliCmd, networkID))
+					time.Sleep(1 * time.Second)
+					executeCommand(fmt.Sprintf("%s enable_network %s", wpaCliCmd, networkID))
+					executeCommand(fmt.Sprintf("%s reconnect", wpaCliCmd))
+				}
+			}
+		}
+
+		// Si no hay progreso después de varios intentos, intentar reconectar
+		if attempt > 5 && !connected && (currentState == "DISCONNECTED" || currentState == "INACTIVE" || currentState == "") {
+			log.Printf("Sin progreso después de %d intentos, forzando reconexión...", attempt+1)
+			executeCommand(fmt.Sprintf("%s disable_network all", wpaCliCmd))
+			time.Sleep(1 * time.Second)
+			executeCommand(fmt.Sprintf("%s enable_network %s", wpaCliCmd, networkID))
 			executeCommand(fmt.Sprintf("%s reconnect", wpaCliCmd))
 		}
 	}
