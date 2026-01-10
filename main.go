@@ -578,7 +578,7 @@ func wifiScanHandler(c *fiber.Ctx) error {
 		interfaceName = detectWiFiInterface()
 	}
 	if interfaceName == "" {
-		interfaceName = "wlan0"
+		interfaceName = DefaultWiFiInterface
 	}
 
 	result := scanWiFiNetworks(interfaceName)
