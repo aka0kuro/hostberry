@@ -407,6 +407,16 @@
     
     try {
       let url = '/api/v1/wifi/scan';
+      
+      // Verificar token antes de escanear
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        showAlert('warning', t('auth.session_expired', 'Session expired. Please log in again.'));
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+        return;
+      }
       const selectedInterface = interfaceSelect ? interfaceSelect.value : '';
       if (selectedInterface) {
         url += '?interface=' + encodeURIComponent(selectedInterface);
