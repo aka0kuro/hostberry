@@ -21,10 +21,6 @@ security:
   bcrypt_cost: 10
   rate_limit_rps: 10
 
-lua:
-  scripts_path: "lua/scripts"
-  enabled: true
-
 logging:
   level: "info"  # debug, info, warn, error
   file: "logs/hostberry.log"
