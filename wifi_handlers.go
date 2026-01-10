@@ -470,8 +470,45 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 		}
 	}
 
-	// Usar wpa_cli para agregar la red
-	wpaCliCmd := fmt.Sprintf("sudo wpa_cli -i %s", interfaceName)
+	// Buscar el socket real de wpa_supplicant y usar la ruta directa
+	// Esto es más confiable que usar -i interfaceName
+	socketPath := ""
+	socketPath1 := fmt.Sprintf("/var/run/wpa_supplicant/%s", interfaceName)
+	socketPath2 := fmt.Sprintf("/run/wpa_supplicant/%s", interfaceName)
+	
+	// Verificar qué socket existe realmente
+	socketCheck1 := exec.Command("sh", "-c", fmt.Sprintf("test -S %s && echo 'exists' || echo 'not'", socketPath1))
+	socketCheck2 := exec.Command("sh", "-c", fmt.Sprintf("test -S %s && echo 'exists' || echo 'not'", socketPath2))
+	if socketOut1, _ := socketCheck1.Output(); strings.Contains(string(socketOut1), "exists") {
+		socketPath = socketPath1
+		log.Printf("Socket encontrado en: %s", socketPath)
+	} else if socketOut2, _ := socketCheck2.Output(); strings.Contains(string(socketOut2), "exists") {
+		socketPath = socketPath2
+		log.Printf("Socket encontrado en: %s", socketPath)
+	} else {
+		// Si no encontramos el socket específico, buscar cualquier socket de wpa_supplicant
+		findSocketCmd := exec.Command("sh", "-c", "find /var/run/wpa_supplicant /run/wpa_supplicant -type s -name '*' 2>/dev/null | head -1")
+		if findOut, _ := findSocketCmd.Output(); len(findOut) > 0 {
+			socketPath = strings.TrimSpace(string(findOut))
+			log.Printf("Socket encontrado mediante búsqueda: %s", socketPath)
+		} else {
+			// Fallback: usar -i interfaceName (puede funcionar si wpa_cli encuentra el socket automáticamente)
+			log.Printf("No se encontró socket específico, usando -i %s", interfaceName)
+			socketPath = "" // Vacío significa usar -i
+		}
+	}
+	
+	// Construir comando wpa_cli según si tenemos la ruta del socket o no
+	var wpaCliCmd string
+	if socketPath != "" {
+		// Usar socket directamente con -p
+		wpaCliCmd = fmt.Sprintf("sudo wpa_cli -p %s", socketPath)
+		log.Printf("Usando wpa_cli con socket directo: %s", socketPath)
+	} else {
+		// Usar -i interfaceName como fallback
+		wpaCliCmd = fmt.Sprintf("sudo wpa_cli -i %s", interfaceName)
+		log.Printf("Usando wpa_cli con -i %s", interfaceName)
+	}
 
 	// Verificar si la red ya existe
 	listCmd := fmt.Sprintf("%s list_networks", wpaCliCmd)
