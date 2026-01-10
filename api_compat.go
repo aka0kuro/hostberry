@@ -722,13 +722,7 @@ func wifiConfigHandler(c *fiber.Ctx) error {
 
 func vpnConnectionsHandler(c *fiber.Ctx) error {
 	// Derivar desde vpn_status.lua (OpenVPN/WireGuard)
-	if luaEngine == nil {
-		return c.JSON([]fiber.Map{})
-	}
-	result, err := luaEngine.Execute("vpn_status.lua", nil)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
-	}
+	result := getVPNStatus()
 
 	var conns []fiber.Map
 	// openvpn
