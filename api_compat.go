@@ -2655,19 +2655,45 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 				for _, line := range strings.Split(iwLink, "\n") {
 					line = strings.TrimSpace(line)
 					// Obtener señal
-					if (connectionInfo["signal"] == nil || connectionInfo["signal"] == "" || connectionInfo["signal"] == "0") && strings.Contains(line, "signal:") {
+					if (connectionInfo["signal"] == nil || connectionInfo["signal"] == "" || connectionInfo["signal"] == "0") && strings.Contains(strings.ToLower(line), "signal") {
 						// Formato: "signal: -45 dBm" o "signal: -45" o "Signal: -45 dBm"
 						parts := strings.Fields(line)
 						for i, part := range parts {
-							if (part == "signal:" || part == "Signal:") && i+1 < len(parts) {
+							partLower := strings.ToLower(part)
+							if (partLower == "signal:" || partLower == "signal") && i+1 < len(parts) {
 								signalStr := strings.TrimSpace(parts[i+1])
 								// Remover "dBm" si está presente
 								signalStr = strings.TrimSuffix(signalStr, "dBm")
 								signalStr = strings.TrimSpace(signalStr)
-								// Verificar que no sea 0 o vacío
+								// Verificar que no sea 0 o vacío y convertir a entero para validar
 								if signalStr != "" && signalStr != "0" {
-									connectionInfo["signal"] = signalStr
-									log.Printf("Found signal from iw: %s", signalStr)
+									if signalInt, err := strconv.Atoi(signalStr); err == nil && signalInt != 0 {
+										// Asegurar que sea negativo
+										if signalInt > 0 {
+											signalInt = -signalInt
+										}
+										// Validar rango
+										if signalInt >= -100 && signalInt <= -30 {
+											signalStr = strconv.Itoa(signalInt)
+											connectionInfo["signal"] = signalStr
+											log.Printf("Found signal from iw: %s dBm", signalStr)
+										}
+									} else {
+										// Si no se puede parsear como entero, intentar extraer número con regex
+										re := regexp.MustCompile(`-?\d+`)
+										matches := re.FindString(signalStr)
+										if matches != "" {
+											if signalInt, err := strconv.Atoi(matches); err == nil {
+												if signalInt > 0 {
+													signalInt = -signalInt
+												}
+												if signalInt >= -100 && signalInt <= -30 {
+													connectionInfo["signal"] = strconv.Itoa(signalInt)
+													log.Printf("Found signal from iw (parsed): %d dBm", signalInt)
+												}
+											}
+										}
+									}
 								}
 								break
 							}
