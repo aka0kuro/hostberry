@@ -34,7 +34,6 @@ type Config struct {
 	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
 	Security SecurityConfig `yaml:"security"`
-	Lua      LuaConfig      `yaml:"lua"`
 }
 
 type ServerConfig struct {
