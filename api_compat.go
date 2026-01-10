@@ -1876,32 +1876,58 @@ RUN+="/bin/ip link set ap0 address %s"
 		// Verificar que la interfaz se creó correctamente (con retry)
 		if apExists && apInterface == "ap0" {
 			// Esperar un momento para que el sistema registre la interfaz
-			time.Sleep(1 * time.Second)
+			time.Sleep(2 * time.Second)
 			
-			// Intentar verificar varias veces
+			// Intentar verificar varias veces con múltiples métodos
 			verified := false
-			for i := 0; i < 3; i++ {
+			for i := 0; i < 5; i++ {
+				// Método 1: ip link show
 				verifyCmd := fmt.Sprintf("ip link show %s 2>/dev/null", apInterface)
 				verifyOut, verifyErr := executeCommand(verifyCmd)
 				if verifyErr == nil && strings.TrimSpace(verifyOut) != "" {
-					log.Printf("Interface %s verified successfully (attempt %d): %s", apInterface, i+1, strings.TrimSpace(verifyOut))
+					log.Printf("Interface %s verified successfully with ip link (attempt %d)", apInterface, i+1)
 					verified = true
 					break
 				}
-				if i < 2 {
-					time.Sleep(500 * time.Millisecond)
+				
+				// Método 2: ls /sys/class/net
+				lsCmd := fmt.Sprintf("ls /sys/class/net/ 2>/dev/null | grep -q '^%s$' && echo 'exists'", apInterface)
+				lsOut, _ := executeCommand(lsCmd)
+				if strings.TrimSpace(lsOut) == "exists" {
+					log.Printf("Interface %s verified successfully with ls /sys/class/net (attempt %d)", apInterface, i+1)
+					verified = true
+					break
+				}
+				
+				// Método 3: iw dev list
+				iwListCmd := fmt.Sprintf("iw dev 2>/dev/null | grep -q 'Interface %s' && echo 'exists'", apInterface)
+				iwListOut, _ := executeCommand(iwListCmd)
+				if strings.TrimSpace(iwListOut) == "exists" {
+					log.Printf("Interface %s verified successfully with iw dev (attempt %d)", apInterface, i+1)
+					verified = true
+					break
+				}
+				
+				if i < 4 {
+					log.Printf("Verification attempt %d failed, retrying...", i+1)
+					time.Sleep(1 * time.Second)
 				}
 			}
 			
 			if !verified {
-				log.Printf("Warning: Interface %s was created but verification failed after retries", apInterface)
-				// Intentar verificar con ls /sys/class/net
-				lsCmd := fmt.Sprintf("ls /sys/class/net/ | grep -q '^%s$' && echo 'exists'", apInterface)
-				lsOut, _ := executeCommand(lsCmd)
-				if strings.TrimSpace(lsOut) == "exists" {
-					log.Printf("Interface %s exists in /sys/class/net, but ip link show failed", apInterface)
-					verified = true
-				}
+				log.Printf("ERROR: Interface %s was NOT created successfully after all attempts", apInterface)
+				log.Printf("Diagnostics:")
+				log.Printf("  - phy name: %s", phyName)
+				log.Printf("  - physical interface: %s", phyInterface)
+				log.Printf("  - MAC address: %s", macAddress)
+				
+				// Intentar crear manualmente como último recurso
+				log.Printf("Attempting manual creation as last resort...")
+				manualCmd := fmt.Sprintf("sudo iw phy %s interface add %s type __ap 2>&1; sleep 1; ip link show %s 2>&1", phyName, apInterface, apInterface)
+				manualOut, _ := executeCommand(manualCmd)
+				log.Printf("Manual creation result: %s", strings.TrimSpace(manualOut))
+			} else {
+				log.Printf("SUCCESS: Interface %s created and verified", apInterface)
 			}
 		}
 	}
