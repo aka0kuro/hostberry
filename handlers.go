@@ -680,17 +680,8 @@ func wifiConnectHandler(c *fiber.Ctx) error {
 
 // Handlers de VPN
 func vpnStatusHandler(c *fiber.Ctx) error {
-	if luaEngine != nil {
-		result, err := luaEngine.Execute("vpn_status.lua", nil)
-		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
-		}
-		return c.JSON(result)
-	}
-
-	return c.Status(500).JSON(fiber.Map{
-		"error": "Lua engine no disponible",
-	})
+	result := getVPNStatus()
+	return c.JSON(result)
 }
 
 func vpnConnectHandler(c *fiber.Ctx) error {
