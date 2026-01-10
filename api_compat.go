@@ -2754,7 +2754,7 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 	
 	return c.JSON(fiber.Map{
 		"enabled":          enabled,
-		"connected":        connected,
+		"connected":        reallyConnected,
 		"current_connection": ssid,
 		"ssid":             ssid,
 		"hard_blocked":     hardBlocked,
