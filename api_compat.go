@@ -852,7 +852,7 @@ func hostapdAccessPointsHandler(c *fiber.Ctx) error {
 		
 		interfaceName := config["interface"]
 		if interfaceName == "" {
-			interfaceName = "wlan0" // Valor por defecto
+			interfaceName = DefaultWiFiInterface
 		}
 		
 		channel := config["channel"]
