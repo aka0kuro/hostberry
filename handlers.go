@@ -343,7 +343,7 @@ func networkStatusHandler(c *fiber.Ctx) error {
 }
 
 func networkInterfacesHandler(c *fiber.Ctx) error {
-	// Usar función Go en lugar de Lua
+	// Obtener interfaces de red
 	result := getNetworkInterfaces()
 	if result != nil {
 		if interfaces, ok := result["interfaces"]; ok {
