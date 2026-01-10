@@ -195,13 +195,31 @@
     if (ssidEl) ssidEl.textContent = data.ssid || '--';
     
     // Buscar signal en connection_info primero
-    let signal = 0;
+    let signal = null;
     if (data.connection_info && data.connection_info.signal) {
-      signal = parseInt(data.connection_info.signal) || 0;
+      const signalStr = String(data.connection_info.signal).trim();
+      if (signalStr && signalStr !== "null" && signalStr !== "0" && signalStr !== "") {
+        const signalNum = parseInt(signalStr, 10);
+        if (!isNaN(signalNum) && signalNum !== 0) {
+          signal = signalNum;
+        }
+      }
     } else if (data.signal) {
-      signal = parseInt(data.signal) || 0;
+      const signalStr = String(data.signal).trim();
+      if (signalStr && signalStr !== "null" && signalStr !== "0" && signalStr !== "") {
+        const signalNum = parseInt(signalStr, 10);
+        if (!isNaN(signalNum) && signalNum !== 0) {
+          signal = signalNum;
+        }
+      }
     }
-    if (signalEl) signalEl.textContent = signal > 0 ? signal + 'dBm' : '--';
+    if (signalEl) {
+      if (signal !== null && signal !== 0 && !isNaN(signal)) {
+        signalEl.textContent = signal + 'dBm';
+      } else {
+        signalEl.textContent = '--';
+      }
+    }
     
     // Buscar security en connection_info primero
     const security = (data.connection_info && data.connection_info.security) || data.security || '--';
