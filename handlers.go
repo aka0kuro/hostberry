@@ -410,6 +410,14 @@ func networkInterfacesHandler(c *fiber.Ctx) error {
 		if ifaceName == "" || ifaceName == "lo" {
 			continue // Saltar loopback
 		}
+		
+		// Verificar que la interfaz realmente existe (incluyendo ap0)
+		// Esto asegura que interfaces virtuales como ap0 se muestren
+		ifaceCheckCmd := exec.Command("sh", "-c", fmt.Sprintf("ip link show %s 2>/dev/null", ifaceName))
+		if ifaceCheckErr := ifaceCheckCmd.Run(); ifaceCheckErr != nil {
+			log.Printf("⚠️ Interface %s no existe o no es accesible, saltando", ifaceName)
+			continue
+		}
 
 		iface := map[string]interface{}{
 			"name": ifaceName,
