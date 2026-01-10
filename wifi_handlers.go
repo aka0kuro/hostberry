@@ -24,8 +24,8 @@ func scanWiFiNetworks(interfaceName string) map[string]interface{} {
 	executeCommand(fmt.Sprintf("sudo ip link set %s up 2>/dev/null || true", interfaceName))
 	time.Sleep(1 * time.Second)
 
-	// Escanear redes usando iw
-	scanCmd := exec.Command("sh", "-c", fmt.Sprintf("sudo iw dev %s scan 2>/dev/null | grep -E 'SSID:|signal:|freq:|WPA:|RSN:'", interfaceName))
+	// Escanear redes usando iw (obtener salida completa sin filtrar)
+	scanCmd := exec.Command("sh", "-c", fmt.Sprintf("sudo iw dev %s scan 2>/dev/null", interfaceName))
 	scanOut, err := scanCmd.Output()
 	if err != nil {
 		log.Printf("Error escaneando WiFi: %v", err)
@@ -35,19 +35,50 @@ func scanWiFiNetworks(interfaceName string) map[string]interface{} {
 		return result
 	}
 
-	// Parsear salida
+	// Parsear salida completa de iw scan
 	lines := strings.Split(string(scanOut), "\n")
 	currentNetwork := make(map[string]interface{})
+	seenNetworks := make(map[string]bool) // Para evitar duplicados
 	
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
+		
+		// Detectar inicio de nuevo BSS (nueva red)
 		if strings.HasPrefix(line, "BSS ") {
-			// Nueva red, guardar la anterior si existe
-			if len(currentNetwork) > 0 && currentNetwork["ssid"] != nil {
-				networks = append(networks, currentNetwork)
+			// Guardar red anterior si existe y tiene SSID
+			if len(currentNetwork) > 0 {
+				if ssid, ok := currentNetwork["ssid"].(string); ok && ssid != "" {
+					// Evitar duplicados basándose en SSID
+					if !seenNetworks[ssid] {
+						seenNetworks[ssid] = true
+						networks = append(networks, currentNetwork)
+					} else {
+						// Si ya existe, mantener el que tiene mejor señal
+						for i, net := range networks {
+							if existingSSID, ok := net["ssid"].(string); ok && existingSSID == ssid {
+								currentSignal := 0
+								existingSignal := 0
+								if s, ok := currentNetwork["signal"].(int); ok {
+									currentSignal = s
+								}
+								if s, ok := net["signal"].(int); ok {
+									existingSignal = s
+								}
+								// Si la señal actual es mejor (más alta, menos negativa), reemplazar
+								if currentSignal > existingSignal {
+									networks[i] = currentNetwork
+								}
+								break
+							}
+						}
+					}
+				}
 			}
+			// Iniciar nueva red
 			currentNetwork = make(map[string]interface{})
-		} else if strings.Contains(line, "SSID:") {
+			currentNetwork["security"] = "Open" // Por defecto
+			currentNetwork["signal"] = 0
+		} else if strings.HasPrefix(line, "SSID:") {
 			// Extraer SSID
 			ssid := strings.TrimPrefix(line, "SSID:")
 			ssid = strings.TrimSpace(ssid)
@@ -55,16 +86,34 @@ func scanWiFiNetworks(interfaceName string) map[string]interface{} {
 				currentNetwork["ssid"] = ssid
 			}
 		} else if strings.Contains(line, "signal:") {
-			// Extraer señal
-			re := regexp.MustCompile(`signal:\s*(-?\d+\.?\d*)`)
+			// Extraer señal - formato: "signal: -45.00 dBm" o "signal: -45 dBm"
+			re := regexp.MustCompile(`signal:\s*(-?\d+\.?\d*)\s*dBm?`)
 			matches := re.FindStringSubmatch(line)
 			if len(matches) > 1 {
 				if signalNum, err := strconv.ParseFloat(matches[1], 64); err == nil {
+					// Asegurar que sea negativo
 					if signalNum > 0 {
 						signalNum = -signalNum
 					}
+					// Validar rango razonable
 					if signalNum >= -100 && signalNum <= -30 {
 						currentNetwork["signal"] = int(signalNum)
+					} else {
+						log.Printf("Señal fuera de rango: %.2f dBm", signalNum)
+					}
+				}
+			} else {
+				// Intentar parseo alternativo sin "dBm"
+				re2 := regexp.MustCompile(`signal:\s*(-?\d+\.?\d*)`)
+				matches2 := re2.FindStringSubmatch(line)
+				if len(matches2) > 1 {
+					if signalNum, err := strconv.ParseFloat(matches2[1], 64); err == nil {
+						if signalNum > 0 {
+							signalNum = -signalNum
+						}
+						if signalNum >= -100 && signalNum <= -30 {
+							currentNetwork["signal"] = int(signalNum)
+						}
 					}
 				}
 			}
@@ -76,10 +125,13 @@ func scanWiFiNetworks(interfaceName string) map[string]interface{} {
 				if freq, err := strconv.Atoi(matches[1]); err == nil {
 					var channel int
 					if freq >= 2412 && freq <= 2484 {
+						// 2.4 GHz
 						channel = (freq-2412)/5 + 1
 					} else if freq >= 5000 && freq <= 5825 {
+						// 5 GHz
 						channel = (freq - 5000) / 5
 					} else if freq >= 5955 && freq <= 7115 {
+						// 6 GHz
 						channel = (freq - 5955) / 5
 					}
 					if channel > 0 {
@@ -87,21 +139,35 @@ func scanWiFiNetworks(interfaceName string) map[string]interface{} {
 					}
 				}
 			}
-		} else if strings.Contains(line, "WPA:") || strings.Contains(line, "RSN:") {
-			// Detectar seguridad
-			if strings.Contains(line, "WPA3") || strings.Contains(line, "SAE") {
+		} else if strings.Contains(line, "RSN:") {
+			// RSN (Robust Security Network) indica WPA2 o WPA3
+			if strings.Contains(line, "WPA3") || strings.Contains(line, "SAE") || strings.Contains(line, "suite-B") {
 				currentNetwork["security"] = "WPA3"
-			} else if strings.Contains(line, "WPA2") || strings.Contains(line, "WPA") {
-				currentNetwork["security"] = "WPA2"
 			} else {
-				currentNetwork["security"] = "Open"
+				currentNetwork["security"] = "WPA2"
+			}
+		} else if strings.Contains(line, "WPA:") {
+			// WPA indica WPA2 (WPA1 es raro)
+			currentNetwork["security"] = "WPA2"
+		} else if strings.Contains(line, "capability:") {
+			// Detectar si tiene Privacy (WEP o protegida)
+			if strings.Contains(line, "Privacy") {
+				// Solo establecer WEP si no se ha detectado otra seguridad
+				if sec, ok := currentNetwork["security"].(string); !ok || sec == "Open" || sec == "" {
+					currentNetwork["security"] = "WEP"
+				}
 			}
 		}
 	}
 
-	// Agregar última red
-	if len(currentNetwork) > 0 && currentNetwork["ssid"] != nil {
-		networks = append(networks, currentNetwork)
+	// Agregar última red si existe
+	if len(currentNetwork) > 0 {
+		if ssid, ok := currentNetwork["ssid"].(string); ok && ssid != "" {
+			if !seenNetworks[ssid] {
+				seenNetworks[ssid] = true
+				networks = append(networks, currentNetwork)
+			}
+		}
 	}
 
 	result["success"] = true
