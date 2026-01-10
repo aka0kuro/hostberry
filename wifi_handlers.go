@@ -286,9 +286,19 @@ func connectWiFi(ssid, password, interfaceName, country, user string) map[string
 		executeCommand(fmt.Sprintf("sudo rm -rf /var/run/wpa_supplicant/%s 2>/dev/null || true", interfaceName))
 		executeCommand(fmt.Sprintf("sudo rm -rf /run/wpa_supplicant/%s 2>/dev/null || true", interfaceName))
 
-		startCmd := fmt.Sprintf("sudo wpa_supplicant -B -i %s -c %s -D nl80211,wext", interfaceName, wpaConfig)
+		// Iniciar wpa_supplicant con el grupo correcto para que el socket tenga permisos adecuados
+		// Usar -g para especificar el grupo del socket (netdev o hostberry)
+		startCmd := fmt.Sprintf("sudo wpa_supplicant -B -i %s -c %s -D nl80211,wext -g netdev", interfaceName, wpaConfig)
 		startOut, _ := executeCommand(startCmd)
 		log.Printf("wpa_supplicant start output: %s", strings.TrimSpace(startOut))
+		
+		// Si falla con -g netdev, intentar sin especificar grupo (usará el del archivo de configuración)
+		if strings.Contains(strings.ToLower(startOut), "error") || strings.Contains(strings.ToLower(startOut), "failed") {
+			log.Printf("Intento con -g netdev falló, intentando sin especificar grupo...")
+			startCmd = fmt.Sprintf("sudo wpa_supplicant -B -i %s -c %s -D nl80211,wext", interfaceName, wpaConfig)
+			startOut, _ = executeCommand(startCmd)
+			log.Printf("wpa_supplicant start output (sin -g): %s", strings.TrimSpace(startOut))
+		}
 		
 		// Esperar más tiempo y verificar que el socket se haya creado
 		socketReady := false
