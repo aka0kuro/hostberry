@@ -1060,6 +1060,9 @@ func systemLogsHandler(c *fiber.Ctx) error {
 }
 
 // Funciones auxiliares
+// getSystemInfo está ahora en system_handlers.go
+// Función antigua comentada para evitar duplicación:
+/*
 func getSystemInfo() fiber.Map {
 	info := fiber.Map{
 		"hostname":      "unknown",
