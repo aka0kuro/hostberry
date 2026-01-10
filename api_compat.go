@@ -2273,21 +2273,25 @@ func wifiLegacyStatusHandler(c *fiber.Ctx) error {
 						}
 					}
 					// Obtener frecuencia/canal
-					if connectionInfo["channel"] == nil && strings.Contains(line, "freq:") {
+					if (connectionInfo["channel"] == nil || connectionInfo["channel"] == "") && strings.Contains(line, "freq:") {
 						parts := strings.Fields(line)
 						for i, part := range parts {
 							if part == "freq:" && i+1 < len(parts) {
-								freqStr := parts[i+1]
-								if freq, err := strconv.Atoi(freqStr); err == nil {
+								freqStr := strings.TrimSpace(parts[i+1])
+								if freq, err := strconv.Atoi(freqStr); err == nil && freq > 0 {
 									// Convertir frecuencia a canal
+									var channel int
 									if freq >= 2412 && freq <= 2484 {
-										channel := (freq-2412)/5 + 1
-										connectionInfo["channel"] = strconv.Itoa(channel)
-										log.Printf("Found channel: %d (from freq %d)", channel, freq)
+										channel = (freq-2412)/5 + 1
 									} else if freq >= 5000 && freq <= 5825 {
-										channel := (freq - 5000) / 5
+										channel = (freq - 5000) / 5
+									} else if freq >= 5955 && freq <= 7115 {
+										// 6 GHz band
+										channel = (freq - 5955) / 5
+									}
+									if channel > 0 {
 										connectionInfo["channel"] = strconv.Itoa(channel)
-										log.Printf("Found channel: %d (from freq %d)", channel, freq)
+										log.Printf("Found channel from iw: %d (from freq %d)", channel, freq)
 									}
 								}
 								break
