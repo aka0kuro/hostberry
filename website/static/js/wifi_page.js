@@ -213,7 +213,18 @@
     
     // Buscar ip en connection_info primero
     const ip = (data.connection_info && data.connection_info.ip) || data.ip || '--';
-    if (ipEl) ipEl.textContent = ip;
+    if (ipEl) {
+      if (ip === '--' || ip === '' || ip === 'N/A') {
+        // Si no hay IP pero está "conectado", mostrar "Obtaining IP..."
+        if (data.connected && data.ssid) {
+          ipEl.textContent = t('wifi.obtaining_ip', 'Obtaining IP...');
+        } else {
+          ipEl.textContent = '--';
+        }
+      } else {
+        ipEl.textContent = ip;
+      }
+    }
     
     // Buscar mac en connection_info primero
     const mac = (data.connection_info && data.connection_info.mac) || data.mac || '--';
