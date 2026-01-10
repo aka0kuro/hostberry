@@ -151,11 +151,7 @@ install_dependencies() {
         export PATH=$PATH:/usr/local/go/bin
     fi
     
-    # Instalar Lua si no está
-    if ! command -v lua5.1 &> /dev/null && ! command -v lua &> /dev/null; then
-        print_info "Instalando Lua..."
-        apt-get install -y lua5.1 || apt-get install -y lua
-    fi
+    # Lua ya no se requiere - todo está en Go ahora
     
     # Verificar e instalar iw si no está disponible (ya está en DEPS, pero verificamos por si acaso)
     if ! command -v iw &> /dev/null; then
