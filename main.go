@@ -605,6 +605,16 @@ func wifiScanHandler(c *fiber.Ctx) error {
 	}
 
 	if luaEngine != nil {
+		interfaceName := c.Query("interface", "wlan0")
+		result := scanWiFiNetworks(interfaceName)
+		if networks, ok := result["networks"]; ok {
+			return c.JSON(networks)
+		}
+		return c.JSON([]fiber.Map{})
+	}
+
+	// Código antiguo (ya no se usa):
+	/*if luaEngine != nil {
 		result, err := luaEngine.Execute("wifi_scan.lua", fiber.Map{
 			"interface": interfaceName,
 		})
