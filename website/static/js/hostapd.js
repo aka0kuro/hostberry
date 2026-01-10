@@ -698,6 +698,11 @@
             if (leaseTimeInput) leaseTimeInput.value = config.lease_time;
           }
           
+          if (config.country) {
+            const countrySelect = document.getElementById('hostapd-country');
+            if (countrySelect) countrySelect.value = config.country;
+          }
+          
           // Nota: No cargamos la contraseña por seguridad
           console.log('HostAPD configuration loaded:', config);
         }
