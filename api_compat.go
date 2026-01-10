@@ -125,6 +125,98 @@ func networkFirewallToggleHandler(c *fiber.Ctx) error {
 }
 
 func networkConfigHandler(c *fiber.Ctx) error {
+	// Si es GET, devolver configuración actual
+	if c.Method() == "GET" {
+		config := fiber.Map{
+			"hostname": "",
+			"gateway":  "",
+			"dns1":     "",
+			"dns2":     "",
+		}
+
+		// Obtener hostname
+		hostnameCmd := exec.Command("sh", "-c", "hostnamectl --static 2>/dev/null || hostname 2>/dev/null || echo ''")
+		if hostnameOut, err := hostnameCmd.Output(); err == nil {
+			config["hostname"] = strings.TrimSpace(string(hostnameOut))
+		}
+
+		// Obtener gateway por defecto
+		gatewayCmd := exec.Command("sh", "-c", "ip route | grep default | awk '{print $3}' | head -1")
+		if gatewayOut, err := gatewayCmd.Output(); err == nil {
+			gateway := strings.TrimSpace(string(gatewayOut))
+			if gateway != "" {
+				config["gateway"] = gateway
+			}
+		}
+
+		// Obtener DNS desde nmcli (si está disponible)
+		dnsCmd := exec.Command("sh", "-c", "nmcli -t -f IP4.DNS connection show $(nmcli -t -f NAME connection show --active | head -1) 2>/dev/null | head -2")
+		if dnsOut, err := dnsCmd.Output(); err == nil {
+			dnsLines := strings.Split(strings.TrimSpace(string(dnsOut)), "\n")
+			for i, dns := range dnsLines {
+				dns = strings.TrimSpace(dns)
+				if dns != "" && strings.Contains(dns, ":") {
+					// Formato puede ser "IP4.DNS[1]:8.8.8.8" o solo "8.8.8.8"
+					parts := strings.Split(dns, ":")
+					if len(parts) > 1 {
+						dns = parts[len(parts)-1]
+					}
+					if i == 0 {
+						config["dns1"] = dns
+					} else if i == 1 {
+						config["dns2"] = dns
+					}
+				} else if dns != "" && !strings.Contains(dns, ":") {
+					// Si no tiene ":", es directamente la IP
+					if i == 0 {
+						config["dns1"] = dns
+					} else if i == 1 {
+						config["dns2"] = dns
+					}
+				}
+			}
+		}
+
+		// Si no se obtuvieron DNS desde nmcli, intentar con resolvectl
+		if config["dns1"] == "" {
+			resolveCmd := exec.Command("sh", "-c", "resolvectl dns 2>/dev/null | grep -E '^[0-9]' | awk '{print $2}' | head -2")
+			if resolveOut, err := resolveCmd.Output(); err == nil {
+				resolveLines := strings.Split(strings.TrimSpace(string(resolveOut)), "\n")
+				for i, dns := range resolveLines {
+					dns = strings.TrimSpace(dns)
+					if dns != "" {
+						if i == 0 {
+							config["dns1"] = dns
+						} else if i == 1 {
+							config["dns2"] = dns
+						}
+					}
+				}
+			}
+		}
+
+		// Si aún no hay DNS, intentar leer desde /etc/resolv.conf
+		if config["dns1"] == "" {
+			resolvCmd := exec.Command("sh", "-c", "grep '^nameserver' /etc/resolv.conf 2>/dev/null | awk '{print $2}' | head -2")
+			if resolvOut, err := resolvCmd.Output(); err == nil {
+				resolvLines := strings.Split(strings.TrimSpace(string(resolvOut)), "\n")
+				for i, dns := range resolvLines {
+					dns = strings.TrimSpace(dns)
+					if dns != "" && dns != "127.0.0.1" && dns != "127.0.0.53" {
+						if i == 0 {
+							config["dns1"] = dns
+						} else if i == 1 {
+							config["dns2"] = dns
+						}
+					}
+				}
+			}
+		}
+
+		return c.JSON(config)
+	}
+
+	// Si es POST, aplicar configuración
 	var req struct {
 		Hostname string `json:"hostname"`
 		DNS1     string `json:"dns1"`
