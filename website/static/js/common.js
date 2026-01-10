@@ -341,7 +341,7 @@
           consecutiveErrors = 0;
         }
       }
-    }, 15 * 60 * 1000); // Cada 15 minutos
+    }, 2 * 60 * 1000); // Cada 2 minutos (verificar más frecuentemente para sesión de 1 hora)
   }
 
   // Populate navbar username from API if logged in
