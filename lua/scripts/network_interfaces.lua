@@ -29,9 +29,10 @@ if interfaces_output and interfaces_output ~= "" then
         interface_info.connected = (interface_info.state == "up")
         
         -- IP y máscara de red
-        local ip_cmd = "ip addr show " .. iface .. " | grep 'inet ' | awk '{print $2}'"
+        -- Método 1: ip addr show (más confiable)
+        local ip_cmd = "ip addr show " .. iface .. " 2>/dev/null | grep 'inet ' | awk '{print $2}' | head -1"
         local ip_output, _ = exec(ip_cmd)
-        if ip_output then
+        if ip_output and ip_output ~= "" then
             -- Formato: "192.168.1.100/24"
             local ip_parts = {}
             for part in ip_output:gmatch("[^/]+") do
@@ -47,6 +48,42 @@ if interfaces_output and interfaces_output ~= "" then
             end
         else
             interface_info.ip = "N/A"
+        end
+        
+        -- Si no se obtuvo IP, intentar método alternativo
+        if interface_info.ip == "N/A" or interface_info.ip == "" then
+            -- Método 2: ifconfig (fallback)
+            local ifconfig_cmd = "ifconfig " .. iface .. " 2>/dev/null | grep 'inet ' | awk '{print $2}' | head -1"
+            local ifconfig_output, _ = exec(ifconfig_cmd)
+            if ifconfig_output and ifconfig_output ~= "" then
+                local ifconfig_ip = ifconfig_output:match("^%s*(.-)%s*$")
+                -- Limpiar cualquier prefijo (ej: "addr:192.168.1.1" -> "192.168.1.1")
+                ifconfig_ip = string.gsub(ifconfig_ip, "^addr:", "")
+                if ifconfig_ip and ifconfig_ip ~= "" then
+                    interface_info.ip = ifconfig_ip
+                end
+            end
+        end
+        
+        -- Si aún no hay IP, intentar obtener desde hostname -I
+        if interface_info.ip == "N/A" or interface_info.ip == "" then
+            -- Método 3: hostname -I y verificar qué IP pertenece a esta interfaz
+            local hostname_cmd = "hostname -I 2>/dev/null | awk '{print $1}'"
+            local hostname_output, _ = exec(hostname_cmd)
+            if hostname_output and hostname_output ~= "" then
+                local hostname_ip = hostname_output:match("^%s*(.-)%s*$")
+                if hostname_ip and hostname_ip ~= "" then
+                    -- Verificar si esta IP está en la interfaz
+                    local check_cmd = "ip addr show " .. iface .. " 2>/dev/null | grep -q '" .. hostname_ip .. "' && echo '" .. hostname_ip .. "'"
+                    local check_output, _ = exec(check_cmd)
+                    if check_output and check_output ~= "" then
+                        local check_ip = check_output:match("^%s*(.-)%s*$")
+                        if check_ip and check_ip ~= "" then
+                            interface_info.ip = check_ip
+                        end
+                    end
+                end
+            end
         end
         
         -- MAC
