@@ -809,12 +809,17 @@
   // Enviar conexión directa (sin formulario)
   async function submitConnectDirect(ssid, security, password) {
     try {
+      // Obtener país desde el selector
+      const countrySelect = document.getElementById('wifi-country');
+      const country = countrySelect ? countrySelect.value || 'US' : 'US';
+      
       const resp = await apiRequest('/api/v1/wifi/connect', {
         method: 'POST',
         body: {
           ssid: ssid,
           password: password || '',
-          security: security
+          security: security,
+          country: country
         }
       });
       
