@@ -358,7 +358,7 @@ func networkConfigHandler(c *fiber.Ctx) error {
 // ---------- WiFi ----------
 
 func wifiNetworksHandler(c *fiber.Ctx) error {
-	interfaceName := c.Query("interface", "wlan0")
+	interfaceName := c.Query("interface", DefaultWiFiInterface)
 	result := scanWiFiNetworks(interfaceName)
 	if networks, ok := result["networks"]; ok {
 		return c.JSON(networks)
@@ -376,7 +376,7 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 	userID := user.ID
 
 	// Obtener estado actual de WiFi
-	interfaceName := c.Query("interface", "wlan0")
+	interfaceName := c.Query("interface", DefaultWiFiInterface)
 	rfkillCheck := exec.Command("sh", "-c", "sudo rfkill list wifi 2>/dev/null | grep -i 'soft blocked'")
 	rfkillOut, _ := rfkillCheck.Output()
 	isBlocked := strings.Contains(strings.ToLower(string(rfkillOut)), "yes")
@@ -2988,7 +2988,7 @@ func wifiLegacyAutoconnectHandler(c *fiber.Ctx) error {
 
 func wifiLegacyScanHandler(c *fiber.Ctx) error {
 	// Reusar el scan Lua
-	interfaceName := c.Query("interface", "wlan0")
+	interfaceName := c.Query("interface", DefaultWiFiInterface)
 	result := scanWiFiNetworks(interfaceName)
 	if networks, ok := result["networks"]; ok {
 		return c.JSON(fiber.Map{"success": true, "networks": networks})
