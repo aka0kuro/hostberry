@@ -715,17 +715,8 @@ func vpnConnectHandler(c *fiber.Ctx) error {
 
 // Handlers de WireGuard
 func wireguardStatusHandler(c *fiber.Ctx) error {
-	if luaEngine != nil {
-		result, err := luaEngine.Execute("wireguard_status.lua", nil)
-		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
-		}
-		return c.JSON(result)
-	}
-
-	return c.Status(500).JSON(fiber.Map{
-		"error": "Lua engine no disponible",
-	})
+	result := getWireGuardStatus()
+	return c.JSON(result)
 }
 
 // wireguardInterfacesHandler adapta el estado a la estructura esperada por wireguard.js
