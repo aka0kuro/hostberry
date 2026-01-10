@@ -2025,18 +2025,24 @@ rsn_pairwise=CCMP
 	// Limpiar archivo temporal
 	os.Remove(tmpFile)
 	
-	// 3. Configurar dnsmasq para DHCP
+	// 3. Configurar dnsmasq para DHCP (mejorado basado en ap_sta_config.sh)
 	dnsmasqConfigPath := "/etc/dnsmasq.conf"
 	// Hacer backup de configuración existente
 	executeCommand(fmt.Sprintf("sudo cp %s %s.backup 2>/dev/null || true", dnsmasqConfigPath, dnsmasqConfigPath))
 	
-	dnsmasqContent := fmt.Sprintf(`interface=%s
+	// Configuración mejorada: bind-interfaces y no-dhcp-interface son importantes para AP+STA
+	// Esto evita que dnsmasq intente servir DHCP en wlan0 (STA) y solo lo haga en ap0 (AP)
+	dnsmasqContent := fmt.Sprintf(`interface=lo,%s
+no-dhcp-interface=lo,%s
+bind-interfaces
+server=8.8.8.8
+server=8.8.4.4
+domain-needed
+bogus-priv
 dhcp-range=%s,%s,255.255.255.0,%s
 dhcp-option=3,%s
 dhcp-option=6,%s
-server=8.8.8.8
-server=8.8.4.4
-`, apInterface, req.DHCPRangeStart, req.DHCPRangeEnd, req.LeaseTime, req.Gateway, req.Gateway)
+`, apInterface, phyInterface, req.DHCPRangeStart, req.DHCPRangeEnd, req.LeaseTime, req.Gateway, req.Gateway)
 	
 	// Guardar configuración de dnsmasq usando un archivo temporal
 	tmpDnsmasqFile := "/tmp/dnsmasq.conf.tmp"
