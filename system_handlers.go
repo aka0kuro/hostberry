@@ -244,7 +244,7 @@ func systemRestart(user string) map[string]interface{} {
 
 	// Intentar con systemctl primero
 	restartCmd := "systemctl reboot"
-	if out, err := executeCommand(restartCmd); err != nil {
+	if _, err := executeCommand(restartCmd); err != nil {
 		log.Printf("WARN: systemctl reboot falló, intentando con shutdown: %v", err)
 		// Intentar con shutdown
 		shutdownPaths := []string{"/usr/sbin/shutdown", "/sbin/shutdown", "shutdown"}
