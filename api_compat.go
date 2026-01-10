@@ -375,22 +375,26 @@ func wifiToggleHandler(c *fiber.Ctx) error {
 	user := c.Locals("user").(*User)
 	userID := user.ID
 
-	// Intentar usar el motor Lua primero (tiene mejor manejo de permisos)
-	if luaEngine != nil {
-		result, err := luaEngine.Execute("wifi_toggle.lua", fiber.Map{
-			"user": user.Username,
-		})
-		if err == nil && result != nil {
-			if success, ok := result["success"].(bool); ok && success {
-				InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso usando Lua (usuario: %s)", user.Username), "wifi", &userID)
-				return c.JSON(fiber.Map{"success": true, "message": "WiFi toggle exitoso"})
-			}
-			if errorMsg, ok := result["error"].(string); ok && errorMsg != "" {
-				InsertLog("ERROR", fmt.Sprintf("Error en WiFi toggle (usuario: %s): %s", user.Username, errorMsg), "wifi", &userID)
-				return c.Status(500).JSON(fiber.Map{"success": false, "error": errorMsg})
-			}
-		} else if err != nil {
-			// Si hay un error ejecutando el script Lua, continuar con fallback
+	// Obtener estado actual de WiFi
+	interfaceName := c.Query("interface", "wlan0")
+	rfkillCheck := exec.Command("sh", "-c", "sudo rfkill list wifi 2>/dev/null | grep -i 'soft blocked'")
+	rfkillOut, _ := rfkillCheck.Output()
+	isBlocked := strings.Contains(strings.ToLower(string(rfkillOut)), "yes")
+	
+	// Toggle: si está bloqueado, desbloquear; si no, bloquear
+	result := toggleWiFi(interfaceName, isBlocked)
+	
+	if success, ok := result["success"].(bool); ok && success {
+		InsertLog("INFO", fmt.Sprintf("WiFi toggle exitoso (usuario: %s)", user.Username), "wifi", &userID)
+		return c.JSON(result)
+	}
+	
+	if errorMsg, ok := result["error"].(string); ok && errorMsg != "" {
+		InsertLog("ERROR", fmt.Sprintf("Error en WiFi toggle (usuario: %s): %s", user.Username, errorMsg), "wifi", &userID)
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": errorMsg})
+	}
+	
+	// Fallback si hay un error
 			InsertLog("WARN", fmt.Sprintf("Error ejecutando script Lua, usando fallback (usuario: %s): %v", user.Username, err), "wifi", &userID)
 		}
 	}
