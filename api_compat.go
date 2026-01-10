@@ -1566,7 +1566,7 @@ func hostapdGetConfigHandler(c *fiber.Ctx) error {
 		countryCode = config["country"] // Algunas configuraciones usan "country" en lugar de "country_code"
 	}
 	if countryCode == "" {
-		countryCode = "US" // Valor por defecto
+		countryCode = DefaultCountryCode
 	}
 	configMap["country"] = countryCode
 	
