@@ -537,23 +537,9 @@ func systemStatsHandler(c *fiber.Ctx) error {
 }
 
 func systemRestartHandler(c *fiber.Ctx) error {
-	if luaEngine != nil {
-		// Ejecutar script Lua para reiniciar el sistema
-		user := c.Locals("user").(*User)
-		result, err := luaEngine.Execute("system_restart.lua", fiber.Map{
-			"user": user.Username,
-		})
-		if err != nil {
-			return c.Status(500).JSON(fiber.Map{
-				"error": err.Error(),
-			})
-		}
-		return c.JSON(result)
-	}
-
-	return c.Status(500).JSON(fiber.Map{
-		"error": "Lua engine no disponible",
-	})
+	user := c.Locals("user").(*User)
+	result := systemRestart(user.Username)
+	return c.JSON(result)
 }
 
 // detectWiFiInterface detecta automáticamente la interfaz WiFi
