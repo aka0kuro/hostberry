@@ -129,8 +129,8 @@ func loadConfig() error {
 		// Configuración por defecto
 		appConfig = Config{
 			Server: ServerConfig{
-				Host:         "0.0.0.0",
-				Port:         8000,
+				Host:         DefaultServerHost,
+				Port:         DefaultServerPort,
 				Debug:        false,
 				ReadTimeout:  30,
 				WriteTimeout: 30,
