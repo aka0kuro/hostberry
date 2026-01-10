@@ -38,6 +38,15 @@ else
     log("INFO", "NetworkManager permanece activo para mantener la conexión actual")
 end
 
+-- Detener hostapd si está corriendo (usa wlan0 y puede interferir)
+local hostapd_running = exec("pgrep hostapd 2>/dev/null")
+if hostapd_running and hostapd_running ~= "" then
+    log("INFO", "Deteniendo hostapd para liberar la interfaz WiFi")
+    exec("sudo systemctl stop hostapd 2>/dev/null || true")
+    exec("sudo pkill hostapd 2>/dev/null || true")
+    os.execute("sleep 2")
+end
+
 -- Asegurar que la interfaz esté en modo managed (no AP) para poder conectarse
 -- Si está en modo AP, cambiarla a managed temporalmente
 local iw_info = exec("iw dev " .. interface .. " info 2>/dev/null")
@@ -45,13 +54,16 @@ if iw_info then
     if string.find(iw_info, "type AP") then
         log("INFO", "Interfaz está en modo AP, cambiando a modo managed para conexión STA")
         exec("sudo iw dev " .. interface .. " set type managed 2>/dev/null")
-        os.execute("sleep 1")
+        os.execute("sleep 2")
     end
 end
 
--- Asegurar que la interfaz esté activa
-exec("sudo ip link set " .. interface .. " up 2>/dev/null")
+-- Asegurar que la interfaz esté activa y no bloqueada
+exec("sudo rfkill unblock wifi 2>/dev/null || true")
+exec("sudo ip link set " .. interface .. " down 2>/dev/null")
 os.execute("sleep 1")
+exec("sudo ip link set " .. interface .. " up 2>/dev/null")
+os.execute("sleep 2")
 
 -- Asegurar que wpa_supplicant esté corriendo
 local wpa_pid = exec("pgrep -f 'wpa_supplicant.*" .. interface .. "'")
