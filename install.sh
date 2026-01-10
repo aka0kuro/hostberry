@@ -529,11 +529,7 @@ install_files() {
     cp -f "${SCRIPT_DIR}/go.mod" "${INSTALL_DIR}/" 2>/dev/null || true
     cp -f "${SCRIPT_DIR}/go.sum" "${INSTALL_DIR}/" 2>/dev/null || true
     
-    # Directorios
-    if [ -d "${SCRIPT_DIR}/lua/scripts" ]; then
-        cp -r "${SCRIPT_DIR}/lua/scripts/"* "${INSTALL_DIR}/lua/scripts/" 2>/dev/null || true
-    fi
-    
+    # Directorios (lua ya no se usa - todo está en Go)
     if [ -d "${SCRIPT_DIR}/locales" ]; then
         cp -r "${SCRIPT_DIR}/locales/"* "${INSTALL_DIR}/locales/" 2>/dev/null || true
     fi
