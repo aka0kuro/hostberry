@@ -1799,11 +1799,16 @@ RUN+="/bin/ip link set ap0 address %s"
 		
 		if createErr != nil {
 			log.Printf("Error creating virtual interface %s with phy %s: %s", apInterface, phyName, strings.TrimSpace(createOut))
+			log.Printf("Error details: %v", createErr)
 			log.Printf("Trying alternative method 1: using interface %s directly...", phyInterface)
 			
 			// Método alternativo 1: usar el nombre de la interfaz directamente
-			createApCmd2 := fmt.Sprintf("sudo iw dev %s interface add %s type __ap", phyInterface, apInterface)
+			createApCmd2 := fmt.Sprintf("sudo iw dev %s interface add %s type __ap 2>&1", phyInterface, apInterface)
+			log.Printf("Executing: %s", createApCmd2)
 			createOut2, createErr2 := executeCommand(createApCmd2)
+			if createOut2 != "" {
+				log.Printf("Method 1 output: %s", strings.TrimSpace(createOut2))
+			}
 			
 			if createErr2 != nil {
 				log.Printf("Error with alternative method 1: %s", strings.TrimSpace(createOut2))
