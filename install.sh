@@ -617,10 +617,6 @@ security:
   token_expiry: 1440
   bcrypt_cost: 10
   rate_limit_rps: 10
-
-lua:
-  scripts_path: "${INSTALL_DIR}/lua/scripts"
-  enabled: true
 EOF
             print_info "Archivo de configuración creado con valores por defecto"
         fi
