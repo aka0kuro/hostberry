@@ -218,23 +218,36 @@ else
     end
 end
 
+-- Deshabilitar todas las redes primero para evitar conflictos
+exec(wpa_cli_cmd .. " disable_network all")
+
 -- Intentar conectar
 local select_cmd = wpa_cli_cmd .. " select_network " .. network_id
-exec(select_cmd)
+local select_result = exec(select_cmd)
+log("INFO", "select_network result: " .. (select_result or "none"))
+
+-- Habilitar la red específica
+local enable_cmd = wpa_cli_cmd .. " enable_network " .. network_id
+local enable_result = exec(enable_cmd)
+log("INFO", "enable_network result: " .. (enable_result or "none"))
+
+-- Reconectar explícitamente
+exec(wpa_cli_cmd .. " reconnect")
 
 -- Esperar un momento para que se establezca la conexión
-os.execute("sleep 5")
+os.execute("sleep 3")
 
 -- Verificar el estado de la conexión (con múltiples intentos)
 local connected = false
 local status_output = ""
-local max_attempts = 5
+local max_attempts = 8
 local attempt = 0
 
 while attempt < max_attempts and not connected do
-    os.execute("sleep 2")
+    os.execute("sleep 3")
     local status_cmd = wpa_cli_cmd .. " status"
     status_output = exec(status_cmd) or ""
+    log("INFO", "Connection status (attempt " .. (attempt + 1) .. "): " .. (status_output or "no output"))
     
     if status_output then
         -- Verificar que realmente esté conectado
@@ -245,12 +258,20 @@ while attempt < max_attempts and not connected do
                 connected = true
                 log("INFO", "WiFi conectado exitosamente: " .. ssid .. " (intento " .. (attempt + 1) .. ")")
                 break
+            else
+                log("INFO", "wpa_state=COMPLETED pero SSID no coincide. Estado: " .. status_output)
+            end
+        else
+            -- Mostrar el estado actual para debugging
+            local wpa_state = string.match(status_output, "wpa_state=([^\r\n]+)")
+            if wpa_state then
+                log("INFO", "Estado wpa_state: " .. wpa_state)
             end
         end
     end
     
     attempt = attempt + 1
-    if attempt < max_attempts then
+    if attempt < max_attempts and not connected then
         log("INFO", "Esperando conexión... (intento " .. attempt .. "/" .. max_attempts .. ")")
         -- Intentar reconectar
         exec(wpa_cli_cmd .. " reconnect")
