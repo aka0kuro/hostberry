@@ -803,7 +803,6 @@
     "enable_wifi_first": "Please enable WiFi first",
     "no_networks_found": "No WiFi networks found",
     "check_wifi_enabled": "Make sure WiFi is enabled",
-    "lua_script_error": "Error executing Lua script",
     "script_not_found": "Script not found"
   },
   "vpn": {
