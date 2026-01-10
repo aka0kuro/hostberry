@@ -552,8 +552,14 @@ func wifiConnectHandler(c *fiber.Ctx) error {
 	user := c.Locals("user").(*User)
 	userID := user.ID
 
-	// Obtener país desde el selector en la página (si está disponible)
-	country := c.Query("country", "US") // Por defecto US si no se especifica
+	// Obtener país desde el request body o query (si está disponible)
+	country := req.Country
+	if country == "" {
+		country = c.Query("country", "US") // Por defecto US si no se especifica
+	}
+	if country == "" {
+		country = "US" // Valor por defecto final
+	}
 	
 	if luaEngine != nil {
 		result, err := luaEngine.Execute("wifi_connect.lua", fiber.Map{
