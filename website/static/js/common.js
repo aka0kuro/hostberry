@@ -282,7 +282,7 @@
     const maxConsecutiveErrors = 3; // Permitir hasta 3 errores consecutivos antes de cerrar sesión
     
     // Verificar token periódicamente para detectar expiración antes de que ocurra
-    // Verificar cada 15 minutos (si el token expira en 24 horas, esto es seguro)
+    // Verificar cada 5 minutos (si el token expira en 1 hora, esto es seguro)
     setInterval(async function(){
       try{
         const token = localStorage.getItem('access_token');
