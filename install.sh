@@ -484,10 +484,31 @@ clean_previous_installation() {
 create_user() {
     if id "$USER_NAME" &>/dev/null; then
         print_info "Usuario $USER_NAME ya existe"
+        # Asegurar que el usuario esté en el grupo netdev (necesario para wpa_supplicant)
+        if getent group netdev > /dev/null 2>&1; then
+            if groups "$USER_NAME" | grep -q "\bnetdev\b"; then
+                print_info "Usuario $USER_NAME ya está en el grupo netdev"
+            else
+                print_info "Agregando usuario $USER_NAME al grupo netdev..."
+                usermod -a -G netdev "$USER_NAME"
+                print_success "Usuario $USER_NAME agregado al grupo netdev"
+            fi
+        else
+            print_warning "Grupo netdev no existe, creándolo..."
+            groupadd -r netdev 2>/dev/null || true
+            usermod -a -G netdev "$USER_NAME"
+            print_success "Grupo netdev creado y usuario agregado"
+        fi
     else
         print_info "Creando usuario $USER_NAME..."
-        useradd -r -s /bin/false -d "$INSTALL_DIR" "$USER_NAME"
-        print_success "Usuario $USER_NAME creado"
+        # Crear grupo netdev si no existe
+        if ! getent group netdev > /dev/null 2>&1; then
+            groupadd -r netdev 2>/dev/null || true
+            print_info "Grupo netdev creado"
+        fi
+        # Crear usuario y agregarlo al grupo netdev
+        useradd -r -s /bin/false -d "$INSTALL_DIR" -G netdev "$USER_NAME"
+        print_success "Usuario $USER_NAME creado y agregado al grupo netdev"
     fi
 }
 
