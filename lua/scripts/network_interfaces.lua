@@ -126,12 +126,48 @@ if interfaces_output and interfaces_output ~= "" then
         end
         
         -- Si la interfaz está "up" pero no tiene IP, podría estar esperando DHCP
-        if (interface_info.state == "up" or interface_info.connected) and (interface_info.ip == "N/A" or interface_info.ip == "") then
+        if (interface_info.state == "up" or interface_info.state == "connected" or interface_info.state == "connecting") and (interface_info.ip == "N/A" or interface_info.ip == "") then
             -- Verificar si hay un proceso DHCP corriendo
             local dhcp_cmd = "ps aux | grep -E '[d]hclient|udhcpc' | grep " .. iface
             local dhcp_output, _ = exec(dhcp_cmd)
             if dhcp_output and dhcp_output ~= "" then
                 interface_info.ip = "Obtaining IP..."
+            end
+        end
+        
+        -- Para interfaces WiFi, verificar el estado real de conexión
+        if string.find(iface, "^wlan") then
+            -- Si wpa_supplicant dice COMPLETED pero no hay IP, aún no está completamente conectado
+            if interface_info.wpa_state == "COMPLETED" then
+                if interface_info.ip == "N/A" or interface_info.ip == "" or interface_info.ip == "Obtaining IP..." then
+                    -- wpa_supplicant conectado pero sin IP aún
+                    interface_info.connected = false
+                    interface_info.state = "connecting"
+                else
+                    -- Realmente conectado con IP
+                    interface_info.connected = true
+                    interface_info.state = "connected"
+                end
+            elseif interface_info.wpa_state == "ASSOCIATING" or interface_info.wpa_state == "ASSOCIATED" or interface_info.wpa_state == "4WAY_HANDSHAKE" or interface_info.wpa_state == "GROUP_HANDSHAKE" then
+                -- En proceso de conexión
+                interface_info.connected = false
+                interface_info.state = "connecting"
+            else
+                -- No conectado
+                interface_info.connected = false
+                if interface_info.state ~= "down" then
+                    interface_info.state = "down"
+                end
+            end
+        else
+            -- Para interfaces no WiFi, usar el estado del sistema
+            if interface_info.ip ~= "N/A" and interface_info.ip ~= "" and interface_info.ip ~= "Obtaining IP..." then
+                interface_info.connected = true
+                if interface_info.state == "up" then
+                    interface_info.state = "connected"
+                end
+            else
+                interface_info.connected = false
             end
         end
         
