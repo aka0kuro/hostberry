@@ -12,6 +12,7 @@ if exec_error then
 end
 
 if interfaces_output and interfaces_output ~= "" then
+    log("INFO", "Interfaces encontradas: " .. interfaces_output)
     for iface in interfaces_output:gmatch("[^\r\n]+") do
         iface = iface:match("^%s*(.-)%s*$") -- Trim whitespace
         -- Filtrar loopback y interfaces vacías
@@ -27,6 +28,8 @@ if interfaces_output and interfaces_output ~= "" then
             log("WARNING", "Interface " .. iface .. " no existe o no es accesible, saltando")
             goto continue
         end
+        
+        log("INFO", "Procesando interfaz: " .. iface)
         
         local interface_info = {}
         interface_info.name = iface
