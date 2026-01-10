@@ -1570,6 +1570,16 @@ func hostapdGetConfigHandler(c *fiber.Ctx) error {
 		configMap["channel"] = "6"
 	}
 	
+	// Obtener country code
+	countryCode := config["country_code"]
+	if countryCode == "" {
+		countryCode = config["country"] // Algunas configuraciones usan "country" en lugar de "country_code"
+	}
+	if countryCode == "" {
+		countryCode = "US" // Valor por defecto
+	}
+	configMap["country"] = countryCode
+	
 	return c.JSON(result)
 }
 
